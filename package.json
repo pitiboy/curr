@@ -2,7 +2,14 @@
   "name": "@curr/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev": "docker-compose --env-file .env.docker up",
+    "stop": "docker-compose --env-file .env.docker down",
+    "logs": "docker-compose --env-file .env.docker logs -f",
+    "strapi:dev": "nx serve backend-strapi",
+    "strapi:build": "nx build backend-strapi",
+    "strapi:start": "nx start backend-strapi"
+  },
   "private": true,
   "dependencies": {},
   "devDependencies": {
