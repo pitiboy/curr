@@ -3,12 +3,13 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "docker-compose --env-file .env.docker up",
-    "stop": "docker-compose --env-file .env.docker down",
-    "logs": "docker-compose --env-file .env.docker logs -f",
-    "strapi:dev": "nx serve backend-strapi",
-    "strapi:build": "nx build backend-strapi",
-    "strapi:start": "nx start backend-strapi"
+    "docker:dev": "docker-compose --env-file .env.docker up",
+    "docker:stop": "docker-compose --env-file .env.docker down",
+    "docker:logs": "docker-compose --env-file .env.docker logs -f",
+    "dev": "pnpm strapi:dev",
+    "strapi:dev": "npx nx serve backend-strapi",
+    "strapi:build": "npx nx build backend-strapi",
+    "strapi:start": "npx nx start backend-strapi"
   },
   "private": true,
   "dependencies": {},
