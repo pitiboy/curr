@@ -14,13 +14,12 @@
   "attributes": {
     "identifier": {
       "type": "uid",
-      "required": true,
-      "unique": true
+      "required": true
     },
     "name": {
       "type": "string",
-      "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "required": true
     },
     "email": {
       "type": "email",
@@ -29,15 +28,25 @@
     },
     "status": {
       "type": "enumeration",
-      "enum": ["resident", "active", "supporting", "sympathizer"],
+      "required": true,
       "default": "active",
-      "required": true
+      "enum": [
+        "resident",
+        "active",
+        "supporting",
+        "sympathizer"
+      ]
     },
     "memberships": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::membership.membership",
       "mappedBy": "member"
+    },
+    "accounts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::account.account"
     }
   }
 }
