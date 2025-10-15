@@ -54,47 +54,26 @@ module.exports = {
   },
 
   /**
-   * Manual seeding function - call this explicitly when you want to seed organizations
+   * Manual seeding function - call this explicitly when you want to seed basic data
    */
   async seed({ strapi }) {
-    console.log('🌱 Starting manual organization seeding...');
+    console.log('🌱 Starting manual basic data seeding...');
 
     try {
-      // Seed Organization only
-      await seedOrganization(strapi);
+      // Seed basic data types only (no organizations)
+      await seedTransactionTypes(strapi);
+      await seedCurrencyCategories(strapi);
+      await seedCurrencyTypes(strapi);
+      await seedAccountCategories(strapi);
+      await seedMembershipTypes(strapi);
 
-      console.log('✅ Manual organization seeding completed successfully!');
+      console.log('✅ Manual basic data seeding completed successfully!');
     } catch (error) {
-      console.error('❌ Error during manual organization seeding:', error);
+      console.error('❌ Error during manual basic data seeding:', error);
       throw error; // Re-throw for manual seeding
     }
   },
 };
-
-async function seedOrganization(strapi) {
-  const existingOrgs = await strapi.entityService.findMany(
-    'api::organization.organization'
-  );
-
-  if (existingOrgs.length === 0) {
-    console.log('📊 Seeding Organization...');
-
-    const org = await strapi.entityService.create(
-      'api::organization.organization',
-      {
-        data: {
-          name: 'Zöld források szövetkezet @Szupatak',
-          description: '',
-          address: 'Szupatak, Hungary',
-        },
-      }
-    );
-
-    console.log(`✅ Created organization: ${org.name}`);
-  } else {
-    console.log('📊 Organization already exists, skipping...');
-  }
-}
 
 async function seedTransactionTypes(strapi) {
   const existingTypes = await strapi.entityService.findMany(
