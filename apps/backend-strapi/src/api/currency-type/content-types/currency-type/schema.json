@@ -24,17 +24,10 @@
       "maxLength": 255
     },
     "category": {
-      "type": "enumeration",
-      "enum": [
-        "cash",
-        "labor",
-        "food",
-        "animal",
-        "material",
-        "property",
-        "natural_resource"
-      ],
-      "required": true
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::currency-category.currency-category",
+      "inversedBy": "currency_types"
     },
     "unit": {
       "type": "string",

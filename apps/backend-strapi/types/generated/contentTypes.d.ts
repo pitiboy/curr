@@ -473,6 +473,59 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCurrencyCategoryCurrencyCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'currency_categories';
+  info: {
+    description: 'Categories for organizing different types of currencies and resources';
+    displayName: 'Currency Category';
+    pluralName: 'currency-categories';
+    singularName: 'currency-category';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    code: Schema.Attribute.UID &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 20;
+      }>;
+    color: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 7;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currency_types: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::currency-type.currency-type'
+    >;
+    description: Schema.Attribute.Text;
+    icon: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::currency-category.currency-category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCurrencyRateCurrencyRate
   extends Struct.CollectionTypeSchema {
   collectionName: 'currency_rates';
@@ -525,18 +578,10 @@ export interface ApiCurrencyTypeCurrencyType
     draftAndPublish: false;
   };
   attributes: {
-    category: Schema.Attribute.Enumeration<
-      [
-        'cash',
-        'labor',
-        'food',
-        'animal',
-        'material',
-        'property',
-        'natural_resource',
-      ]
-    > &
-      Schema.Attribute.Required;
+    category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::currency-category.currency-category'
+    >;
     code: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique &
@@ -1403,6 +1448,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::account.account': ApiAccountAccount;
+      'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;
       'api::division.division': ApiDivisionDivision;

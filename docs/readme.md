@@ -76,11 +76,20 @@ erDiagram
         relation division_id FK
     }
 
+    CURRENCY_CATEGORY {
+        uid id PK
+        uid code
+        string name
+        text description
+        string icon
+        string color
+    }
+
     CURRENCY_TYPE {
         uid id PK
         string code
         string name
-        enum category
+        relation category_id FK
         string unit
     }
 
@@ -120,6 +129,7 @@ erDiagram
     DIVISION ||--o{ ACCOUNT : "division_id"
     ACCOUNT ||--o{ TRANSACTION : "account_id"
     MEMBER ||--o{ TRANSACTION : "member_id"
+    CURRENCY_CATEGORY ||--o{ CURRENCY_TYPE : "categorizes"
     CURRENCY_TYPE ||--o{ CURRENCY_RATE : "from currency"
     CURRENCY_TYPE ||--o{ CURRENCY_RATE : "to currency"
     TRANSACTION_TYPE ||--o{ TRANSACTION : "transaction_type_id"
@@ -130,17 +140,18 @@ erDiagram
 
 ### 💬 Entity Overview
 
-| Entity              | Description                                                                 | Sample Values                                                                                                                                                                                                                                           |
-| ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Member**          | A community participant (individual).                                       | John Doe, jane@example.com                                                                                                                                                                                                                              |
-| **Organization**    | Collective entity managing resources and members.                           | Zöld források szövetkezet @Szupatak, Kömlődi állatidomárok                                                                                                                                                                                              |
-| **Membership**      | Relation between a Member and an Organization, storing their role.          | tag, bentlakó tag, szimbpatizáns                                                                                                                                                                                                                        |
-| **Division**        | A structured unit of work within an organization, linked to a location.     | 1.1. IRÁNYÍTÁS ÉS SZEMÉLYZETI KÖZPONT, 1.2. KOMMUNIKÁCIÓS KÖZPONT, 2.4 PROMÓCIÓ ÉS MARKETING IGAZGATÓSÁG, 3.9 NYILVÁNTARTÁSOK, VAGYONTÁRGYAK, 4.10 TERVEZÉSI KÖZPONT, 4.11 TERÜLET KIALAKÍTÁS, 4.12 TERMELÉS IRÁNYÍTÁS, 4.12.1 MEZŐ- ÉS ERDŐGAZDÁLKODÁS |
-| **Account**         | A defined action or operation type (e.g. gardening, maintenance).           | orchard retail shop, food production, deer retail service                                                                                                                                                                                               |
-| **CurrencyType**    | Defines currencies or other measurable resource units (cash, labor, goods). | HUF (partial note/részjegy), labor Hour, Natural resource, property (tractor), raw material (rooftile), lifestock (chicken), etc                                                                                                                        |
-| **CurrencyRate**    | Defines conversion rates between resource types over time.                  | HUF→EUR: 0.0026, labour hour→HUF: 3000                                                                                                                                                                                                                  |
-| **TransactionType** | Categorizes transactions (income, expense, transfer).                       | Elrendelt, Utalás, Készpénz, Átvezetés, Jutalék, Barter                                                                                                                                                                                                 |
-| **Transaction**     | Single-entry record of resource inflow or outflow.                          | +5000 HUF, -2 HOUR, deposit payment, gardening work                                                                                                                                                                                                     |
+| Entity               | Description                                                                 | Sample Values                                                                                                                                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Member**           | A community participant (individual).                                       | John Doe, jane@example.com                                                                                                                                                                                                                              |
+| **Organization**     | Collective entity managing resources and members.                           | Zöld források szövetkezet @Szupatak, Igaz Szeretet forrás Egyesület, Kömlődi állatidomárok                                                                                                                                                              |
+| **Membership**       | Relation between a Member and an Organization, storing their role.          | tag, bentlakó tag, szimbpatizáns                                                                                                                                                                                                                        |
+| **Division**         | A structured unit of work within an organization, linked to a location.     | 1.1. IRÁNYÍTÁS ÉS SZEMÉLYZETI KÖZPONT, 1.2. KOMMUNIKÁCIÓS KÖZPONT, 2.4 PROMÓCIÓ ÉS MARKETING IGAZGATÓSÁG, 3.9 NYILVÁNTARTÁSOK, VAGYONTÁRGYAK, 4.10 TERVEZÉSI KÖZPONT, 4.11 TERÜLET KIALAKÍTÁS, 4.12 TERMELÉS IRÁNYÍTÁS, 4.12.1 MEZŐ- ÉS ERDŐGAZDÁLKODÁS |
+| **Account**          | A defined action or operation type (e.g. gardening, maintenance).           | orchard retail shop, food production, deer retail service                                                                                                                                                                                               |
+| **CurrencyCategory** | Organizes currency types into logical groups.                               | Cash 💰, Labor ⏰, Resources 🌾, Assets 🏠                                                                                                                                                                                                              |
+| **CurrencyType**     | Defines currencies or other measurable resource units (cash, labor, goods). | HUF, EUR, HOUR, WHEAT, TRACTOR, CHICKEN                                                                                                                                                                                                                 |
+| **CurrencyRate**     | Defines conversion rates between resource types over time.                  | HUF→EUR: 0.0026, HOUR→HUF: 3000                                                                                                                                                                                                                         |
+| **TransactionType**  | Categorizes transactions (income, expense, transfer).                       | Elrendelt, Utalás, Készpénz, Átvezetés, Jutalék, Barter                                                                                                                                                                                                 |
+| **Transaction**      | Single-entry record of resource inflow or outflow.                          | +5000 HUF, -2 HOUR, deposit payment, gardening work                                                                                                                                                                                                     |
 
 #### Missing items to consider for further addition
 
@@ -149,3 +160,5 @@ erDiagram
 - Task management (with Trello integration)
 - Time management tool for labour hours
 - Division or project based role
+
+- Target account payment can be Egyesület / Szövetkezet
