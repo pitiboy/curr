@@ -130,18 +130,22 @@ erDiagram
 
 ### 💬 Entity Overview
 
-| Entity              | Description                                                                 | Sample Values                                       |
-| ------------------- | --------------------------------------------------------------------------- | --------------------------------------------------- |
-| **Member**          | A community participant (individual).                                       | John Doe, jane@example.com, resident                |
-| **Organization**    | Collective entity managing resources and members.                           | Zöld források szövetkezet, Kömlődi állatidomárok    |
-| **Membership**      | Relation between a Member and an Organization, storing their role.          | gardener, coordinator, 2024-01-15                   |
-| **Division**        | A structured unit of work within an organization, linked to a location.     | Spring Planting, Community Kitchen                  |
-| **Account**         | A defined action or operation type (e.g. gardening, maintenance).           | gardening, maintenance, cooking                     |
-| **CurrencyType**    | Defines currencies or other measurable resource units (cash, labor, goods). | HUF, HOUR, KG_WHEAT, cash, labor                    |
-| **CurrencyRate**    | Defines conversion rates between resource types over time.                  | HUF→EUR: 0.0026, HOUR→HUF: 5000                     |
-| **TransactionType** | Categorizes transactions (income, expense, transfer).                       | income, expense, internal                           |
-| **Transaction**     | Single-entry record of resource inflow or outflow.                          | +5000 HUF, -2 HOUR, deposit payment, gardening work |
+| Entity              | Description                                                                 | Sample Values                                                                                                                                                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Member**          | A community participant (individual).                                       | John Doe, jane@example.com                                                                                                                                                                                                                              |
+| **Organization**    | Collective entity managing resources and members.                           | Zöld források szövetkezet @Szupatak, Kömlődi állatidomárok                                                                                                                                                                                              |
+| **Membership**      | Relation between a Member and an Organization, storing their role.          | tag, bentlakó tag, szimbpatizáns                                                                                                                                                                                                                        |
+| **Division**        | A structured unit of work within an organization, linked to a location.     | 1.1. IRÁNYÍTÁS ÉS SZEMÉLYZETI KÖZPONT, 1.2. KOMMUNIKÁCIÓS KÖZPONT, 2.4 PROMÓCIÓ ÉS MARKETING IGAZGATÓSÁG, 3.9 NYILVÁNTARTÁSOK, VAGYONTÁRGYAK, 4.10 TERVEZÉSI KÖZPONT, 4.11 TERÜLET KIALAKÍTÁS, 4.12 TERMELÉS IRÁNYÍTÁS, 4.12.1 MEZŐ- ÉS ERDŐGAZDÁLKODÁS |
+| **Account**         | A defined action or operation type (e.g. gardening, maintenance).           | orchard retail shop, food production, deer retail service                                                                                                                                                                                               |
+| **CurrencyType**    | Defines currencies or other measurable resource units (cash, labor, goods). | HUF (partial note/részjegy), labor Hour, Natural resource, property (tractor), raw material (rooftile), lifestock (chicken), etc                                                                                                                        |
+| **CurrencyRate**    | Defines conversion rates between resource types over time.                  | HUF→EUR: 0.0026, labour hour→HUF: 3000                                                                                                                                                                                                                  |
+| **TransactionType** | Categorizes transactions (income, expense, transfer).                       | Elrendelt, Utalás, Készpénz, Átvezetés, Jutalék, Barter                                                                                                                                                                                                 |
+| **Transaction**     | Single-entry record of resource inflow or outflow.                          | +5000 HUF, -2 HOUR, deposit payment, gardening work                                                                                                                                                                                                     |
 
 #### Missing items to consider for further addition
 
 - Member's Competencies
+- Organization / Division might required further physical Location entity
+- Task management (with Trello integration)
+- Time management tool for labour hours
+- Division or project based role
