@@ -29,10 +29,22 @@
       "target": "api::membership.membership",
       "mappedBy": "organization"
     },
-    "divisions": {
+    "parent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "inversedBy": "children"
+    },
+    "children": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::division.division",
+      "target": "api::organization.organization",
+      "mappedBy": "parent"
+    },
+    "accounts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::account.account",
       "mappedBy": "organization"
     }
   }

@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "currency_categories",
+  "info": {
+    "singularName": "currency-category",
+    "pluralName": "currency-categories",
+    "displayName": "Currency Category",
+    "description": "Categories for organizing different types of currencies and resources"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "code": {
+      "type": "uid",
+      "required": true,
+      "unique": true,
+      "maxLength": 20
+    },
+    "description": {
+      "type": "text"
+    },
+    "icon": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "color": {
+      "type": "string",
+      "maxLength": 7
+    },
+    "currency_types": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::currency-type.currency-type",
+      "mappedBy": "category"
+    }
+  }
+}
