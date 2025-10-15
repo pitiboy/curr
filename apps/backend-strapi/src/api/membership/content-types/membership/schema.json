@@ -12,22 +12,11 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "role": {
-      "type": "enumeration",
-      "enum": [
-        "tag",
-        "bentlakó_tag",
-        "szimpatizáns",
-        "gardener",
-        "coordinator",
-        "accountant",
-        "manager"
-      ],
-      "required": true
-    },
-    "joined_at": {
-      "type": "datetime",
-      "required": true
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "inversedBy": "memberships"
     },
     "member": {
       "type": "relation",
@@ -35,11 +24,18 @@
       "target": "api::member.member",
       "inversedBy": "memberships"
     },
-    "organization": {
+    "membership_type": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::organization.organization",
+      "target": "api::membership-type.membership-type",
       "inversedBy": "memberships"
+    },
+    "valid_from": {
+      "type": "datetime",
+      "required": true
+    },
+    "valid_to": {
+      "type": "datetime"
     }
   }
 }
