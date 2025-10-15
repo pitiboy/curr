@@ -446,11 +446,11 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
       ['revenue', 'expense', 'asset', 'liability', 'equity']
     > &
       Schema.Attribute.Required;
+    children: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
-    division: Schema.Attribute.Relation<'manyToOne', 'api::division.division'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -462,6 +462,11 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    organization: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::organization.organization'
+    >;
+    parent: Schema.Attribute.Relation<'manyToOne', 'api::account.account'>;
     publishedAt: Schema.Attribute.DateTime;
     transactions: Schema.Attribute.Relation<
       'oneToMany',
@@ -626,46 +631,6 @@ export interface ApiCurrencyTypeCurrencyType
   };
 }
 
-export interface ApiDivisionDivision extends Struct.CollectionTypeSchema {
-  collectionName: 'divisions';
-  info: {
-    description: 'A structured unit of work within an organization, linked to a location';
-    displayName: 'Division';
-    pluralName: 'divisions';
-    singularName: 'division';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    accounts: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::division.division'
-    > &
-      Schema.Attribute.Private;
-    location: Schema.Attribute.Relation<'manyToOne', 'api::location.location'>;
-    name: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 255;
-      }>;
-    organization: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::organization.organization'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiLocationLocation extends Struct.CollectionTypeSchema {
   collectionName: 'locations';
   info: {
@@ -683,7 +648,6 @@ export interface ApiLocationLocation extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
-    divisions: Schema.Attribute.Relation<'oneToMany', 'api::division.division'>;
     lat: Schema.Attribute.Decimal;
     lng: Schema.Attribute.Decimal;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -815,12 +779,16 @@ export interface ApiOrganizationOrganization
     draftAndPublish: false;
   };
   attributes: {
+    accounts: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
     address: Schema.Attribute.Text;
+    children: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::organization.organization'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
-    divisions: Schema.Attribute.Relation<'oneToMany', 'api::division.division'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -836,6 +804,10 @@ export interface ApiOrganizationOrganization
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    parent: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::organization.organization'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1451,7 +1423,6 @@ declare module '@strapi/strapi' {
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;
-      'api::division.division': ApiDivisionDivision;
       'api::location.location': ApiLocationLocation;
       'api::member.member': ApiMemberMember;
       'api::membership.membership': ApiMembershipMembership;

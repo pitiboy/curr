@@ -33,11 +33,5 @@
       "precision": 11,
       "scale": 8
     },
-    "divisions": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::division.division",
-      "mappedBy": "location"
-    }
   }
 }

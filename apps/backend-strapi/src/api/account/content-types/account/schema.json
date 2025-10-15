@@ -25,11 +25,23 @@
     "description": {
       "type": "text"
     },
-    "division": {
+    "organization": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::division.division",
+      "target": "api::organization.organization",
       "inversedBy": "accounts"
+    },
+    "parent": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::account.account",
+      "inversedBy": "children"
+    },
+    "children": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::account.account",
+      "mappedBy": "parent"
     },
     "transactions": {
       "type": "relation",
