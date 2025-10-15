@@ -10,45 +10,32 @@ module.exports = {
    * An asynchronous register function that runs before
    * your application is initialized.
    *
-   * This gives you an opportunity to extend code.
-   */
-  register(/*{ strapi }*/) {},
-
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  async bootstrap({ strapi }) {
-    // Only run seeding in development or when explicitly requested
-    if (process.env.NODE_ENV === 'production' && !process.env.FORCE_SEED) {
-      console.log(
-        '🌱 Skipping seeding in production (set FORCE_SEED=true to override)'
-      );
-      return;
-    }
-
-    console.log('🌱 Starting initial data seeding...');
+   /**
+    * Manual seeding function - call this explicitly when you want to seed
+    */
+  async seed({ strapi }) {
+    console.log('🌱 Starting manual initial data seeding...');
 
     try {
-      // Seed Organization
-      await seedOrganization(strapi);
-
       // Seed Transaction Types
       await seedTransactionTypes(strapi);
 
-      // Seed Divisions
-      await seedDivisions(strapi);
+      // Seed Currency Categories
+      await seedCurrencyCategories(strapi);
 
       // Seed Currency Types
       await seedCurrencyTypes(strapi);
 
-      console.log('✅ Initial data seeding completed successfully!');
+      // Seed Account Categories
+      await seedAccountCategories(strapi);
+
+      // Seed Organization
+      await seedOrganization(strapi);
+
+      console.log('✅ Manual seeding completed successfully!');
     } catch (error) {
-      console.error('❌ Error during seeding:', error);
-      // Don't throw error to prevent app startup failure
+      console.error('❌ Error during manual seeding:', error);
+      throw error; // Re-throw for manual seeding
     }
   },
 };
@@ -89,17 +76,17 @@ async function seedTransactionTypes(strapi) {
     const transactionTypes = [
       {
         name: 'Elrendelt',
-        category: 'future',
+        category: 'expense',
         description: 'Tervezett/elrendelt kiadás',
       },
       {
         name: 'Utalás',
-        category: 'actual',
+        category: 'transfer',
         description: 'Banki átutalás',
       },
       {
         name: 'Készpénz',
-        category: 'actual',
+        category: 'transfer',
         description: 'Készpénzes fizetés',
       },
       {
@@ -109,12 +96,12 @@ async function seedTransactionTypes(strapi) {
       },
       {
         name: 'Jutalék',
-        category: 'actual',
+        category: 'income',
         description: 'Jutalék vagy bónusz kifizetés',
       },
       {
         name: 'Barter',
-        category: 'actual',
+        category: 'barter',
         description: 'Áru/szolgáltatás csere',
       },
     ];
@@ -134,151 +121,113 @@ async function seedTransactionTypes(strapi) {
   }
 }
 
-async function seedDivisions(strapi) {
-  const existingDivisions = await strapi.entityService.findMany(
-    'api::division.division'
+async function seedAccountCategories(strapi) {
+  const existingCategories = await strapi.entityService.findMany(
+    'api::account-category.account-category'
   );
 
-  if (existingDivisions.length === 0) {
-    console.log('🏢 Seeding Divisions...');
+  if (existingCategories.length === 0) {
+    console.log('📊 Seeding Account Categories...');
 
-    // Get the organization first
-    const orgs = await strapi.entityService.findMany(
-      'api::organization.organization',
+    const accountCategories = [
       {
-        limit: 1,
-      }
-    );
-
-    let organizationId = null;
-    if (orgs.length > 0) {
-      organizationId = orgs[0].id;
-      console.log(
-        `🔗 Linking divisions to organization: ${orgs[0].name} (ID: ${organizationId})`
-      );
-    } else {
-      console.log(
-        '⚠️ No organization found, divisions will be seeded without an organization link.'
-      );
-    }
-
-    const divisions = [
-      {
-        name: '1.1. IRÁNYÍTÁS ÉS SZEMÉLYZETI KÖZPONT',
-        description: 'Vezetés és személyzeti ügyek központja',
-        organization: organizationId,
+        name: 'Bevétel',
+        type: 'revenue',
+        description: 'Bevételi és jövedelmi számlák',
+        color: '#10B981', // Green
       },
       {
-        name: '1.2. KOMMUNIKÁCIÓS KÖZPONT',
-        description: 'A szervezet kommunikációs tevékenységeinek központja',
-        organization: organizationId,
+        name: 'Költség',
+        type: 'expense',
+        description: 'Költség- és ráfordítási számlák',
+        color: '#EF4444', // Red
       },
       {
-        name: '1.2.2 KIMENŐ KOMMUNIKÁCIÓS KÖZPONT',
-        description: 'Kifelé irányuló kommunikációért felelős központ',
-        organization: organizationId,
+        name: 'Eszköz',
+        type: 'asset',
+        description: 'Eszköz- és vagyonszámlák',
+        color: '#3B82F6', // Blue
       },
       {
-        name: '1.2.3 BELSŐ KOMMUNIKÁCIÓS KÖZPONT',
-        description: 'Belső kommunikációért felelős központ',
-        organization: organizationId,
+        name: 'Kötelezettség',
+        type: 'liability',
+        description: 'Kötelezettség- és tartozásszámlák',
+        color: '#F59E0B', // Yellow
       },
       {
-        name: '1.3 VIZSGÁLATOK ÉS JELENTÉSEK',
-        description: 'Vizsgálatok és jelentések készítésének központja',
-        organization: organizationId,
-      },
-      {
-        name: '2.4 PROMÓCIÓ ÉS MARKETING IGAZGATÓSÁG',
-        description: 'Promóciós és marketing tevékenységek igazgatósága',
-        organization: organizationId,
-      },
-      {
-        name: '2.5 KIADVÁNYOK',
-        description: 'Kiadványok szerkesztése és terjesztése',
-        organization: organizationId,
-      },
-      {
-        name: '2.6. REGISZTRÁCIÓS KÖZPONT',
-        description: 'Tagok és adatok regisztrációjának központja',
-        organization: organizationId,
-      },
-      {
-        name: '3.7 BEVÉTELI KÖZPONT',
-        description: 'Bevételek kezelésének és gyűjtésének központja',
-        organization: organizationId,
-      },
-      {
-        name: '3.8 KIFIZETÉSI KÖZPONT',
-        description: 'Kifizetések kezelésének és lebonyolításának központja',
-        organization: organizationId,
-      },
-      {
-        name: '3.9 NYILVÁNTARTÁSOK, VAGYONTÁRGYAK',
-        description: 'Nyilvántartások és vagyontárgyak kezelése',
-        organization: organizationId,
-      },
-      {
-        name: '4.10 TERVEZÉSI KÖZPONT',
-        description: 'Stratégiai és operatív tervezés központja',
-        organization: organizationId,
-      },
-      {
-        name: '4.11 TERÜLET KIALAKÍTÁS',
-        description: 'Területek fejlesztése és kialakítása',
-        organization: organizationId,
-      },
-      {
-        name: '4.12 TERMELÉS IRÁNYÍTÁS',
-        description: 'Termelési folyamatok irányítása és felügyelete',
-        organization: organizationId,
-      },
-      {
-        name: '4.12.1 MEZŐ- ÉS ERDŐGAZDÁLKODÁS',
-        description: 'Mezőgazdasági és erdőgazdálkodási tevékenységek',
-        organization: organizationId,
-      },
-      {
-        name: '5.13 ÉRVÉNYESÍTÉS',
-        description: 'Szabályok és eljárások érvényesítése',
-        organization: organizationId,
-      },
-      {
-        name: '5.14 MUNKATÁRS FEJLESZTÉS',
-        description: 'Munkatársak képzése és fejlesztése',
-        organization: organizationId,
-      },
-      {
-        name: '5.15 KORREKCIÓS KÖZPONT',
-        description: 'Hibák és eltérések korrekciójának központja',
-        organization: organizationId,
-      },
-      {
-        name: '6.A KAPCSOLATFELVÉTEL',
-        description: 'Külső és belső kapcsolatfelvétel kezelése',
-        organization: organizationId,
-      },
-      {
-        name: '6.B TERÜLETI TÁMOGATÁS',
-        description: 'Területi egységek támogatása és koordinálása',
-        organization: organizationId,
-      },
-      {
-        name: '6.C TERÜLETEK FELÜGYELETe',
-        description: 'Területi tevékenységek felügyelete és ellenőrzése',
-        organization: organizationId,
+        name: 'Tőke',
+        type: 'equity',
+        description: 'Tőke- és saját tőkeszámlák',
+        color: '#8B5CF6', // Purple
       },
     ];
 
-    for (const division of divisions) {
-      await strapi.entityService.create('api::division.division', {
-        data: division,
-      });
+    for (const category of accountCategories) {
+      await strapi.entityService.create(
+        'api::account-category.account-category',
+        {
+          data: category,
+        }
+      );
     }
 
-    console.log(`✅ Created ${divisions.length} divisions`);
+    console.log(`✅ Created ${accountCategories.length} account categories`);
   } else {
-    console.log('🏢 Divisions already exist, skipping...');
+    console.log('📊 Account categories already exist, skipping...');
+  }
+}
+
+async function seedCurrencyCategories(strapi) {
+  const existingCategories = await strapi.entityService.findMany(
+    'api::currency-category.currency-category'
+  );
+
+  if (existingCategories.length === 0) {
+    console.log('💱 Seeding Currency Categories...');
+
+    const currencyCategories = [
+      {
+        code: 'CASH',
+        name: 'Pénz',
+        description: 'Hagyományos pénzügyi eszközök',
+        icon: '💰',
+        color: '#10B981',
+      },
+      {
+        code: 'LABOUR',
+        name: 'Munka',
+        description: 'Idő- és munkalapú eszközök',
+        icon: '⏰',
+        color: '#3B82F6',
+      },
+      {
+        code: 'RESOURCES',
+        name: 'Erőforrás',
+        description: 'Fizikai áruk és anyagok',
+        icon: '🌾',
+        color: '#F59E0B',
+      },
+      {
+        code: 'ASSETS',
+        name: 'Vagyon',
+        description: 'Ingatlan és berendezések',
+        icon: '🏠',
+        color: '#8B5CF6',
+      },
+    ];
+
+    for (const category of currencyCategories) {
+      await strapi.entityService.create(
+        'api::currency-category.currency-category',
+        {
+          data: category,
+        }
+      );
+    }
+
+    console.log(`✅ Created ${currencyCategories.length} currency categories`);
+  } else {
+    console.log('💱 Currency categories already exist, skipping...');
   }
 }
 
@@ -290,23 +239,33 @@ async function seedCurrencyTypes(strapi) {
   if (existingCurrencies.length === 0) {
     console.log('💱 Seeding Currency Types...');
 
+    // Get currency categories first
+    const cashCategory = await strapi.entityService.findMany(
+      'api::currency-category.currency-category',
+      { filters: { code: 'CASH' } }
+    );
+    const laborCategory = await strapi.entityService.findMany(
+      'api::currency-category.currency-category',
+      { filters: { code: 'LABOUR' } }
+    );
+
     const currencyTypes = [
       {
         code: 'HUF',
         name: 'Magyar Forint',
-        category: 'cash',
+        category: cashCategory[0]?.id,
         unit: 'HUF',
       },
       {
         code: 'EUR',
         name: 'Euro',
-        category: 'cash',
+        category: cashCategory[0]?.id,
         unit: 'EUR',
       },
       {
         code: 'HOUR',
         name: 'emberi munkaóra',
-        category: 'labor',
+        category: laborCategory[0]?.id,
         unit: 'hour',
       },
     ];

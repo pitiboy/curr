@@ -12,7 +12,15 @@ The `initial-data.js` seeder automatically populates basic data when the databas
 
    - Zöld források szövetkezet @Szupatak
 
-2. **Transaction Types** (8 entries)
+2. **Account Categories** (5 entries)
+
+   - Revenue (Green)
+   - Expense (Red)
+   - Asset (Blue)
+   - Liability (Yellow)
+   - Equity (Purple)
+
+3. **Transaction Types** (6 entries)
 
    - Elrendelt (Planned expense)
    - Utalás (Bank transfer)
@@ -20,49 +28,46 @@ The `initial-data.js` seeder automatically populates basic data when the databas
    - Átvezetés (Internal transfer)
    - Jutalék (Commission)
    - Barter (Goods exchange)
-   - Tagdíj (Membership fee)
-   - Befizetés (Deposit)
 
-3. **Divisions** (8 entries)
+4. **Currency Categories** (4 entries)
 
-   - Management and Personnel Center
-   - Communication Center
-   - Promotion and Marketing Directorate
-   - Records and Assets Management
-   - Planning Center
-   - Area Development
-   - Production Management
-   - Agriculture and Forestry
+   - Cash 💰 (Traditional money currencies)
+   - Labor ⏰ (Time and work-based currencies)
+   - Resources 🌾 (Physical goods and materials)
+   - Assets 🏠 (Property and equipment)
 
-4. **Currency Types** (8 entries)
-   - HUF (Hungarian Forint)
-   - EUR (Euro)
-   - HOUR (Labor Hour)
-   - KG_WHEAT (Wheat)
-   - CHICKEN (Chicken)
-   - TRACTOR (Tractor)
-   - ROOFTILE (Roof Tile)
-   - WOOD (Wood)
+5. **Currency Types** (3 entries)
+   - HUF (Hungarian Forint) - Cash category
+   - EUR (Euro) - Cash category
+   - HOUR (Labor Hour) - Labor category
 
 ## How to use:
 
-### Automatic seeding (recommended):
+### Manual seeding (recommended):
 
-The seeder runs automatically when Strapi starts if the database is empty.
+The seeder is now manual-only and does not run automatically.
 
-### Manual seeding:
+#### Option 1: Using the seed script
 
 ```bash
 # From the backend-strapi directory
-npm run seed
+node scripts/seed-database.js
 ```
 
-### In Strapi console:
+#### Option 2: In Strapi console
 
 ```javascript
 // Access the seeder
 const seeder = require('./database/seeders/initial-data.js');
-await seeder.bootstrap({ strapi });
+await seeder.seed({ strapi });
+```
+
+#### Option 3: Programmatically
+
+```javascript
+// In your own script
+const seeder = require('./database/seeders/initial-data.js');
+await seeder.seed({ strapi: yourStrapiInstance });
 ```
 
 ## Safety features:

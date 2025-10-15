@@ -6,10 +6,22 @@
  */
 
 const path = require('path');
-const fs = require('fs');
+
+// Load environment variables from .env file
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 async function runSeeder() {
   console.log('🌱 Starting CURR database seeding...');
+
+  // Debug: Check if environment variables are loaded
+  console.log('🔍 Database config:', {
+    client: process.env.DATABASE_CLIENT,
+    host: process.env.DATABASE_HOST,
+    port: process.env.DATABASE_PORT,
+    name: process.env.DATABASE_NAME,
+    username: process.env.DATABASE_USERNAME,
+    password: process.env.DATABASE_PASSWORD ? '***' : 'EMPTY',
+  });
 
   try {
     // Import Strapi
@@ -20,6 +32,7 @@ async function runSeeder() {
       distDir: path.resolve(__dirname, '..', 'dist'),
       autoReload: false,
       serveAdminPanel: false,
+      env: process.env.NODE_ENV || 'development',
     });
 
     await app.load();
@@ -28,7 +41,7 @@ async function runSeeder() {
 
     // Import and run the seeder
     const seeder = require('../database/seeders/initial-data.js');
-    await seeder.bootstrap({ strapi: app });
+    await seeder.seed({ strapi: app });
 
     console.log('✅ Seeding completed successfully!');
 

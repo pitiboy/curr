@@ -13,8 +13,8 @@
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
-    "seed:help": "node scripts/seed-manual.js",
-    "seed:mock": "node scripts/seed.js"
+    "_preseed": "pnpm build",
+    "seed": "node scripts/seed-database.js"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.27.0",

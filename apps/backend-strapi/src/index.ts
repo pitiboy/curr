@@ -15,10 +15,4 @@ export default {
    * run jobs, or perform some special logic.
    */
   bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
-
-//   async bootstrap({ strapi }) {
-//     // Import and run the seeder
-//     const seeder = require('../database/seeders/initial-data.js');
-//     await seeder.bootstrap({ strapi });
-//   },
-// };
+};
