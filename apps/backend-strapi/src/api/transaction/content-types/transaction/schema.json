@@ -58,6 +58,12 @@
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "related_transaction"
+    },
+    "receipt": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images", "files"]
     }
   }
 }
