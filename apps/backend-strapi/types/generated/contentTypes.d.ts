@@ -494,6 +494,14 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    credit_transactions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
+    debit_transactions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
     description: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -512,10 +520,6 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
     >;
     parent: Schema.Attribute.Relation<'manyToOne', 'api::account.account'>;
     publishedAt: Schema.Attribute.DateTime;
-    transactions: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::transaction.transaction'
-    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -755,10 +759,6 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'active'>;
-    transactions: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::transaction.transaction'
-    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -906,7 +906,7 @@ export interface ApiTransactionTypeTransactionType
 export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
   collectionName: 'transactions';
   info: {
-    description: 'Single-entry record of resource inflow or outflow';
+    description: 'Double-entry bookkeeping record with debit and credit entries';
     displayName: 'Transaction';
     pluralName: 'transactions';
     singularName: 'transaction';
@@ -915,26 +915,30 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    account: Schema.Attribute.Relation<'manyToOne', 'api::account.account'>;
     amount: Schema.Attribute.Decimal & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    credit_account: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::account.account'
+    >;
     currency_type: Schema.Attribute.Relation<
       'manyToOne',
       'api::currency-type.currency-type'
     >;
     date: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    debit_account: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::account.account'
+    >;
     description: Schema.Attribute.Text;
-    direction: Schema.Attribute.Enumeration<['in', 'out']> &
-      Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::transaction.transaction'
     > &
       Schema.Attribute.Private;
-    member: Schema.Attribute.Relation<'manyToOne', 'api::member.member'>;
     publishedAt: Schema.Attribute.DateTime;
     related_transaction: Schema.Attribute.Relation<
       'manyToOne',

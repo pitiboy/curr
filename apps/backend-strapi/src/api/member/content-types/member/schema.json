@@ -38,12 +38,6 @@
       "relation": "oneToMany",
       "target": "api::membership.membership",
       "mappedBy": "member"
-    },
-    "transactions": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::transaction.transaction",
-      "mappedBy": "member"
     }
   }
 }

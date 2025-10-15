@@ -5,7 +5,7 @@
     "singularName": "transaction",
     "pluralName": "transactions",
     "displayName": "Transaction",
-    "description": "Single-entry record of resource inflow or outflow"
+    "description": "Double-entry bookkeeping record with debit and credit entries"
   },
   "options": {
     "draftAndPublish": false
@@ -22,25 +22,20 @@
       "precision": 15,
       "scale": 2
     },
-    "direction": {
-      "type": "enumeration",
-      "enum": ["in", "out"],
-      "required": true
-    },
     "description": {
       "type": "text"
     },
-    "member": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::member.member",
-      "inversedBy": "transactions"
-    },
-    "account": {
+    "debit_account": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
-      "inversedBy": "transactions"
+      "inversedBy": "debit_transactions"
+    },
+    "credit_account": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::account.account",
+      "inversedBy": "credit_transactions"
     },
     "transaction_type": {
       "type": "relation",

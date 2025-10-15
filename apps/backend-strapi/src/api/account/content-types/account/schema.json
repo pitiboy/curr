@@ -44,11 +44,17 @@
       "target": "api::account.account",
       "mappedBy": "parent"
     },
-    "transactions": {
+    "debit_transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "account"
+      "mappedBy": "debit_account"
+    },
+    "credit_transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction",
+      "mappedBy": "credit_account"
     }
   }
 }
