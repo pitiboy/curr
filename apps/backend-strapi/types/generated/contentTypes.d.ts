@@ -902,7 +902,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    receipt: Schema.Attribute.Media<'images' | 'files' | 'videos', true>;
+    receipt: Schema.Attribute.Media<'images' | 'files', true>;
     related_transaction: Schema.Attribute.Relation<
       'manyToOne',
       'api::transaction.transaction'
