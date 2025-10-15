@@ -43,6 +43,9 @@ module.exports = {
       // Seed Account Categories
       await seedAccountCategories(strapi);
 
+      // Seed Membership Types
+      await seedMembershipTypes(strapi);
+
       console.log('✅ Bootstrap seeding completed successfully!');
     } catch (error) {
       console.error('❌ Error during bootstrap seeding:', error);
@@ -307,5 +310,51 @@ async function seedCurrencyTypes(strapi) {
     console.log(`✅ Created ${currencyTypes.length} currency types`);
   } else {
     console.log('💱 Currency types already exist, skipping...');
+  }
+}
+
+async function seedMembershipTypes(strapi) {
+  const existingTypes = await strapi.entityService.findMany(
+    'api::membership-type.membership-type'
+  );
+
+  if (existingTypes.length === 0) {
+    console.log('👥 Seeding Membership Types...');
+
+    const membershipTypes = [
+      {
+        name: 'Bentlakó tag',
+        description: 'Teljes jogú tag, aki a szövetkezeti birtokon lakik',
+        color: '#10B981', // Green
+      },
+      {
+        name: 'Társult tag',
+        description: 'Társult tag, aki támogatja a szövetkezetet',
+        color: '#3B82F6', // Blue
+      },
+      {
+        name: 'Pártoló tag',
+        description: 'Pártoló tag, aki segíti a szövetkezet munkáját',
+        color: '#8B5CF6', // Purple
+      },
+      {
+        name: 'Érdeklődő',
+        description: 'Érdeklődő személy, aki még nem tag',
+        color: '#F59E0B', // Yellow
+      },
+    ];
+
+    for (const type of membershipTypes) {
+      await strapi.entityService.create(
+        'api::membership-type.membership-type',
+        {
+          data: type,
+        }
+      );
+    }
+
+    console.log(`✅ Created ${membershipTypes.length} membership types`);
+  } else {
+    console.log('👥 Membership types already exist, skipping...');
   }
 }

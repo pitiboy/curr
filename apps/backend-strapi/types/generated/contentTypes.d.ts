@@ -735,12 +735,6 @@ export interface ApiMembershipTypeMembershipType
     draftAndPublish: false;
   };
   attributes: {
-    code: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 50;
-      }>;
     color: Schema.Attribute.String &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 7;
@@ -761,6 +755,7 @@ export interface ApiMembershipTypeMembershipType
     >;
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
+      Schema.Attribute.Unique &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;

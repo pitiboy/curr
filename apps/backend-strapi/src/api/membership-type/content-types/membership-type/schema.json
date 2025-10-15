@@ -12,16 +12,11 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "code": {
-      "type": "string",
-      "maxLength": 50,
-      "required": true,
-      "unique": true
-    },
     "name": {
       "type": "string",
       "maxLength": 255,
-      "required": true
+      "required": true,
+      "unique": true
     },
     "description": {
       "type": "text"
