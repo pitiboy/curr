@@ -22,6 +22,9 @@
       "type": "datetime",
       "required": true
     },
+    "valid_to": {
+      "type": "datetime"
+    },
     "from_currency_type": {
       "type": "relation",
       "relation": "manyToOne",

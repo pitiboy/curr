@@ -611,6 +611,7 @@ export interface ApiCurrencyRateCurrencyRate
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     valid_from: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    valid_to: Schema.Attribute.DateTime;
   };
 }
 
