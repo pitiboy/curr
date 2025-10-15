@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "account_categories",
+  "info": {
+    "singularName": "account-category",
+    "pluralName": "account-categories",
+    "displayName": "Account Category",
+    "description": "Categories for financial accounts (revenue, expense, asset, liability, equity)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["revenue", "expense", "asset", "liability", "equity"],
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "color": {
+      "type": "string",
+      "maxLength": 7
+    },
+    "accounts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::account.account",
+      "mappedBy": "category"
+    }
+  }
+}

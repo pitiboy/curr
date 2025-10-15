@@ -430,6 +430,50 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAccountCategoryAccountCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'account_categories';
+  info: {
+    description: 'Categories for financial accounts (revenue, expense, asset, liability, equity)';
+    displayName: 'Account Category';
+    pluralName: 'account-categories';
+    singularName: 'account-category';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    accounts: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
+    color: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 7;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::account-category.account-category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    type: Schema.Attribute.Enumeration<
+      ['revenue', 'expense', 'asset', 'liability', 'equity']
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
   collectionName: 'accounts';
   info: {
@@ -442,10 +486,10 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    category: Schema.Attribute.Enumeration<
-      ['revenue', 'expense', 'asset', 'liability', 'equity']
-    > &
-      Schema.Attribute.Required;
+    category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::account-category.account-category'
+    >;
     children: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1419,6 +1463,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::account-category.account-category': ApiAccountCategoryAccountCategory;
       'api::account.account': ApiAccountAccount;
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
