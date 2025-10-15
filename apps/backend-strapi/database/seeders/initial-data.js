@@ -76,17 +76,17 @@ async function seedTransactionTypes(strapi) {
     const transactionTypes = [
       {
         name: 'Elrendelt',
-        category: 'expense',
+        category: 'future',
         description: 'Tervezett/elrendelt kiadás',
       },
       {
         name: 'Utalás',
-        category: 'transfer',
+        category: 'actual',
         description: 'Banki átutalás',
       },
       {
         name: 'Készpénz',
-        category: 'transfer',
+        category: 'actual',
         description: 'Készpénzes fizetés',
       },
       {
@@ -96,12 +96,12 @@ async function seedTransactionTypes(strapi) {
       },
       {
         name: 'Jutalék',
-        category: 'income',
+        category: 'actual',
         description: 'Jutalék vagy bónusz kifizetés',
       },
       {
         name: 'Barter',
-        category: 'barter',
+        category: 'actual',
         description: 'Áru/szolgáltatás csere',
       },
     ];

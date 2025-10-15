@@ -835,9 +835,7 @@ export interface ApiTransactionTypeTransactionType
     draftAndPublish: false;
   };
   attributes: {
-    category: Schema.Attribute.Enumeration<
-      ['income', 'expense', 'internal', 'transfer', 'deposit', 'fee', 'barter']
-    > &
+    category: Schema.Attribute.Enumeration<['actual', 'future', 'internal']> &
       Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
