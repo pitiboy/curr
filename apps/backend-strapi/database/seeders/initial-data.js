@@ -9,12 +9,26 @@ module.exports = {
   /**
    * An asynchronous register function that runs before
    * your application is initialized.
+   */
+  register(/*{ strapi }*/) {},
+
+  /**
+   * An asynchronous bootstrap function that runs before
+   * your application gets started.
    *
-   /**
-    * Manual seeding function - call this explicitly when you want to seed
-    */
-  async seed({ strapi }) {
-    console.log('🌱 Starting manual initial data seeding...');
+   * This gives you an opportunity to set up your data model,
+   * run jobs, or perform some special logic.
+   */
+  async bootstrap({ strapi }) {
+    // Only run seeding in development or when explicitly requested
+    if (process.env.NODE_ENV === 'production' && !process.env.FORCE_SEED) {
+      console.log(
+        '🌱 Skipping bootstrap seeding in production (set FORCE_SEED=true to override)'
+      );
+      return;
+    }
+
+    console.log('🌱 Starting bootstrap seeding...');
 
     try {
       // Seed Transaction Types
@@ -29,12 +43,26 @@ module.exports = {
       // Seed Account Categories
       await seedAccountCategories(strapi);
 
-      // Seed Organization
+      console.log('✅ Bootstrap seeding completed successfully!');
+    } catch (error) {
+      console.error('❌ Error during bootstrap seeding:', error);
+      // Don't throw error to prevent app startup failure
+    }
+  },
+
+  /**
+   * Manual seeding function - call this explicitly when you want to seed organizations
+   */
+  async seed({ strapi }) {
+    console.log('🌱 Starting manual organization seeding...');
+
+    try {
+      // Seed Organization only
       await seedOrganization(strapi);
 
-      console.log('✅ Manual seeding completed successfully!');
+      console.log('✅ Manual organization seeding completed successfully!');
     } catch (error) {
-      console.error('❌ Error during manual seeding:', error);
+      console.error('❌ Error during manual organization seeding:', error);
       throw error; // Re-throw for manual seeding
     }
   },

@@ -14,5 +14,32 @@ export default {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }) {
+    // Import and run the bootstrap seeding
+    const path = require('path');
+    const fs = require('fs');
+
+    // Try different possible paths
+    const possiblePaths = [
+      path.resolve(__dirname, '../../database/seeders/initial-data.js'),
+      path.resolve(process.cwd(), 'database/seeders/initial-data.js'),
+      path.resolve(__dirname, '../../../database/seeders/initial-data.js'),
+    ];
+
+    let seederPath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        seederPath = testPath;
+        break;
+      }
+    }
+
+    if (!seederPath) {
+      console.log('🌱 Seeder file not found, skipping bootstrap seeding');
+      return;
+    }
+
+    const seeder = require(seederPath);
+    await seeder.bootstrap({ strapi });
+  },
 };
