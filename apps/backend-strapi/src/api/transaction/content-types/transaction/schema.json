@@ -8,7 +8,7 @@
     "description": "Double-entry bookkeeping record with debit and credit entries"
   },
   "options": {
-    "draftAndPublish": false
+    "draftAndPublish": true
   },
   "pluginOptions": {},
   "attributes": {
@@ -18,9 +18,7 @@
     },
     "amount": {
       "type": "decimal",
-      "required": true,
-      "precision": 15,
-      "scale": 2
+      "required": true
     },
     "description": {
       "type": "text"
