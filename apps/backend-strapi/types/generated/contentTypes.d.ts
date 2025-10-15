@@ -491,6 +491,10 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
       'api::account-category.account-category'
     >;
     children: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
+    code: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 10;
+      }>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

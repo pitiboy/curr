@@ -17,6 +17,10 @@
       "required": true,
       "maxLength": 255
     },
+    "code": {
+      "type": "string",
+      "maxLength": 10
+    },
     "category": {
       "type": "relation",
       "relation": "manyToOne",
