@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "currency_types",
+  "info": {
+    "singularName": "currency-type",
+    "pluralName": "currency-types",
+    "displayName": "Currency Type",
+    "description": "Defines currencies or other measurable resource units (cash, labor, goods)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "code": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 10
+    },
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "cash",
+        "labor",
+        "food",
+        "animal",
+        "material",
+        "property",
+        "natural_resource"
+      ],
+      "required": true
+    },
+    "unit": {
+      "type": "string",
+      "required": true,
+      "maxLength": 50
+    },
+    "transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction",
+      "mappedBy": "currency_type"
+    },
+    "exchange_rates_from": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::currency-rate.currency-rate",
+      "mappedBy": "from_currency_type"
+    },
+    "exchange_rates_to": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::currency-rate.currency-rate",
+      "mappedBy": "to_currency_type"
+    }
+  }
+}

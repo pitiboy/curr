@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "memberships",
+  "info": {
+    "singularName": "membership",
+    "pluralName": "memberships",
+    "displayName": "Membership",
+    "description": "Relation between a Member and an Organization, storing their role"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "role": {
+      "type": "enumeration",
+      "enum": [
+        "tag",
+        "bentlakó_tag",
+        "szimpatizáns",
+        "gardener",
+        "coordinator",
+        "accountant",
+        "manager"
+      ],
+      "required": true
+    },
+    "joined_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "member": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::member.member",
+      "inversedBy": "memberships"
+    },
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "inversedBy": "memberships"
+    }
+  }
+}

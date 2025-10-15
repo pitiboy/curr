@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "transaction_types",
+  "info": {
+    "singularName": "transaction-type",
+    "pluralName": "transaction-types",
+    "displayName": "Transaction Type",
+    "description": "Categorizes transactions (income, expense, transfer)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "income",
+        "expense",
+        "internal",
+        "transfer",
+        "deposit",
+        "fee",
+        "barter"
+      ],
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction",
+      "mappedBy": "transaction_type"
+    }
+  }
+}

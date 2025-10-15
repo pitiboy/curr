@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "currency_rates",
+  "info": {
+    "singularName": "currency-rate",
+    "pluralName": "currency-rates",
+    "displayName": "Currency Rate",
+    "description": "Defines conversion rates between currency types over time"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "rate": {
+      "type": "decimal",
+      "required": true,
+      "precision": 10,
+      "scale": 6
+    },
+    "valid_from": {
+      "type": "datetime",
+      "required": true
+    },
+    "from_currency_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::currency-type.currency-type",
+      "inversedBy": "exchange_rates_from"
+    },
+    "to_currency_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::currency-type.currency-type",
+      "inversedBy": "exchange_rates_to"
+    }
+  }
+}

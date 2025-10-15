@@ -1,0 +1,70 @@
+{
+  "kind": "collectionType",
+  "collectionName": "transactions",
+  "info": {
+    "singularName": "transaction",
+    "pluralName": "transactions",
+    "displayName": "Transaction",
+    "description": "Single-entry record of resource inflow or outflow"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "date": {
+      "type": "datetime",
+      "required": true
+    },
+    "amount": {
+      "type": "decimal",
+      "required": true,
+      "precision": 15,
+      "scale": 2
+    },
+    "direction": {
+      "type": "enumeration",
+      "enum": ["in", "out"],
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "member": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::member.member",
+      "inversedBy": "transactions"
+    },
+    "account": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::account.account",
+      "inversedBy": "transactions"
+    },
+    "transaction_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transaction-type.transaction-type",
+      "inversedBy": "transactions"
+    },
+    "currency_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::currency-type.currency-type",
+      "inversedBy": "transactions"
+    },
+    "related_transaction": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transaction.transaction",
+      "inversedBy": "related_transactions"
+    },
+    "related_transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction",
+      "mappedBy": "related_transaction"
+    }
+  }
+}
