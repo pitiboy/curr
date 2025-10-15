@@ -10,7 +10,29 @@ Purpose:
 This system manages community-based resource accounting, where members, organizations, locations, and activities interact through multi-currency transactions (money, time, food, goods, etc.).
 Each transaction is recorded in a simplified single-entry ledger.
 
-### Use cases
+### Use Cases
+
+#### Member Use Cases
+
+- **As a member**, I would like to see my own balance and transaction history.
+- **As a member**, I would like to make transactions to the organization fund.
+
+#### Accountant Use Cases
+
+- **As an accountant**, I would like to enter member fees and payments.
+- **As an accountant**, I would like to schedule future member fees.
+- **As an accountant**, I would like to register new invoices.
+- **As an accountant**, I would like to import transactions from a file.
+
+#### Management Use Cases
+
+- **As a project owner**, I would like to see my project balance as a report.
+- **As a board member**, I would like to see all project balances across the organization.
+
+#### System Use Cases
+
+- **Expense tracking**: The system can track expenses that belong to specific projects or locations.
+- **Multi-currency support**: Transactions can be made in different currencies with automatic conversion.
 
 ```mermaid
 erDiagram
