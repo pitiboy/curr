@@ -423,13 +423,19 @@ async function seedOrganizationAccounts(strapi, organizationId) {
       name: 'Egyéb bevételek',
       code: '4200',
       category: categoryMap.revenue,
-      childOrganizationToLink: 'I/1. Kommunikációs Igazgatóság',
+      childOrganizationToLink: 'I/3.7 Bevételi központ',
     },
     {
       name: 'Pénzügyi bevételek',
       code: '4300',
       category: categoryMap.revenue,
-      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+      childOrganizationToLink: 'I/3.7 Bevételi központ',
+    },
+    {
+      name: 'Előfizetések és tagsági díjak',
+      code: '4300',
+      category: categoryMap.equity,
+      childOrganizationToLink: 'I/3.7 Bevételi központ',
     },
 
     // 5000s: Expenses
