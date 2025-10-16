@@ -42,7 +42,6 @@ erDiagram
         uid identifier
         string name
         email email
-        enum status
     }
 
     ORGANIZATION {

@@ -12,10 +12,14 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "code": {
+      "type": "string",
+      "maxLength": 10
+    },
     "name": {
       "type": "string",
-      "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "required": true
     },
     "category": {
       "type": "relation",

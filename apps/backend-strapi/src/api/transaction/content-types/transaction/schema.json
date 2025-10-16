@@ -63,7 +63,10 @@
       "type": "media",
       "multiple": true,
       "required": false,
-      "allowedTypes": ["images", "files"]
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
     }
   }
 }

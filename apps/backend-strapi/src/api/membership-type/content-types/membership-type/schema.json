@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "membership_types",
+  "info": {
+    "singularName": "membership-type",
+    "pluralName": "membership-types",
+    "displayName": "Membership Type",
+    "description": "Types of membership roles within organizations (tag, bentlakó tag, szimpatizáns, etc.)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "maxLength": 255,
+      "required": true,
+      "unique": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "color": {
+      "type": "string",
+      "maxLength": 7
+    },
+    "memberships": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::membership.membership",
+      "mappedBy": "membership_type"
+    }
+  }
+}

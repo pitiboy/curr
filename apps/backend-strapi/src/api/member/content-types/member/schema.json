@@ -14,6 +14,7 @@
   "attributes": {
     "identifier": {
       "type": "uid",
+      "targetField": "name",
       "required": true
     },
     "name": {
@@ -25,17 +26,6 @@
       "type": "email",
       "required": true,
       "unique": true
-    },
-    "status": {
-      "type": "enumeration",
-      "required": true,
-      "default": "active",
-      "enum": [
-        "resident",
-        "active",
-        "supporting",
-        "sympathizer"
-      ]
     },
     "memberships": {
       "type": "relation",

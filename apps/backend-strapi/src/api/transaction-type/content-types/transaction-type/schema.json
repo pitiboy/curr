@@ -19,15 +19,7 @@
     },
     "category": {
       "type": "enumeration",
-      "enum": [
-        "income",
-        "expense",
-        "internal",
-        "transfer",
-        "deposit",
-        "fee",
-        "barter"
-      ],
+      "enum": ["actual", "future", "internal"],
       "required": true
     },
     "description": {

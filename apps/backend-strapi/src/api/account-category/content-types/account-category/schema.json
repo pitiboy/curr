@@ -19,7 +19,13 @@
     },
     "type": {
       "type": "enumeration",
-      "enum": ["revenue", "expense", "asset", "liability", "equity"],
+      "enum": [
+        "revenue",
+        "expense",
+        "asset",
+        "liability",
+        "equity"
+      ],
       "required": true
     },
     "description": {

@@ -491,6 +491,10 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
       'api::account-category.account-category'
     >;
     children: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
+    code: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 10;
+      }>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -699,7 +703,7 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
     email: Schema.Attribute.Email &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
-    identifier: Schema.Attribute.UID & Schema.Attribute.Required;
+    identifier: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -716,11 +720,50 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
         maxLength: 255;
       }>;
     publishedAt: Schema.Attribute.DateTime;
-    status: Schema.Attribute.Enumeration<
-      ['resident', 'active', 'supporting', 'sympathizer']
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiMembershipTypeMembershipType
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'membership_types';
+  info: {
+    description: 'Types of membership roles within organizations (tag, bentlak\u00F3 tag, szimpatiz\u00E1ns, etc.)';
+    displayName: 'Membership Type';
+    pluralName: 'membership-types';
+    singularName: 'membership-type';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    color: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 7;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::membership-type.membership-type'
     > &
+      Schema.Attribute.Private;
+    memberships: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::membership.membership'
+    >;
+    name: Schema.Attribute.String &
       Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'active'>;
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -742,7 +785,6 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    joined_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -750,26 +792,20 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     member: Schema.Attribute.Relation<'manyToOne', 'api::member.member'>;
+    membership_type: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::membership-type.membership-type'
+    >;
     organization: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
     >;
     publishedAt: Schema.Attribute.DateTime;
-    role: Schema.Attribute.Enumeration<
-      [
-        'tag',
-        'bentlak\u00F3_tag',
-        'szimpatiz\u00E1ns',
-        'gardener',
-        'coordinator',
-        'accountant',
-        'manager',
-      ]
-    > &
-      Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    valid_from: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    valid_to: Schema.Attribute.DateTime;
   };
 }
 
@@ -835,9 +871,7 @@ export interface ApiTransactionTypeTransactionType
     draftAndPublish: false;
   };
   attributes: {
-    category: Schema.Attribute.Enumeration<
-      ['income', 'expense', 'internal', 'transfer', 'deposit', 'fee', 'barter']
-    > &
+    category: Schema.Attribute.Enumeration<['actual', 'future', 'internal']> &
       Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1437,6 +1471,7 @@ declare module '@strapi/strapi' {
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;
       'api::member.member': ApiMemberMember;
+      'api::membership-type.membership-type': ApiMembershipTypeMembershipType;
       'api::membership.membership': ApiMembershipMembership;
       'api::organization.organization': ApiOrganizationOrganization;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;

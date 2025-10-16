@@ -12,7 +12,15 @@
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
-    "upgrade:dry": "npx @strapi/upgrade latest --dry"
+    "upgrade:dry": "npx @strapi/upgrade latest --dry",
+    "_preseed": "pnpm build",
+    "seed": "node scripts/seed-database.js",
+    "seed:help": "node scripts/seed-database.js --help",
+    "seed:basic": "node scripts/seed-database.js --name \"Zöld források szövetkezet @Szupatak\" --level 0",
+    "seed:full": "node scripts/seed-database.js --name \"Zöld források szövetkezet @Szupatak\" --level 1 --accounts",
+    "cleanup:orgs": "node scripts/cleanup-database.js --confirm",
+    "cleanup:dry": "node scripts/cleanup-database.js --dry-run",
+    "cleanup:help": "node scripts/cleanup-database.js --help"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.27.0",
