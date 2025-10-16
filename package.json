@@ -9,10 +9,16 @@
     "dev": "pnpm strapi:dev",
     "strapi:dev": "npx nx serve backend-strapi",
     "strapi:build": "npx nx build backend-strapi",
-    "strapi:start": "npx nx start backend-strapi"
+    "strapi:start": "npx nx start backend-strapi",
+    "deploy": "node deploy-strapi.js",
+    "build": "node deploy-strapi.js",
+    "start": "cd apps/backend-strapi && npm start",
+    "develop": "cd apps/backend-strapi && npm run develop"
   },
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "@strapi/strapi": "5.27.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@nx/eslint": "21.6.4",
