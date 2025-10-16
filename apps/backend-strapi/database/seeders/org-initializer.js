@@ -72,19 +72,47 @@ async function createChildOrganizations(strapi, parentOrgId, level) {
   console.log(`🏢 Creating child organizations (level ${level})...`);
 
   const childOrganizations = getChildOrganizationsByLevel(level);
+  let totalCreated = 0;
 
   for (const childOrg of childOrganizations) {
-    await strapi.entityService.create('api::organization.organization', {
-      data: {
-        name: childOrg.name,
-        description: childOrg.description || '',
-        address: '',
-        parent: parentOrgId,
-      },
-    });
+    totalCreated += await createOrganizationRecursively(
+      strapi,
+      childOrg,
+      parentOrgId
+    );
   }
 
-  console.log(`✅ Created ${childOrganizations.length} child organizations`);
+  console.log(`✅ Created ${totalCreated} child organizations`);
+}
+
+async function createOrganizationRecursively(strapi, orgData, parentId) {
+  // Create the current organization
+  const createdOrg = await strapi.entityService.create(
+    'api::organization.organization',
+    {
+      data: {
+        name: orgData.name,
+        description: orgData.description || '',
+        address: '',
+        parent: parentId,
+      },
+    }
+  );
+
+  let count = 1; // Count this organization
+
+  // Create children recursively if they exist
+  if (orgData.children && orgData.children.length > 0) {
+    for (const child of orgData.children) {
+      count += await createOrganizationRecursively(
+        strapi,
+        child,
+        createdOrg.id
+      );
+    }
+  }
+
+  return count;
 }
 
 /**
@@ -92,112 +120,162 @@ async function createChildOrganizations(strapi, parentOrgId, level) {
  * @param {number} level - The level of the child organizations
  * @returns {Array} - The child organizations
  * Child Organizations:
-0. Vezetés 
-0.1 Alapító(k)
-0.19 KÜLKAPCSOLATI IGAZGATÁS
-0.20 OPERATÍV VEZETÉS
-1. Kommunikációs Központ
-1.1. IRÁNYÍTÁS ÉS SZEMÉLYZETI KÖZPONT
-1.2. KOMMUNIKÁCIÓS KÖZPONT
-1.2.2 KIMENŐ KOMMUNIKÁCIÓS KÖZPONT
-1.2.3 BELSŐ KOMMUNIKÁCIÓS KÖZPONT
-1.3 VIZSGÁLATOK ÉS JELENTÉSEK
-2. Marketing Központ
-2.4 PROMÓCIÓ ÉS MARKETING IGAZGATÓSÁG
-2.5 KIADVÁNYOK
-2.6. REGISZTRÁCIÓS KÖZPONT
-3. Pénzügyi Központ
-3.7 BEVÉTELI KÖZPONT
-3.8 KIFIZETÉSI KÖZPONT
-3.9 NYILVÁNTARTÁSOK, VAGYONTÁRGYAK
-4. Termelési Központ
-4.10 TERVEZÉSI KÖZPONT
-4.11 TERÜLET KIALAKÍTÁS
-4.12 TERMELÉS IRÁNYÍTÁS
-4.12.1 MEZŐ- ÉS ERDŐGAZDÁLKODÁS
-5. Minőségfelügyeleti Központ
-5.13 ÉRVÉNYESÍTÉS
-5.14 MUNKATÁRS FEJLESZTÉS
-5.15 KORREKCIÓS KÖZPONT
-6. Terjesztési Központ
-6.16 KAPCSOLATFELVÉTEL
-6.17 TERÜLETI TÁMOGATÁS
-6.18 TERÜLETEK FELÜGYELETE
  */
 function getChildOrganizationsByLevel(level) {
-  const allChildOrgs = [
+  const hierarchicalOrgs = level > 0 && [
     // Level 0 - Vezetés
-    { name: 'Vezetés', description: 'Fővezetés és irányítás' },
-    { name: 'Alapító(k)', description: 'Alapítók és tulajdonosok' },
     {
-      name: 'KÜLKAPCSOLATI IGAZGATÁS',
-      description: 'Külső kapcsolatok kezelése',
+      name: 'I/0. Vezetés',
+      description: 'Fővezetés és irányítás',
+      children: level > 1 && [
+        {
+          name: 'I/0.1 Alapító(k)',
+          description: 'Alapítók és tulajdonosok',
+        },
+        {
+          name: 'I/0.19 Külső kapcsolati igazgatás',
+          description: 'Külső kapcsolatok kezelése',
+        },
+        {
+          name: 'I/0.20 Operatív vezetés',
+          description: 'Napi működés irányítása',
+        },
+      ],
     },
-    { name: 'OPERATÍV VEZETÉS', description: 'Napi működés irányítása' },
 
     // Level 1 - Központok
     {
-      name: 'Kommunikációs Központ',
+      name: 'I/1. Kommunikációs Igazgatóság',
       description: 'Kommunikáció és kapcsolattartás',
+      children: level > 1 && [
+        {
+          name: 'I/1.1 Irányítás és személyzeti központ',
+          description: 'Személyzeti ügyek',
+        },
+        {
+          name: 'I/1.2 Kommunikációs központ',
+          description: 'Kommunikációs feladatok',
+          children: level > 2 && [
+            {
+              name: 'I/1.2.2 Kimenő kommunikációs központ',
+              description: 'Külső kommunikáció',
+            },
+            {
+              name: 'I/1.2.3 Belső kommunikációs központ',
+              description: 'Belső kommunikáció',
+            },
+          ],
+        },
+        {
+          name: 'I/1.3 Vizsgálatok és jelentések',
+          description: 'Elemzések és jelentések',
+        },
+      ],
     },
-    { name: 'Marketing Központ', description: 'Marketing és promóció' },
-    { name: 'Pénzügyi Központ', description: 'Pénzügyi ügyek kezelése' },
-    { name: 'Termelési Központ', description: 'Termelés irányítása' },
+
     {
-      name: 'Minőségfelügyeleti Központ',
+      name: 'I/2. Marketing Igazgatóság',
+      description: 'Marketing és promóció',
+      children: level > 1 && [
+        {
+          name: 'I/2.4 Promóció és marketing igazgatóság',
+          description: 'Marketing stratégiák',
+        },
+        {
+          name: 'I/2.5 Kiadványok',
+          description: 'Kiadói tevékenység',
+        },
+        {
+          name: 'I/2.6 Regisztrációs központ',
+          description: 'Regisztrációs feladatok',
+        },
+      ],
+    },
+
+    {
+      name: 'I/3. Pénzügyi Igazgatóság',
+      description: 'Pénzügyi ügyek kezelése',
+      children: level > 1 && [
+        {
+          name: 'I/3.7 Bevételi központ',
+          description: 'Bevételek kezelése',
+        },
+        {
+          name: 'I/3.8 Kifizetési központ',
+          description: 'Kifizetések kezelése',
+        },
+        {
+          name: 'I/3.9 Nyilvántartások, vagyontárgyak',
+          description: 'Vagyonkezelés',
+        },
+      ],
+    },
+
+    {
+      name: 'I/4. Termelési Igazgatóság',
+      description: 'Termelés irányítása',
+      children: level > 1 && [
+        {
+          name: 'I/4.10 Tervezési központ',
+          description: 'Tervezési feladatok',
+        },
+        {
+          name: 'I/4.11 Terület kialakítás',
+          description: 'Területfejlesztés',
+        },
+        {
+          name: 'I/4.12 Termelés irányítása',
+          description: 'Termelésirányítás',
+          children: level > 2 && [
+            {
+              name: 'I/4.12.1 Mező- és erdőgazdálkodás',
+              description: 'Mezőgazdasági és erdészeti tevékenység',
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      name: 'I/5. Minőségfelügyeleti Igazgatóság',
       description: 'Minőség és ellenőrzés',
+      children: level > 1 && [
+        {
+          name: 'I/5.13 Érvényesítés',
+          description: 'Érvényesítési feladatok',
+        },
+        {
+          name: 'I/5.14 Munkatárs fejlesztés',
+          description: 'Személyzetfejlesztés',
+        },
+        {
+          name: 'I/5.15 Korrekciós központ',
+          description: 'Hibaelhárítás',
+        },
+      ],
     },
-    { name: 'Terjesztési Központ', description: 'Terjesztés és logisztika' },
 
-    // Level 2 - Részlegek
     {
-      name: 'IRÁNYÍTÁS ÉS SZEMÉLYZETI KÖZPONT',
-      description: 'Személyzeti ügyek',
-    },
-    { name: 'KOMMUNIKÁCIÓS KÖZPONT', description: 'Kommunikációs feladatok' },
-    { name: 'KIMENŐ KOMMUNIKÁCIÓS KÖZPONT', description: 'Külső kommunikáció' },
-    { name: 'BELSŐ KOMMUNIKÁCIÓS KÖZPONT', description: 'Belső kommunikáció' },
-    {
-      name: 'VIZSGÁLATOK ÉS JELENTÉSEK',
-      description: 'Elemzések és jelentések',
-    },
-    {
-      name: 'PROMÓCIÓ ÉS MARKETING IGAZGATÓSÁG',
-      description: 'Marketing stratégiák',
-    },
-    { name: 'KIADVÁNYOK', description: 'Kiadói tevékenység' },
-    { name: 'REGISZTRÁCIÓS KÖZPONT', description: 'Regisztrációs feladatok' },
-    { name: 'BEVÉTELI KÖZPONT', description: 'Bevételek kezelése' },
-    { name: 'KIFIZETÉSI KÖZPONT', description: 'Kifizetések kezelése' },
-    { name: 'NYILVÁNTARTÁSOK, VAGYONTÁRGYAK', description: 'Vagyonkezelés' },
-    { name: 'TERVEZÉSI KÖZPONT', description: 'Tervezési feladatok' },
-    { name: 'TERÜLET KIALAKÍTÁS', description: 'Területfejlesztés' },
-    { name: 'TERMELÉS IRÁNYÍTÁS', description: 'Termelésirányítás' },
-    { name: 'ÉRVÉNYESÍTÉS', description: 'Érvényesítési feladatok' },
-    { name: 'MUNKATÁRS FEJLESZTÉS', description: 'Személyzetfejlesztés' },
-    { name: 'KORREKCIÓS KÖZPONT', description: 'Hibaelhárítás' },
-    { name: 'KAPCSOLATFELVÉTEL', description: 'Új kapcsolatok építése' },
-    { name: 'TERÜLETI TÁMOGATÁS', description: 'Területi támogatás' },
-    { name: 'TERÜLETEK FELÜGYELETE', description: 'Területfelügyelet' },
-
-    // Level 3 - Részletes részlegek
-    {
-      name: 'MEZŐ- ÉS ERDŐGAZDÁLKODÁS',
-      description: 'Mezőgazdasági és erdészeti tevékenység',
+      name: 'I/6. Terjesztési Igazgatóság',
+      description: 'Terjesztés és logisztika',
+      children: level > 1 && [
+        {
+          name: 'I/6.16 Kapcsolatfelvétel',
+          description: 'Új kapcsolatok építése',
+        },
+        {
+          name: 'I/6.17 Területi támogatás',
+          description: 'Területi támogatás',
+        },
+        {
+          name: 'I/6.18 Területek felügyelete',
+          description: 'Területfelügyelet',
+        },
+      ],
     },
   ];
 
-  // Return organizations based on level
-  switch (level) {
-    case 1:
-      return allChildOrgs.slice(0, 4); // Vezetés level
-    case 2:
-      return allChildOrgs.slice(0, 10); // Vezetés + Központok
-    case 3:
-      return allChildOrgs; // All levels
-    default:
-      return [];
-  }
+  return hierarchicalOrgs;
 }
 
 async function seedOrganizationAccounts(strapi, organizationId) {
