@@ -293,17 +293,53 @@ async function seedOrganizationAccounts(strapi, organizationId) {
 
   const accounts = [
     // 1000s: Assets
-    { name: 'Készpénz', code: '1000', category: categoryMap.asset },
-    { name: 'Bankszámlák', code: '1100', category: categoryMap.asset },
-    { name: 'Követelések', code: '1200', category: categoryMap.asset },
-    { name: 'Készletek', code: '1300', category: categoryMap.asset },
-    { name: 'Előlegek', code: '1400', category: categoryMap.asset },
-    { name: 'Tárgyi eszközök', code: '1500', category: categoryMap.asset },
-    { name: 'Immateriális javak', code: '1600', category: categoryMap.asset },
+    {
+      name: 'Készpénz',
+      code: '1000',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Bankszámlák',
+      code: '1100',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Követelések',
+      code: '1200',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Készletek',
+      code: '1300',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/4. Termelési Igazgatóság',
+    },
+    {
+      name: 'Előlegek',
+      code: '1400',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/6. Terjesztési Igazgatóság',
+    },
+    {
+      name: 'Tárgyi eszközök',
+      code: '1500',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/4. Termelési Igazgatóság',
+    },
+    {
+      name: 'Immateriális javak',
+      code: '1600',
+      category: categoryMap.asset,
+      childOrganizationToLink: 'I/4. Termelési Igazgatóság',
+    },
     {
       name: 'Pénzügyi befektetések',
       code: '1700',
       category: categoryMap.asset,
+      childOrganizationToLink: 'I/4. Termelési Igazgatóság',
     },
 
     // 2000s: Liabilities
@@ -311,74 +347,190 @@ async function seedOrganizationAccounts(strapi, organizationId) {
       name: 'Szállítói tartozások',
       code: '2000',
       category: categoryMap.liability,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
     },
     {
       name: 'Rövid lejáratú kötelezettségek',
       code: '2100',
       category: categoryMap.liability,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
     },
     {
       name: 'Hosszú lejáratú kötelezettségek',
       code: '2200',
       category: categoryMap.liability,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
     },
-    { name: 'Adótartozások', code: '2300', category: categoryMap.liability },
-    { name: 'Bértartozások', code: '2400', category: categoryMap.liability },
-    { name: 'Egyéb tartozások', code: '2500', category: categoryMap.liability },
+    {
+      name: 'Adótartozások',
+      code: '2300',
+      category: categoryMap.liability,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Bértartozások',
+      code: '2400',
+      category: categoryMap.liability,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Egyéb tartozások',
+      code: '2500',
+      category: categoryMap.liability,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
 
     // 3000s: Equity
-    { name: 'Alaptőke', code: '3000', category: categoryMap.equity },
-    { name: 'Tartalékok', code: '3100', category: categoryMap.equity },
-    { name: 'Eredménytartalék', code: '3200', category: categoryMap.equity },
-    { name: 'Tárgyévi eredmény', code: '3300', category: categoryMap.equity },
+    {
+      name: 'Alaptőke',
+      code: '3000',
+      category: categoryMap.equity,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Tartalékok',
+      code: '3100',
+      category: categoryMap.equity,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Eredménytartalék',
+      code: '3200',
+      category: categoryMap.equity,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Tárgyévi eredmény',
+      code: '3300',
+      category: categoryMap.equity,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
 
     // 4000s: Revenue
     {
       name: 'Értékesítés bevétele',
       code: '4000',
       category: categoryMap.revenue,
+      childOrganizationToLink: 'I/2. Marketing Igazgatóság',
     },
     {
       name: 'Szolgáltatás bevétele',
       code: '4100',
       category: categoryMap.revenue,
+      childOrganizationToLink: 'I/2. Marketing Igazgatóság',
     },
-    { name: 'Egyéb bevételek', code: '4200', category: categoryMap.revenue },
-    { name: 'Pénzügyi bevételek', code: '4300', category: categoryMap.revenue },
+    {
+      name: 'Egyéb bevételek',
+      code: '4200',
+      category: categoryMap.revenue,
+      childOrganizationToLink: 'I/1. Kommunikációs Igazgatóság',
+    },
+    {
+      name: 'Pénzügyi bevételek',
+      code: '4300',
+      category: categoryMap.revenue,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
 
     // 5000s: Expenses
-    { name: 'Anyagköltség', code: '5000', category: categoryMap.expense },
-    { name: 'Bérköltség', code: '5100', category: categoryMap.expense },
+    {
+      name: 'Anyagköltség',
+      code: '5000',
+      category: categoryMap.expense,
+      childOrganizationToLink: 'I/4. Termelési Igazgatóság',
+    },
+    {
+      name: 'Bérköltség',
+      code: '5100',
+      category: categoryMap.expense,
+      childOrganizationToLink: 'I/1.1 Irányítás és személyzeti központ',
+    },
     {
       name: 'Társadalombiztosítási költség',
       code: '5200',
       category: categoryMap.expense,
+      childOrganizationToLink: 'I/1.1 Irányítás és személyzeti központ',
     },
-    { name: 'Értékcsökkenés', code: '5300', category: categoryMap.expense },
-    { name: 'Szolgáltatások', code: '5400', category: categoryMap.expense },
+    {
+      name: 'Értékcsökkenés',
+      code: '5300',
+      category: categoryMap.expense,
+      childOrganizationToLink: 'I/5. Minőségfelügyeleti Igazgatóság',
+    },
+    {
+      name: 'Szolgáltatások',
+      code: '5400',
+      category: categoryMap.expense,
+      childOrganizationToLink: 'I/1. Kommunikációs Igazgatóság',
+    },
     {
       name: 'Általános költségek',
       code: '5500',
       category: categoryMap.expense,
+      childOrganizationToLink: 'I/0. Vezetés',
     },
     {
       name: 'Értékesítési költségek',
       code: '5600',
       category: categoryMap.expense,
+      childOrganizationToLink: 'I/2. Marketing Igazgatóság',
     },
-    { name: 'Pénzügyi költségek', code: '5700', category: categoryMap.expense },
-    { name: 'Egyéb költségek', code: '5800', category: categoryMap.expense },
+    {
+      name: 'Pénzügyi költségek',
+      code: '5700',
+      category: categoryMap.expense,
+      childOrganizationToLink: 'I/3. Pénzügyi Igazgatóság',
+    },
+    {
+      name: 'Egyéb költségek',
+      code: '5800',
+      category: categoryMap.expense,
+      childOrganizationToLink: 'I/0. Vezetés',
+    },
   ];
 
+  // Create accounts with hardcoded organization mapping
   for (const account of accounts) {
+    const mappedOrgId = await findOrganizationByName(
+      strapi,
+      account.childOrganizationToLink,
+      organizationId
+    );
+
     await strapi.entityService.create('api::account.account', {
       data: {
-        ...account,
-        organization: organizationId,
+        name: account.name,
+        code: account.code,
+        category: account.category,
+        organization: mappedOrgId,
         description: `${account.name} számla`,
       },
     });
   }
 
-  console.log(`✅ Created ${accounts.length} accounts for organization`);
+  console.log(
+    `✅ Created ${accounts.length} accounts with hardcoded organization mapping`
+  );
+}
+
+async function findOrganizationByName(strapi, targetOrgName, defaultOrgId) {
+  if (!targetOrgName) {
+    return defaultOrgId;
+  }
+
+  // Find the organization by name
+  const organizations = await strapi.entityService.findMany(
+    'api::organization.organization',
+    {
+      filters: { name: targetOrgName },
+      limit: 1,
+    }
+  );
+
+  if (organizations.length > 0) {
+    return organizations[0].id;
+  } else {
+    console.log(`⚠️  Organization "${targetOrgName}" not found, using default`);
+    return defaultOrgId;
+  }
 }
