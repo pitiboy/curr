@@ -104,6 +104,9 @@ async function runSeeder() {
 
     console.log('✅ Organization initialization completed successfully!');
 
+    // Give a moment for pending operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Close the app
     await app.destroy();
     process.exit(0);
