@@ -33,10 +33,11 @@
       "target": "api::membership.membership",
       "mappedBy": "member"
     },
-    "accounts": {
+    "account": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::account.account"
+      "relation": "oneToOne",
+      "target": "api::account.account",
+      "configurable": false
     }
   }
 }

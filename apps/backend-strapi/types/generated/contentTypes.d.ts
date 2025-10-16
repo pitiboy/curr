@@ -696,7 +696,7 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    accounts: Schema.Attribute.Relation<'oneToMany', 'api::account.account'>;
+    account: Schema.Attribute.Relation<'oneToOne', 'api::account.account'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
