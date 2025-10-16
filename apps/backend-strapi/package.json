@@ -17,7 +17,10 @@
     "seed": "node scripts/seed-database.js",
     "seed:help": "node scripts/seed-database.js --help",
     "seed:basic": "node scripts/seed-database.js --name \"Zöld források szövetkezet @Szupatak\" --level 0",
-    "seed:full": "node scripts/seed-database.js --name \"SDFDF\" --level 3 --accounts"
+    "seed:full": "node scripts/seed-database.js --name \"SDFDF\" --level 3 --accounts",
+    "cleanup:orgs": "node scripts/cleanup-database.js --confirm",
+    "cleanup:dry": "node scripts/cleanup-database.js --dry-run",
+    "cleanup:help": "node scripts/cleanup-database.js --help"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.27.0",
