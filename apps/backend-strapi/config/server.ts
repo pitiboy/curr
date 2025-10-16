@@ -4,4 +4,12 @@ export default ({ env }) => ({
   app: {
     keys: env.array('APP_KEYS'),
   },
+  logger: {
+    level: 'debug',
+    exposeInContext: true,
+    transport: {
+      target: 'pino-pretty',
+      options: { colorize: true },
+    },
+  },
 });
