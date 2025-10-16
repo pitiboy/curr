@@ -12,14 +12,20 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "identifier": {
-      "type": "uid",
-      "targetField": "name",
-      "required": true
+    "account": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::account.account",
+      "configurable": false
     },
     "name": {
       "type": "string",
       "maxLength": 255,
+      "required": true
+    },
+    "identifier": {
+      "type": "uid",
+      "targetField": "name",
       "required": true
     },
     "email": {
@@ -32,12 +38,6 @@
       "relation": "oneToMany",
       "target": "api::membership.membership",
       "mappedBy": "member"
-    },
-    "account": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::account.account",
-      "configurable": false
     }
   }
 }
