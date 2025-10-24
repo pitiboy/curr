@@ -18,14 +18,15 @@
       "target": "api::account.account",
       "configurable": false
     },
-    "name": {
-      "type": "string",
-      "maxLength": 255,
-      "required": true
-    },
     "identifier": {
       "type": "uid",
       "targetField": "name",
+      "required": true,
+      "regex": "[a-z0-9\\-\\.]+"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 255,
       "required": true
     },
     "email": {
