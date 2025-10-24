@@ -7,6 +7,7 @@
     "build": "strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
+    "_predev": "pnpm build",
     "dev": "strapi develop",
     "develop": "strapi develop",
     "start": "strapi start",
