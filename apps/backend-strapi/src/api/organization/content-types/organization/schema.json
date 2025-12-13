@@ -14,8 +14,8 @@
   "attributes": {
     "name": {
       "type": "string",
-      "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "required": true
     },
     "description": {
       "type": "text"
@@ -45,6 +45,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::account.account",
+      "mappedBy": "organization"
+    },
+    "receipts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::receipt.receipt",
       "mappedBy": "organization"
     }
   }

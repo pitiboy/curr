@@ -852,9 +852,52 @@ export interface ApiOrganizationOrganization
       'api::organization.organization'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
+  collectionName: 'receipts';
+  info: {
+    displayName: 'Receipt';
+    pluralName: 'receipts';
+    singularName: 'receipt';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    amount: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    description: Schema.Attribute.Text & Schema.Attribute.Required;
+    document: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'> &
+      Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::receipt.receipt'
+    > &
+      Schema.Attribute.Private;
+    organization: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::organization.organization'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    reference: Schema.Attribute.UID;
+    transactions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vendor: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -936,7 +979,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    receipt: Schema.Attribute.Media<'images' | 'files', true>;
+    receipt: Schema.Attribute.Relation<'manyToOne', 'api::receipt.receipt'>;
     related_transaction: Schema.Attribute.Relation<
       'manyToOne',
       'api::transaction.transaction'
@@ -1474,6 +1517,7 @@ declare module '@strapi/strapi' {
       'api::membership-type.membership-type': ApiMembershipTypeMembershipType;
       'api::membership.membership': ApiMembershipMembership;
       'api::organization.organization': ApiOrganizationOrganization;
+      'api::receipt.receipt': ApiReceiptReceipt;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
       'api::transaction.transaction': ApiTransactionTransaction;
       'plugin::content-releases.release': PluginContentReleasesRelease;

@@ -60,10 +60,10 @@
       "mappedBy": "related_transaction"
     },
     "receipt": {
-      "type": "media",
-      "multiple": true,
-      "required": false,
-      "allowedTypes": ["images", "files"]
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::receipt.receipt",
+      "inversedBy": "transactions"
     }
   }
 }
