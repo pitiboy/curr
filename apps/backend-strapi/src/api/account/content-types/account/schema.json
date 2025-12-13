@@ -14,51 +14,87 @@
   "attributes": {
     "code": {
       "type": "string",
-      "maxLength": 10
+      "maxLength": 10,
+      "metadatas": {
+        "label": "Kód",
+        "description": "A számla rövid kódja"
+      }
     },
     "name": {
       "type": "string",
       "maxLength": 255,
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Név",
+        "description": "A számla neve"
+      }
     },
     "category": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account-category.account-category",
-      "inversedBy": "accounts"
+      "inversedBy": "accounts",
+      "metadatas": {
+        "label": "Kategória",
+        "description": "A számla kategóriája"
+      }
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A számla részletes leírása"
+      }
     },
     "organization": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::organization.organization",
-      "inversedBy": "accounts"
+      "inversedBy": "accounts",
+      "metadatas": {
+        "label": "Szervezet",
+        "description": "A számlához tartozó szervezet"
+      }
     },
     "parent": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
-      "inversedBy": "children"
+      "inversedBy": "children",
+      "metadatas": {
+        "label": "Szülő számla",
+        "description": "A számla szülő számlája (ha van)"
+      }
     },
     "children": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::account.account",
-      "mappedBy": "parent"
+      "mappedBy": "parent",
+      "metadatas": {
+        "label": "Alárendelt számlák",
+        "description": "A számla alárendelt számlái"
+      }
     },
     "debit_transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "debit_account"
+      "mappedBy": "debit_account",
+      "metadatas": {
+        "label": "Tartozik tranzakciók",
+        "description": "A számlára tartozikként rögzített tranzakciók"
+      }
     },
     "credit_transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "credit_account"
+      "mappedBy": "credit_account",
+      "metadatas": {
+        "label": "Követel tranzakciók",
+        "description": "A számlára követelként rögzített tranzakciók"
+      }
     }
   }
 }

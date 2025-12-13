@@ -15,43 +15,75 @@
     "name": {
       "type": "string",
       "maxLength": 255,
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Név",
+        "description": "A szervezet neve"
+      }
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A szervezet részletes leírása"
+      }
     },
     "address": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Cím",
+        "description": "A szervezet címe"
+      }
     },
     "memberships": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::membership.membership",
-      "mappedBy": "organization"
+      "mappedBy": "organization",
+      "metadatas": {
+        "label": "Tagságok",
+        "description": "A szervezethez tartozó tagságok"
+      }
     },
     "parent": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::organization.organization",
-      "inversedBy": "children"
+      "inversedBy": "children",
+      "metadatas": {
+        "label": "Szülő szervezet",
+        "description": "A szervezet szülő szervezete (ha van)"
+      }
     },
     "children": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::organization.organization",
-      "mappedBy": "parent"
+      "mappedBy": "parent",
+      "metadatas": {
+        "label": "Alárendelt szervezetek",
+        "description": "A szervezet alárendelt szervezetei"
+      }
     },
     "accounts": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::account.account",
-      "mappedBy": "organization"
+      "mappedBy": "organization",
+      "metadatas": {
+        "label": "Számlák",
+        "description": "A szervezethez tartozó számlák"
+      }
     },
     "receipts": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::receipt.receipt",
-      "mappedBy": "organization"
+      "mappedBy": "organization",
+      "metadatas": {
+        "label": "Nyugták",
+        "description": "A szervezethez tartozó nyugták"
+      }
     }
   }
 }

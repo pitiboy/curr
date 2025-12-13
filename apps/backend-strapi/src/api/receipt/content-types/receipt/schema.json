@@ -12,46 +12,73 @@
   "pluginOptions": {},
   "attributes": {
     "reference": {
-      "type": "uid"
+      "type": "uid",
+      "metadatas": {
+        "label": "Referencia",
+        "description": "A nyugta egyedi azonosítója"
+      }
     },
     "date": {
       "type": "datetime",
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Dátum",
+        "description": "A nyugta dátuma"
+      }
     },
     "amount": {
       "type": "decimal",
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Összeg",
+        "description": "A nyugta összege"
+      }
     },
     "description": {
       "type": "text",
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A nyugta leírása"
+      }
     },
     "vendor": {
       "type": "string",
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Eladó",
+        "description": "Az eladó vagy szolgáltató neve"
+      }
     },
     "organization": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::organization.organization",
-      "inversedBy": "receipts"
+      "inversedBy": "receipts",
+      "metadatas": {
+        "label": "Szervezet",
+        "description": "A nyugtához tartozó szervezet"
+      }
     },
     "document": {
       "type": "media",
       "multiple": false,
       "required": true,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+      "allowedTypes": ["images", "files", "videos", "audios"],
+      "metadatas": {
+        "label": "Dokumentum",
+        "description": "A nyugta dokumentuma (kép, PDF, stb.)"
+      }
     },
     "transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "receipt"
+      "mappedBy": "receipt",
+      "metadatas": {
+        "label": "Tranzakciók",
+        "description": "A nyugtához tartozó tranzakciók"
+      }
     }
   }
 }

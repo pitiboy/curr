@@ -15,30 +15,54 @@
     "name": {
       "type": "string",
       "required": true,
-      "maxLength": 100
+      "maxLength": 100,
+      "metadatas": {
+        "label": "Név",
+        "description": "A pénznem kategória neve (pl. Készpénz, Munkaerő, Erőforrások)"
+      }
     },
     "code": {
       "type": "uid",
       "required": true,
       "unique": true,
-      "maxLength": 20
+      "maxLength": 20,
+      "metadatas": {
+        "label": "Kód",
+        "description": "A pénznem kategória egyedi kódja"
+      }
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A pénznem kategória részletes leírása"
+      }
     },
     "icon": {
       "type": "string",
-      "maxLength": 50
+      "maxLength": 50,
+      "metadatas": {
+        "label": "Ikon",
+        "description": "A kategória ikonja (emoji vagy ikon neve)"
+      }
     },
     "color": {
       "type": "string",
-      "maxLength": 7
+      "maxLength": 7,
+      "metadatas": {
+        "label": "Szín",
+        "description": "A kategória színe (hex kód, pl. #FF0000)"
+      }
     },
     "currency_types": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::currency-type.currency-type",
-      "mappedBy": "category"
+      "mappedBy": "category",
+      "metadatas": {
+        "label": "Pénznem típusok",
+        "description": "Az ehhez a kategóriához tartozó pénznem típusok"
+      }
     }
   }
 }

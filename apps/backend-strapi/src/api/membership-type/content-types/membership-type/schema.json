@@ -16,20 +16,36 @@
       "type": "string",
       "maxLength": 255,
       "required": true,
-      "unique": true
+      "unique": true,
+      "metadatas": {
+        "label": "Név",
+        "description": "A tagság típus neve (pl. tag, bentlakó tag, szimpatizáns)"
+      }
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A tagság típus részletes leírása"
+      }
     },
     "color": {
       "type": "string",
-      "maxLength": 7
+      "maxLength": 7,
+      "metadatas": {
+        "label": "Szín",
+        "description": "A tagság típus színe (hex kód, pl. #FF0000)"
+      }
     },
     "memberships": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::membership.membership",
-      "mappedBy": "membership_type"
+      "mappedBy": "membership_type",
+      "metadatas": {
+        "label": "Tagságok",
+        "description": "Az ehhez a típushoz tartozó tagságok"
+      }
     }
   }
 }

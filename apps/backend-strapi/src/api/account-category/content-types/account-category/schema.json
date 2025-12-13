@@ -15,31 +15,45 @@
     "name": {
       "type": "string",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Név",
+        "description": "A számla kategória neve"
+      }
     },
     "type": {
       "type": "enumeration",
-      "enum": [
-        "revenue",
-        "expense",
-        "asset",
-        "liability",
-        "equity"
-      ],
-      "required": true
+      "enum": ["revenue", "expense", "asset", "liability", "equity"],
+      "required": true,
+      "metadatas": {
+        "label": "Típus",
+        "description": "A számla kategória típusa (bevétel, kiadás, eszköz, kötelezettség, tőke)"
+      }
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A számla kategória részletes leírása"
+      }
     },
     "color": {
       "type": "string",
-      "maxLength": 7
+      "maxLength": 7,
+      "metadatas": {
+        "label": "Szín",
+        "description": "A kategória színe (hex kód, pl. #FF0000)"
+      }
     },
     "accounts": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::account.account",
-      "mappedBy": "category"
+      "mappedBy": "category",
+      "metadatas": {
+        "label": "Számlák",
+        "description": "Az ehhez a kategóriához tartozó számlák"
+      }
     }
   }
 }

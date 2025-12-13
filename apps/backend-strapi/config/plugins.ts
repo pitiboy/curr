@@ -22,4 +22,7 @@ export default ({ env }) => ({
       },
     },
   },
+  'strapi-schema-extender': {
+    enabled: true,
+  },
 });

@@ -16,41 +16,69 @@
       "type": "string",
       "required": true,
       "unique": true,
-      "maxLength": 10
+      "maxLength": 10,
+      "metadatas": {
+        "label": "Kód",
+        "description": "A pénznem típus kódja (pl. HUF, EUR, HOUR)"
+      }
     },
     "name": {
       "type": "string",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Név",
+        "description": "A pénznem típus neve (pl. Magyar Forint, Euro, Munkaóra)"
+      }
     },
     "category": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::currency-category.currency-category",
-      "inversedBy": "currency_types"
+      "inversedBy": "currency_types",
+      "metadatas": {
+        "label": "Kategória",
+        "description": "A pénznem típus kategóriája"
+      }
     },
     "unit": {
       "type": "string",
       "required": true,
-      "maxLength": 50
+      "maxLength": 50,
+      "metadatas": {
+        "label": "Mértékegység",
+        "description": "A pénznem mértékegysége (pl. Ft, €, óra)"
+      }
     },
     "transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "currency_type"
+      "mappedBy": "currency_type",
+      "metadatas": {
+        "label": "Tranzakciók",
+        "description": "Az ezzel a pénznemmel rögzített tranzakciók"
+      }
     },
     "exchange_rates_from": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::currency-rate.currency-rate",
-      "mappedBy": "from_currency_type"
+      "mappedBy": "from_currency_type",
+      "metadatas": {
+        "label": "Árfolyamok (forrás)",
+        "description": "Azok az árfolyamok, ahol ez a pénznem a forrás"
+      }
     },
     "exchange_rates_to": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::currency-rate.currency-rate",
-      "mappedBy": "to_currency_type"
+      "mappedBy": "to_currency_type",
+      "metadatas": {
+        "label": "Árfolyamok (cél)",
+        "description": "Azok az árfolyamok, ahol ez a pénznem a cél"
+      }
     }
   }
 }

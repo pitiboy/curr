@@ -15,21 +15,37 @@
     "name": {
       "type": "string",
       "required": true,
-      "maxLength": 255
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Név",
+        "description": "A tranzakció típus neve"
+      }
     },
     "category": {
       "type": "enumeration",
       "enum": ["actual", "future", "internal"],
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Kategória",
+        "description": "A tranzakció kategóriája (tényleges, jövőbeli, belső)"
+      }
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "metadatas": {
+        "label": "Leírás",
+        "description": "Részletes leírás a tranzakció típusáról"
+      }
     },
     "transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "transaction_type"
+      "mappedBy": "transaction_type",
+      "metadatas": {
+        "label": "Tranzakciók",
+        "description": "Az ehhez a típushoz tartozó tranzakciók"
+      }
     }
   }
 }

@@ -16,26 +16,46 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::organization.organization",
-      "inversedBy": "memberships"
+      "inversedBy": "memberships",
+      "metadatas": {
+        "label": "Szervezet",
+        "description": "A tagsághoz tartozó szervezet"
+      }
     },
     "member": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::member.member",
-      "inversedBy": "memberships"
+      "inversedBy": "memberships",
+      "metadatas": {
+        "label": "Tag",
+        "description": "A tagsághoz tartozó tag"
+      }
     },
     "membership_type": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::membership-type.membership-type",
-      "inversedBy": "memberships"
+      "inversedBy": "memberships",
+      "metadatas": {
+        "label": "Tagság típus",
+        "description": "A tagság típusa (pl. tag, bentlakó tag, szimpatizáns)"
+      }
     },
     "valid_from": {
       "type": "datetime",
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Érvényesség kezdete",
+        "description": "A tagság érvényességének kezdő dátuma"
+      }
     },
     "valid_to": {
-      "type": "datetime"
+      "type": "datetime",
+      "metadatas": {
+        "label": "Érvényesség vége",
+        "description": "A tagság érvényességének vége (opcionális)"
+      }
     }
   }
 }

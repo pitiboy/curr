@@ -16,26 +16,46 @@
       "type": "decimal",
       "required": true,
       "precision": 10,
-      "scale": 6
+      "scale": 6,
+      "metadatas": {
+        "label": "Árfolyam",
+        "description": "Az árfolyam értéke (hány egység cél pénznem = 1 egység forrás pénznem)"
+      }
     },
     "valid_from": {
       "type": "datetime",
-      "required": true
+      "required": true,
+      "metadatas": {
+        "label": "Érvényesség kezdete",
+        "description": "Az árfolyam érvényességének kezdő dátuma"
+      }
     },
     "valid_to": {
-      "type": "datetime"
+      "type": "datetime",
+      "metadatas": {
+        "label": "Érvényesség vége",
+        "description": "Az árfolyam érvényességének vége (opcionális)"
+      }
     },
     "from_currency_type": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::currency-type.currency-type",
-      "inversedBy": "exchange_rates_from"
+      "inversedBy": "exchange_rates_from",
+      "metadatas": {
+        "label": "Forrás pénznem",
+        "description": "Az árfolyam forrás pénzneme"
+      }
     },
     "to_currency_type": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::currency-type.currency-type",
-      "inversedBy": "exchange_rates_to"
+      "inversedBy": "exchange_rates_to",
+      "metadatas": {
+        "label": "Cél pénznem",
+        "description": "Az árfolyam cél pénzneme"
+      }
     }
   }
 }
