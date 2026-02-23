@@ -1,7 +1,11 @@
 import path from 'path';
 
 export default ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'sqlite');
+  // Use postgres if DATABASE_URL is provided (Render, Railway, etc.)
+  // Otherwise use DATABASE_CLIENT env var, defaulting to sqlite
+  const client = env('DATABASE_URL')
+    ? 'postgres'
+    : env('DATABASE_CLIENT', 'sqlite');
 
   const connections = {
     mysql: {
@@ -36,17 +40,20 @@ export default ({ env }) => {
         database: env('DATABASE_NAME', 'strapi'),
         user: env('DATABASE_USERNAME', 'strapi'),
         password: env('DATABASE_PASSWORD', 'strapi'),
-        ssl: env.bool('DATABASE_SSL', false) && {
-          key: env('DATABASE_SSL_KEY', undefined),
-          cert: env('DATABASE_SSL_CERT', undefined),
-          ca: env('DATABASE_SSL_CA', undefined),
-          capath: env('DATABASE_SSL_CAPATH', undefined),
-          cipher: env('DATABASE_SSL_CIPHER', undefined),
-          rejectUnauthorized: env.bool(
-            'DATABASE_SSL_REJECT_UNAUTHORIZED',
-            true
-          ),
-        },
+        // Enable SSL for production (Render requires SSL)
+        ssl: env('DATABASE_URL')
+          ? { rejectUnauthorized: false } // Render uses self-signed certs
+          : env.bool('DATABASE_SSL', false) && {
+              key: env('DATABASE_SSL_KEY', undefined),
+              cert: env('DATABASE_SSL_CERT', undefined),
+              ca: env('DATABASE_SSL_CA', undefined),
+              capath: env('DATABASE_SSL_CAPATH', undefined),
+              cipher: env('DATABASE_SSL_CIPHER', undefined),
+              rejectUnauthorized: env.bool(
+                'DATABASE_SSL_REJECT_UNAUTHORIZED',
+                true
+              ),
+            },
         schema: env('DATABASE_SCHEMA', 'public'),
       },
       pool: {

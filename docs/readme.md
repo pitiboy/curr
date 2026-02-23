@@ -34,6 +34,15 @@ Each transaction is recorded using double-entry bookkeeping principles with debi
 - **Expense tracking**: The system can track expenses that belong to specific projects or locations.
 - **Multi-currency support**: Transactions can be made in different currencies with automatic conversion.
 
+#### Real Use cases
+
+- Én a minimális tagi részjegyet fizettem be, 500K-t.
+- a részarányokat a részjegyekből számoljuk, de évről évre inflálódik a részjegy, egyre kevesebb arányt lehet kapni adott befizetésért.
+- Dani 13M helyett fizetett 12M-et utalással, 1M-et pedig olyan megvásárolt ingatlanra fizette be, aminek a szerződés szerinti értékét csökkentettük ezzel, viszont a pénzt ugye kpban adtuk át közvetlenül.
+- a pénztárban van hivatalosan 1M, de kp-s vásárlásokkal azt csökkenteni kívánjuk, így kp-s számlákkal tudjuk abból a pénz kivenni, ahol valójában céges pénzmozgás nincs, mert saját pénztárcából fizetünk.
+- kaptam Lacitól egy lapátot, adok érte 10000Ft-ot
+- Kaptunk Lacitól 60 cserepet kölcsön
+
 ```mermaid
 erDiagram
     %% === Core entities ===
