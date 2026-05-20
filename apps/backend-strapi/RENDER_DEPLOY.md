@@ -46,7 +46,6 @@ The deployment hooks are already configured. If not, add these to `package.json`
    - **Branch:** `main` (or your default branch)
    - **Root Directory:** `apps/backend-strapi` ⚠️ **IMPORTANT**
    - **Runtime:** `Node`
-   - **Install Command:** `npm install` (optional but recommended so install runs in this directory)
    - **Build Command:** `npm run build`
    - **Start Command:** `npm start`
 
@@ -112,14 +111,15 @@ The deployment hooks are already configured. If not, add these to `package.json`
 
 ### `strapi: not found` / Build fails
 
-- **Root Directory must be `apps/backend-strapi`** so Render runs `npm install` and `npm run build` inside the Strapi app (not the repo root). In Dashboard → your Web Service → **Settings**, set **Root Directory** to exactly `apps/backend-strapi`.
-- Set **Install Command** to `npm install` so dependencies are installed in that directory.
-- The repo root is an Nx/pnpm monorepo; Strapi is only installed when the project root is `apps/backend-strapi`.
+- **Root Directory must be `apps/backend-strapi`** so Render runs install and build inside the Strapi app (not the repo root). In Dashboard → your Web Service → **Settings**, set **Root Directory** to exactly `apps/backend-strapi`.
+- The repo root is an Nx/pnpm monorepo; Strapi is only installed when the project root is `apps/backend-strapi`. Using `npx strapi build` / `npx strapi start` in package.json ensures the local Strapi binary is used.
 
 ### Other build failures
 
-- Check logs in Render dashboard
-- Verify all environment variables are set
+- **Find the real error:** The message appears *above* "Exited with status 1". In **Logs** → **All logs**, scroll up to see the line that caused the failure (e.g. "Killed", "Module not found", "ENOENT", or a stack trace).
+- **Set env vars before first deploy:** Add all required variables (including `APP_KEYS`, `DATABASE_URL`, etc.) in the Render dashboard *before* the first build. Some config is loaded at build time.
+- **Out of memory (OOM):** If the build is **Killed** with no other message, the container ran out of memory. Add an environment variable in Render: `NODE_OPTIONS` = `--max-old-space-size=512` (or `256` on the free tier) so the Node process uses less RAM during the build.
+- Reproduce locally: `cd apps/backend-strapi && NODE_ENV=production npm run build`.
 
 ### Database Connection Fails
 
