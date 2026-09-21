@@ -1,8 +1,7 @@
-version: '3.8'
 services:
   postgres:
-    image: postgres:18
-    restart: always
+    image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-strapi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
@@ -11,22 +10,11 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - '${POSTGRES_PORT:-5432}:5432'
-
-  backend:
-    build: ./apps/backend
-    command: ['pnpm', 'nx', 'run', 'backend:develop']
-    ports:
-      - '1337:1337'
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_CLIENT: postgres
-      DATABASE_HOST: postgres
-      DATABASE_PORT: ${POSTGRES_PORT:-5432}
-      DATABASE_NAME: ${POSTGRES_DB:-strapi}
-      DATABASE_USERNAME: ${POSTGRES_USER:-strapi}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
-      NODE_ENV: development
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-strapi} -d ${POSTGRES_DB:-strapi}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:

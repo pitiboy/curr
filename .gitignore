@@ -1,15 +1,41 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
-
 # compiled output
 dist
+build
 tmp
+.tmp
 out-tsc
+.cache
+.tsbuildinfo
+.eslintcache
 
 # dependencies
 node_modules
 
+# env & secrets
+.env
+.env.local
+.strapi
+.strapi-updater.json
+.strapi-cloud.json
+exports
+license.txt
+
+# uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# logs
+*.log
+error.log
+npm-debug.log
+yarn-error.log
+
+# tests
+coverage
+lcov.info
+
 # IDEs and editors
-/.idea
+.idea
 .project
 .classpath
 .c9/
@@ -24,25 +50,14 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
 # System Files
 .DS_Store
 Thumbs.db
 
-.nx/cache
-.nx/workspace-data
+# leftover Nx artifacts
+.nx
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-error.log
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*

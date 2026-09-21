@@ -1,0 +1,258 @@
+// Curr domain ERD
+// Generated from Strapi collection-type schemas in src/api/*/content-types/*/schema.json
+// Open this file with the dbdiagram plugin to render the diagram.
+
+Project curr {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Community accounting domain model (Strapi 5).
+    Collection types only — admin, users-permissions, and upload internals omitted.
+    Relation FKs sit on the owning (manyToOne / oneToOne) side, matching Strapi persistence.
+    draftAndPublish models include published_at.
+  '''
+}
+
+Enum account_category_type {
+  revenue [note: 'Bevétel']
+  expense [note: 'Kiadás']
+  asset [note: 'Eszköz']
+  liability [note: 'Kötelezettség']
+  equity [note: 'Tőke']
+}
+
+Enum transaction_type_category {
+  actual [note: 'Tényleges']
+  future [note: 'Jövőbeli']
+  internal [note: 'Belső']
+}
+
+// ---------------------------------------------------------------------------
+// Community
+// ---------------------------------------------------------------------------
+
+Table organizations [headercolor: #3B82F6] {
+  id int [pk, increment]
+  name varchar(255) [not null, note: 'Név — A szervezet neve']
+  description text [note: 'Leírás']
+  address text [note: 'Cím']
+  parent_id int [note: 'Szülő szervezet']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Collective entity managing resources and members'
+}
+
+Table members [headercolor: #3B82F6] {
+  id int [pk, increment]
+  identifier varchar [unique, not null, note: 'Azonosító — uid from name, [a-z0-9.-]+']
+  name varchar(255) [not null, note: 'Név']
+  email varchar [unique, not null, note: 'E-mail']
+  account_id int [unique, note: 'Számla — auto-created one-to-one account']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'A community participant (individual)'
+}
+
+Table membership_types [headercolor: #3B82F6] {
+  id int [pk, increment]
+  name varchar(255) [unique, not null, note: 'Név — pl. tag, bentlakó tag, szimpatizáns']
+  description text [note: 'Leírás']
+  color varchar(7) [note: 'Szín — hex, pl. #FF0000']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Types of membership roles within organizations'
+}
+
+Table memberships [headercolor: #3B82F6] {
+  id int [pk, increment]
+  organization_id int [not null, note: 'Szervezet']
+  member_id int [not null, note: 'Tag']
+  membership_type_id int [note: 'Tagság típus']
+  valid_from timestamp [not null, note: 'Érvényesség kezdete']
+  valid_to timestamp [note: 'Érvényesség vége']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Relation between a Member and an Organization, storing their role'
+}
+
+// ---------------------------------------------------------------------------
+// Chart of accounts
+// ---------------------------------------------------------------------------
+
+Table account_categories [headercolor: #10B981] {
+  id int [pk, increment]
+  name varchar(255) [not null, note: 'Név']
+  type account_category_type [not null, note: 'Típus']
+  description text [note: 'Leírás']
+  color varchar(7) [note: 'Szín — hex, pl. #FF0000']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Categories for financial accounts (revenue, expense, asset, liability, equity)'
+}
+
+Table accounts [headercolor: #10B981] {
+  id int [pk, increment]
+  code varchar(10) [note: 'Kód — A számla rövid kódja']
+  name varchar(255) [not null, note: 'Név']
+  description text [note: 'Leírás']
+  category_id int [note: 'Kategória']
+  organization_id int [note: 'Szervezet']
+  parent_id int [note: 'Szülő számla']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Financial account within a division for tracking transactions'
+}
+
+// ---------------------------------------------------------------------------
+// Currency / resources
+// ---------------------------------------------------------------------------
+
+Table currency_categories [headercolor: #F59E0B] {
+  id int [pk, increment]
+  name varchar(100) [not null, note: 'Név — pl. Készpénz, Munkaerő, Erőforrások']
+  code varchar(20) [unique, not null, note: 'Kód — uid']
+  description text [note: 'Leírás']
+  icon varchar(50) [note: 'Ikon — emoji or icon name']
+  color varchar(7) [note: 'Szín — hex, pl. #FF0000']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Categories for organizing different types of currencies and resources'
+}
+
+Table currency_types [headercolor: #F59E0B] {
+  id int [pk, increment]
+  code varchar(10) [unique, not null, note: 'Kód — pl. HUF, EUR, HOUR']
+  name varchar(255) [not null, note: 'Név — pl. Magyar Forint, Euro, Munkaóra']
+  unit varchar(50) [not null, note: 'Mértékegység — pl. Ft, €, óra']
+  category_id int [note: 'Kategória']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Defines currencies or other measurable resource units (cash, labor, goods)'
+}
+
+Table currency_rates [headercolor: #F59E0B] {
+  id int [pk, increment]
+  rate decimal(10,6) [not null, note: 'Árfolyam — units of target per 1 unit of source']
+  valid_from timestamp [not null, note: 'Érvényesség kezdete']
+  valid_to timestamp [note: 'Érvényesség vége']
+  from_currency_type_id int [note: 'Forrás pénznem']
+  to_currency_type_id int [note: 'Cél pénznem']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Defines conversion rates between currency types over time'
+}
+
+// ---------------------------------------------------------------------------
+// Ledger
+// ---------------------------------------------------------------------------
+
+Table transaction_types [headercolor: #8B5CF6] {
+  id int [pk, increment]
+  name varchar(255) [not null, note: 'Név']
+  category transaction_type_category [not null, note: 'Kategória']
+  description text [note: 'Leírás']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Categorizes transactions (income, expense, transfer)'
+}
+
+Table receipts [headercolor: #8B5CF6] {
+  id int [pk, increment]
+  reference varchar [unique, note: 'Referencia — uid']
+  date timestamp [not null, note: 'Dátum']
+  amount decimal [not null, note: 'Összeg']
+  description text [not null, note: 'Leírás']
+  vendor varchar [not null, note: 'Eladó']
+  organization_id int [note: 'Szervezet']
+  document_id int [not null, note: 'Dokumentum — Strapi media (plugin::upload.file)']
+  created_at timestamp
+  updated_at timestamp
+  published_at timestamp [note: 'draftAndPublish']
+
+  Note: 'Receipt / source document for one or more transactions'
+}
+
+Table transactions [headercolor: #8B5CF6] {
+  id int [pk, increment]
+  date timestamp [not null, note: 'Dátum']
+  amount decimal [not null, note: 'Összeg']
+  description text [note: 'Leírás']
+  debit_account_id int [note: 'Tartozik számla']
+  credit_account_id int [note: 'Követel számla']
+  transaction_type_id int [note: 'Tranzakció típus']
+  currency_type_id int [note: 'Pénznem típus']
+  related_transaction_id int [note: 'Kapcsolódó tranzakció']
+  receipt_id int [note: 'Nyugta']
+  created_at timestamp
+  updated_at timestamp
+  published_at timestamp [note: 'draftAndPublish']
+
+  Note: 'Double-entry bookkeeping record with debit and credit entries'
+}
+
+// ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+TableGroup community [color: #3B82F6] {
+  organizations
+  members
+  membership_types
+  memberships
+}
+
+TableGroup chart_of_accounts [color: #10B981] {
+  account_categories
+  accounts
+}
+
+TableGroup currency [color: #F59E0B] {
+  currency_categories
+  currency_types
+  currency_rates
+}
+
+TableGroup ledger [color: #8B5CF6] {
+  transaction_types
+  receipts
+  transactions
+}
+
+// ---------------------------------------------------------------------------
+// Relations (owning side only)
+// ---------------------------------------------------------------------------
+
+Ref organizations_parent: organizations.parent_id > organizations.id
+
+Ref members_account: members.account_id - accounts.id
+
+Ref memberships_organization: memberships.organization_id > organizations.id
+Ref memberships_member: memberships.member_id > members.id
+Ref memberships_type: memberships.membership_type_id > membership_types.id
+
+Ref accounts_category: accounts.category_id > account_categories.id
+Ref accounts_organization: accounts.organization_id > organizations.id
+Ref accounts_parent: accounts.parent_id > accounts.id
+
+Ref currency_types_category: currency_types.category_id > currency_categories.id
+
+Ref currency_rates_from: currency_rates.from_currency_type_id > currency_types.id
+Ref currency_rates_to: currency_rates.to_currency_type_id > currency_types.id
+
+Ref receipts_organization: receipts.organization_id > organizations.id
+
+Ref transactions_debit: transactions.debit_account_id > accounts.id
+Ref transactions_credit: transactions.credit_account_id > accounts.id
+Ref transactions_type: transactions.transaction_type_id > transaction_types.id
+Ref transactions_currency: transactions.currency_type_id > currency_types.id
+Ref transactions_related: transactions.related_transaction_id > transactions.id
+Ref transactions_receipt: transactions.receipt_id > receipts.id
