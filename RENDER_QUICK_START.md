@@ -1,52 +1,66 @@
-# Render Quick Start
+# Redeploy Curr on Render
 
-Strapi lives at the **repository root**. Do not set a Root Directory.
+**Do not delete** `curr-zep-strapi`. Reuse it so you keep the hostname, env vars, and linked Postgres.
 
-## 1. Generate secrets
+The first deploy failed because Root Directory was `apps/backend-strapi` and the branch was `ci/deploy-render-cloud` (Nx + Strapi in a subfolder). Strapi is now the **repo root** on `feat/strapi-monorepo`.
+
+## 1. Point the existing service at the new code
+
+Open [curr-zep-strapi → Settings](https://dashboard.render.com) and save:
+
+| Field | Set to |
+| --- | --- |
+| **Branch** | `feat/strapi-monorepo` |
+| **Root Directory** | **empty** — click Edit and delete `apps/backend-strapi` |
+| **Install Command** | `npm ci` (required — Render skipped install and failed with `strapi: not found`) |
+| **Build Command** | `npm run build` |
+| **Start Command** | `npm start` |
+| **Pre-Deploy Command** | empty |
+| **Health Check Path** | `/_health` |
+
+After you clear Root Directory, the prompt should look like `$ npm run build`, not `apps/backend-strapi/ $ npm run build`. If there is no Install Command field, set **Build Command** to `npm ci && npm run build`. A good deploy log shows **Installing dependencies** (or `npm ci`) *before* `strapi build`, and takes minutes, not ~7 seconds.
+
+Do **not** create a new Web Service and do **not** apply `render.yaml` (that would create a second app and database).
+
+## 2. Environment
+
+Keep existing secrets if they are already set. Confirm these exist:
+
+```
+NODE_VERSION=20
+NODE_ENV=production
+NODE_OPTIONS=--max-old-space-size=512
+HOST=0.0.0.0
+DATABASE_CLIENT=postgres
+DATABASE_SSL=true
+DATABASE_URL=<Internal Database URL, same region as Frankfurt>
+IS_PROXIED=true
+PUBLIC_URL=https://curr-zep-strapi.onrender.com
+APP_KEYS=<four comma-separated keys>
+API_TOKEN_SALT
+ADMIN_JWT_SECRET
+TRANSFER_TOKEN_SALT
+JWT_SECRET
+ENCRYPTION_KEY
+```
+
+Missing secrets:
 
 ```bash
 node scripts/generate-secrets.js
 ```
 
-Copy every line into the Render dashboard (or Blueprint `sync: false` vars). Include `ENCRYPTION_KEY`.
+Cloudinary vars only if you use uploads. Optional: `CORS_ORIGINS` for Appsmith.
 
-## 2. PostgreSQL
+## 3. Deploy
 
-1. [Render Dashboard](https://dashboard.render.com) → **New +** → **PostgreSQL**
-2. Same region as the web service
-3. Copy the **Internal** Database URL (not External)
+**Manual Deploy → Deploy latest commit.**
 
-## 3. Web service
+Expect 5–10 minutes. Free instances often OOM on `strapi build`. If logs say **Killed**, upgrade the instance (Starter / 1 GB), then redeploy.
 
-1. **New +** → **Web Service** → this GitHub repo
-2. Settings:
-   - **Root Directory:** leave **empty**
-   - **Runtime:** Node
-   - **Build Command:** `npm run build`
-   - **Start Command:** `npm start`
-   - **Instance:** enough RAM for `strapi build` (512MB often OOMs; 1GB+ is safer)
-3. Environment:
+## 4. Check
 
-   ```
-   NODE_VERSION=20
-   NODE_ENV=production
-   NODE_OPTIONS=--max-old-space-size=512
-   HOST=0.0.0.0
-   DATABASE_CLIENT=postgres
-   DATABASE_SSL=true
-   DATABASE_URL=<internal-database-url>
-   IS_PROXIED=true
-   PUBLIC_URL=https://<your-service>.onrender.com
-   ```
+- `https://curr-zep-strapi.onrender.com/_health` → 204
+- `https://curr-zep-strapi.onrender.com/admin` → create the first admin here
 
-   Plus the secrets from step 1, and Cloudinary vars if you use uploads.
-   Optional: `CORS_ORIGINS=https://your-appsmith.example.com`
-
-4. Create the service (or use [render.yaml](render.yaml) as a Blueprint)
-
-## 4. Admin
-
-- Health: `https://<your-service>.onrender.com/_health`
-- Admin: `https://<your-service>.onrender.com/admin` — create the first user here, never commit it
-
-Or skip the dashboard and apply [render.yaml](render.yaml); still set the `sync: false` secrets before the first deploy. See [RENDER_DEPLOY.md](RENDER_DEPLOY.md) for cutover and troubleshooting.
+More detail: [RENDER_DEPLOY.md](RENDER_DEPLOY.md).
