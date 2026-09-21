@@ -1,5 +1,0 @@
-packages:
-  - 'packages/*'
-  - 'libs'
-autoInstallPeers: true
-strictPeerDependencies: false
