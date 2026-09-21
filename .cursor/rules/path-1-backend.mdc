@@ -1,0 +1,20 @@
+---
+description: Path 1 year-1 backend lock — Strapi 5.27, Neon FRA, Fly fra, Admin UI
+alwaysApply: true
+---
+
+# Path 1 backend
+
+Keep this repository’s **Strapi 5.27** app. Postgres is **Neon** `aws-eu-central-1`. The Node process runs on **Fly.io `fra`**. Year-1 operators use **Strapi Admin**. The later client (out of year-1) uses Strapi **REST**.
+
+Do not:
+
+- Drop Strapi, add GraphQL, or treat Neon Data API / PostgREST / Supabase as the application
+- Use DBeaver or SQL as the treasurer UI
+- Design a custom client, member self-serve, CSV import, or scheduled fees
+- Apply `render.yaml` or delete `curr-zep-strapi` / tárhely
+- Provision Fly Postgres or MPG
+- Commit `.env`, `APP_KEYS`, Neon passwords, or `FLY_API_TOKEN`
+- Run `seed:full` or create Neon/Fly resources unless the user asks
+
+Deploy steps for humans: `FLY_DEPLOY.md`. Agent cutover prompt: `docs/ci/deploy.neon.fly.io.md`.

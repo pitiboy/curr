@@ -1,0 +1,19 @@
+---
+description: Fly fra + Neon pooled URL; CI builds the image; 1 GB autostop
+globs: Dockerfile,fly.toml,.github/workflows/**,config/database.ts
+alwaysApply: false
+---
+
+# Fly + Neon deploy files
+
+- **Build** `strapi build` in GitHub Actions / the Docker build stage. Never as the only build on Fly.
+- [`fly.toml`](fly.toml): `primary_region = "fra"`, `memory = "1gb"`, `auto_stop_machines = "stop"`, `min_machines_running = 0`, check `/_health`. No Fly Postgres.
+- Deploy workflow: branch `deploy/fly`, GHCR, `flyctl deploy --image`. App name must match `fly.toml`.
+- When `DATABASE_URL` is set, pool **min default 0** (Neon sleep). Production URL is Neon **pooled** (`-pooler` in the hostname).
+
+```toml
+auto_stop_machines = "stop"
+min_machines_running = 0
+```
+
+Human console steps: `FLY_DEPLOY.md`. Do not create cloud resources unless asked.

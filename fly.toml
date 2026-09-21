@@ -1,0 +1,41 @@
+# Path 1 year-1 API host. Database is Neon FRA, not Fly Postgres / MPG.
+# Replace `app` with the name created in the Fly dashboard (see FLY_DEPLOY.md).
+
+app = "curr-strapi"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  HOST = "0.0.0.0"
+  PORT = "1337"
+  IS_PROXIED = "true"
+  DATABASE_SSL = "true"
+  DATABASE_POOL_MIN = "0"
+
+[http_service]
+  internal_port = 1337
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[http_service.concurrency]
+  type = "requests"
+  soft_limit = 20
+  hard_limit = 40
+
+[[http_service.checks]]
+  grace_period = "90s"
+  interval = "30s"
+  method = "GET"
+  timeout = "10s"
+  path = "/_health"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

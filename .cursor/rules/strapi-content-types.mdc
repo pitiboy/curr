@@ -1,0 +1,21 @@
+---
+description: Keep Strapi schema.json and member lifecycle; no SQL remodel
+globs: src/api/**/schema.json,src/api/**/lifecycles.ts
+alwaysApply: false
+---
+
+# Content-types
+
+Git JSON under `src/api/` is the schema. Do not remodel these as SQL migrations or add `post_transaction()`.
+
+- Keep [`src/api/member/content-types/member/lifecycles.ts`](src/api/member/content-types/member/lifecycles.ts) (member → account).
+- `draftAndPublish` stays on `transaction` and `receipt` only.
+- `debit_account` / `credit_account` are not required yet. Mark `required: true` only in the days 30–60 window, still in `schema.json` — not a Postgres CHECK.
+
+```json
+"debit_account": {
+  "type": "relation",
+  "relation": "manyToOne",
+  "target": "api::account.account"
+}
+```

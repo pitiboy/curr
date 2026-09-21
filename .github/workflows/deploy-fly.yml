@@ -1,0 +1,63 @@
+# Push to `deploy/fly` after Neon + Fly secrets exist (see FLY_DEPLOY.md).
+# Builds the production image on GitHub-hosted runners, pushes GHCR, then
+# deploys that image to Fly. Does not run `strapi build` on Fly.
+
+name: Deploy Fly
+
+on:
+  push:
+    branches:
+      - deploy/fly
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-fly
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Image name
+        id: meta
+        run: |
+          repo=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${repo}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+            ${{ steps.meta.outputs.image }}:deploy-fly
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_OPTIONS=--max-old-space-size=1536
+
+      - name: Pull image for Fly upload
+        run: docker pull ${{ steps.meta.outputs.image }}:${{ github.sha }}
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy image to Fly
+        run: flyctl deploy --app curr-strapi --image ${{ steps.meta.outputs.image }}:${{ github.sha }} --local-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
