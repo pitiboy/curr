@@ -1,0 +1,3772 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dineug/erd-editor/main/json-schema/schema.json",
+  "version": "3.0.0",
+  "settings": {
+    "width": 5000,
+    "height": 3500,
+    "scrollTop": 0,
+    "scrollLeft": 0,
+    "originX": 0,
+    "originY": 0,
+    "zoomLevel": 0.7,
+    "show": 511,
+    "database": 16,
+    "databaseName": "curr",
+    "canvasType": "ERD",
+    "language": 16,
+    "tableNameCase": 1,
+    "columnNameCase": 1,
+    "bracketType": 2,
+    "relationshipDataTypeSync": true,
+    "relationshipOptimization": true,
+    "columnOrder": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64
+    ],
+    "maxWidthComment": 300,
+    "ignoreSaveSettings": 0
+  },
+  "doc": {
+    "tableIds": [
+      "tbl__organizations",
+      "tbl__memberships",
+      "tbl__members",
+      "tbl__membership_types",
+      "tbl__account_categories",
+      "tbl__accounts",
+      "tbl__receipts",
+      "tbl__transaction_types",
+      "tbl__currency_categories",
+      "tbl__currency_types",
+      "tbl__currency_rates",
+      "tbl__transactions"
+    ],
+    "relationshipIds": [
+      "rel__accounts__category",
+      "rel__accounts__organization",
+      "rel__accounts__parent",
+      "rel__currency_rates__from_currency_type",
+      "rel__currency_rates__to_currency_type",
+      "rel__currency_types__category",
+      "rel__members__account",
+      "rel__memberships__organization",
+      "rel__memberships__member",
+      "rel__memberships__membership_type",
+      "rel__organizations__parent",
+      "rel__receipts__organization",
+      "rel__transactions__debit_account",
+      "rel__transactions__credit_account",
+      "rel__transactions__transaction_type",
+      "rel__transactions__currency_type",
+      "rel__transactions__related_transaction",
+      "rel__transactions__receipt"
+    ],
+    "indexIds": [
+      "idx__accounts__document_id",
+      "idx__account_categories__document_id",
+      "idx__currency_categories__document_id",
+      "idx__currency_categories__code",
+      "idx__currency_rates__document_id",
+      "idx__currency_types__document_id",
+      "idx__currency_types__code",
+      "idx__members__document_id",
+      "idx__members__account_id",
+      "idx__members__identifier",
+      "idx__members__email",
+      "idx__memberships__document_id",
+      "idx__membership_types__document_id",
+      "idx__membership_types__name",
+      "idx__organizations__document_id",
+      "idx__receipts__document_id",
+      "idx__receipts__reference",
+      "idx__transactions__document_id",
+      "idx__transaction_types__document_id"
+    ],
+    "memoIds": [
+      "memo__legend"
+    ]
+  },
+  "collections": {
+    "tableEntities": {
+      "tbl__accounts": {
+        "id": "tbl__accounts",
+        "name": "accounts",
+        "comment": "Financial account within a division for tracking transactions",
+        "columnIds": [
+          "col__accounts__id",
+          "col__accounts__document_id",
+          "col__accounts__code",
+          "col__accounts__name",
+          "col__accounts__category_id",
+          "col__accounts__description",
+          "col__accounts__organization_id",
+          "col__accounts__parent_id",
+          "col__accounts__created_at",
+          "col__accounts__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__accounts__id",
+          "col__accounts__document_id",
+          "col__accounts__code",
+          "col__accounts__name",
+          "col__accounts__category_id",
+          "col__accounts__description",
+          "col__accounts__organization_id",
+          "col__accounts__parent_id",
+          "col__accounts__created_at",
+          "col__accounts__updated_at"
+        ],
+        "ui": {
+          "x": 1215,
+          "y": 470,
+          "zIndex": 2,
+          "widthName": 78,
+          "widthComment": 300,
+          "color": "#7B68A6"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__account_categories": {
+        "id": "tbl__account_categories",
+        "name": "account_categories",
+        "comment": "Categories for financial accounts (revenue, expense, asset, liability, equity)",
+        "columnIds": [
+          "col__account_categories__id",
+          "col__account_categories__document_id",
+          "col__account_categories__name",
+          "col__account_categories__type",
+          "col__account_categories__description",
+          "col__account_categories__color",
+          "col__account_categories__created_at",
+          "col__account_categories__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__account_categories__id",
+          "col__account_categories__document_id",
+          "col__account_categories__name",
+          "col__account_categories__type",
+          "col__account_categories__description",
+          "col__account_categories__color",
+          "col__account_categories__created_at",
+          "col__account_categories__updated_at"
+        ],
+        "ui": {
+          "x": 80,
+          "y": 470,
+          "zIndex": 1,
+          "widthName": 162,
+          "widthComment": 300,
+          "color": "#7B68A6"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__currency_categories": {
+        "id": "tbl__currency_categories",
+        "name": "currency_categories",
+        "comment": "Categories for organizing different types of currencies and resources",
+        "columnIds": [
+          "col__currency_categories__id",
+          "col__currency_categories__document_id",
+          "col__currency_categories__name",
+          "col__currency_categories__code",
+          "col__currency_categories__description",
+          "col__currency_categories__icon",
+          "col__currency_categories__color",
+          "col__currency_categories__created_at",
+          "col__currency_categories__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__currency_categories__id",
+          "col__currency_categories__document_id",
+          "col__currency_categories__name",
+          "col__currency_categories__code",
+          "col__currency_categories__description",
+          "col__currency_categories__icon",
+          "col__currency_categories__color",
+          "col__currency_categories__created_at",
+          "col__currency_categories__updated_at"
+        ],
+        "ui": {
+          "x": 80,
+          "y": 938,
+          "zIndex": 1,
+          "widthName": 170,
+          "widthComment": 300,
+          "color": "#C9A227"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__currency_rates": {
+        "id": "tbl__currency_rates",
+        "name": "currency_rates",
+        "comment": "Defines conversion rates between currency types over time",
+        "columnIds": [
+          "col__currency_rates__id",
+          "col__currency_rates__document_id",
+          "col__currency_rates__rate",
+          "col__currency_rates__valid_from",
+          "col__currency_rates__valid_to",
+          "col__currency_rates__from_currency_type_id",
+          "col__currency_rates__to_currency_type_id",
+          "col__currency_rates__created_at",
+          "col__currency_rates__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__currency_rates__id",
+          "col__currency_rates__document_id",
+          "col__currency_rates__rate",
+          "col__currency_rates__valid_from",
+          "col__currency_rates__valid_to",
+          "col__currency_rates__from_currency_type_id",
+          "col__currency_rates__to_currency_type_id",
+          "col__currency_rates__created_at",
+          "col__currency_rates__updated_at"
+        ],
+        "ui": {
+          "x": 1644,
+          "y": 938,
+          "zIndex": 3,
+          "widthName": 128,
+          "widthComment": 300,
+          "color": "#C9A227"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__currency_types": {
+        "id": "tbl__currency_types",
+        "name": "currency_types",
+        "comment": "Defines currencies or other measurable resource units (cash, labor, goods)",
+        "columnIds": [
+          "col__currency_types__id",
+          "col__currency_types__document_id",
+          "col__currency_types__code",
+          "col__currency_types__name",
+          "col__currency_types__category_id",
+          "col__currency_types__unit",
+          "col__currency_types__created_at",
+          "col__currency_types__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__currency_types__id",
+          "col__currency_types__document_id",
+          "col__currency_types__code",
+          "col__currency_types__name",
+          "col__currency_types__category_id",
+          "col__currency_types__unit",
+          "col__currency_types__created_at",
+          "col__currency_types__updated_at"
+        ],
+        "ui": {
+          "x": 862,
+          "y": 938,
+          "zIndex": 2,
+          "widthName": 128,
+          "widthComment": 300,
+          "color": "#C9A227"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__members": {
+        "id": "tbl__members",
+        "name": "members",
+        "comment": "A community participant (individual)",
+        "columnIds": [
+          "col__members__id",
+          "col__members__document_id",
+          "col__members__account_id",
+          "col__members__identifier",
+          "col__members__name",
+          "col__members__email",
+          "col__members__created_at",
+          "col__members__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__members__id",
+          "col__members__document_id",
+          "col__members__account_id",
+          "col__members__identifier",
+          "col__members__name",
+          "col__members__email",
+          "col__members__created_at",
+          "col__members__updated_at"
+        ],
+        "ui": {
+          "x": 1703,
+          "y": 80,
+          "zIndex": 3,
+          "widthName": 69,
+          "widthComment": 300,
+          "color": "#4A90D9"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__memberships": {
+        "id": "tbl__memberships",
+        "name": "memberships",
+        "comment": "Relation between a Member and an Organization, storing their role",
+        "columnIds": [
+          "col__memberships__id",
+          "col__memberships__document_id",
+          "col__memberships__organization_id",
+          "col__memberships__member_id",
+          "col__memberships__membership_type_id",
+          "col__memberships__valid_from",
+          "col__memberships__valid_to",
+          "col__memberships__created_at",
+          "col__memberships__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__memberships__id",
+          "col__memberships__document_id",
+          "col__memberships__organization_id",
+          "col__memberships__member_id",
+          "col__memberships__membership_type_id",
+          "col__memberships__valid_from",
+          "col__memberships__valid_to",
+          "col__memberships__created_at",
+          "col__memberships__updated_at"
+        ],
+        "ui": {
+          "x": 862,
+          "y": 80,
+          "zIndex": 2,
+          "widthName": 103,
+          "widthComment": 300,
+          "color": "#4A90D9"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__membership_types": {
+        "id": "tbl__membership_types",
+        "name": "membership_types",
+        "comment": "Types of membership roles within organizations (tag, bentlakó tag, szimpatizáns, etc.)",
+        "columnIds": [
+          "col__membership_types__id",
+          "col__membership_types__document_id",
+          "col__membership_types__name",
+          "col__membership_types__description",
+          "col__membership_types__color",
+          "col__membership_types__created_at",
+          "col__membership_types__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__membership_types__id",
+          "col__membership_types__document_id",
+          "col__membership_types__name",
+          "col__membership_types__description",
+          "col__membership_types__color",
+          "col__membership_types__created_at",
+          "col__membership_types__updated_at"
+        ],
+        "ui": {
+          "x": 2485,
+          "y": 80,
+          "zIndex": 4,
+          "widthName": 145,
+          "widthComment": 300,
+          "color": "#4A90D9"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__organizations": {
+        "id": "tbl__organizations",
+        "name": "organizations",
+        "comment": "Collective entity managing resources and members",
+        "columnIds": [
+          "col__organizations__id",
+          "col__organizations__document_id",
+          "col__organizations__name",
+          "col__organizations__description",
+          "col__organizations__address",
+          "col__organizations__parent_id",
+          "col__organizations__created_at",
+          "col__organizations__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__organizations__id",
+          "col__organizations__document_id",
+          "col__organizations__name",
+          "col__organizations__description",
+          "col__organizations__address",
+          "col__organizations__parent_id",
+          "col__organizations__created_at",
+          "col__organizations__updated_at"
+        ],
+        "ui": {
+          "x": 80,
+          "y": 80,
+          "zIndex": 1,
+          "widthName": 120,
+          "widthComment": 300,
+          "color": "#4A90D9"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__receipts": {
+        "id": "tbl__receipts",
+        "name": "receipts",
+        "comment": "Receipt",
+        "columnIds": [
+          "col__receipts__id",
+          "col__receipts__document_id",
+          "col__receipts__reference",
+          "col__receipts__date",
+          "col__receipts__amount",
+          "col__receipts__description",
+          "col__receipts__vendor",
+          "col__receipts__organization_id",
+          "col__receipts__document",
+          "col__receipts__created_at",
+          "col__receipts__updated_at",
+          "col__receipts__published_at"
+        ],
+        "seqColumnIds": [
+          "col__receipts__id",
+          "col__receipts__document_id",
+          "col__receipts__reference",
+          "col__receipts__date",
+          "col__receipts__amount",
+          "col__receipts__description",
+          "col__receipts__vendor",
+          "col__receipts__organization_id",
+          "col__receipts__document",
+          "col__receipts__created_at",
+          "col__receipts__updated_at",
+          "col__receipts__published_at"
+        ],
+        "ui": {
+          "x": 2009,
+          "y": 470,
+          "zIndex": 3,
+          "widthName": 78,
+          "widthComment": 69,
+          "color": "#3D8B6E"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__transactions": {
+        "id": "tbl__transactions",
+        "name": "transactions",
+        "comment": "Double-entry bookkeeping record with debit and credit entries",
+        "columnIds": [
+          "col__transactions__id",
+          "col__transactions__document_id",
+          "col__transactions__date",
+          "col__transactions__amount",
+          "col__transactions__description",
+          "col__transactions__debit_account_id",
+          "col__transactions__credit_account_id",
+          "col__transactions__transaction_type_id",
+          "col__transactions__currency_type_id",
+          "col__transactions__related_transaction_id",
+          "col__transactions__receipt_id",
+          "col__transactions__created_at",
+          "col__transactions__updated_at",
+          "col__transactions__published_at"
+        ],
+        "seqColumnIds": [
+          "col__transactions__id",
+          "col__transactions__document_id",
+          "col__transactions__date",
+          "col__transactions__amount",
+          "col__transactions__description",
+          "col__transactions__debit_account_id",
+          "col__transactions__credit_account_id",
+          "col__transactions__transaction_type_id",
+          "col__transactions__currency_type_id",
+          "col__transactions__related_transaction_id",
+          "col__transactions__receipt_id",
+          "col__transactions__created_at",
+          "col__transactions__updated_at",
+          "col__transactions__published_at"
+        ],
+        "ui": {
+          "x": 2519,
+          "y": 938,
+          "zIndex": 4,
+          "widthName": 111,
+          "widthComment": 300,
+          "color": "#3D8B6E"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "tbl__transaction_types": {
+        "id": "tbl__transaction_types",
+        "name": "transaction_types",
+        "comment": "Categorizes transactions (income, expense, transfer)",
+        "columnIds": [
+          "col__transaction_types__id",
+          "col__transaction_types__document_id",
+          "col__transaction_types__name",
+          "col__transaction_types__category",
+          "col__transaction_types__description",
+          "col__transaction_types__created_at",
+          "col__transaction_types__updated_at"
+        ],
+        "seqColumnIds": [
+          "col__transaction_types__id",
+          "col__transaction_types__document_id",
+          "col__transaction_types__name",
+          "col__transaction_types__category",
+          "col__transaction_types__description",
+          "col__transaction_types__created_at",
+          "col__transaction_types__updated_at"
+        ],
+        "ui": {
+          "x": 2824,
+          "y": 470,
+          "zIndex": 4,
+          "widthName": 153,
+          "widthComment": 300,
+          "color": "#3D8B6E"
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      }
+    },
+    "tableColumnEntities": {
+      "col__accounts__id": {
+        "id": "col__accounts__id",
+        "tableId": "tbl__accounts",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__document_id": {
+        "id": "col__accounts__document_id",
+        "tableId": "tbl__accounts",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__code": {
+        "id": "col__accounts__code",
+        "tableId": "tbl__accounts",
+        "name": "code",
+        "comment": "A számla rövid kódja",
+        "dataType": "VARCHAR(10)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 178,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__name": {
+        "id": "col__accounts__name",
+        "tableId": "tbl__accounts",
+        "name": "name",
+        "comment": "A számla neve",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 120,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__category_id": {
+        "id": "col__accounts__category_id",
+        "tableId": "tbl__accounts",
+        "name": "category_id",
+        "comment": "A számla kategóriája",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 103,
+          "widthComment": 178,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__description": {
+        "id": "col__accounts__description",
+        "tableId": "tbl__accounts",
+        "name": "description",
+        "comment": "A számla részletes leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 229,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__organization_id": {
+        "id": "col__accounts__organization_id",
+        "tableId": "tbl__accounts",
+        "name": "organization_id",
+        "comment": "A számlához tartozó szervezet",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 136,
+          "widthComment": 254,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__parent_id": {
+        "id": "col__accounts__parent_id",
+        "tableId": "tbl__accounts",
+        "name": "parent_id",
+        "comment": "A számla szülő számlája (ha van)",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 86,
+          "widthComment": 279,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__created_at": {
+        "id": "col__accounts__created_at",
+        "tableId": "tbl__accounts",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__accounts__updated_at": {
+        "id": "col__accounts__updated_at",
+        "tableId": "tbl__accounts",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__id": {
+        "id": "col__account_categories__id",
+        "tableId": "tbl__account_categories",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__document_id": {
+        "id": "col__account_categories__document_id",
+        "tableId": "tbl__account_categories",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__name": {
+        "id": "col__account_categories__name",
+        "tableId": "tbl__account_categories",
+        "name": "name",
+        "comment": "A számla kategória neve",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 204,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__type": {
+        "id": "col__account_categories__type",
+        "tableId": "tbl__account_categories",
+        "name": "type",
+        "comment": "A számla kategória típusa (bevétel, kiadás, eszköz, kötelezettség, tőke)",
+        "dataType": "ENUM('revenue','expense','asset','liability','equity')",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 464,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__description": {
+        "id": "col__account_categories__description",
+        "tableId": "tbl__account_categories",
+        "name": "description",
+        "comment": "A számla kategória részletes leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 300,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__color": {
+        "id": "col__account_categories__color",
+        "tableId": "tbl__account_categories",
+        "name": "color",
+        "comment": "A kategória színe (hex kód, pl. #FF0000)",
+        "dataType": "VARCHAR(7)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 94,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__created_at": {
+        "id": "col__account_categories__created_at",
+        "tableId": "tbl__account_categories",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__account_categories__updated_at": {
+        "id": "col__account_categories__updated_at",
+        "tableId": "tbl__account_categories",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__id": {
+        "id": "col__currency_categories__id",
+        "tableId": "tbl__currency_categories",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__document_id": {
+        "id": "col__currency_categories__document_id",
+        "tableId": "tbl__currency_categories",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__name": {
+        "id": "col__currency_categories__name",
+        "tableId": "tbl__currency_categories",
+        "name": "name",
+        "comment": "A pénznem kategória neve (pl. Készpénz, Munkaerő, Erőforrások)",
+        "dataType": "VARCHAR(100)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__code": {
+        "id": "col__currency_categories__code",
+        "tableId": "tbl__currency_categories",
+        "name": "code",
+        "comment": "A pénznem kategória egyedi kódja",
+        "dataType": "VARCHAR(20)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 279,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__description": {
+        "id": "col__currency_categories__description",
+        "tableId": "tbl__currency_categories",
+        "name": "description",
+        "comment": "A pénznem kategória részletes leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 300,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__icon": {
+        "id": "col__currency_categories__icon",
+        "tableId": "tbl__currency_categories",
+        "name": "icon",
+        "comment": "A kategória ikonja (emoji vagy ikon neve)",
+        "dataType": "VARCHAR(50)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__color": {
+        "id": "col__currency_categories__color",
+        "tableId": "tbl__currency_categories",
+        "name": "color",
+        "comment": "A kategória színe (hex kód, pl. #FF0000)",
+        "dataType": "VARCHAR(7)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 94,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__created_at": {
+        "id": "col__currency_categories__created_at",
+        "tableId": "tbl__currency_categories",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_categories__updated_at": {
+        "id": "col__currency_categories__updated_at",
+        "tableId": "tbl__currency_categories",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__id": {
+        "id": "col__currency_rates__id",
+        "tableId": "tbl__currency_rates",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__document_id": {
+        "id": "col__currency_rates__document_id",
+        "tableId": "tbl__currency_rates",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__rate": {
+        "id": "col__currency_rates__rate",
+        "tableId": "tbl__currency_rates",
+        "name": "rate",
+        "comment": "Az árfolyam értéke (hány egység cél pénznem = 1 egység forrás pénznem)",
+        "dataType": "DECIMAL(10,6)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 120,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__valid_from": {
+        "id": "col__currency_rates__valid_from",
+        "tableId": "tbl__currency_rates",
+        "name": "valid_from",
+        "comment": "Az árfolyam érvényességének kezdő dátuma",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__valid_to": {
+        "id": "col__currency_rates__valid_to",
+        "tableId": "tbl__currency_rates",
+        "name": "valid_to",
+        "comment": "Az árfolyam érvényességének vége (opcionális)",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 78,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__from_currency_type_id": {
+        "id": "col__currency_rates__from_currency_type_id",
+        "tableId": "tbl__currency_rates",
+        "name": "from_currency_type_id",
+        "comment": "Az árfolyam forrás pénzneme",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 187,
+          "widthComment": 237,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__to_currency_type_id": {
+        "id": "col__currency_rates__to_currency_type_id",
+        "tableId": "tbl__currency_rates",
+        "name": "to_currency_type_id",
+        "comment": "Az árfolyam cél pénzneme",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 170,
+          "widthComment": 212,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__created_at": {
+        "id": "col__currency_rates__created_at",
+        "tableId": "tbl__currency_rates",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_rates__updated_at": {
+        "id": "col__currency_rates__updated_at",
+        "tableId": "tbl__currency_rates",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__id": {
+        "id": "col__currency_types__id",
+        "tableId": "tbl__currency_types",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__document_id": {
+        "id": "col__currency_types__document_id",
+        "tableId": "tbl__currency_types",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__code": {
+        "id": "col__currency_types__code",
+        "tableId": "tbl__currency_types",
+        "name": "code",
+        "comment": "A pénznem típus kódja (pl. HUF, EUR, HOUR)",
+        "dataType": "VARCHAR(10)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__name": {
+        "id": "col__currency_types__name",
+        "tableId": "tbl__currency_types",
+        "name": "name",
+        "comment": "A pénznem típus neve (pl. Magyar Forint, Euro, Munkaóra)",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__category_id": {
+        "id": "col__currency_types__category_id",
+        "tableId": "tbl__currency_types",
+        "name": "category_id",
+        "comment": "A pénznem típus kategóriája",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 103,
+          "widthComment": 237,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__unit": {
+        "id": "col__currency_types__unit",
+        "tableId": "tbl__currency_types",
+        "name": "unit",
+        "comment": "A pénznem mértékegysége (pl. Ft, €, óra)",
+        "dataType": "VARCHAR(50)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__created_at": {
+        "id": "col__currency_types__created_at",
+        "tableId": "tbl__currency_types",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__currency_types__updated_at": {
+        "id": "col__currency_types__updated_at",
+        "tableId": "tbl__currency_types",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__id": {
+        "id": "col__members__id",
+        "tableId": "tbl__members",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__document_id": {
+        "id": "col__members__document_id",
+        "tableId": "tbl__members",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__account_id": {
+        "id": "col__members__account_id",
+        "tableId": "tbl__members",
+        "name": "account_id",
+        "comment": "A taghoz tartozó számla (automatikusan létrejön)",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 4,
+        "ui": {
+          "keys": 2,
+          "widthName": 94,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__identifier": {
+        "id": "col__members__identifier",
+        "tableId": "tbl__members",
+        "name": "identifier",
+        "comment": "A tag egyedi azonosítója",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 212,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__name": {
+        "id": "col__members__name",
+        "tableId": "tbl__members",
+        "name": "name",
+        "comment": "A tag neve",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 94,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__email": {
+        "id": "col__members__email",
+        "tableId": "tbl__members",
+        "name": "email",
+        "comment": "A tag e-mail címe",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 153,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__created_at": {
+        "id": "col__members__created_at",
+        "tableId": "tbl__members",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__members__updated_at": {
+        "id": "col__members__updated_at",
+        "tableId": "tbl__members",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__id": {
+        "id": "col__memberships__id",
+        "tableId": "tbl__memberships",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__document_id": {
+        "id": "col__memberships__document_id",
+        "tableId": "tbl__memberships",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__organization_id": {
+        "id": "col__memberships__organization_id",
+        "tableId": "tbl__memberships",
+        "name": "organization_id",
+        "comment": "A tagsághoz tartozó szervezet",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 136,
+          "widthComment": 254,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__member_id": {
+        "id": "col__memberships__member_id",
+        "tableId": "tbl__memberships",
+        "name": "member_id",
+        "comment": "A tagsághoz tartozó tag",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 86,
+          "widthComment": 204,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__membership_type_id": {
+        "id": "col__memberships__membership_type_id",
+        "tableId": "tbl__memberships",
+        "name": "membership_type_id",
+        "comment": "A tagság típusa (pl. tag, bentlakó tag, szimpatizáns)",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 162,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__valid_from": {
+        "id": "col__memberships__valid_from",
+        "tableId": "tbl__memberships",
+        "name": "valid_from",
+        "comment": "A tagság érvényességének kezdő dátuma",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__valid_to": {
+        "id": "col__memberships__valid_to",
+        "tableId": "tbl__memberships",
+        "name": "valid_to",
+        "comment": "A tagság érvényességének vége (opcionális)",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 78,
+          "widthComment": 300,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__created_at": {
+        "id": "col__memberships__created_at",
+        "tableId": "tbl__memberships",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__memberships__updated_at": {
+        "id": "col__memberships__updated_at",
+        "tableId": "tbl__memberships",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__id": {
+        "id": "col__membership_types__id",
+        "tableId": "tbl__membership_types",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__document_id": {
+        "id": "col__membership_types__document_id",
+        "tableId": "tbl__membership_types",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__name": {
+        "id": "col__membership_types__name",
+        "tableId": "tbl__membership_types",
+        "name": "name",
+        "comment": "A tagság típus neve (pl. tag, bentlakó tag, szimpatizáns)",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__description": {
+        "id": "col__membership_types__description",
+        "tableId": "tbl__membership_types",
+        "name": "description",
+        "comment": "A tagság típus részletes leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 279,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__color": {
+        "id": "col__membership_types__color",
+        "tableId": "tbl__membership_types",
+        "name": "color",
+        "comment": "A tagság típus színe (hex kód, pl. #FF0000)",
+        "dataType": "VARCHAR(7)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 300,
+          "widthDataType": 94,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__created_at": {
+        "id": "col__membership_types__created_at",
+        "tableId": "tbl__membership_types",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__membership_types__updated_at": {
+        "id": "col__membership_types__updated_at",
+        "tableId": "tbl__membership_types",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__id": {
+        "id": "col__organizations__id",
+        "tableId": "tbl__organizations",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__document_id": {
+        "id": "col__organizations__document_id",
+        "tableId": "tbl__organizations",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__name": {
+        "id": "col__organizations__name",
+        "tableId": "tbl__organizations",
+        "name": "name",
+        "comment": "A szervezet neve",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 145,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__description": {
+        "id": "col__organizations__description",
+        "tableId": "tbl__organizations",
+        "name": "description",
+        "comment": "A szervezet részletes leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 254,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__address": {
+        "id": "col__organizations__address",
+        "tableId": "tbl__organizations",
+        "name": "address",
+        "comment": "A szervezet címe",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 69,
+          "widthComment": 145,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__parent_id": {
+        "id": "col__organizations__parent_id",
+        "tableId": "tbl__organizations",
+        "name": "parent_id",
+        "comment": "A szervezet szülő szervezete (ha van)",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 86,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__created_at": {
+        "id": "col__organizations__created_at",
+        "tableId": "tbl__organizations",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__organizations__updated_at": {
+        "id": "col__organizations__updated_at",
+        "tableId": "tbl__organizations",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__id": {
+        "id": "col__receipts__id",
+        "tableId": "tbl__receipts",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__document_id": {
+        "id": "col__receipts__document_id",
+        "tableId": "tbl__receipts",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__reference": {
+        "id": "col__receipts__reference",
+        "tableId": "tbl__receipts",
+        "name": "reference",
+        "comment": "A nyugta egyedi azonosítója",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 4,
+        "ui": {
+          "keys": 0,
+          "widthName": 86,
+          "widthComment": 237,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__date": {
+        "id": "col__receipts__date",
+        "tableId": "tbl__receipts",
+        "name": "date",
+        "comment": "A nyugta dátuma",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 136,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__amount": {
+        "id": "col__receipts__amount",
+        "tableId": "tbl__receipts",
+        "name": "amount",
+        "comment": "A nyugta összege",
+        "dataType": "DECIMAL",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 145,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__description": {
+        "id": "col__receipts__description",
+        "tableId": "tbl__receipts",
+        "name": "description",
+        "comment": "A nyugta leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 145,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__vendor": {
+        "id": "col__receipts__vendor",
+        "tableId": "tbl__receipts",
+        "name": "vendor",
+        "comment": "Az eladó vagy szolgáltató neve",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 262,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__organization_id": {
+        "id": "col__receipts__organization_id",
+        "tableId": "tbl__receipts",
+        "name": "organization_id",
+        "comment": "A nyugtához tartozó szervezet",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 136,
+          "widthComment": 254,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__document": {
+        "id": "col__receipts__document",
+        "tableId": "tbl__receipts",
+        "name": "document",
+        "comment": "A nyugta dokumentuma (kép, PDF, stb.)",
+        "dataType": "media",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 78,
+          "widthComment": 300,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__created_at": {
+        "id": "col__receipts__created_at",
+        "tableId": "tbl__receipts",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__updated_at": {
+        "id": "col__receipts__updated_at",
+        "tableId": "tbl__receipts",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__receipts__published_at": {
+        "id": "col__receipts__published_at",
+        "tableId": "tbl__receipts",
+        "name": "published_at",
+        "comment": "Draft & publish timestamp",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 111,
+          "widthComment": 220,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__id": {
+        "id": "col__transactions__id",
+        "tableId": "tbl__transactions",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__document_id": {
+        "id": "col__transactions__document_id",
+        "tableId": "tbl__transactions",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__date": {
+        "id": "col__transactions__date",
+        "tableId": "tbl__transactions",
+        "name": "date",
+        "comment": "A tranzakció dátuma",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 170,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__amount": {
+        "id": "col__transactions__amount",
+        "tableId": "tbl__transactions",
+        "name": "amount",
+        "comment": "A tranzakció összege",
+        "dataType": "DECIMAL",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 178,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__description": {
+        "id": "col__transactions__description",
+        "tableId": "tbl__transactions",
+        "name": "description",
+        "comment": "A tranzakció részletes leírása",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 262,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__debit_account_id": {
+        "id": "col__transactions__debit_account_id",
+        "tableId": "tbl__transactions",
+        "name": "debit_account_id",
+        "comment": "A számla, amelyre a tranzakció tartozikként kerül rögzítésre",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 145,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__credit_account_id": {
+        "id": "col__transactions__credit_account_id",
+        "tableId": "tbl__transactions",
+        "name": "credit_account_id",
+        "comment": "A számla, amelyre a tranzakció követelként kerül rögzítésre",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 153,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__transaction_type_id": {
+        "id": "col__transactions__transaction_type_id",
+        "tableId": "tbl__transactions",
+        "name": "transaction_type_id",
+        "comment": "A tranzakció kategóriája",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 170,
+          "widthComment": 212,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__currency_type_id": {
+        "id": "col__transactions__currency_type_id",
+        "tableId": "tbl__transactions",
+        "name": "currency_type_id",
+        "comment": "A tranzakció pénzneme vagy erőforrás típusa",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 145,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__related_transaction_id": {
+        "id": "col__transactions__related_transaction_id",
+        "tableId": "tbl__transactions",
+        "name": "related_transaction_id",
+        "comment": "Egy másik tranzakció, amelyhez ez kapcsolódik",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 195,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__receipt_id": {
+        "id": "col__transactions__receipt_id",
+        "tableId": "tbl__transactions",
+        "name": "receipt_id",
+        "comment": "A tranzakcióhoz tartozó nyugta",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 94,
+          "widthComment": 262,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__created_at": {
+        "id": "col__transactions__created_at",
+        "tableId": "tbl__transactions",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__updated_at": {
+        "id": "col__transactions__updated_at",
+        "tableId": "tbl__transactions",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transactions__published_at": {
+        "id": "col__transactions__published_at",
+        "tableId": "tbl__transactions",
+        "name": "published_at",
+        "comment": "Draft & publish timestamp",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 111,
+          "widthComment": 220,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__id": {
+        "id": "col__transaction_types__id",
+        "tableId": "tbl__transaction_types",
+        "name": "id",
+        "comment": "Strapi row primary key",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 195,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__document_id": {
+        "id": "col__transaction_types__document_id",
+        "tableId": "tbl__transaction_types",
+        "name": "document_id",
+        "comment": "Strapi 5 document identifier",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 246,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__name": {
+        "id": "col__transaction_types__name",
+        "tableId": "tbl__transaction_types",
+        "name": "name",
+        "comment": "A tranzakció típus neve",
+        "dataType": "VARCHAR(255)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 204,
+          "widthDataType": 111,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__category": {
+        "id": "col__transaction_types__category",
+        "tableId": "tbl__transaction_types",
+        "name": "category",
+        "comment": "A tranzakció kategóriája (tényleges, jövőbeli, belső)",
+        "dataType": "ENUM('actual','future','internal')",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 78,
+          "widthComment": 300,
+          "widthDataType": 296,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__description": {
+        "id": "col__transaction_types__description",
+        "tableId": "tbl__transaction_types",
+        "name": "description",
+        "comment": "Részletes leírás a tranzakció típusáról",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 300,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__created_at": {
+        "id": "col__transaction_types__created_at",
+        "tableId": "tbl__transaction_types",
+        "name": "created_at",
+        "comment": "Row created at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "col__transaction_types__updated_at": {
+        "id": "col__transaction_types__updated_at",
+        "tableId": "tbl__transaction_types",
+        "name": "updated_at",
+        "comment": "Row updated at",
+        "dataType": "TIMESTAMPTZ",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 94,
+          "widthComment": 128,
+          "widthDataType": 103,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      }
+    },
+    "relationshipEntities": {
+      "rel__accounts__category": {
+        "id": "rel__accounts__category",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__account_categories",
+          "columnIds": [
+            "col__account_categories__id"
+          ],
+          "x": 1125,
+          "y": 597,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__category_id"
+          ],
+          "x": 1215,
+          "y": 623,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__accounts__organization": {
+        "id": "rel__accounts__organization",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__organizations",
+          "columnIds": [
+            "col__organizations__id"
+          ],
+          "x": 772,
+          "y": 207,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__organization_id"
+          ],
+          "x": 1215,
+          "y": 623,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__accounts__parent": {
+        "id": "rel__accounts__parent",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__id"
+          ],
+          "x": 1567,
+          "y": 470,
+          "direction": 4
+        },
+        "end": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__parent_id"
+          ],
+          "x": 1919,
+          "y": 623,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__currency_rates__from_currency_type": {
+        "id": "rel__currency_rates__from_currency_type",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__currency_types",
+          "columnIds": [
+            "col__currency_types__id"
+          ],
+          "x": 1554,
+          "y": 1065,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__currency_rates",
+          "columnIds": [
+            "col__currency_rates__from_currency_type_id"
+          ],
+          "x": 1644,
+          "y": 1078,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__currency_rates__to_currency_type": {
+        "id": "rel__currency_rates__to_currency_type",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__currency_types",
+          "columnIds": [
+            "col__currency_types__id"
+          ],
+          "x": 1554,
+          "y": 1065,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__currency_rates",
+          "columnIds": [
+            "col__currency_rates__to_currency_type_id"
+          ],
+          "x": 1644,
+          "y": 1078,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__currency_types__category": {
+        "id": "rel__currency_types__category",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__currency_categories",
+          "columnIds": [
+            "col__currency_categories__id"
+          ],
+          "x": 772,
+          "y": 1078,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__currency_types",
+          "columnIds": [
+            "col__currency_types__category_id"
+          ],
+          "x": 862,
+          "y": 1065,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__members__account": {
+        "id": "rel__members__account",
+        "identification": false,
+        "relationshipType": 2,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__id"
+          ],
+          "x": 1919,
+          "y": 623,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__members",
+          "columnIds": [
+            "col__members__account_id"
+          ],
+          "x": 1703,
+          "y": 207,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__memberships__organization": {
+        "id": "rel__memberships__organization",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__organizations",
+          "columnIds": [
+            "col__organizations__id"
+          ],
+          "x": 772,
+          "y": 207,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__memberships",
+          "columnIds": [
+            "col__memberships__organization_id"
+          ],
+          "x": 862,
+          "y": 220,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__memberships__member": {
+        "id": "rel__memberships__member",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__members",
+          "columnIds": [
+            "col__members__id"
+          ],
+          "x": 1703,
+          "y": 207,
+          "direction": 1
+        },
+        "end": {
+          "tableId": "tbl__memberships",
+          "columnIds": [
+            "col__memberships__member_id"
+          ],
+          "x": 1613,
+          "y": 220,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__memberships__membership_type": {
+        "id": "rel__memberships__membership_type",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__membership_types",
+          "columnIds": [
+            "col__membership_types__id"
+          ],
+          "x": 2485,
+          "y": 194,
+          "direction": 1
+        },
+        "end": {
+          "tableId": "tbl__memberships",
+          "columnIds": [
+            "col__memberships__membership_type_id"
+          ],
+          "x": 1613,
+          "y": 220,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__organizations__parent": {
+        "id": "rel__organizations__parent",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__organizations",
+          "columnIds": [
+            "col__organizations__id"
+          ],
+          "x": 426,
+          "y": 80,
+          "direction": 4
+        },
+        "end": {
+          "tableId": "tbl__organizations",
+          "columnIds": [
+            "col__organizations__parent_id"
+          ],
+          "x": 772,
+          "y": 207,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__receipts__organization": {
+        "id": "rel__receipts__organization",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__organizations",
+          "columnIds": [
+            "col__organizations__id"
+          ],
+          "x": 772,
+          "y": 207,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__receipts",
+          "columnIds": [
+            "col__receipts__organization_id"
+          ],
+          "x": 2009,
+          "y": 649,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__transactions__debit_account": {
+        "id": "rel__transactions__debit_account",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__id"
+          ],
+          "x": 1919,
+          "y": 623,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__debit_account_id"
+          ],
+          "x": 2519,
+          "y": 1143,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__transactions__credit_account": {
+        "id": "rel__transactions__credit_account",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__accounts",
+          "columnIds": [
+            "col__accounts__id"
+          ],
+          "x": 1919,
+          "y": 623,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__credit_account_id"
+          ],
+          "x": 2519,
+          "y": 1143,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__transactions__transaction_type": {
+        "id": "rel__transactions__transaction_type",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__transaction_types",
+          "columnIds": [
+            "col__transaction_types__id"
+          ],
+          "x": 3262.5,
+          "y": 698,
+          "direction": 8
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__transaction_type_id"
+          ],
+          "x": 2911,
+          "y": 938,
+          "direction": 4
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__transactions__currency_type": {
+        "id": "rel__transactions__currency_type",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__currency_types",
+          "columnIds": [
+            "col__currency_types__id"
+          ],
+          "x": 1554,
+          "y": 1065,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__currency_type_id"
+          ],
+          "x": 2519,
+          "y": 1143,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__transactions__related_transaction": {
+        "id": "rel__transactions__related_transaction",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__id"
+          ],
+          "x": 2911,
+          "y": 938,
+          "direction": 4
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__related_transaction_id"
+          ],
+          "x": 3303,
+          "y": 1143,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "rel__transactions__receipt": {
+        "id": "rel__transactions__receipt",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__receipts",
+          "columnIds": [
+            "col__receipts__id"
+          ],
+          "x": 2734,
+          "y": 649,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__receipt_id"
+          ],
+          "x": 2519,
+          "y": 1143,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      }
+    },
+    "indexEntities": {
+      "idx__accounts__document_id": {
+        "id": "idx__accounts__document_id",
+        "name": "uq_accounts_document_id",
+        "tableId": "tbl__accounts",
+        "indexColumnIds": [
+          "idxcol__accounts__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__accounts__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__account_categories__document_id": {
+        "id": "idx__account_categories__document_id",
+        "name": "uq_account_categories_document_id",
+        "tableId": "tbl__account_categories",
+        "indexColumnIds": [
+          "idxcol__account_categories__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__account_categories__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__currency_categories__document_id": {
+        "id": "idx__currency_categories__document_id",
+        "name": "uq_currency_categories_document_id",
+        "tableId": "tbl__currency_categories",
+        "indexColumnIds": [
+          "idxcol__currency_categories__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__currency_categories__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__currency_categories__code": {
+        "id": "idx__currency_categories__code",
+        "name": "uq_currency_categories_code",
+        "tableId": "tbl__currency_categories",
+        "indexColumnIds": [
+          "idxcol__currency_categories__code"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__currency_categories__code"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__currency_rates__document_id": {
+        "id": "idx__currency_rates__document_id",
+        "name": "uq_currency_rates_document_id",
+        "tableId": "tbl__currency_rates",
+        "indexColumnIds": [
+          "idxcol__currency_rates__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__currency_rates__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__currency_types__document_id": {
+        "id": "idx__currency_types__document_id",
+        "name": "uq_currency_types_document_id",
+        "tableId": "tbl__currency_types",
+        "indexColumnIds": [
+          "idxcol__currency_types__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__currency_types__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__currency_types__code": {
+        "id": "idx__currency_types__code",
+        "name": "uq_currency_types_code",
+        "tableId": "tbl__currency_types",
+        "indexColumnIds": [
+          "idxcol__currency_types__code"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__currency_types__code"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__members__document_id": {
+        "id": "idx__members__document_id",
+        "name": "uq_members_document_id",
+        "tableId": "tbl__members",
+        "indexColumnIds": [
+          "idxcol__members__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__members__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__members__account_id": {
+        "id": "idx__members__account_id",
+        "name": "uq_members_account_id",
+        "tableId": "tbl__members",
+        "indexColumnIds": [
+          "idxcol__members__account_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__members__account_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__members__identifier": {
+        "id": "idx__members__identifier",
+        "name": "uq_members_identifier",
+        "tableId": "tbl__members",
+        "indexColumnIds": [
+          "idxcol__members__identifier"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__members__identifier"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__members__email": {
+        "id": "idx__members__email",
+        "name": "uq_members_email",
+        "tableId": "tbl__members",
+        "indexColumnIds": [
+          "idxcol__members__email"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__members__email"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__memberships__document_id": {
+        "id": "idx__memberships__document_id",
+        "name": "uq_memberships_document_id",
+        "tableId": "tbl__memberships",
+        "indexColumnIds": [
+          "idxcol__memberships__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__memberships__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__membership_types__document_id": {
+        "id": "idx__membership_types__document_id",
+        "name": "uq_membership_types_document_id",
+        "tableId": "tbl__membership_types",
+        "indexColumnIds": [
+          "idxcol__membership_types__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__membership_types__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__membership_types__name": {
+        "id": "idx__membership_types__name",
+        "name": "uq_membership_types_name",
+        "tableId": "tbl__membership_types",
+        "indexColumnIds": [
+          "idxcol__membership_types__name"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__membership_types__name"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__organizations__document_id": {
+        "id": "idx__organizations__document_id",
+        "name": "uq_organizations_document_id",
+        "tableId": "tbl__organizations",
+        "indexColumnIds": [
+          "idxcol__organizations__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__organizations__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__receipts__document_id": {
+        "id": "idx__receipts__document_id",
+        "name": "uq_receipts_document_id",
+        "tableId": "tbl__receipts",
+        "indexColumnIds": [
+          "idxcol__receipts__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__receipts__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__receipts__reference": {
+        "id": "idx__receipts__reference",
+        "name": "uq_receipts_reference",
+        "tableId": "tbl__receipts",
+        "indexColumnIds": [
+          "idxcol__receipts__reference"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__receipts__reference"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__transactions__document_id": {
+        "id": "idx__transactions__document_id",
+        "name": "uq_transactions_document_id",
+        "tableId": "tbl__transactions",
+        "indexColumnIds": [
+          "idxcol__transactions__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__transactions__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idx__transaction_types__document_id": {
+        "id": "idx__transaction_types__document_id",
+        "name": "uq_transaction_types_document_id",
+        "tableId": "tbl__transaction_types",
+        "indexColumnIds": [
+          "idxcol__transaction_types__document_id"
+        ],
+        "seqIndexColumnIds": [
+          "idxcol__transaction_types__document_id"
+        ],
+        "unique": true,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      }
+    },
+    "indexColumnEntities": {
+      "idxcol__accounts__document_id": {
+        "id": "idxcol__accounts__document_id",
+        "indexId": "idx__accounts__document_id",
+        "columnId": "col__accounts__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__account_categories__document_id": {
+        "id": "idxcol__account_categories__document_id",
+        "indexId": "idx__account_categories__document_id",
+        "columnId": "col__account_categories__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__currency_categories__document_id": {
+        "id": "idxcol__currency_categories__document_id",
+        "indexId": "idx__currency_categories__document_id",
+        "columnId": "col__currency_categories__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__currency_categories__code": {
+        "id": "idxcol__currency_categories__code",
+        "indexId": "idx__currency_categories__code",
+        "columnId": "col__currency_categories__code",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__currency_rates__document_id": {
+        "id": "idxcol__currency_rates__document_id",
+        "indexId": "idx__currency_rates__document_id",
+        "columnId": "col__currency_rates__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__currency_types__document_id": {
+        "id": "idxcol__currency_types__document_id",
+        "indexId": "idx__currency_types__document_id",
+        "columnId": "col__currency_types__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__currency_types__code": {
+        "id": "idxcol__currency_types__code",
+        "indexId": "idx__currency_types__code",
+        "columnId": "col__currency_types__code",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__members__document_id": {
+        "id": "idxcol__members__document_id",
+        "indexId": "idx__members__document_id",
+        "columnId": "col__members__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__members__account_id": {
+        "id": "idxcol__members__account_id",
+        "indexId": "idx__members__account_id",
+        "columnId": "col__members__account_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__members__identifier": {
+        "id": "idxcol__members__identifier",
+        "indexId": "idx__members__identifier",
+        "columnId": "col__members__identifier",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__members__email": {
+        "id": "idxcol__members__email",
+        "indexId": "idx__members__email",
+        "columnId": "col__members__email",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__memberships__document_id": {
+        "id": "idxcol__memberships__document_id",
+        "indexId": "idx__memberships__document_id",
+        "columnId": "col__memberships__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__membership_types__document_id": {
+        "id": "idxcol__membership_types__document_id",
+        "indexId": "idx__membership_types__document_id",
+        "columnId": "col__membership_types__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__membership_types__name": {
+        "id": "idxcol__membership_types__name",
+        "indexId": "idx__membership_types__name",
+        "columnId": "col__membership_types__name",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__organizations__document_id": {
+        "id": "idxcol__organizations__document_id",
+        "indexId": "idx__organizations__document_id",
+        "columnId": "col__organizations__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__receipts__document_id": {
+        "id": "idxcol__receipts__document_id",
+        "indexId": "idx__receipts__document_id",
+        "columnId": "col__receipts__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__receipts__reference": {
+        "id": "idxcol__receipts__reference",
+        "indexId": "idx__receipts__reference",
+        "columnId": "col__receipts__reference",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__transactions__document_id": {
+        "id": "idxcol__transactions__document_id",
+        "indexId": "idx__transactions__document_id",
+        "columnId": "col__transactions__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      },
+      "idxcol__transaction_types__document_id": {
+        "id": "idxcol__transaction_types__document_id",
+        "indexId": "idx__transaction_types__document_id",
+        "columnId": "col__transaction_types__document_id",
+        "orderType": 1,
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      }
+    },
+    "memoEntities": {
+      "memo__legend": {
+        "id": "memo__legend",
+        "value": "CURR — Strapi 5 content types\nSource: src/api/**/schema.json\n\nBlue: community  ·  Purple: accounts\nGreen: ledger  ·  Gold: currency\n\nOwning-side FKs only (mappedBy omitted).\ndocument_id is the Strapi 5 document key.\npublished_at only when draftAndPublish is on.",
+        "ui": {
+          "x": 80,
+          "y": 1478,
+          "width": 420,
+          "height": 210,
+          "zIndex": 1,
+          "color": ""
+        },
+        "meta": {
+          "updateAt": 1789992579651,
+          "createAt": 1789992579651
+        }
+      }
+    }
+  }
+}
