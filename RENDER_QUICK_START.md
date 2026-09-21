@@ -29,7 +29,7 @@ Keep existing secrets if they are already set. Confirm these exist:
 ```
 NODE_VERSION=20
 NODE_ENV=production
-NODE_OPTIONS=--max-old-space-size=512
+NODE_OPTIONS=--max-old-space-size=1536
 HOST=0.0.0.0
 DATABASE_CLIENT=postgres
 DATABASE_SSL=true
@@ -56,7 +56,7 @@ Cloudinary vars only if you use uploads. Optional: `CORS_ORIGINS` for Appsmith.
 
 **Manual Deploy → Deploy latest commit.**
 
-Expect 5–10 minutes. Free instances often OOM on `strapi build`. If logs say **Killed**, upgrade the instance (Starter / 1 GB), then redeploy.
+Expect 5–10 minutes. **Free (512 MB) cannot finish `strapi build`.** The admin panel needs ~1 GB of heap. In Settings → upgrade to a **2 GB** plan, set `NODE_OPTIONS=--max-old-space-size=1536`, then Manual Deploy. Raising the heap on Free only gets the process killed by the container.
 
 ## 4. Check
 

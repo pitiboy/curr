@@ -15,7 +15,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_OPTIONS
-        value: --max-old-space-size=512
+        value: --max-old-space-size=1536
       - key: HOST
         value: 0.0.0.0
       - key: DATABASE_CLIENT

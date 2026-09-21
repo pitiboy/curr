@@ -31,7 +31,7 @@ Skip `render.yaml` for this cutover. A Blueprint would create another web servic
 ```
 NODE_VERSION=20
 NODE_ENV=production
-NODE_OPTIONS=--max-old-space-size=512
+NODE_OPTIONS=--max-old-space-size=1536
 HOST=0.0.0.0
 DATABASE_CLIENT=postgres
 DATABASE_SSL=true
@@ -63,7 +63,7 @@ Optional: Cloudinary (`CLOUDINARY_*`), `CORS_ORIGINS`.
 | Symptom | Fix |
 | --- | --- |
 | `strapi: not found` in ~7s | Install never ran. Set **Install Command** to `npm ci` (or Build to `npm ci && npm run build`). Logs must show a dependency install before `strapi build`. |
-| Build **Killed** / OOM | Free RAM is too small; set `NODE_OPTIONS` and upgrade off Free |
+| `JavaScript heap out of memory` / **Killed** | Admin build needs more than 512 MB. Upgrade to **2 GB**, set `NODE_OPTIONS=--max-old-space-size=1536`. Do not keep heap at 512 on Free. |
 | DB connection errors | Use **Internal** `DATABASE_URL`, same region (Frankfurt) |
 | Admin cookies fail on HTTPS | `IS_PROXIED=true` and `PUBLIC_URL=https://curr-zep-strapi.onrender.com` |
 | Missing `ENCRYPTION_KEY` | Generate and set it before boot |
