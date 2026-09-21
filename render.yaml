@@ -1,0 +1,61 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Existing services: after merge, clear Root Directory and keep the current Postgres.
+# Do not apply this Blueprint if it would create a second database you do not want.
+
+services:
+  - type: web
+    name: curr-strapi
+    runtime: node
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /_health
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: NODE_ENV
+        value: production
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=512
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_CLIENT
+        value: postgres
+      - key: DATABASE_SSL
+        value: 'true'
+      - key: IS_PROXIED
+        value: 'true'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: curr-strapi-db
+          property: connectionString
+      - key: APP_KEYS
+        sync: false
+      - key: API_TOKEN_SALT
+        sync: false
+      - key: ADMIN_JWT_SECRET
+        sync: false
+      - key: TRANSFER_TOKEN_SALT
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CLOUDINARY_NAME
+        sync: false
+      - key: CLOUDINARY_KEY
+        sync: false
+      - key: CLOUDINARY_SECRET
+        sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: strapi-uploads
+
+databases:
+  - name: curr-strapi-db
+    databaseName: strapi
+    user: strapi

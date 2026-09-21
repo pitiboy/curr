@@ -50,8 +50,9 @@ The seeder is now manual-only and does not run automatically.
 #### Option 1: Using the seed script
 
 ```bash
-# From the backend-strapi directory
-node scripts/seed-database.js
+# From the repository root
+npm run seed
+# or: node scripts/seed-database.js
 ```
 
 #### Option 2: In Strapi console

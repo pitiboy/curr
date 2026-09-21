@@ -1,6 +1,36 @@
 import path from 'path';
 
 export default ({ env }) => {
+  const databaseUrl = env('DATABASE_URL');
+  const isProduction = env('NODE_ENV') === 'production';
+
+  if (databaseUrl) {
+    const sslEnabled = env.bool('DATABASE_SSL', isProduction);
+
+    return {
+      connection: {
+        client: 'postgres',
+        connection: {
+          connectionString: databaseUrl,
+          ssl: sslEnabled && {
+            rejectUnauthorized: env.bool(
+              'DATABASE_SSL_REJECT_UNAUTHORIZED',
+              false
+            ),
+          },
+        },
+        pool: {
+          min: env.int('DATABASE_POOL_MIN', 2),
+          max: env.int('DATABASE_POOL_MAX', 10),
+        },
+        acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
+      },
+      settings: {
+        forceMigration: env.bool('DATABASE_FORCE_MIGRATION', false),
+      },
+    };
+  }
+
   const client = env('DATABASE_CLIENT', 'sqlite');
 
   const connections = {
@@ -30,7 +60,6 @@ export default ({ env }) => {
     },
     postgres: {
       connection: {
-        connectionString: env('DATABASE_URL'),
         host: env('DATABASE_HOST', 'localhost'),
         port: env.int('DATABASE_PORT', 5432),
         database: env('DATABASE_NAME', 'strapi'),
