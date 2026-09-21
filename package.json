@@ -27,6 +27,8 @@
     "docker:logs": "docker compose --env-file .env.docker logs -f"
   },
   "dependencies": {
+    "@neon/config": "^1.7.2",
+    "@neon/env": "^1.4.3",
     "@strapi/plugin-cloud": "5.27.0",
     "@strapi/plugin-users-permissions": "5.27.0",
     "@strapi/provider-upload-cloudinary": "5.27.0",
