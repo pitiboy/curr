@@ -50,21 +50,16 @@
         "description": "Az eladó vagy szolgáltató neve"
       }
     },
-    "organization": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::organization.organization",
-      "inversedBy": "receipts",
-      "metadatas": {
-        "label": "Szervezet",
-        "description": "A nyugtához tartozó szervezet"
-      }
-    },
     "document": {
       "type": "media",
       "multiple": false,
       "required": true,
-      "allowedTypes": ["images", "files", "videos", "audios"],
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
       "metadatas": {
         "label": "Dokumentum",
         "description": "A nyugta dokumentuma (kép, PDF, stb.)"
@@ -74,11 +69,7 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "receipt",
-      "metadatas": {
-        "label": "Tranzakciók",
-        "description": "A nyugtához tartozó tranzakciók"
-      }
+      "mappedBy": "receipt"
     }
   }
 }

@@ -58,12 +58,12 @@
       "rel__memberships__member",
       "rel__memberships__membership_type",
       "rel__organizations__parent",
-      "rel__receipts__organization",
       "rel__transactions__debit_account",
       "rel__transactions__credit_account",
       "rel__transactions__transaction_type",
       "rel__transactions__currency_type",
       "rel__transactions__related_transaction",
+      "rel__transactions__organization",
       "rel__transactions__receipt"
     ],
     "indexIds": [
@@ -130,8 +130,8 @@
           "color": "#7B68A6"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__account_categories": {
@@ -167,8 +167,8 @@
           "color": "#7B68A6"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__currency_categories": {
@@ -199,15 +199,15 @@
         ],
         "ui": {
           "x": 80,
-          "y": 938,
+          "y": 912,
           "zIndex": 1,
           "widthName": 170,
           "widthComment": 300,
           "color": "#C9A227"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__currency_rates": {
@@ -238,15 +238,15 @@
         ],
         "ui": {
           "x": 1644,
-          "y": 938,
+          "y": 912,
           "zIndex": 3,
           "widthName": 128,
           "widthComment": 300,
           "color": "#C9A227"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__currency_types": {
@@ -275,15 +275,15 @@
         ],
         "ui": {
           "x": 862,
-          "y": 938,
+          "y": 912,
           "zIndex": 2,
           "widthName": 128,
           "widthComment": 300,
           "color": "#C9A227"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__members": {
@@ -319,8 +319,8 @@
           "color": "#4A90D9"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__memberships": {
@@ -358,8 +358,8 @@
           "color": "#4A90D9"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__membership_types": {
@@ -393,8 +393,8 @@
           "color": "#4A90D9"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__organizations": {
@@ -430,8 +430,8 @@
           "color": "#4A90D9"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__receipts": {
@@ -446,7 +446,6 @@
           "col__receipts__amount",
           "col__receipts__description",
           "col__receipts__vendor",
-          "col__receipts__organization_id",
           "col__receipts__document",
           "col__receipts__created_at",
           "col__receipts__updated_at",
@@ -460,7 +459,6 @@
           "col__receipts__amount",
           "col__receipts__description",
           "col__receipts__vendor",
-          "col__receipts__organization_id",
           "col__receipts__document",
           "col__receipts__created_at",
           "col__receipts__updated_at",
@@ -475,8 +473,8 @@
           "color": "#3D8B6E"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__transactions": {
@@ -494,6 +492,7 @@
           "col__transactions__transaction_type_id",
           "col__transactions__currency_type_id",
           "col__transactions__related_transaction_id",
+          "col__transactions__organization_id",
           "col__transactions__receipt_id",
           "col__transactions__created_at",
           "col__transactions__updated_at",
@@ -510,6 +509,7 @@
           "col__transactions__transaction_type_id",
           "col__transactions__currency_type_id",
           "col__transactions__related_transaction_id",
+          "col__transactions__organization_id",
           "col__transactions__receipt_id",
           "col__transactions__created_at",
           "col__transactions__updated_at",
@@ -517,15 +517,15 @@
         ],
         "ui": {
           "x": 2519,
-          "y": 938,
+          "y": 912,
           "zIndex": 4,
           "widthName": 111,
           "widthComment": 300,
           "color": "#3D8B6E"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "tbl__transaction_types": {
@@ -551,7 +551,7 @@
           "col__transaction_types__updated_at"
         ],
         "ui": {
-          "x": 2824,
+          "x": 2799,
           "y": 470,
           "zIndex": 4,
           "widthName": 153,
@@ -559,8 +559,8 @@
           "color": "#3D8B6E"
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       }
     },
@@ -581,8 +581,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__document_id": {
@@ -601,8 +601,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__code": {
@@ -621,8 +621,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__name": {
@@ -641,8 +641,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__category_id": {
@@ -661,8 +661,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__description": {
@@ -681,8 +681,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__organization_id": {
@@ -701,8 +701,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__parent_id": {
@@ -721,8 +721,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__created_at": {
@@ -741,8 +741,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__accounts__updated_at": {
@@ -761,8 +761,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__id": {
@@ -781,8 +781,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__document_id": {
@@ -801,8 +801,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__name": {
@@ -821,8 +821,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__type": {
@@ -841,8 +841,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__description": {
@@ -861,8 +861,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__color": {
@@ -881,8 +881,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__created_at": {
@@ -901,8 +901,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__account_categories__updated_at": {
@@ -921,8 +921,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__id": {
@@ -941,8 +941,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__document_id": {
@@ -961,8 +961,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__name": {
@@ -981,8 +981,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__code": {
@@ -1001,8 +1001,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__description": {
@@ -1021,8 +1021,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__icon": {
@@ -1041,8 +1041,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__color": {
@@ -1061,8 +1061,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__created_at": {
@@ -1081,8 +1081,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_categories__updated_at": {
@@ -1101,8 +1101,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__id": {
@@ -1121,8 +1121,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__document_id": {
@@ -1141,8 +1141,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__rate": {
@@ -1161,8 +1161,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__valid_from": {
@@ -1181,8 +1181,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__valid_to": {
@@ -1201,8 +1201,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__from_currency_type_id": {
@@ -1221,8 +1221,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__to_currency_type_id": {
@@ -1241,8 +1241,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__created_at": {
@@ -1261,8 +1261,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_rates__updated_at": {
@@ -1281,8 +1281,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__id": {
@@ -1301,8 +1301,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__document_id": {
@@ -1321,8 +1321,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__code": {
@@ -1341,8 +1341,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__name": {
@@ -1361,8 +1361,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__category_id": {
@@ -1381,8 +1381,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__unit": {
@@ -1401,8 +1401,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__created_at": {
@@ -1421,8 +1421,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__currency_types__updated_at": {
@@ -1441,8 +1441,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__id": {
@@ -1461,8 +1461,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__document_id": {
@@ -1481,8 +1481,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__account_id": {
@@ -1501,8 +1501,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__identifier": {
@@ -1521,8 +1521,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__name": {
@@ -1541,8 +1541,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__email": {
@@ -1561,8 +1561,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__created_at": {
@@ -1581,8 +1581,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__members__updated_at": {
@@ -1601,8 +1601,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__id": {
@@ -1621,8 +1621,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__document_id": {
@@ -1641,8 +1641,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__organization_id": {
@@ -1661,8 +1661,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__member_id": {
@@ -1681,8 +1681,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__membership_type_id": {
@@ -1701,8 +1701,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__valid_from": {
@@ -1721,8 +1721,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__valid_to": {
@@ -1741,8 +1741,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__created_at": {
@@ -1761,8 +1761,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__memberships__updated_at": {
@@ -1781,8 +1781,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__id": {
@@ -1801,8 +1801,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__document_id": {
@@ -1821,8 +1821,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__name": {
@@ -1841,8 +1841,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__description": {
@@ -1861,8 +1861,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__color": {
@@ -1881,8 +1881,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__created_at": {
@@ -1901,8 +1901,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__membership_types__updated_at": {
@@ -1921,8 +1921,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__id": {
@@ -1941,8 +1941,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__document_id": {
@@ -1961,8 +1961,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__name": {
@@ -1981,8 +1981,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__description": {
@@ -2001,8 +2001,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__address": {
@@ -2021,8 +2021,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__parent_id": {
@@ -2041,8 +2041,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__created_at": {
@@ -2061,8 +2061,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__organizations__updated_at": {
@@ -2081,8 +2081,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__id": {
@@ -2101,8 +2101,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__document_id": {
@@ -2121,8 +2121,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__reference": {
@@ -2141,8 +2141,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__date": {
@@ -2161,8 +2161,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__amount": {
@@ -2181,8 +2181,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__description": {
@@ -2201,8 +2201,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__vendor": {
@@ -2221,28 +2221,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
-        }
-      },
-      "col__receipts__organization_id": {
-        "id": "col__receipts__organization_id",
-        "tableId": "tbl__receipts",
-        "name": "organization_id",
-        "comment": "A nyugtához tartozó szervezet",
-        "dataType": "INTEGER",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 2,
-          "widthName": 136,
-          "widthComment": 254,
-          "widthDataType": 69,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__document": {
@@ -2261,8 +2241,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__created_at": {
@@ -2281,8 +2261,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__updated_at": {
@@ -2301,8 +2281,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__receipts__published_at": {
@@ -2321,8 +2301,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__id": {
@@ -2341,8 +2321,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__document_id": {
@@ -2361,75 +2341,75 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__date": {
         "id": "col__transactions__date",
         "tableId": "tbl__transactions",
         "name": "date",
-        "comment": "A tranzakció dátuma",
-        "dataType": "TIMESTAMPTZ",
+        "comment": "",
+        "dataType": "DATE",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 170,
-          "widthDataType": 103,
+          "widthComment": 60,
+          "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__amount": {
         "id": "col__transactions__amount",
         "tableId": "tbl__transactions",
         "name": "amount",
-        "comment": "A tranzakció összege",
+        "comment": "",
         "dataType": "DECIMAL",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 61,
-          "widthComment": 178,
+          "widthComment": 60,
           "widthDataType": 69,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__description": {
         "id": "col__transactions__description",
         "tableId": "tbl__transactions",
         "name": "description",
-        "comment": "A tranzakció részletes leírása",
+        "comment": "",
         "dataType": "TEXT",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 103,
-          "widthComment": 262,
+          "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__debit_account_id": {
         "id": "col__transactions__debit_account_id",
         "tableId": "tbl__transactions",
         "name": "debit_account_id",
-        "comment": "A számla, amelyre a tranzakció tartozikként kerül rögzítésre",
+        "comment": "mire ment a pénz (anyag, bér, a megvett dolog)",
         "dataType": "INTEGER",
         "default": "",
         "options": 0,
@@ -2441,15 +2421,15 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__credit_account_id": {
         "id": "col__transactions__credit_account_id",
         "tableId": "tbl__transactions",
         "name": "credit_account_id",
-        "comment": "A számla, amelyre a tranzakció követelként kerül rögzítésre",
+        "comment": "Honnan fizetted ki (pl készpénz vagy bank)",
         "dataType": "INTEGER",
         "default": "",
         "options": 0,
@@ -2461,8 +2441,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__transaction_type_id": {
@@ -2481,8 +2461,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__currency_type_id": {
@@ -2501,8 +2481,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__related_transaction_id": {
@@ -2521,8 +2501,28 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
+        }
+      },
+      "col__transactions__organization_id": {
+        "id": "col__transactions__organization_id",
+        "tableId": "tbl__transactions",
+        "name": "organization_id",
+        "comment": "A szervezeti fa azon csomópontja, amelyre a költség tartozik (a projekt)",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 136,
+          "widthComment": 300,
+          "widthDataType": 69,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__receipt_id": {
@@ -2541,8 +2541,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__created_at": {
@@ -2561,8 +2561,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__updated_at": {
@@ -2581,8 +2581,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transactions__published_at": {
@@ -2601,8 +2601,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__id": {
@@ -2621,8 +2621,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__document_id": {
@@ -2641,8 +2641,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__name": {
@@ -2661,8 +2661,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__category": {
@@ -2681,8 +2681,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__description": {
@@ -2701,8 +2701,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__created_at": {
@@ -2721,8 +2721,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "col__transaction_types__updated_at": {
@@ -2741,8 +2741,8 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       }
     },
@@ -2771,8 +2771,8 @@
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__accounts__organization": {
@@ -2799,8 +2799,8 @@
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__accounts__parent": {
@@ -2827,8 +2827,8 @@
           "direction": 2
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__currency_rates__from_currency_type": {
@@ -2842,7 +2842,7 @@
             "col__currency_types__id"
           ],
           "x": 1554,
-          "y": 1065,
+          "y": 1039,
           "direction": 2
         },
         "end": {
@@ -2851,12 +2851,12 @@
             "col__currency_rates__from_currency_type_id"
           ],
           "x": 1644,
-          "y": 1078,
+          "y": 1052,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__currency_rates__to_currency_type": {
@@ -2870,7 +2870,7 @@
             "col__currency_types__id"
           ],
           "x": 1554,
-          "y": 1065,
+          "y": 1039,
           "direction": 2
         },
         "end": {
@@ -2879,12 +2879,12 @@
             "col__currency_rates__to_currency_type_id"
           ],
           "x": 1644,
-          "y": 1078,
+          "y": 1052,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__currency_types__category": {
@@ -2898,7 +2898,7 @@
             "col__currency_categories__id"
           ],
           "x": 772,
-          "y": 1078,
+          "y": 1052,
           "direction": 2
         },
         "end": {
@@ -2907,12 +2907,12 @@
             "col__currency_types__category_id"
           ],
           "x": 862,
-          "y": 1065,
+          "y": 1039,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__members__account": {
@@ -2939,8 +2939,8 @@
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__memberships__organization": {
@@ -2967,8 +2967,8 @@
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__memberships__member": {
@@ -2995,8 +2995,8 @@
           "direction": 2
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__memberships__membership_type": {
@@ -3023,8 +3023,8 @@
           "direction": 2
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__organizations__parent": {
@@ -3051,36 +3051,8 @@
           "direction": 2
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
-        }
-      },
-      "rel__receipts__organization": {
-        "id": "rel__receipts__organization",
-        "identification": false,
-        "relationshipType": 4,
-        "startRelationshipType": 1,
-        "start": {
-          "tableId": "tbl__organizations",
-          "columnIds": [
-            "col__organizations__id"
-          ],
-          "x": 772,
-          "y": 207,
-          "direction": 2
-        },
-        "end": {
-          "tableId": "tbl__receipts",
-          "columnIds": [
-            "col__receipts__organization_id"
-          ],
-          "x": 2009,
-          "y": 649,
-          "direction": 1
-        },
-        "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__transactions__debit_account": {
@@ -3103,12 +3075,12 @@
             "col__transactions__debit_account_id"
           ],
           "x": 2519,
-          "y": 1143,
+          "y": 1130,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__transactions__credit_account": {
@@ -3131,12 +3103,12 @@
             "col__transactions__credit_account_id"
           ],
           "x": 2519,
-          "y": 1143,
+          "y": 1130,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__transactions__transaction_type": {
@@ -3149,7 +3121,7 @@
           "columnIds": [
             "col__transaction_types__id"
           ],
-          "x": 3262.5,
+          "x": 3237.5,
           "y": 698,
           "direction": 8
         },
@@ -3159,12 +3131,12 @@
             "col__transactions__transaction_type_id"
           ],
           "x": 2911,
-          "y": 938,
+          "y": 912,
           "direction": 4
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__transactions__currency_type": {
@@ -3178,7 +3150,7 @@
             "col__currency_types__id"
           ],
           "x": 1554,
-          "y": 1065,
+          "y": 1039,
           "direction": 2
         },
         "end": {
@@ -3187,12 +3159,12 @@
             "col__transactions__currency_type_id"
           ],
           "x": 2519,
-          "y": 1143,
+          "y": 1130,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__transactions__related_transaction": {
@@ -3206,7 +3178,7 @@
             "col__transactions__id"
           ],
           "x": 2911,
-          "y": 938,
+          "y": 912,
           "direction": 4
         },
         "end": {
@@ -3215,12 +3187,40 @@
             "col__transactions__related_transaction_id"
           ],
           "x": 3303,
-          "y": 1143,
+          "y": 1130,
           "direction": 2
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
+        }
+      },
+      "rel__transactions__organization": {
+        "id": "rel__transactions__organization",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 1,
+        "start": {
+          "tableId": "tbl__organizations",
+          "columnIds": [
+            "col__organizations__id"
+          ],
+          "x": 772,
+          "y": 207,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl__transactions",
+          "columnIds": [
+            "col__transactions__organization_id"
+          ],
+          "x": 2519,
+          "y": 1130,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "rel__transactions__receipt": {
@@ -3233,8 +3233,8 @@
           "columnIds": [
             "col__receipts__id"
           ],
-          "x": 2734,
-          "y": 649,
+          "x": 2709,
+          "y": 636,
           "direction": 2
         },
         "end": {
@@ -3243,12 +3243,12 @@
             "col__transactions__receipt_id"
           ],
           "x": 2519,
-          "y": 1143,
+          "y": 1130,
           "direction": 1
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       }
     },
@@ -3265,8 +3265,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__account_categories__document_id": {
@@ -3281,8 +3281,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__currency_categories__document_id": {
@@ -3297,8 +3297,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__currency_categories__code": {
@@ -3313,8 +3313,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__currency_rates__document_id": {
@@ -3329,8 +3329,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__currency_types__document_id": {
@@ -3345,8 +3345,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__currency_types__code": {
@@ -3361,8 +3361,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__members__document_id": {
@@ -3377,8 +3377,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__members__account_id": {
@@ -3393,8 +3393,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__members__identifier": {
@@ -3409,8 +3409,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__members__email": {
@@ -3425,8 +3425,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__memberships__document_id": {
@@ -3441,8 +3441,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__membership_types__document_id": {
@@ -3457,8 +3457,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__membership_types__name": {
@@ -3473,8 +3473,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__organizations__document_id": {
@@ -3489,8 +3489,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__receipts__document_id": {
@@ -3505,8 +3505,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__receipts__reference": {
@@ -3521,8 +3521,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__transactions__document_id": {
@@ -3537,8 +3537,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idx__transaction_types__document_id": {
@@ -3553,8 +3553,8 @@
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       }
     },
@@ -3565,8 +3565,8 @@
         "columnId": "col__accounts__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__account_categories__document_id": {
@@ -3575,8 +3575,8 @@
         "columnId": "col__account_categories__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__currency_categories__document_id": {
@@ -3585,8 +3585,8 @@
         "columnId": "col__currency_categories__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__currency_categories__code": {
@@ -3595,8 +3595,8 @@
         "columnId": "col__currency_categories__code",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__currency_rates__document_id": {
@@ -3605,8 +3605,8 @@
         "columnId": "col__currency_rates__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__currency_types__document_id": {
@@ -3615,8 +3615,8 @@
         "columnId": "col__currency_types__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__currency_types__code": {
@@ -3625,8 +3625,8 @@
         "columnId": "col__currency_types__code",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__members__document_id": {
@@ -3635,8 +3635,8 @@
         "columnId": "col__members__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__members__account_id": {
@@ -3645,8 +3645,8 @@
         "columnId": "col__members__account_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__members__identifier": {
@@ -3655,8 +3655,8 @@
         "columnId": "col__members__identifier",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__members__email": {
@@ -3665,8 +3665,8 @@
         "columnId": "col__members__email",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__memberships__document_id": {
@@ -3675,8 +3675,8 @@
         "columnId": "col__memberships__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__membership_types__document_id": {
@@ -3685,8 +3685,8 @@
         "columnId": "col__membership_types__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__membership_types__name": {
@@ -3695,8 +3695,8 @@
         "columnId": "col__membership_types__name",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__organizations__document_id": {
@@ -3705,8 +3705,8 @@
         "columnId": "col__organizations__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__receipts__document_id": {
@@ -3715,8 +3715,8 @@
         "columnId": "col__receipts__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__receipts__reference": {
@@ -3725,8 +3725,8 @@
         "columnId": "col__receipts__reference",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__transactions__document_id": {
@@ -3735,8 +3735,8 @@
         "columnId": "col__transactions__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       },
       "idxcol__transaction_types__document_id": {
@@ -3745,8 +3745,8 @@
         "columnId": "col__transaction_types__document_id",
         "orderType": 1,
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       }
     },
@@ -3763,8 +3763,8 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1789992579651,
-          "createAt": 1789992579651
+          "updateAt": 1790627879208,
+          "createAt": 1790627879208
         }
       }
     }

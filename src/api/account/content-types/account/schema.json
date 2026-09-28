@@ -80,21 +80,13 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "debit_account",
-      "metadatas": {
-        "label": "Tartozik tranzakciók",
-        "description": "A számlára tartozikként rögzített tranzakciók"
-      }
+      "mappedBy": "debit_account"
     },
     "credit_transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "credit_account",
-      "metadatas": {
-        "label": "Követel tranzakciók",
-        "description": "A számlára követelként rögzített tranzakciók"
-      }
+      "mappedBy": "credit_account"
     }
   }
 }

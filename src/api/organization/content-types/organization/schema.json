@@ -75,14 +75,14 @@
         "description": "A szervezethez tartozó számlák"
       }
     },
-    "receipts": {
+    "transactions": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::receipt.receipt",
+      "target": "api::transaction.transaction",
       "mappedBy": "organization",
       "metadatas": {
-        "label": "Nyugták",
-        "description": "A szervezethez tartozó nyugták"
+        "label": "Tranzakciók",
+        "description": "A szervezethez tartozó tranzakciók"
       }
     }
   }

@@ -54,11 +54,7 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "currency_type",
-      "metadatas": {
-        "label": "Tranzakciók",
-        "description": "Az ezzel a pénznemmel rögzített tranzakciók"
-      }
+      "mappedBy": "currency_type"
     },
     "exchange_rates_from": {
       "type": "relation",

@@ -852,7 +852,10 @@ export interface ApiOrganizationOrganization
       'api::organization.organization'
     >;
     publishedAt: Schema.Attribute.DateTime;
-    receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;
+    transactions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -884,10 +887,6 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
       'api::receipt.receipt'
     > &
       Schema.Attribute.Private;
-    organization: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::organization.organization'
-    >;
     publishedAt: Schema.Attribute.DateTime;
     reference: Schema.Attribute.UID;
     transactions: Schema.Attribute.Relation<
@@ -966,7 +965,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::currency-type.currency-type'
     >;
-    date: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
     debit_account: Schema.Attribute.Relation<
       'manyToOne',
       'api::account.account'
@@ -978,6 +977,10 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       'api::transaction.transaction'
     > &
       Schema.Attribute.Private;
+    organization: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::organization.organization'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     receipt: Schema.Attribute.Relation<'manyToOne', 'api::receipt.receipt'>;
     related_transaction: Schema.Attribute.Relation<
