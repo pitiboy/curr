@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Leveles körforgás</title>
+  <path d="M 16.48 52.10C 21.94 48.34 31.19 44.04 30.08 35.98C 28.11 29.51 27.04 25.61 26.74 23.90C 26.14 25.13 23.95 27.36 19.86 32.25C 14.84 38.73 17.98 47.53 16.48 52.10Z" fill="#14663A"/>
+  <path d="M 57.16 35.40C 51.18 32.54 42.83 26.68 36.40 31.67C 31.79 36.61 28.95 39.49 27.62 40.60C 28.97 40.51 32.01 41.29 38.29 42.39C 46.41 43.50 52.46 36.38 57.16 35.40Z" fill="#1B7A45"/>
+  <path d="M 22.36 8.51C 22.88 15.12 21.98 25.28 29.52 28.35C 36.10 29.88 40.01 30.90 41.64 31.49C 40.88 30.37 40.05 27.35 37.85 21.36C 34.75 13.77 25.56 12.09 22.36 8.51Z" fill="#2F9A56"/>
+  <path d="M 23.57 11.41Q 29.52 22.08 37.45 28.75" fill="none" stroke="#0C3F24" stroke-width="1.85" stroke-linecap="round"/>
+  <path d="M 54.05 35.00Q 41.83 34.81 32.10 38.34" fill="none" stroke="#0C3F24" stroke-width="1.85" stroke-linecap="round"/>
+  <path d="M 18.38 49.59Q 24.65 39.11 26.46 28.91" fill="none" stroke="#0C3F24" stroke-width="1.85" stroke-linecap="round"/>
+</svg>

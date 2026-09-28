@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KÖR logóváltozatok</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      header, section { padding: 40px 28px 48px; }
+      h1, h2, p { margin: 0; }
+      h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; }
+      header p { margin-top: 8px; max-width: 40rem; line-height: 1.45; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+        margin-top: 32px;
+      }
+      h2 { font-size: 1.25rem; font-weight: 600; }
+      .note {
+        margin-top: 6px;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.92rem;
+        line-height: 1.4;
+      }
+      .sizes {
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 18px 16px;
+        margin-top: 18px;
+      }
+      figure { margin: 0; }
+      figcaption {
+        margin-top: 6px;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.75rem;
+      }
+      img { display: block; }
+      .large { width: 220px; height: 220px; }
+      .zoom {
+        width: 64px;
+        height: 64px;
+        image-rendering: pixelated;
+      }
+      .light { background: #f4f7f5; color: #143028; }
+      .light .note, .light figcaption { color: #3d5c4c; }
+      .dark { background: #101816; color: #e7f3ec; }
+      .dark .note, .dark figcaption { color: #b7cfc3; }
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+        .large { width: min(220px, 70vw); height: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="light">
+      <h1>KÖR logóváltozatok</h1>
+      <p>A körforgás és két változata. A nagy kép, a kicsi kép és a favicon ugyanabból a formából készül.</p>
+    </header>
+
+    <section class="light" aria-labelledby="light-title">
+      <h2 id="light-title">Világos háttér</h2>
+      <div class="grid">
+        <article>
+          <h2>Körforgás</h2>
+          <p class="note">Három vastagodó ív az óramutató járásával. A közép nyitott.</p>
+          <div class="sizes">
+            <figure>
+              <a href="korforgas/large.png"><img class="large" src="korforgas/large.png" width="1024" height="1024" alt="Körforgás, nagy jel"></a>
+              <figcaption>Nagy, 1024</figcaption>
+            </figure>
+            <figure>
+              <img src="korforgas/small.png" width="128" height="128" alt="Körforgás, kicsi jel">
+              <figcaption>Kicsi, 128</figcaption>
+            </figure>
+            <figure>
+              <img src="korforgas/favicon-32.png" width="32" height="32" alt="Körforgás, 32 pixeles favicon">
+              <figcaption>Favicon, 32</figcaption>
+            </figure>
+            <figure>
+              <img class="zoom" src="korforgas/favicon-16.png" width="16" height="16" alt="Körforgás, 16 pixeles favicon nagyítva">
+              <figcaption>Favicon, 16</figcaption>
+            </figure>
+          </div>
+        </article>
+        <article>
+          <h2>Színes</h2>
+          <p class="note">Zöld a szeretet és a gyógyulás, kék a béke, lila a spiritualitás.</p>
+          <div class="sizes">
+            <figure>
+              <a href="szines/large.png"><img class="large" src="szines/large.png" width="1024" height="1024" alt="Színes körforgás, nagy jel"></a>
+              <figcaption>Nagy, 1024</figcaption>
+            </figure>
+            <figure>
+              <img src="szines/small.png" width="128" height="128" alt="Színes körforgás, kicsi jel">
+              <figcaption>Kicsi, 128</figcaption>
+            </figure>
+            <figure>
+              <img src="szines/favicon-32.png" width="32" height="32" alt="Színes körforgás, 32 pixeles favicon">
+              <figcaption>Favicon, 32</figcaption>
+            </figure>
+            <figure>
+              <img class="zoom" src="szines/favicon-16.png" width="16" height="16" alt="Színes körforgás, 16 pixeles favicon nagyítva">
+              <figcaption>Favicon, 16</figcaption>
+            </figure>
+          </div>
+        </article>
+        <article>
+          <h2>Leveles</h2>
+          <p class="note">Három levél egymás felé fordul, a hegyük belefolyik a következőbe.</p>
+          <div class="sizes">
+            <figure>
+              <a href="level/large.png"><img class="large" src="level/large.png" width="1024" height="1024" alt="Leveles körforgás, nagy jel"></a>
+              <figcaption>Nagy, 1024</figcaption>
+            </figure>
+            <figure>
+              <img src="level/small.png" width="128" height="128" alt="Leveles körforgás, kicsi jel">
+              <figcaption>Kicsi, 128</figcaption>
+            </figure>
+            <figure>
+              <img src="level/favicon-32.png" width="32" height="32" alt="Leveles körforgás, 32 pixeles favicon">
+              <figcaption>Favicon, 32</figcaption>
+            </figure>
+            <figure>
+              <img class="zoom" src="level/favicon-16.png" width="16" height="16" alt="Leveles körforgás, 16 pixeles favicon nagyítva">
+              <figcaption>Favicon, 16</figcaption>
+            </figure>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="dark" aria-labelledby="dark-title">
+      <h2 id="dark-title">Sötét háttér</h2>
+      <div class="grid">
+        <article>
+          <h2>Körforgás</h2>
+          <p class="note">Három vastagodó ív az óramutató járásával. A közép nyitott.</p>
+          <div class="sizes">
+            <figure>
+              <a href="korforgas/large.png"><img class="large" src="korforgas/large.png" width="1024" height="1024" alt=""></a>
+              <figcaption>Nagy, 1024</figcaption>
+            </figure>
+            <figure>
+              <img src="korforgas/small.png" width="128" height="128" alt="">
+              <figcaption>Kicsi, 128</figcaption>
+            </figure>
+            <figure>
+              <img src="korforgas/favicon-32.png" width="32" height="32" alt="">
+              <figcaption>Favicon, 32</figcaption>
+            </figure>
+            <figure>
+              <img class="zoom" src="korforgas/favicon-16.png" width="16" height="16" alt="">
+              <figcaption>Favicon, 16</figcaption>
+            </figure>
+          </div>
+        </article>
+        <article>
+          <h2>Színes</h2>
+          <p class="note">Zöld a szeretet és a gyógyulás, kék a béke, lila a spiritualitás.</p>
+          <div class="sizes">
+            <figure>
+              <a href="szines/large.png"><img class="large" src="szines/large.png" width="1024" height="1024" alt=""></a>
+              <figcaption>Nagy, 1024</figcaption>
+            </figure>
+            <figure>
+              <img src="szines/small.png" width="128" height="128" alt="">
+              <figcaption>Kicsi, 128</figcaption>
+            </figure>
+            <figure>
+              <img src="szines/favicon-32.png" width="32" height="32" alt="">
+              <figcaption>Favicon, 32</figcaption>
+            </figure>
+            <figure>
+              <img class="zoom" src="szines/favicon-16.png" width="16" height="16" alt="">
+              <figcaption>Favicon, 16</figcaption>
+            </figure>
+          </div>
+        </article>
+        <article>
+          <h2>Leveles</h2>
+          <p class="note">Három levél egymás felé fordul, a hegyük belefolyik a következőbe.</p>
+          <div class="sizes">
+            <figure>
+              <a href="level/large.png"><img class="large" src="level/large.png" width="1024" height="1024" alt=""></a>
+              <figcaption>Nagy, 1024</figcaption>
+            </figure>
+            <figure>
+              <img src="level/small.png" width="128" height="128" alt="">
+              <figcaption>Kicsi, 128</figcaption>
+            </figure>
+            <figure>
+              <img src="level/favicon-32.png" width="32" height="32" alt="">
+              <figcaption>Favicon, 32</figcaption>
+            </figure>
+            <figure>
+              <img class="zoom" src="level/favicon-16.png" width="16" height="16" alt="">
+              <figcaption>Favicon, 16</figcaption>
+            </figure>
+          </div>
+        </article>
+      </div>
+    </section>
+  </body>
+</html>
