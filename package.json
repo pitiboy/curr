@@ -24,9 +24,12 @@
     "generate:secrets": "node scripts/generate-secrets.js",
     "docker:dev": "docker compose --env-file .env.docker up -d",
     "docker:stop": "docker compose --env-file .env.docker down",
-    "docker:logs": "docker compose --env-file .env.docker logs -f"
+    "docker:logs": "docker compose --env-file .env.docker logs -f",
+    "ci:npm:install:cron": "/bin/bash -lc 'source /home/ysgljxyi/nodevenv/node/kor-szupatak/22/bin/activate && cd /home/ysgljxyi/node/kor-szupatak && NODE_OPTIONS=--max-old-space-size=768 npm install --omit=dev --no-audit --no-fund> /home/ysgljxyi/npm-install.log 2>&1'"
   },
   "dependencies": {
+    "@neon/config": "^1.7.2",
+    "@neon/env": "^1.4.3",
     "@strapi/plugin-cloud": "5.27.0",
     "@strapi/plugin-users-permissions": "5.27.0",
     "@strapi/provider-upload-cloudinary": "5.27.0",
