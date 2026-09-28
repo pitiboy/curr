@@ -41,6 +41,8 @@
     "src/plugins/**",
     "apps/",
     "docs/",
-    "scripts/"
+    "scripts/",
+    // Neon CLI config; loaded by the Neon toolchain, not the Strapi server
+    "neon.ts"
   ]
 }
