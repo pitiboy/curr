@@ -13,7 +13,7 @@ Jelenlegi elsődleges példány: `kor.fejlesztesek.hu`, mappa `node/kor-szupatak
 
 A cPanel a `node_modules` nevet symlinkként rakja az elsődleges gyökérbe. A célja `nodevenv/node/kor-szupatak/22/lib/node_modules`, oda kerül az `npm install` eredménye. Az alias ezt a linket használja, saját példányt nem kap.
 
-Az elsődleges `server.js` a repó gyökerében lévő indító. Az alias `server.js` átvált a `/home/ysgljxyi/node/kor-szupatak` mappára, és azt a fájlt tölti be. A Node a csomagokat az elsődleges symlinkjén keresztül találja meg.
+Az elsődleges `server.js` a repó gyökerében lévő indító. Az alias `server.js` a betöltés előtt a saját `favicon.png` útvonalát teszi a `FAVICON_PATH` változóba, utána átvált a `/home/ysgljxyi/node/kor-szupatak` mappára, és azt a fájlt tölti be. A Node a csomagokat az elsődleges symlinkjén keresztül találja meg.
 
 ## Alias létrehozása
 
@@ -23,7 +23,7 @@ Az elsődleges `server.js` a repó gyökerében lévő indító. Az alias `serve
 4. **NPM Installt az aliasen ne indíts.** Saját `nodevenv` modulkészletet és saját symlinket hozna létre.
 5. Add meg az alias környezeti változóit, ments, majd **Újraindítás**.
 
-Másik domainnél ugyanígy: új tartomány, új Node.js alkalmazás 22-es Node-dal, és ez a két fájl. A `package.json` `name` mezője az adott alias neve legyen. A `server.js` útvonalai az elsődleges mappára mutassanak. Ha a tárhely felhasználója vagy az elsődleges mappa más, csak a `server.js` két útvonalát kell átírni.
+Másik domainnél ugyanígy: új tartomány, új Node.js alkalmazás 22-es Node-dal, és ez a két fájl. A `package.json` `name` mezője az adott alias neve legyen. A `server.js` útvonalai az elsődleges mappára mutassanak, a `FAVICON_PATH` pedig az alias saját mappájára. Ha a tárhely felhasználója vagy a mappa más, ezt a három útvonalat kell átírni.
 
 ## Környezeti változók
 
@@ -38,9 +38,19 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
 
 A `PORT` értékét a Passenger adja, nem kell beállítani. Üres Neon adatbázison az első indulás létrehozza a sémát. Az admin felhasználó az alias `/admin` címén külön jön létre.
 
+## Favicon
+
+A Strapi a `favicon.png` fájlt az alkalmazás gyökeréből olvassa. Az alias induláskor a közös gyökérbe vált, ezért útvonal nélkül mindkét domain a `node/kor-szupatak/favicon.png` ikont adná.
+
+Az alias `server.js` betöltés előtt beállítja a `FAVICON_PATH` értékét. A fájl az alias mappájában van, a neve `favicon.png`, a tartalma az adott domain 32 pixeles ikonja. A `node/kor-szupatak/favicon.png` a `kor.fejlesztesek.hu` ikonja, azt az alias logója ne írja felül.
+
+A `FAVICON_PATH` ne kerüljön a közös `.env` fájlba, mert azt mindkét folyamat betölti. Az elsődleges példányon a változó maradjon üres: ott a gyökér `favicon.png` érvényes.
+
+A futó alkalmazás a `dist/config/middlewares.js` fájlt tölti. A middleware-változás a közös fa új buildje után kerül a `node/kor-szupatak` mappába. Az alias `server.js` külön, a `node/kor-edizone` gyökérbe kerül. Utána mindkét Node.js alkalmazást újra kell indítani. Az edizone ikonja a `node/kor-edizone/favicon.png`: a 32 pixeles PNG, nem a 16 pixeles.
+
 ## Frissítés
 
-A kódot és a buildet csak a `node/kor-szupatak` mappában cseréld. Függőségváltáskor az NPM Install is csak ott fut. Utána mindkét Node.js alkalmazást újra kell indítani. Az alias mappája változatlan marad.
+A kódot és a buildet csak a `node/kor-szupatak` mappában cseréld. Függőségváltáskor az NPM Install is csak ott fut. Utána mindkét Node.js alkalmazást újra kell indítani. Az alias mappájából a `server.js` csak akkor cserélendő, ha az útvonalai változtak. A `favicon.png` az alias mappájában marad.
 
 ## Állapot
 
