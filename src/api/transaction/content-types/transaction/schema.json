@@ -13,97 +13,95 @@
   "pluginOptions": {},
   "attributes": {
     "date": {
-      "type": "datetime",
-      "required": true,
-      "metadatas": {
-        "label": "Dátum",
-        "description": "A tranzakció dátuma"
-      }
+      "type": "date",
+      "required": true
     },
     "amount": {
       "type": "decimal",
-      "required": true,
-      "metadatas": {
-        "label": "Összeg",
-        "description": "A tranzakció összege"
-      }
+      "required": true
     },
     "description": {
-      "type": "text",
-      "metadatas": {
-        "label": "Leírás",
-        "description": "A tranzakció részletes leírása"
-      }
+      "type": "text"
     },
     "debit_account": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
-      "inversedBy": "debit_transactions",
       "metadatas": {
-        "label": "Tartozik számla",
-        "description": "A számla, amelyre a tranzakció tartozikként kerül rögzítésre"
-      }
+        "label": "Költség számlaszám",
+        "description": "mire ment a pénz (anyag, bér, a megvett dolog)"
+      },
+      "inversedBy": "debit_transactions"
     },
     "credit_account": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
-      "inversedBy": "credit_transactions",
       "metadatas": {
-        "label": "Követel számla",
-        "description": "A számla, amelyre a tranzakció követelként kerül rögzítésre"
-      }
+        "label": "Kifizető számlaszám",
+        "description": "Honnan fizetted ki (pl készpénz vagy bank)"
+      },
+      "inversedBy": "credit_transactions"
     },
     "transaction_type": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::transaction-type.transaction-type",
-      "inversedBy": "transactions",
       "metadatas": {
         "label": "Tranzakció típus",
         "description": "A tranzakció kategóriája"
-      }
+      },
+      "inversedBy": "transactions"
     },
     "currency_type": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::currency-type.currency-type",
-      "inversedBy": "transactions",
       "metadatas": {
         "label": "Pénznem típus",
         "description": "A tranzakció pénzneme vagy erőforrás típusa"
-      }
+      },
+      "inversedBy": "transactions"
     },
     "related_transaction": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::transaction.transaction",
-      "inversedBy": "related_transactions",
       "metadatas": {
         "label": "Kapcsolódó tranzakció",
         "description": "Egy másik tranzakció, amelyhez ez kapcsolódik"
-      }
+      },
+      "inversedBy": "related_transactions"
     },
     "related_transactions": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "related_transaction",
       "metadatas": {
         "label": "Kapcsolódó tranzakciók",
         "description": "Az ehhez a tranzakcióhoz kapcsolódó tranzakciók"
-      }
+      },
+      "mappedBy": "related_transaction"
+    },
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "metadatas": {
+        "label": "Szervezet",
+        "description": "A szervezeti fa azon csomópontja, amelyre a költség tartozik (a projekt)"
+      },
+      "inversedBy": "transactions"
     },
     "receipt": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::receipt.receipt",
-      "inversedBy": "transactions",
       "metadatas": {
         "label": "Nyugta",
         "description": "A tranzakcióhoz tartozó nyugta"
-      }
+      },
+      "inversedBy": "transactions"
     }
   }
 }

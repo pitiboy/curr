@@ -23,7 +23,11 @@
     },
     "category": {
       "type": "enumeration",
-      "enum": ["actual", "future", "internal"],
+      "enum": [
+        "actual",
+        "future",
+        "internal"
+      ],
       "required": true,
       "metadatas": {
         "label": "Kategória",
@@ -41,11 +45,7 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "transaction_type",
-      "metadatas": {
-        "label": "Tranzakciók",
-        "description": "Az ehhez a típushoz tartozó tranzakciók"
-      }
+      "mappedBy": "transaction_type"
     }
   }
 }

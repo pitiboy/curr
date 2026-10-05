@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Leveles körforgás</title>
+  <path d="M 15.04 53.33C 21.01 49.29 30.48 44.57 30.65 35.72C 29.58 28.54 28.99 24.18 28.87 22.27C 28.23 23.66 26.05 26.22 21.83 31.79C 16.26 38.99 17.45 48.45 15.04 53.33Z" fill="#14663A"/>
+  <path d="M 58.95 36.02C 52.47 32.87 43.65 27.03 35.89 31.31C 30.21 35.83 26.74 38.51 25.14 39.58C 26.66 39.44 29.97 40.04 36.90 40.91C 45.92 42.14 53.52 36.37 58.95 36.02Z" fill="#1B7A45"/>
+  <path d="M 22.01 6.65C 22.52 13.84 21.87 24.39 29.45 28.97C 36.21 31.63 40.27 33.30 41.99 34.15C 41.11 32.90 39.98 29.73 37.27 23.30C 33.82 14.87 25.03 11.18 22.01 6.65Z" fill="#2F9A56"/>
+  <path d="M 23.16 10.01Q 29.08 22.52 37.47 30.72" fill="none" stroke="#0C3F24" stroke-width="0.95" stroke-linecap="round"/>
+  <path d="M 26.71 18.36Q 25.79 19.78 25.51 21.13" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 26.71 18.36Q 28.23 18.01 29.45 18.26" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 29.25 22.40Q 28.48 23.71 28.34 24.95" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 29.25 22.40Q 30.75 22.06 32.01 22.28" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 32.31 26.06Q 31.87 27.13 32.00 28.17" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 32.31 26.06Q 33.60 25.87 34.79 26.15" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 35.31 28.92Q 35.23 29.73 35.62 30.59" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 35.31 28.92Q 36.34 28.93 37.41 29.29" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 55.46 35.33Q 41.67 34.21 30.38 37.38" fill="none" stroke="#0C3F24" stroke-width="0.95" stroke-linecap="round"/>
+  <path d="M 46.46 34.24Q 45.69 32.73 44.66 31.81" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 46.46 34.24Q 46.00 35.74 45.17 36.66" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 41.69 34.42Q 40.94 33.09 39.94 32.36" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 41.69 34.42Q 41.23 35.88 40.41 36.87" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 36.99 35.23Q 36.28 34.32 35.31 33.91" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 36.99 35.23Q 36.50 36.45 35.67 37.34" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 33.01 36.41Q 32.35 35.93 31.41 35.84" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 33.01 36.41Q 32.49 37.30 31.64 38.04" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 17.38 50.65Q 25.25 39.27 28.15 27.91" fill="none" stroke="#0C3F24" stroke-width="0.95" stroke-linecap="round"/>
+  <path d="M 22.83 43.40Q 24.52 43.49 25.83 43.06" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 22.83 43.40Q 21.76 42.26 21.38 41.08" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 25.06 39.18Q 26.59 39.20 27.72 38.69" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 25.06 39.18Q 24.02 38.05 23.58 36.85" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 26.70 34.70Q 27.85 34.55 28.69 33.91" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 26.70 34.70Q 25.89 33.68 25.54 32.51" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 27.68 30.67Q 28.42 30.33 28.97 29.57" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+  <path d="M 27.68 30.67Q 27.17 29.78 26.95 28.67" fill="none" stroke="#0C3F24" stroke-width="0.48" stroke-linecap="round"/>
+</svg>
