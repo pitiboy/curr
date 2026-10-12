@@ -1,0 +1,338 @@
+# Számlakategóriák
+# A database/seeders JS seederek httpYac változata (seed:full + initial-data).
+#
+#   httpyac send database/seeders/kor/0*.http --env kor --all
+#
+# Környezet: local | kor | edizone a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+###
+# @name lookup-cat_revenue
+{{
+  exports.failed_cat_revenue = false;
+  exports.encoded = encodeURIComponent("revenue");
+}}
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    exports.failed_cat_revenue = true;
+    console.error("lookup failed: Bevétel", response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      exports.cat_revenue = found;
+    }
+  }
+}}
+
+###
+# @name create-cat_revenue
+{{
+  const exists = typeof cat_revenue !== "undefined" && cat_revenue;
+  const failed = typeof failed_cat_revenue !== "undefined" && failed_cat_revenue;
+  if (exists || failed) {
+    exports.$cancel = true;
+  } else {
+
+  }
+}}
+POST {{baseUrl}}/api/account-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "data": {
+    "name": "Bevétel",
+    "type": "revenue",
+    "description": "Bevételi és jövedelmi számlák",
+    "color": "#10B981"
+  }
+}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: Bevétel", response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      exports.cat_revenue = created;
+    }
+  }
+}}
+
+###
+# @name lookup-cat_expense
+{{
+  exports.failed_cat_expense = false;
+  exports.encoded = encodeURIComponent("expense");
+}}
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    exports.failed_cat_expense = true;
+    console.error("lookup failed: Költség", response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      exports.cat_expense = found;
+    }
+  }
+}}
+
+###
+# @name create-cat_expense
+{{
+  const exists = typeof cat_expense !== "undefined" && cat_expense;
+  const failed = typeof failed_cat_expense !== "undefined" && failed_cat_expense;
+  if (exists || failed) {
+    exports.$cancel = true;
+  } else {
+
+  }
+}}
+POST {{baseUrl}}/api/account-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "data": {
+    "name": "Költség",
+    "type": "expense",
+    "description": "Költség- és ráfordítási számlák",
+    "color": "#EF4444"
+  }
+}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: Költség", response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      exports.cat_expense = created;
+    }
+  }
+}}
+
+###
+# @name lookup-cat_asset
+{{
+  exports.failed_cat_asset = false;
+  exports.encoded = encodeURIComponent("asset");
+}}
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    exports.failed_cat_asset = true;
+    console.error("lookup failed: Eszköz", response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      exports.cat_asset = found;
+    }
+  }
+}}
+
+###
+# @name create-cat_asset
+{{
+  const exists = typeof cat_asset !== "undefined" && cat_asset;
+  const failed = typeof failed_cat_asset !== "undefined" && failed_cat_asset;
+  if (exists || failed) {
+    exports.$cancel = true;
+  } else {
+
+  }
+}}
+POST {{baseUrl}}/api/account-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "data": {
+    "name": "Eszköz",
+    "type": "asset",
+    "description": "Eszköz- és vagyonszámlák",
+    "color": "#3B82F6"
+  }
+}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: Eszköz", response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      exports.cat_asset = created;
+    }
+  }
+}}
+
+###
+# @name lookup-cat_liability
+{{
+  exports.failed_cat_liability = false;
+  exports.encoded = encodeURIComponent("liability");
+}}
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    exports.failed_cat_liability = true;
+    console.error("lookup failed: Kötelezettség", response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      exports.cat_liability = found;
+    }
+  }
+}}
+
+###
+# @name create-cat_liability
+{{
+  const exists = typeof cat_liability !== "undefined" && cat_liability;
+  const failed = typeof failed_cat_liability !== "undefined" && failed_cat_liability;
+  if (exists || failed) {
+    exports.$cancel = true;
+  } else {
+
+  }
+}}
+POST {{baseUrl}}/api/account-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "data": {
+    "name": "Kötelezettség",
+    "type": "liability",
+    "description": "Kötelezettség- és tartozásszámlák",
+    "color": "#F59E0B"
+  }
+}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: Kötelezettség", response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      exports.cat_liability = created;
+    }
+  }
+}}
+
+###
+# @name lookup-cat_equity
+{{
+  exports.failed_cat_equity = false;
+  exports.encoded = encodeURIComponent("equity");
+}}
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    exports.failed_cat_equity = true;
+    console.error("lookup failed: Tőke", response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      exports.cat_equity = found;
+    }
+  }
+}}
+
+###
+# @name create-cat_equity
+{{
+  const exists = typeof cat_equity !== "undefined" && cat_equity;
+  const failed = typeof failed_cat_equity !== "undefined" && failed_cat_equity;
+  if (exists || failed) {
+    exports.$cancel = true;
+  } else {
+
+  }
+}}
+POST {{baseUrl}}/api/account-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "data": {
+    "name": "Tőke",
+    "type": "equity",
+    "description": "Tőke- és saját tőkeszámlák",
+    "color": "#8B5CF6"
+  }
+}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: Tőke", response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      exports.cat_equity = created;
+    }
+  }
+}}
