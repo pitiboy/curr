@@ -21,6 +21,7 @@
     "seed:full": "node scripts/seed-database.js --name \"Zöld források szövetkezet @Szupatak\" --level 3 --accounts",
     "seed:http": "httpyac send database/seeders/kor/0*.http --all --env",
     "seed:http:prod": "httpyac send database/seeders/kor/0*.http --all --env prod",
+    "seed:http:reset": "httpyac send database/seeders/kor/reset.http --all --env",
     "cleanup:orgs": "node scripts/cleanup-database.js --confirm",
     "cleanup:dry": "node scripts/cleanup-database.js --dry-run",
     "cleanup:help": "node scripts/cleanup-database.js --help",

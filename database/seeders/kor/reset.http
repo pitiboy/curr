@@ -1,0 +1,108 @@
+# A content collectionök kiürítése. A séma, az admin felhasználók és az API tokenek megmaradnak.
+# Minden bejegyzést töröl ezekből a típusokból, a seed sorait és a később felvitt tartalmat is.
+# A médiafájlok a libraryben maradnak.
+#
+#   npm run seed:http:reset -- prod
+#   npm run seed:http -- prod
+
+{{
+  const draftTypes = { transactions: true, receipts: true };
+  const paths = [
+    "transactions",
+    "receipts",
+    "currency-rates",
+    "memberships",
+    "members",
+    "accounts",
+    "organizations",
+    "currency-types",
+    "currency-categories",
+    "account-categories",
+    "membership-types",
+    "transaction-types",
+  ];
+
+  async function listPage(path, page) {
+    const status = draftTypes[path] ? "&status=draft" : "";
+    const response = await fetch(
+      baseUrl + "/api/" + path + "?pagination[page]=" + page + "&pagination[pageSize]=100" + status,
+      { headers: { Authorization: "Bearer " + token, Accept: "application/json" } }
+    );
+    const text = await response.text();
+    let parsed = null;
+    try { parsed = JSON.parse(text); } catch (error) { parsed = null; }
+    if (response.status !== 200) {
+      throw new Error(path + " list " + response.status + " " + text);
+    }
+    return (parsed && parsed.data) || [];
+  }
+
+  async function listAll(path) {
+    const rows = [];
+    let page = 1;
+    while (page < 100) {
+      const batch = await listPage(path, page);
+      rows.push.apply(rows, batch);
+      if (batch.length < 100) break;
+      page += 1;
+    }
+    return rows;
+  }
+
+  async function remove(path, documentId) {
+    const response = await fetch(baseUrl + "/api/" + path + "/" + documentId, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token, Accept: "application/json" },
+    });
+    if (response.status === 200 || response.status === 204) return true;
+    const text = await response.text();
+    console.error(path, documentId, response.status, text);
+    return false;
+  }
+
+  async function wipe(path) {
+    let pass = 0;
+    while (pass < 30) {
+      pass += 1;
+      const rows = await listAll(path);
+      if (!rows.length) {
+        console.info(path + " empty");
+        return;
+      }
+      let deleted = 0;
+      for (const row of rows) {
+        if (row && row.documentId && (await remove(path, row.documentId))) deleted += 1;
+      }
+      console.info(path + " deleted " + deleted + ", remaining " + (rows.length - deleted));
+      if (!deleted) {
+        throw new Error(path + " delete stuck, " + rows.length + " remaining");
+      }
+    }
+    throw new Error(path + " delete did not finish");
+  }
+
+  async function reset() {
+    for (const path of paths) {
+      await wipe(path);
+    }
+    return "ok";
+  }
+
+  exports.reset = reset();
+}}
+GET {{baseUrl}}/api/organizations?pagination[pageSize]=1
+Authorization: Bearer {{token}}
+X-Reset: {{reset}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  const left = parsed && parsed.data ? parsed.data.length : -1;
+  if (response.statusCode !== 200 || left !== 0) {
+    throw new Error("organizations not empty after reset");
+  }
+  console.info("content collections are empty");
+}}
