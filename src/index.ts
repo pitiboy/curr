@@ -1,3 +1,83 @@
+const enabled = { enabled: true, policy: '' };
+
+function allow(actions: string[]) {
+  return Object.fromEntries(actions.map((action) => [action, enabled]));
+}
+
+const usersPermissionsRolePermissions = {
+  'api::transaction': {
+    controllers: {
+      transaction: allow(['find', 'findOne', 'create', 'update']),
+    },
+  },
+  'api::receipt': {
+    controllers: {
+      receipt: allow(['find', 'findOne', 'create', 'update']),
+    },
+  },
+  'api::organization': {
+    controllers: {
+      organization: allow(['find', 'findOne']),
+    },
+  },
+  'api::account': {
+    controllers: {
+      account: allow(['find', 'findOne']),
+    },
+  },
+  'plugin::upload': {
+    controllers: {
+      'content-api': allow(['upload']),
+    },
+  },
+};
+
+const usersPermissionsRoles = [
+  {
+    name: 'dataentry',
+    type: 'dataentry',
+    description: 'Tranzakció és nyugta rögzítése.',
+  },
+  {
+    name: 'qa',
+    type: 'qa',
+    description: 'Tranzakció és nyugta ellenőrzése.',
+  },
+];
+
+async function ensureUsersPermissionsRoles(strapi: {
+  db: {
+    query: (uid: string) => {
+      findOne: (params: { where: { type: string } }) => Promise<{ id: number } | null>;
+    };
+  };
+  plugin: (name: string) => {
+    service: (name: string) => {
+      createRole: (params: Record<string, unknown>) => Promise<void>;
+    };
+  };
+  log: { info: (message: string) => void };
+}) {
+  const roleService = strapi.plugin('users-permissions').service('role');
+
+  for (const role of usersPermissionsRoles) {
+    const existing = await strapi.db.query('plugin::users-permissions.role').findOne({
+      where: { type: role.type },
+    });
+
+    if (existing) {
+      strapi.log.info(`Users-permissions role "${role.type}" already exists`);
+      continue;
+    }
+
+    await roleService.createRole({
+      ...role,
+      permissions: usersPermissionsRolePermissions,
+    });
+    strapi.log.info(`Created users-permissions role "${role.type}"`);
+  }
+}
+
 export default {
   register({ strapi }) {
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
@@ -20,5 +100,7 @@ export default {
       await next();
     });
   },
-  bootstrap(/*{ strapi }*/) {},
+  async bootstrap({ strapi }) {
+    await ensureUsersPermissionsRoles(strapi);
+  },
 };
