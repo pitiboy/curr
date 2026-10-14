@@ -7,6 +7,33 @@ const GUARDED_UIDS = new Set([TRANSACTION_UID, RECEIPT_UID]);
 
 const PUBLISH_FORBIDDEN =
   'Only the editor role can publish transactions and receipts';
+const DRAFT_ONLY =
+  'Transactions and receipts are saved as drafts; publishing on create or update is disabled';
+const SAME_PERSON =
+  'The person who entered the document cannot publish it';
+
+export type PublishPolicy = {
+  /** `draft`: create/update cannot publish. `published`: an editor may save as published. */
+  defaultStatus: 'draft' | 'published';
+  /** When true, entered_by and the publisher must be different people. */
+  publisherMustDiffer: boolean;
+};
+
+export const DEFAULT_PUBLISH_POLICY: PublishPolicy = {
+  defaultStatus: 'draft',
+  publisherMustDiffer: true,
+};
+
+export function readPublishPolicy(
+  env: Record<string, string | undefined> = process.env,
+): PublishPolicy {
+  const status = env.CONTENT_DEFAULT_STATUS?.trim().toLowerCase();
+  const differ = env.CONTENT_PUBLISHER_MUST_DIFFER?.trim().toLowerCase();
+  return {
+    defaultStatus: status === 'published' ? 'published' : 'draft',
+    publisherMustDiffer: differ !== 'false' && differ !== '0',
+  };
+}
 
 export type ContentActor = {
   roleType: string;
@@ -15,7 +42,7 @@ export type ContentActor = {
 
 export type GuardEffect =
   | { type: 'ignore' }
-  | { type: 'forbid' }
+  | { type: 'forbid'; message: string }
   | {
       type: 'allow';
       clearAuditOnData: boolean;
@@ -47,6 +74,7 @@ type RequestState = {
   state?: {
     auth?: { strategy?: { name?: string } };
     user?: { id?: number | string };
+    publishGuardLinked?: boolean;
   };
 };
 
@@ -85,11 +113,17 @@ export function guardEffect(
   action: string,
   status: string | undefined,
   actor: ContentActor | null,
+  options?: {
+    policy?: PublishPolicy;
+    enteredBy?: string | null;
+    linkedPublish?: boolean;
+  },
 ): GuardEffect {
   if (!GUARDED_UIDS.has(uid)) {
     return { type: 'ignore' };
   }
 
+  const policy = options?.policy ?? DEFAULT_PUBLISH_POLICY;
   const writing = action === 'create' || action === 'update';
   const publishing =
     action === 'publish' ||
@@ -97,11 +131,32 @@ export function guardEffect(
     (writing && status === 'published');
 
   if (actor && actor.roleType !== 'editor' && publishing) {
-    return { type: 'forbid' };
+    return { type: 'forbid', message: PUBLISH_FORBIDDEN };
   }
 
   if (!actor) {
     return { type: 'ignore' };
+  }
+
+  if (
+    writing &&
+    status === 'published' &&
+    policy.defaultStatus === 'draft'
+  ) {
+    return { type: 'forbid', message: DRAFT_ONLY };
+  }
+
+  if (
+    !options?.linkedPublish &&
+    policy.publisherMustDiffer &&
+    publishing &&
+    action !== 'unpublish' &&
+    samePerson(
+      action === 'create' ? actor.email : options?.enteredBy,
+      actor.email,
+    )
+  ) {
+    return { type: 'forbid', message: SAME_PERSON };
   }
 
   const editorPublishing = actor.roleType === 'editor' && publishing;
@@ -161,6 +216,15 @@ export function relationDocumentId(value: unknown): string | undefined {
     : undefined;
 }
 
+function samePerson(
+  enteredBy: string | null | undefined,
+  publisherEmail: string,
+): boolean {
+  const creator = enteredBy?.trim().toLowerCase() ?? '';
+  const publisher = publisherEmail.trim().toLowerCase();
+  return creator.length > 0 && creator === publisher;
+}
+
 function asData(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -209,25 +273,60 @@ async function publishLinkedReceipt(strapi: PublishGuardStrapi, documentId: stri
     return;
   }
 
-  await strapi.documents(RECEIPT_UID).publish({ documentId: receiptId });
+  const state = strapi.requestContext.get()?.state;
+  if (state) state.publishGuardLinked = true;
+  try {
+    await strapi.documents(RECEIPT_UID).publish({ documentId: receiptId });
+  } finally {
+    if (state) state.publishGuardLinked = false;
+  }
 }
 
-export function registerPublishGuard(strapi: PublishGuardStrapi) {
+async function storedEnteredBy(
+  strapi: PublishGuardStrapi,
+  uid: string,
+  documentId: string | undefined,
+): Promise<string | undefined> {
+  if (!documentId) return undefined;
+  const row = await strapi.db.query(uid).findOne({
+    where: { documentId, publishedAt: { $null: true } },
+  });
+  return typeof row?.entered_by === 'string' ? row.entered_by : undefined;
+}
+
+export function registerPublishGuard(
+  strapi: PublishGuardStrapi,
+  policy: PublishPolicy = readPublishPolicy(),
+) {
   strapi.documents.use(async (context, next) => {
     const actor = await contentApiActor(strapi);
-    const effect = guardEffect(
-      context.uid,
-      context.action,
-      context.params?.status,
-      actor,
-    );
+    const requestState = strapi.requestContext.get()?.state;
+    const linkedPublish = requestState?.publishGuardLinked === true;
+    const status = context.params?.status;
+    const writing = context.action === 'create' || context.action === 'update';
+    const needsCreator =
+      actor != null &&
+      (context.action === 'publish' || (writing && status === 'published'));
+    const enteredBy =
+      needsCreator && context.action !== 'create'
+        ? await storedEnteredBy(
+            strapi,
+            context.uid,
+            context.params?.documentId,
+          )
+        : undefined;
+    const effect = guardEffect(context.uid, context.action, status, actor, {
+      policy,
+      enteredBy,
+      linkedPublish,
+    });
 
     if (effect.type === 'ignore') {
       return next();
     }
 
     if (effect.type === 'forbid') {
-      throw new errors.ForbiddenError(PUBLISH_FORBIDDEN);
+      throw new errors.ForbiddenError(effect.message);
     }
 
     const params = context.params ?? {};

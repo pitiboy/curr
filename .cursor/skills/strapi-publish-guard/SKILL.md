@@ -22,38 +22,18 @@ Más content type `draftAndPublish` értéke nem változik.
 
 ## Middleware
 
-A `src/index.ts` `register({ strapi })` törzsében, a meglévő proxy middleware mellett:
+A `src/index.ts` `register({ strapi })` a `src/publish-guard.ts` `registerPublishGuard` függvényét köti a Document Service-re. Az `editor` nem lép ki korán: a `guardEffect` dönt.
 
-```ts
-import { errors } from '@strapi/utils';
+- Admin, seed és user nélküli hívás (`actor` null): az őr nem ír és nem tilt.
+- `dataentry` publish, unpublish, vagy create/update `status=published`: 403.
+- `CONTENT_DEFAULT_STATUS` `draft` (alap): create/update `status=published` 403, editornek is. `published`: az editor create/update publikálhat, ha a másik szabály engedi.
+- `CONTENT_PUBLISHER_MUST_DIFFER` igaz (alap): az `entered_by` e-mailje nem publikálhatja ugyanazt a dokumentumot. `false` vagy `0`: ugyanaz a user publikálhat. Üres `entered_by` nem blokkol.
 
-const GUARDED = ['api::transaction.transaction', 'api::receipt.receipt'];
-
-strapi.documents.use(async (context, next) => {
-  if (!GUARDED.includes(context.uid)) return next();
-
-  const roleType = await contentApiRoleType(strapi);
-  if (roleType === null || roleType === 'editor') return next();
-
-  const publishing =
-    context.action === 'publish' ||
-    context.action === 'unpublish' ||
-    ((context.action === 'create' || context.action === 'update') &&
-      context.params?.status === 'published');
-
-  if (publishing) {
-    throw new errors.ForbiddenError(
-      'Only the editor role can publish transactions and receipts'
-    );
-  }
-
-  return next();
-});
-```
-
-`contentApiRoleType` csak akkor ad vissza szerep-`type` stringet, ha a kérés users-permissions stratégiájú. Admin, seed és user nélküli hívás `null`. A szerepet a user rekordról töltsd, `role` populate-tal; a JWT-ben lévő id önmagában nem elég, ha a role nincs a state-en.
+A szerepet a user rekordról töltsd, `role` populate-tal. A JWT-ben lévő id önmagában nem elég, ha a role nincs a state-en. Admin, seed és user nélküli hívás `null`.
 
 A REST API `status` nélkül publishedet ír. Az SPA ezért `?status=draft` queryt küld. A middleware-ben a hiányzó `params.status` nem publish: a Document Service alapja a draft. Csak a `published` és a `publish` / `unpublish` action tiltott.
+
+A kapcsolt receipt automatikus publishje a különböző-ember szabályt nem futtatja újra.
 
 Ugyanebben a middleware-ben, a publish döntés után, ha a hívás mehet tovább:
 

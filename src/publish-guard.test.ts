@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   contentApiActor,
   guardEffect,
+  readPublishPolicy,
   registerPublishGuard,
   relationDocumentId,
   type PublishGuardStrapi,
@@ -74,13 +75,46 @@ describe('guardEffect', () => {
     assert.equal(effect.publishedByOnData, undefined);
   });
 
-  it('sets published_by when an editor publishes through create or update', () => {
-    const effect = guardEffect(transaction, 'update', 'published', editor);
+  it('keeps editor create and update as draft unless the env allows published writes', () => {
+    assert.equal(
+      guardEffect(transaction, 'update', 'published', editor).type,
+      'forbid',
+    );
+    assert.equal(
+      guardEffect(transaction, 'create', 'published', editor).type,
+      'forbid',
+    );
+
+    const effect = guardEffect(transaction, 'update', 'published', editor, {
+      policy: { defaultStatus: 'published', publisherMustDiffer: false },
+    });
     assert.equal(effect.type, 'allow');
     if (effect.type !== 'allow') return;
     assert.equal(effect.publishedByOnData, editor.email);
-    assert.equal(effect.enteredBy, undefined);
     assert.equal(effect.publishLinkedReceipt, true);
+  });
+
+  it('rejects publish by the person who entered the document', () => {
+    const own = guardEffect(transaction, 'publish', undefined, editor, {
+      enteredBy: 'Editor@example.com',
+    });
+    assert.equal(own.type, 'forbid');
+    if (own.type === 'forbid') {
+      assert.match(own.message, /cannot publish/);
+    }
+
+    const other = guardEffect(transaction, 'publish', undefined, editor, {
+      enteredBy: dataentry.email,
+    });
+    assert.equal(other.type, 'allow');
+  });
+
+  it('allows the same person to publish when the env says so', () => {
+    const effect = guardEffect(transaction, 'publish', undefined, editor, {
+      policy: { defaultStatus: 'draft', publisherMustDiffer: false },
+      enteredBy: editor.email,
+    });
+    assert.equal(effect.type, 'allow');
   });
 
   it('writes published_by on the draft for the publish action and clears it on unpublish', () => {
@@ -100,6 +134,25 @@ describe('guardEffect', () => {
     assert.equal(effect.type, 'allow');
     if (effect.type !== 'allow') return;
     assert.equal(effect.publishLinkedReceipt, false);
+  });
+});
+
+describe('readPublishPolicy', () => {
+  it('defaults to draft writes and a different publisher', () => {
+    assert.deepEqual(readPublishPolicy({}), {
+      defaultStatus: 'draft',
+      publisherMustDiffer: true,
+    });
+  });
+
+  it('reads the published default and turns off the different-person rule', () => {
+    assert.deepEqual(
+      readPublishPolicy({
+        CONTENT_DEFAULT_STATUS: 'published',
+        CONTENT_PUBLISHER_MUST_DIFFER: 'false',
+      }),
+      { defaultStatus: 'published', publisherMustDiffer: false },
+    );
   });
 });
 
@@ -271,5 +324,49 @@ describe('registerPublishGuard', () => {
       { uid: transaction, data: { published_by: editor.email } },
     ]);
     assert.deepEqual(published, ['rc_1']);
+  });
+
+  it('rejects editor publish of a document that the same person entered', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 2,
+      user: { email: editor.email, role: { type: 'editor' } },
+    });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async () =>
+          uid === 'plugin::users-permissions.user'
+            ? { email: editor.email, role: { type: 'editor' } }
+            : { id: 9, documentId: 'tx_1', entered_by: 'editor@example.com' },
+      };
+    };
+    let middleware: (
+      context: { uid: string; action: string; params?: { documentId?: string } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'tx_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.match(error.message, /cannot publish/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
   });
 });

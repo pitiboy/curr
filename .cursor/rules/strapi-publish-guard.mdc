@@ -10,7 +10,7 @@ A Users & Permissions action-mátrix nem választja szét a draft írást és a 
 
 - `receipt.vendor` nem kötelező. Ha van receipt sor, a `document` kötelező. A `transaction.receipt` opcionális marad.
 - Document Service middleware a `src/index.ts` `register()` függvényében, az `api::transaction.transaction` és `api::receipt.receipt` uid-okra.
-- Content API híváson csak az `editor` szerep publikálhat (`action` `publish` / `unpublish`, vagy create/update `params.status === 'published'`). A `dataentry` ilyen kérésre 403-at kap, a mentés nem íródik át csendben publisheddé.
+- Content API híváson csak az `editor` szerep publikálhat. A `dataentry` publish 403, a mentés nem íródik át csendben publisheddé. `CONTENT_DEFAULT_STATUS` alapból `draft`: create/update `status=published` 403. `published` értéknél az editor create/update publikálhat. `CONTENT_PUBLISHER_MUST_DIFFER` alapból igaz: az `entered_by` user nem publikálhatja ugyanazt a dokumentumot.
 - Ugyanaz a middleware írja az auditot. `entered_by` és `published_by` string a transaction és a receipt sémán. Create-kor `entered_by` a Content user e-mailje. Publish-kor `published_by` az `editor` e-mailje, unpublish-kor üres. A kliens payloadja nem írja felül. User reláció és user `find` jog nincs. A „mikor” a `createdAt` és a `publishedAt`.
 - Admin stratégia, seed és a users-permissions user nélküli hívás nem esik a őr alá.
 - A `dataentry` és `editor` szerepek `type` mezője pontosan ez a két szó. Létrehozásuk a `bootstrap()`-ban fut, productionben is, idempotensen. Ha `editor` nincs, de `qa` igen, a meglévő sort átnevezi. A dev-only seeder nem elég.

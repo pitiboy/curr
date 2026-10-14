@@ -37,7 +37,7 @@ A `loginPage` a react-admin `LoginWithEmail`, plusz egy Google gomb. A Google a 
 
 Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry` vagy `editor`. Az `ra-strapi` ezt nem tölti ki.
 
-Minden dataentry írás queryje `status=draft`. A REST status nélkül publishedet ír, és a szerver a `dataentry` publisht 403-mal elutasítja.
+A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél is. A REST status nélkül publishedet ír, és a szerver a `dataentry` publisht 403-mal elutasítja.
 
 ## Oldalak
 
@@ -45,13 +45,13 @@ Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create é
 
 | Route | Szerep | Viselkedés |
 | --- | --- | --- |
-| `/transactions/create` | `dataentry` | Create. Mentés draft. Publish nincs. |
+| `/transactions/create` | `dataentry`, `editor` | Create. Mentés draft. Publish nincs. |
 | `/transactions/review` | `editor` | Lista `status=draft`. Show/edit. Publish gomb. |
 | `/transactions` | mindkettő | Draft és published. Szűrő. Nincs create, edit, publish. |
 | `/login` | vendég | Email/jelszó és Google. |
 | `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |
 
-A menü a szerep szerint rejti a create vagy a review elemet. Ismeretlen szerep egyik író oldalt sem kapja meg.
+A menü mindkét szerepnek mutatja a create elemet. A review elemet csak az `editor` látja. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
 A create és a review mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális `receipt`. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
 

@@ -33,7 +33,7 @@ export function BackofficeMenu() {
           to={form.path}
         />
       ))}
-      {permissions === 'dataentry' && (
+      {(permissions === 'dataentry' || permissions === 'editor') && (
         <Menu.Item
           leftIcon={<PostAddIcon />}
           primaryText={translate('app.transactions_create')}
