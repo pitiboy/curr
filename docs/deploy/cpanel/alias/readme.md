@@ -50,7 +50,7 @@ A futó alkalmazás a `dist/config/middlewares.js` fájlt tölti. A middleware-v
 
 ## Frissítés
 
-A kódot és a buildet csak a `node/kor-szupatak` mappában cseréld. Függőségváltáskor az NPM Install is csak ott fut. Utána mindkét Node.js alkalmazást újra kell indítani. Az alias mappájából a `server.js` csak akkor cserélendő, ha az útvonalai változtak. A `favicon.png` az alias mappájában marad.
+A kódot és a buildet csak a `node/kor-szupatak` mappában cseréld. Függőségváltáskor az NPM Install is csak ott fut. A kvóta és a kihagyható telepítés: [npm-install.md](../npm-install.md). Utána mindkét Node.js alkalmazást újra kell indítani. Az alias mappájából a `server.js` csak akkor cserélendő, ha az útvonalai változtak. A `favicon.png` az alias mappájában marad.
 
 ## Állapot
 
