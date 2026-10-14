@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Elrendelt",
+    "category": "future",
+    "description": "Tervezett/elrendelt kiadás"
+  },
+  {
+    "name": "Utalás",
+    "category": "actual",
+    "description": "Banki átutalás"
+  },
+  {
+    "name": "Készpénz",
+    "category": "actual",
+    "description": "Készpénzes fizetés"
+  },
+  {
+    "name": "Átvezetés",
+    "category": "internal",
+    "description": "Belső átvezetés számlák között"
+  },
+  {
+    "name": "Jutalék",
+    "category": "actual",
+    "description": "Jutalék vagy bónusz kifizetés"
+  },
+  {
+    "name": "Barter",
+    "category": "actual",
+    "description": "Áru/szolgáltatás csere"
+  }
+]

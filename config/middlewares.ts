@@ -51,7 +51,14 @@ export default ({ env }) => {
     'strapi::query',
     'strapi::body',
     'strapi::session',
-    'strapi::favicon',
+    {
+      name: 'strapi::favicon',
+      config: {
+        // Absolute path wins over the shared app root, so an alias can keep
+        // its own icon. Unset: favicon.png next to the primary server.js.
+        path: env('FAVICON_PATH', 'favicon.png'),
+      },
+    },
     'strapi::public',
   ];
 };

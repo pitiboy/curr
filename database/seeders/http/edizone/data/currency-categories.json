@@ -1,0 +1,30 @@
+[
+  {
+    "code": "CASH",
+    "name": "Pénz",
+    "description": "Hagyományos pénzügyi eszközök",
+    "icon": "💰",
+    "color": "#10B981"
+  },
+  {
+    "code": "LABOUR",
+    "name": "Munka",
+    "description": "Idő- és munkalapú eszközök",
+    "icon": "⏰",
+    "color": "#3B82F6"
+  },
+  {
+    "code": "RESOURCES",
+    "name": "Erőforrás",
+    "description": "Fizikai áruk és anyagok",
+    "icon": "🌾",
+    "color": "#F59E0B"
+  },
+  {
+    "code": "ASSETS",
+    "name": "Vagyon",
+    "description": "Ingatlan és berendezések",
+    "icon": "🏠",
+    "color": "#8B5CF6"
+  }
+]

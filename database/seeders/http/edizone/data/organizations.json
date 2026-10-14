@@ -1,0 +1,121 @@
+[
+  {
+    "name": "EdiZone @Kömlőd",
+    "description": "",
+    "address": ""
+  },
+  {
+    "name": "I/0. Vezetés",
+    "description": "Fővezetés és irányítás",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  },
+  {
+    "name": "I/0.1 Alapító(k)",
+    "description": "Alapítók és tulajdonosok",
+    "address": "",
+    "parentName": "I/0. Vezetés"
+  },
+  {
+    "name": "I/0.20 Operatív vezetés",
+    "description": "Napi működés irányítása",
+    "address": "",
+    "parentName": "I/0. Vezetés"
+  },
+  {
+    "name": "I/1. Kommunikációs Igazgatóság",
+    "description": "Kommunikáció és kapcsolattartás",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  },
+  {
+    "name": "I/2. Marketing Igazgatóság",
+    "description": "Marketing és promóció",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  },
+  {
+    "name": "I/3. Pénzügyi Igazgatóság",
+    "description": "Pénzügyi ügyek kezelése",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  },
+  {
+    "name": "I/4. Termelési Igazgatóság",
+    "description": "Termelés irányítása",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  },
+  {
+    "name": "I/4.10 Tervezési központ",
+    "description": "Tervezési feladatok",
+    "address": "",
+    "parentName": "I/4. Termelési Igazgatóság"
+  },
+  {
+    "name": "I/4.11 Terület kialakítás",
+    "description": "Területfejlesztés",
+    "address": "",
+    "parentName": "I/4. Termelési Igazgatóság"
+  },
+  {
+    "name": "I/4.12 Termelés irányítása",
+    "description": "Termelésirányítás",
+    "address": "",
+    "parentName": "I/4. Termelési Igazgatóság"
+  },
+  {
+    "name": "I/4.12.1 Mező- és erdőgazdálkodás",
+    "description": "Mezőgazdasági és erdészeti tevékenység",
+    "address": "",
+    "parentName": "I/4.12 Termelés irányítása"
+  },
+  {
+    "name": "I/4.12.1.1 Növénytermesztés",
+    "description": "Növénytermesztés",
+    "address": "",
+    "parentName": "I/4.12.1 Mező- és erdőgazdálkodás"
+  },
+  {
+    "name": "I/4.12.1.1.1 Gyümölcsészet",
+    "description": "Gyümölcstermesztés",
+    "address": "",
+    "parentName": "I/4.12.1.1 Növénytermesztés"
+  },
+  {
+    "name": "I/4.12.1.1.2 Zöldségkert",
+    "description": "Zöldségtermesztés",
+    "address": "",
+    "parentName": "I/4.12.1.1 Növénytermesztés"
+  },
+  {
+    "name": "I/4.12.1.2 Állattenyésztés",
+    "description": "Állattenyésztés",
+    "address": "",
+    "parentName": "I/4.12.1 Mező- és erdőgazdálkodás"
+  },
+  {
+    "name": "I/4.12.1.2.1 Tyúktartás",
+    "description": "Tyúktartás",
+    "address": "",
+    "parentName": "I/4.12.1.2 Állattenyésztés"
+  },
+  {
+    "name": "I/4.12.1.2.2 Disznótartás",
+    "description": "Disznótartás",
+    "address": "",
+    "parentName": "I/4.12.1.2 Állattenyésztés"
+  },
+  {
+    "name": "I/5. Minőségfelügyeleti Igazgatóság",
+    "description": "Minőség és ellenőrzés",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  },
+  {
+    "name": "I/6. Terjesztési Igazgatóság",
+    "description": "Terjesztés és logisztika",
+    "address": "",
+    "parentName": "EdiZone @Kömlőd"
+  }
+]

@@ -1,0 +1,13 @@
+---
+description: Content backoffice v1 határa. A PRD 0001 és az ADR 0001 a szerződés; a v2 scope kimarad.
+alwaysApply: true
+---
+
+# Content backoffice v1
+
+A szállítható szerződés a `docs/prd/0001-content-backoffice-v1.md`. A technikai döntés a `docs/adr/0001-react-admin-content-ui.md`. A v2 PRD nem része ennek a munkának.
+
+- Az SPA az `apps/content-backoffice` alatt él. A Strapi Admin fejlesztői felület marad.
+- Az SPA a Content API-t hívja Users & Permissions JWT-vel. Az `/admin/login` és az Admin JWT kimarad az SPA-ból.
+- Strapi-oldali v1 változás: `receipt.vendor` opcionális, `dataentry` és `qa` szerepek, publish őr a transaction és receipt dokumentumokon, Google provider a `/backoffice` SPA-hoz.
+- A §8 kimarad: szervezet, tag, membership, számla és pénznem CRUD, user–member kötés, org ACL, avatar, CI/CD, subdomain, receipt N:M, Enterprise RBAC, lista inline edit, `dataentry` publish.

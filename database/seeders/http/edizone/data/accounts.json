@@ -1,0 +1,229 @@
+{
+  "mainOrganization": "EdiZone @Kömlőd",
+  "accounts": [
+    {
+      "name": "Készpénz",
+      "code": "1000",
+      "description": "Készpénz számla",
+      "categoryType": "asset",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Bankszámlák",
+      "code": "1100",
+      "description": "Bankszámlák számla",
+      "categoryType": "asset",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Követelések",
+      "code": "1200",
+      "description": "Követelések számla",
+      "categoryType": "asset",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Készletek",
+      "code": "1300",
+      "description": "Készletek számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Előlegek",
+      "code": "1400",
+      "description": "Előlegek számla",
+      "categoryType": "asset",
+      "organizationName": "I/6. Terjesztési Igazgatóság"
+    },
+    {
+      "name": "Tárgyi eszközök",
+      "code": "1500",
+      "description": "Tárgyi eszközök számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Immateriális javak",
+      "code": "1600",
+      "description": "Immateriális javak számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Pénzügyi befektetések",
+      "code": "1700",
+      "description": "Pénzügyi befektetések számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Szállítói tartozások",
+      "code": "2000",
+      "description": "Szállítói tartozások számla",
+      "categoryType": "liability",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Rövid lejáratú kötelezettségek",
+      "code": "2100",
+      "description": "Rövid lejáratú kötelezettségek számla",
+      "categoryType": "liability",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Hosszú lejáratú kötelezettségek",
+      "code": "2200",
+      "description": "Hosszú lejáratú kötelezettségek számla",
+      "categoryType": "liability",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Adótartozások",
+      "code": "2300",
+      "description": "Adótartozások számla",
+      "categoryType": "liability",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Bértartozások",
+      "code": "2400",
+      "description": "Bértartozások számla",
+      "categoryType": "liability",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Egyéb tartozások",
+      "code": "2500",
+      "description": "Egyéb tartozások számla",
+      "categoryType": "liability",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Alaptőke",
+      "code": "3000",
+      "description": "Alaptőke számla",
+      "categoryType": "equity",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Tartalékok",
+      "code": "3100",
+      "description": "Tartalékok számla",
+      "categoryType": "equity",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Eredménytartalék",
+      "code": "3200",
+      "description": "Eredménytartalék számla",
+      "categoryType": "equity",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Tárgyévi eredmény",
+      "code": "3300",
+      "description": "Tárgyévi eredmény számla",
+      "categoryType": "equity",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Értékesítés bevétele",
+      "code": "4000",
+      "description": "Értékesítés bevétele számla",
+      "categoryType": "revenue",
+      "organizationName": "I/2. Marketing Igazgatóság"
+    },
+    {
+      "name": "Szolgáltatás bevétele",
+      "code": "4100",
+      "description": "Szolgáltatás bevétele számla",
+      "categoryType": "revenue",
+      "organizationName": "I/2. Marketing Igazgatóság"
+    },
+    {
+      "name": "Egyéb bevételek",
+      "code": "4200",
+      "description": "Egyéb bevételek számla",
+      "categoryType": "revenue",
+      "organizationName": "I/3.7 Bevételi központ"
+    },
+    {
+      "name": "Pénzügyi bevételek",
+      "code": "4300",
+      "description": "Pénzügyi bevételek számla",
+      "categoryType": "revenue",
+      "organizationName": "I/3.7 Bevételi központ"
+    },
+    {
+      "name": "Előfizetések és tagsági díjak",
+      "code": "4300",
+      "description": "Előfizetések és tagsági díjak számla",
+      "categoryType": "equity",
+      "organizationName": "I/3.7 Bevételi központ"
+    },
+    {
+      "name": "Anyagköltség",
+      "code": "5000",
+      "description": "Anyagköltség számla",
+      "categoryType": "expense",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Bérköltség",
+      "code": "5100",
+      "description": "Bérköltség számla",
+      "categoryType": "expense",
+      "organizationName": "I/1.1 Irányítás és személyzeti központ"
+    },
+    {
+      "name": "Társadalombiztosítási költség",
+      "code": "5200",
+      "description": "Társadalombiztosítási költség számla",
+      "categoryType": "expense",
+      "organizationName": "I/1.1 Irányítás és személyzeti központ"
+    },
+    {
+      "name": "Értékcsökkenés",
+      "code": "5300",
+      "description": "Értékcsökkenés számla",
+      "categoryType": "expense",
+      "organizationName": "I/5. Minőségfelügyeleti Igazgatóság"
+    },
+    {
+      "name": "Szolgáltatások",
+      "code": "5400",
+      "description": "Szolgáltatások számla",
+      "categoryType": "expense",
+      "organizationName": "I/1. Kommunikációs Igazgatóság"
+    },
+    {
+      "name": "Általános költségek",
+      "code": "5500",
+      "description": "Általános költségek számla",
+      "categoryType": "expense",
+      "organizationName": "I/0. Vezetés"
+    },
+    {
+      "name": "Értékesítési költségek",
+      "code": "5600",
+      "description": "Értékesítési költségek számla",
+      "categoryType": "expense",
+      "organizationName": "I/2. Marketing Igazgatóság"
+    },
+    {
+      "name": "Pénzügyi költségek",
+      "code": "5700",
+      "description": "Pénzügyi költségek számla",
+      "categoryType": "expense",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Egyéb költségek",
+      "code": "5800",
+      "description": "Egyéb költségek számla",
+      "categoryType": "expense",
+      "organizationName": "I/0. Vezetés"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+# Szervezetfa, seed:full --level 3
+# A rekordok a dataDir/organizations.json fájlban vannak.
+# A parentName a szülő szervezet neve. A tömb sorrendje szülő, aztán gyerek.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof orgItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.orgItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "organizations.json"), "utf8")
+    );
+    exports.orgIds = {};
+    exports.orgFailed = {};
+  }
+}}
+
+###
+# @name lookup-organization
+# @loop for item of orgItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
+}}
+GET {{baseUrl}}/api/organizations?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    orgFailed[item.name] = true;
+    exports.orgFailed = orgFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      orgIds[item.name] = found;
+      exports.orgIds = orgIds;
+    }
+  }
+}}
+
+###
+# @name create-organization
+# @loop for item of orgItems
+{{
+  if (orgIds[item.name] || orgFailed[item.name]) {
+    exports.$cancel = true;
+  } else {
+    const data = {
+      name: item.name,
+      description: item.description,
+      address: item.address,
+    };
+    if (item.parentName) {
+      const parentId = orgIds[item.parentName];
+      if (!parentId) {
+        console.error("missing parent for " + item.name);
+        exports.$cancel = true;
+      } else {
+        data.parent = parentId;
+        exports.orgPayload = JSON.stringify({ data });
+      }
+    } else {
+      exports.orgPayload = JSON.stringify({ data });
+    }
+  }
+}}
+POST {{baseUrl}}/api/organizations
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{orgPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      orgIds[item.name] = created;
+      exports.orgIds = orgIds;
+    }
+  }
+}}

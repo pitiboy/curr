@@ -1,0 +1,86 @@
+# Tagságtípusok
+# A rekordok a dataDir/membership-types.json fájlban vannak.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof memItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.memItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "membership-types.json"), "utf8")
+    );
+    exports.memIds = {};
+    exports.memFailed = {};
+  }
+}}
+
+###
+# @name lookup-membership-type
+# @loop for item of memItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
+}}
+GET {{baseUrl}}/api/membership-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    memFailed[item.name] = true;
+    exports.memFailed = memFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      memIds[item.name] = found;
+      exports.memIds = memIds;
+    }
+  }
+}}
+
+###
+# @name create-membership-type
+# @loop for item of memItems
+{{
+  if (memIds[item.name] || memFailed[item.name]) {
+    exports.$cancel = true;
+  } else {
+    exports.memPayload = JSON.stringify({ data: item });
+  }
+}}
+POST {{baseUrl}}/api/membership-types
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{memPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      memIds[item.name] = created;
+      exports.memIds = memIds;
+    }
+  }
+}}

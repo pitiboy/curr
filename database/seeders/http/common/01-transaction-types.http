@@ -1,0 +1,86 @@
+# Tranzakciótípusok
+# A rekordok a dataDir/transaction-types.json fájlban vannak.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof txItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.txItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "transaction-types.json"), "utf8")
+    );
+    exports.txIds = {};
+    exports.txFailed = {};
+  }
+}}
+
+###
+# @name lookup-transaction-type
+# @loop for item of txItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
+}}
+GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    txFailed[item.name] = true;
+    exports.txFailed = txFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      txIds[item.name] = found;
+      exports.txIds = txIds;
+    }
+  }
+}}
+
+###
+# @name create-transaction-type
+# @loop for item of txItems
+{{
+  if (txIds[item.name] || txFailed[item.name]) {
+    exports.$cancel = true;
+  } else {
+    exports.txPayload = JSON.stringify({ data: item });
+  }
+}}
+POST {{baseUrl}}/api/transaction-types
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{txPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      txIds[item.name] = created;
+      exports.txIds = txIds;
+    }
+  }
+}}

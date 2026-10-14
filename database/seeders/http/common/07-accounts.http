@@ -1,0 +1,175 @@
+# Főkönyvi számlák, seed:full --accounts
+# A rekordok a dataDir/accounts.json fájlban vannak.
+# A categoryType számlakategória-típus, az organizationName a szervezet neve.
+# Ha a szervezet hiányzik, a mainOrganization lesz a kötés.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof acctRecords === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    const source = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "accounts.json"), "utf8")
+    );
+    exports.acctRecords = source.accounts;
+    exports.acctMainOrganization = source.mainOrganization;
+    exports.acctCategoryTypes = [
+      ...new Set(source.accounts.map((account) => account.categoryType)),
+    ];
+    exports.acctOrganizationNames = [
+      ...new Set([
+        source.mainOrganization,
+        ...source.accounts.map((account) => account.organizationName),
+      ]),
+    ];
+    exports.acctCategoryIds = {};
+    exports.acctOrganizationIds = {};
+    exports.acctIds = {};
+    exports.acctFailed = {};
+  }
+}}
+
+###
+# @name require-account-category
+# @loop for categoryType of acctCategoryTypes
+{{
+  exports.encoded = encodeURIComponent(categoryType);
+}}
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + categoryType, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      acctCategoryIds[categoryType] = found;
+      exports.acctCategoryIds = acctCategoryIds;
+    } else {
+      console.error("not found: " + categoryType);
+    }
+  }
+}}
+
+###
+# @name require-organization
+# @loop for organizationName of acctOrganizationNames
+{{
+  exports.encoded = encodeURIComponent(organizationName);
+}}
+GET {{baseUrl}}/api/organizations?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + organizationName, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      acctOrganizationIds[organizationName] = found;
+      exports.acctOrganizationIds = acctOrganizationIds;
+    } else {
+      console.error("not found: " + organizationName);
+    }
+  }
+}}
+
+###
+# @name lookup-account
+# @loop for item of acctRecords
+{{
+  exports.encoded = encodeURIComponent(item.name);
+}}
+GET {{baseUrl}}/api/accounts?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    acctFailed[item.name] = true;
+    exports.acctFailed = acctFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      acctIds[item.name] = found;
+      exports.acctIds = acctIds;
+    }
+  }
+}}
+
+###
+# @name create-account
+# @loop for item of acctRecords
+{{
+  const categoryId = acctCategoryIds[item.categoryType];
+  const mappedOrg = acctOrganizationIds[item.organizationName];
+  const mainOrg = acctOrganizationIds[acctMainOrganization];
+  const organizationId = mappedOrg || mainOrg;
+  if (acctIds[item.name] || acctFailed[item.name]) {
+    exports.$cancel = true;
+  } else if (!categoryId || !organizationId) {
+    console.error("missing relation for " + item.name);
+    exports.$cancel = true;
+  } else {
+    if (!mappedOrg) {
+      console.error("organization not found, using main: " + item.organizationName);
+    }
+    exports.acctPayload = JSON.stringify({
+      data: {
+        name: item.name,
+        code: item.code,
+        description: item.description,
+        category: categoryId,
+        organization: organizationId,
+      },
+    });
+  }
+}}
+POST {{baseUrl}}/api/accounts
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{acctPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      acctIds[item.name] = created;
+      exports.acctIds = acctIds;
+    }
+  }
+}}

@@ -1,0 +1,86 @@
+# Pénznem-kategóriák
+# A rekordok a dataDir/currency-categories.json fájlban vannak.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof ccyCatItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.ccyCatItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "currency-categories.json"), "utf8")
+    );
+    exports.ccyCatIds = {};
+    exports.ccyCatFailed = {};
+  }
+}}
+
+###
+# @name lookup-currency-category
+# @loop for item of ccyCatItems
+{{
+  exports.encoded = encodeURIComponent(item.code);
+}}
+GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    ccyCatFailed[item.code] = true;
+    exports.ccyCatFailed = ccyCatFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      ccyCatIds[item.code] = found;
+      exports.ccyCatIds = ccyCatIds;
+    }
+  }
+}}
+
+###
+# @name create-currency-category
+# @loop for item of ccyCatItems
+{{
+  if (ccyCatIds[item.code] || ccyCatFailed[item.code]) {
+    exports.$cancel = true;
+  } else {
+    exports.ccyCatPayload = JSON.stringify({ data: item });
+  }
+}}
+POST {{baseUrl}}/api/currency-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{ccyCatPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      ccyCatIds[item.code] = created;
+      exports.ccyCatIds = ccyCatIds;
+    }
+  }
+}}

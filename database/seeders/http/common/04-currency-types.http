@@ -1,0 +1,131 @@
+# Pénznemek
+# A rekordok a dataDir/currency-types.json fájlban vannak.
+# A categoryCode a pénznem-kategória kódja, a POST-ban documentId lesz.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof ccyItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    const loaded = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "currency-types.json"), "utf8")
+    );
+    exports.ccyItems = loaded;
+    exports.ccyCategoryCodes = [...new Set(loaded.map((item) => item.categoryCode))];
+    exports.ccyCategoryIds = {};
+    exports.ccyIds = {};
+    exports.ccyFailed = {};
+  }
+}}
+
+###
+# @name require-currency-category
+# @loop for categoryCode of ccyCategoryCodes
+{{
+  exports.encoded = encodeURIComponent(categoryCode);
+}}
+GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + categoryCode, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      ccyCategoryIds[categoryCode] = found;
+      exports.ccyCategoryIds = ccyCategoryIds;
+    } else {
+      console.error("not found: " + categoryCode);
+    }
+  }
+}}
+
+###
+# @name lookup-currency-type
+# @loop for item of ccyItems
+{{
+  exports.encoded = encodeURIComponent(item.code);
+}}
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    ccyFailed[item.code] = true;
+    exports.ccyFailed = ccyFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      ccyIds[item.code] = found;
+      exports.ccyIds = ccyIds;
+    }
+  }
+}}
+
+###
+# @name create-currency-type
+# @loop for item of ccyItems
+{{
+  if (ccyIds[item.code] || ccyFailed[item.code]) {
+    exports.$cancel = true;
+  } else {
+    const categoryId = ccyCategoryIds[item.categoryCode];
+    if (!categoryId) {
+      console.error("missing category for " + item.name);
+      exports.$cancel = true;
+    } else {
+      exports.ccyPayload = JSON.stringify({
+        data: {
+          code: item.code,
+          name: item.name,
+          unit: item.unit,
+          category: categoryId,
+        },
+      });
+    }
+  }
+}}
+POST {{baseUrl}}/api/currency-types
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{ccyPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      ccyIds[item.code] = created;
+      exports.ccyIds = ccyIds;
+    }
+  }
+}}

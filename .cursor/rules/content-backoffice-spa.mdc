@@ -1,0 +1,20 @@
+---
+description: A content-backoffice SPA stackje, szerepei és számlakód-szűrése.
+globs: apps/content-backoffice/**
+alwaysApply: false
+---
+
+# Content backoffice SPA
+
+Vite + TypeScript + React Admin 5 + `ra-strapi` + MUI. Env: `VITE_STRAPI_URL`. A Vite `base` értéke `/backoffice/`.
+
+- A react-admin `id` a Strapi `documentId`. A numerikus `id` nem kerül URL-be.
+- Éles képernyőn nincs `ListGuesser`, `EditGuesser`, `ShowGuesser`.
+- Menü csak a tranzakció-domain. Resource név: `transactions`.
+- `dataentry`: `/transactions/create` és a readonly `/transactions`. Publish gomb nincs. Mentés `status=draft`.
+- `qa`: `/transactions/review` (csak draft) és a readonly `/transactions`. Publish csak a review nézeten.
+- A readonly listáról nincs create, edit, publish.
+- Debit választó: `account.code` ∈ `5000`, `5100`, `5400`. Credit választó: `code` illeszkedik `^1`-re (a seedben legalább `1000`, `1100`). A szűrés kliens oldali.
+- Alapnyelv `hu`. Az `en` katalógus is a repóban van.
+- A receipt fájl saját upload úton megy a Content API `/api/upload` végpontjára. Az `ra-strapi` média mezője nem elég.
+- Local login a `strapiAuthProvider`. Google-only fióknál a jelszócsere rejtett.

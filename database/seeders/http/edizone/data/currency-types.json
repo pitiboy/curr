@@ -1,0 +1,26 @@
+[
+  {
+    "code": "HUF",
+    "name": "Magyar Forint",
+    "unit": "HUF",
+    "categoryCode": "CASH"
+  },
+  {
+    "code": "EUR",
+    "name": "Euro",
+    "unit": "EUR",
+    "categoryCode": "CASH"
+  },
+  {
+    "code": "HOUR",
+    "name": "emberi munkaóra",
+    "unit": "hour",
+    "categoryCode": "LABOUR"
+  },
+  {
+    "code": "EGG",
+    "name": "tojás termelés",
+    "unit": "egg",
+    "categoryCode": "RESOURCES"
+  }
+]
