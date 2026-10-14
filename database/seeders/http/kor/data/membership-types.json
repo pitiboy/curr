@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Bentlakó tag",
+    "description": "Teljes jogú tag, aki a szövetkezeti birtokon lakik",
+    "color": "#10B981"
+  },
+  {
+    "name": "Társult tag",
+    "description": "Társult tag, aki támogatja a szövetkezetet",
+    "color": "#3B82F6"
+  },
+  {
+    "name": "Pártoló tag",
+    "description": "Pártoló tag, aki segíti a szövetkezet munkáját",
+    "color": "#8B5CF6"
+  },
+  {
+    "name": "Partner / Bedolgozó",
+    "description": "Közreműködő, aki segíti a munkát, de nem tag",
+    "color": "#F43F5E"
+  },
+  {
+    "name": "Érdeklődő",
+    "description": "Érdeklődő személy, aki még nem tag",
+    "color": "#F59E0B"
+  }
+]

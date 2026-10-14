@@ -1,17 +1,29 @@
 # Pénznem-kategóriák
-# A database/seeders JS seederek httpYac változata (seed:full + initial-data).
+# A rekordok a data/currency-categories.json fájlban vannak.
 #
-#   httpyac send database/seeders/kor/0*.http --env kor --all
+#   httpyac send database/seeders/http/kor/0*.http --all --env kor
 #
 # Környezet: local | kor | edizone a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
-###
-# @name lookup-ccy_cat_cash
 {{
-  exports.failed_ccy_cat_cash = false;
-  exports.encoded = encodeURIComponent("CASH");
+  if (typeof ccyCatItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    exports.ccyCatItems = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "data/currency-categories.json"), "utf8")
+    );
+    exports.ccyCatIds = {};
+    exports.ccyCatFailed = {};
+  }
+}}
+
+###
+# @name lookup-currency-category
+# @loop for item of ccyCatItems
+{{
+  exports.encoded = encodeURIComponent(item.code);
 }}
 GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
@@ -23,25 +35,26 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    exports.failed_ccy_cat_cash = true;
-    console.error("lookup failed: Pénz", response.statusCode, response.body);
+    ccyCatFailed[item.code] = true;
+    exports.ccyCatFailed = ccyCatFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      exports.ccy_cat_cash = found;
+      ccyCatIds[item.code] = found;
+      exports.ccyCatIds = ccyCatIds;
     }
   }
 }}
 
 ###
-# @name create-ccy_cat_cash
+# @name create-currency-category
+# @loop for item of ccyCatItems
 {{
-  const exists = typeof ccy_cat_cash !== "undefined" && ccy_cat_cash;
-  const failed = typeof failed_ccy_cat_cash !== "undefined" && failed_ccy_cat_cash;
-  if (exists || failed) {
+  if (ccyCatIds[item.code] || ccyCatFailed[item.code]) {
     exports.$cancel = true;
   } else {
-
+    exports.ccyCatPayload = JSON.stringify({ data: item });
   }
 }}
 POST {{baseUrl}}/api/currency-categories
@@ -49,15 +62,7 @@ Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
-{
-  "data": {
-    "code": "CASH",
-    "name": "Pénz",
-    "description": "Hagyományos pénzügyi eszközök",
-    "icon": "💰",
-    "color": "#10B981"
-  }
-}
+{{ccyCatPayload}}
 
 {{
   let parsed = response.parsedBody;
@@ -65,212 +70,12 @@ Content-Type: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Pénz", response.statusCode, response.body);
+    console.error("create failed: " + item.name, response.statusCode, response.body);
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
-      exports.ccy_cat_cash = created;
-    }
-  }
-}}
-
-###
-# @name lookup-ccy_cat_labour
-{{
-  exports.failed_ccy_cat_labour = false;
-  exports.encoded = encodeURIComponent("LABOUR");
-}}
-GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_ccy_cat_labour = true;
-    console.error("lookup failed: Munka", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.ccy_cat_labour = found;
-    }
-  }
-}}
-
-###
-# @name create-ccy_cat_labour
-{{
-  const exists = typeof ccy_cat_labour !== "undefined" && ccy_cat_labour;
-  const failed = typeof failed_ccy_cat_labour !== "undefined" && failed_ccy_cat_labour;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/currency-categories
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "code": "LABOUR",
-    "name": "Munka",
-    "description": "Idő- és munkalapú eszközök",
-    "icon": "⏰",
-    "color": "#3B82F6"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Munka", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.ccy_cat_labour = created;
-    }
-  }
-}}
-
-###
-# @name lookup-ccy_cat_resources
-{{
-  exports.failed_ccy_cat_resources = false;
-  exports.encoded = encodeURIComponent("RESOURCES");
-}}
-GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_ccy_cat_resources = true;
-    console.error("lookup failed: Erőforrás", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.ccy_cat_resources = found;
-    }
-  }
-}}
-
-###
-# @name create-ccy_cat_resources
-{{
-  const exists = typeof ccy_cat_resources !== "undefined" && ccy_cat_resources;
-  const failed = typeof failed_ccy_cat_resources !== "undefined" && failed_ccy_cat_resources;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/currency-categories
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "code": "RESOURCES",
-    "name": "Erőforrás",
-    "description": "Fizikai áruk és anyagok",
-    "icon": "🌾",
-    "color": "#F59E0B"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Erőforrás", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.ccy_cat_resources = created;
-    }
-  }
-}}
-
-###
-# @name lookup-ccy_cat_assets
-{{
-  exports.failed_ccy_cat_assets = false;
-  exports.encoded = encodeURIComponent("ASSETS");
-}}
-GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_ccy_cat_assets = true;
-    console.error("lookup failed: Vagyon", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.ccy_cat_assets = found;
-    }
-  }
-}}
-
-###
-# @name create-ccy_cat_assets
-{{
-  const exists = typeof ccy_cat_assets !== "undefined" && ccy_cat_assets;
-  const failed = typeof failed_ccy_cat_assets !== "undefined" && failed_ccy_cat_assets;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/currency-categories
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "code": "ASSETS",
-    "name": "Vagyon",
-    "description": "Ingatlan és berendezések",
-    "icon": "🏠",
-    "color": "#8B5CF6"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Vagyon", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.ccy_cat_assets = created;
+      ccyCatIds[item.code] = created;
+      exports.ccyCatIds = ccyCatIds;
     }
   }
 }}

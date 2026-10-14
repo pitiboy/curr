@@ -1,0 +1,193 @@
+[
+  {
+    "name": "Zöld források szövetkezet @Szupatak",
+    "description": "",
+    "address": ""
+  },
+  {
+    "name": "I/0. Vezetés",
+    "description": "Fővezetés és irányítás",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/0.1 Alapító(k)",
+    "description": "Alapítók és tulajdonosok",
+    "address": "",
+    "parentName": "I/0. Vezetés"
+  },
+  {
+    "name": "I/0.19 Külső kapcsolati igazgatás",
+    "description": "Külső kapcsolatok kezelése",
+    "address": "",
+    "parentName": "I/0. Vezetés"
+  },
+  {
+    "name": "I/0.20 Operatív vezetés",
+    "description": "Napi működés irányítása",
+    "address": "",
+    "parentName": "I/0. Vezetés"
+  },
+  {
+    "name": "I/1. Kommunikációs Igazgatóság",
+    "description": "Kommunikáció és kapcsolattartás",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/1.1 Irányítás és személyzeti központ",
+    "description": "Személyzeti ügyek",
+    "address": "",
+    "parentName": "I/1. Kommunikációs Igazgatóság"
+  },
+  {
+    "name": "I/1.2 Kommunikációs központ",
+    "description": "Kommunikációs feladatok",
+    "address": "",
+    "parentName": "I/1. Kommunikációs Igazgatóság"
+  },
+  {
+    "name": "I/1.2.2 Kimenő kommunikációs központ",
+    "description": "Külső kommunikáció",
+    "address": "",
+    "parentName": "I/1.2 Kommunikációs központ"
+  },
+  {
+    "name": "I/1.2.3 Belső kommunikációs központ",
+    "description": "Belső kommunikáció",
+    "address": "",
+    "parentName": "I/1.2 Kommunikációs központ"
+  },
+  {
+    "name": "I/1.3 Vizsgálatok és jelentések",
+    "description": "Elemzések és jelentések",
+    "address": "",
+    "parentName": "I/1. Kommunikációs Igazgatóság"
+  },
+  {
+    "name": "I/2. Marketing Igazgatóság",
+    "description": "Marketing és promóció",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/2.4 Promóció és marketing igazgatóság",
+    "description": "Marketing stratégiák",
+    "address": "",
+    "parentName": "I/2. Marketing Igazgatóság"
+  },
+  {
+    "name": "I/2.5 Kiadványok",
+    "description": "Kiadói tevékenység",
+    "address": "",
+    "parentName": "I/2. Marketing Igazgatóság"
+  },
+  {
+    "name": "I/2.6 Regisztrációs központ",
+    "description": "Regisztrációs feladatok",
+    "address": "",
+    "parentName": "I/2. Marketing Igazgatóság"
+  },
+  {
+    "name": "I/3. Pénzügyi Igazgatóság",
+    "description": "Pénzügyi ügyek kezelése",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/3.7 Bevételi központ",
+    "description": "Bevételek kezelése",
+    "address": "",
+    "parentName": "I/3. Pénzügyi Igazgatóság"
+  },
+  {
+    "name": "I/3.8 Kifizetési központ",
+    "description": "Kifizetések kezelése",
+    "address": "",
+    "parentName": "I/3. Pénzügyi Igazgatóság"
+  },
+  {
+    "name": "I/3.9 Nyilvántartások, vagyontárgyak",
+    "description": "Vagyonkezelés",
+    "address": "",
+    "parentName": "I/3. Pénzügyi Igazgatóság"
+  },
+  {
+    "name": "I/4. Termelési Igazgatóság",
+    "description": "Termelés irányítása",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/4.10 Tervezési központ",
+    "description": "Tervezési feladatok",
+    "address": "",
+    "parentName": "I/4. Termelési Igazgatóság"
+  },
+  {
+    "name": "I/4.11 Terület kialakítás",
+    "description": "Területfejlesztés",
+    "address": "",
+    "parentName": "I/4. Termelési Igazgatóság"
+  },
+  {
+    "name": "I/4.12 Termelés irányítása",
+    "description": "Termelésirányítás",
+    "address": "",
+    "parentName": "I/4. Termelési Igazgatóság"
+  },
+  {
+    "name": "I/4.12.1 Mező- és erdőgazdálkodás",
+    "description": "Mezőgazdasági és erdészeti tevékenység",
+    "address": "",
+    "parentName": "I/4.12 Termelés irányítása"
+  },
+  {
+    "name": "I/5. Minőségfelügyeleti Igazgatóság",
+    "description": "Minőség és ellenőrzés",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/5.13 Érvényesítés",
+    "description": "Érvényesítési feladatok",
+    "address": "",
+    "parentName": "I/5. Minőségfelügyeleti Igazgatóság"
+  },
+  {
+    "name": "I/5.14 Munkatárs fejlesztés",
+    "description": "Személyzetfejlesztés",
+    "address": "",
+    "parentName": "I/5. Minőségfelügyeleti Igazgatóság"
+  },
+  {
+    "name": "I/5.15 Korrekciós központ",
+    "description": "Hibaelhárítás",
+    "address": "",
+    "parentName": "I/5. Minőségfelügyeleti Igazgatóság"
+  },
+  {
+    "name": "I/6. Terjesztési Igazgatóság",
+    "description": "Terjesztés és logisztika",
+    "address": "",
+    "parentName": "Zöld források szövetkezet @Szupatak"
+  },
+  {
+    "name": "I/6.16 Kapcsolatfelvétel",
+    "description": "Új kapcsolatok építése",
+    "address": "",
+    "parentName": "I/6. Terjesztési Igazgatóság"
+  },
+  {
+    "name": "I/6.17 Területi támogatás",
+    "description": "Területi támogatás",
+    "address": "",
+    "parentName": "I/6. Terjesztési Igazgatóság"
+  },
+  {
+    "name": "I/6.18 Területek felügyelete",
+    "description": "Területfelügyelet",
+    "address": "",
+    "parentName": "I/6. Terjesztési Igazgatóság"
+  }
+]

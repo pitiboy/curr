@@ -1,16 +1,33 @@
 # Pénznemek
-# A database/seeders JS seederek httpYac változata (seed:full + initial-data).
+# A rekordok a data/currency-types.json fájlban vannak.
+# A categoryCode a pénznem-kategória kódja, a POST-ban documentId lesz.
 #
-#   httpyac send database/seeders/kor/0*.http --env kor --all
+#   httpyac send database/seeders/http/kor/0*.http --all --env kor
 #
 # Környezet: local | kor | edizone a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
-###
-# @name require-ccy_cat_cash
 {{
-  exports.encoded = encodeURIComponent("CASH");
+  if (typeof ccyItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    const loaded = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "data/currency-types.json"), "utf8")
+    );
+    exports.ccyItems = loaded;
+    exports.ccyCategoryCodes = [...new Set(loaded.map((item) => item.categoryCode))];
+    exports.ccyCategoryIds = {};
+    exports.ccyIds = {};
+    exports.ccyFailed = {};
+  }
+}}
+
+###
+# @name require-currency-category
+# @loop for categoryCode of ccyCategoryCodes
+{{
+  exports.encoded = encodeURIComponent(categoryCode);
 }}
 GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
@@ -22,23 +39,25 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    console.error("lookup failed: CASH", response.statusCode, response.body);
+    console.error("lookup failed: " + categoryCode, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      exports.ccy_cat_cash = found;
+      ccyCategoryIds[categoryCode] = found;
+      exports.ccyCategoryIds = ccyCategoryIds;
     } else {
-      console.error("not found: CASH");
+      console.error("not found: " + categoryCode);
     }
   }
 }}
 
 ###
-# @name require-ccy_cat_labour
+# @name lookup-currency-type
+# @loop for item of ccyItems
 {{
-  exports.encoded = encodeURIComponent("LABOUR");
+  exports.encoded = encodeURIComponent(item.code);
 }}
-GET {{baseUrl}}/api/currency-categories?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -48,58 +67,39 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    console.error("lookup failed: LABOUR", response.statusCode, response.body);
+    ccyFailed[item.code] = true;
+    exports.ccyFailed = ccyFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      exports.ccy_cat_labour = found;
+      ccyIds[item.code] = found;
+      exports.ccyIds = ccyIds;
+    }
+  }
+}}
+
+###
+# @name create-currency-type
+# @loop for item of ccyItems
+{{
+  if (ccyIds[item.code] || ccyFailed[item.code]) {
+    exports.$cancel = true;
+  } else {
+    const categoryId = ccyCategoryIds[item.categoryCode];
+    if (!categoryId) {
+      console.error("missing category for " + item.name);
+      exports.$cancel = true;
     } else {
-      console.error("not found: LABOUR");
+      exports.ccyPayload = JSON.stringify({
+        data: {
+          code: item.code,
+          name: item.name,
+          unit: item.unit,
+          category: categoryId,
+        },
+      });
     }
-  }
-}}
-
-###
-# @name lookup-ccy_huf
-{{
-  exports.failed_ccy_huf = false;
-  exports.encoded = encodeURIComponent("HUF");
-}}
-GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_ccy_huf = true;
-    console.error("lookup failed: Magyar Forint", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.ccy_huf = found;
-    }
-  }
-}}
-
-###
-# @name create-ccy_huf
-{{
-  const exists = typeof ccy_huf !== "undefined" && ccy_huf;
-  const failed = typeof failed_ccy_huf !== "undefined" && failed_ccy_huf;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-  const categoryId = typeof ccy_cat_cash !== "undefined" && ccy_cat_cash;
-  if (!categoryId) {
-    console.error("missing category for Magyar Forint");
-    exports.$cancel = true;
-  } else {
-    exports.categoryId = categoryId;
-  }
   }
 }}
 POST {{baseUrl}}/api/currency-types
@@ -107,14 +107,7 @@ Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
-{
-  "data": {
-    "code": "HUF",
-    "name": "Magyar Forint",
-    "unit": "HUF",
-    "category": "{{categoryId}}"
-  }
-}
+{{ccyPayload}}
 
 {{
   let parsed = response.parsedBody;
@@ -122,155 +115,12 @@ Content-Type: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Magyar Forint", response.statusCode, response.body);
+    console.error("create failed: " + item.name, response.statusCode, response.body);
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
-      exports.ccy_huf = created;
-    }
-  }
-}}
-
-###
-# @name lookup-ccy_eur
-{{
-  exports.failed_ccy_eur = false;
-  exports.encoded = encodeURIComponent("EUR");
-}}
-GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_ccy_eur = true;
-    console.error("lookup failed: Euro", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.ccy_eur = found;
-    }
-  }
-}}
-
-###
-# @name create-ccy_eur
-{{
-  const exists = typeof ccy_eur !== "undefined" && ccy_eur;
-  const failed = typeof failed_ccy_eur !== "undefined" && failed_ccy_eur;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-  const categoryId = typeof ccy_cat_cash !== "undefined" && ccy_cat_cash;
-  if (!categoryId) {
-    console.error("missing category for Euro");
-    exports.$cancel = true;
-  } else {
-    exports.categoryId = categoryId;
-  }
-  }
-}}
-POST {{baseUrl}}/api/currency-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "code": "EUR",
-    "name": "Euro",
-    "unit": "EUR",
-    "category": "{{categoryId}}"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Euro", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.ccy_eur = created;
-    }
-  }
-}}
-
-###
-# @name lookup-ccy_hour
-{{
-  exports.failed_ccy_hour = false;
-  exports.encoded = encodeURIComponent("HOUR");
-}}
-GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_ccy_hour = true;
-    console.error("lookup failed: emberi munkaóra", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.ccy_hour = found;
-    }
-  }
-}}
-
-###
-# @name create-ccy_hour
-{{
-  const exists = typeof ccy_hour !== "undefined" && ccy_hour;
-  const failed = typeof failed_ccy_hour !== "undefined" && failed_ccy_hour;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-  const categoryId = typeof ccy_cat_labour !== "undefined" && ccy_cat_labour;
-  if (!categoryId) {
-    console.error("missing category for emberi munkaóra");
-    exports.$cancel = true;
-  } else {
-    exports.categoryId = categoryId;
-  }
-  }
-}}
-POST {{baseUrl}}/api/currency-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "code": "HOUR",
-    "name": "emberi munkaóra",
-    "unit": "hour",
-    "category": "{{categoryId}}"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: emberi munkaóra", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.ccy_hour = created;
+      ccyIds[item.code] = created;
+      exports.ccyIds = ccyIds;
     }
   }
 }}

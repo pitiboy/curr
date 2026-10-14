@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Bevétel",
+    "type": "revenue",
+    "description": "Bevételi és jövedelmi számlák",
+    "color": "#10B981"
+  },
+  {
+    "name": "Költség",
+    "type": "expense",
+    "description": "Költség- és ráfordítási számlák",
+    "color": "#EF4444"
+  },
+  {
+    "name": "Eszköz",
+    "type": "asset",
+    "description": "Eszköz- és vagyonszámlák",
+    "color": "#3B82F6"
+  },
+  {
+    "name": "Kötelezettség",
+    "type": "liability",
+    "description": "Kötelezettség- és tartozásszámlák",
+    "color": "#F59E0B"
+  },
+  {
+    "name": "Tőke",
+    "type": "equity",
+    "description": "Tőke- és saját tőkeszámlák",
+    "color": "#8B5CF6"
+  }
+]

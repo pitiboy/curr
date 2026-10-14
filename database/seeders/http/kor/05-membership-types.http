@@ -1,17 +1,29 @@
 # Tagságtípusok
-# A database/seeders JS seederek httpYac változata (seed:full + initial-data).
+# A rekordok a data/membership-types.json fájlban vannak.
 #
-#   httpyac send database/seeders/kor/0*.http --env kor --all
+#   httpyac send database/seeders/http/kor/0*.http --all --env kor
 #
 # Környezet: local | kor | edizone a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
-###
-# @name lookup-mem_bentlako_tag
 {{
-  exports.failed_mem_bentlako_tag = false;
-  exports.encoded = encodeURIComponent("Bentlakó tag");
+  if (typeof memItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    exports.memItems = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "data/membership-types.json"), "utf8")
+    );
+    exports.memIds = {};
+    exports.memFailed = {};
+  }
+}}
+
+###
+# @name lookup-membership-type
+# @loop for item of memItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
 }}
 GET {{baseUrl}}/api/membership-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
@@ -23,25 +35,26 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    exports.failed_mem_bentlako_tag = true;
-    console.error("lookup failed: Bentlakó tag", response.statusCode, response.body);
+    memFailed[item.name] = true;
+    exports.memFailed = memFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      exports.mem_bentlako_tag = found;
+      memIds[item.name] = found;
+      exports.memIds = memIds;
     }
   }
 }}
 
 ###
-# @name create-mem_bentlako_tag
+# @name create-membership-type
+# @loop for item of memItems
 {{
-  const exists = typeof mem_bentlako_tag !== "undefined" && mem_bentlako_tag;
-  const failed = typeof failed_mem_bentlako_tag !== "undefined" && failed_mem_bentlako_tag;
-  if (exists || failed) {
+  if (memIds[item.name] || memFailed[item.name]) {
     exports.$cancel = true;
   } else {
-
+    exports.memPayload = JSON.stringify({ data: item });
   }
 }}
 POST {{baseUrl}}/api/membership-types
@@ -49,13 +62,7 @@ Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
-{
-  "data": {
-    "name": "Bentlakó tag",
-    "description": "Teljes jogú tag, aki a szövetkezeti birtokon lakik",
-    "color": "#10B981"
-  }
-}
+{{memPayload}}
 
 {{
   let parsed = response.parsedBody;
@@ -63,206 +70,12 @@ Content-Type: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Bentlakó tag", response.statusCode, response.body);
+    console.error("create failed: " + item.name, response.statusCode, response.body);
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
-      exports.mem_bentlako_tag = created;
-    }
-  }
-}}
-
-###
-# @name lookup-mem_tarsult_tag
-{{
-  exports.failed_mem_tarsult_tag = false;
-  exports.encoded = encodeURIComponent("Társult tag");
-}}
-GET {{baseUrl}}/api/membership-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_mem_tarsult_tag = true;
-    console.error("lookup failed: Társult tag", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.mem_tarsult_tag = found;
-    }
-  }
-}}
-
-###
-# @name create-mem_tarsult_tag
-{{
-  const exists = typeof mem_tarsult_tag !== "undefined" && mem_tarsult_tag;
-  const failed = typeof failed_mem_tarsult_tag !== "undefined" && failed_mem_tarsult_tag;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/membership-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Társult tag",
-    "description": "Társult tag, aki támogatja a szövetkezetet",
-    "color": "#3B82F6"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Társult tag", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.mem_tarsult_tag = created;
-    }
-  }
-}}
-
-###
-# @name lookup-mem_partolo_tag
-{{
-  exports.failed_mem_partolo_tag = false;
-  exports.encoded = encodeURIComponent("Pártoló tag");
-}}
-GET {{baseUrl}}/api/membership-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_mem_partolo_tag = true;
-    console.error("lookup failed: Pártoló tag", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.mem_partolo_tag = found;
-    }
-  }
-}}
-
-###
-# @name create-mem_partolo_tag
-{{
-  const exists = typeof mem_partolo_tag !== "undefined" && mem_partolo_tag;
-  const failed = typeof failed_mem_partolo_tag !== "undefined" && failed_mem_partolo_tag;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/membership-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Pártoló tag",
-    "description": "Pártoló tag, aki segíti a szövetkezet munkáját",
-    "color": "#8B5CF6"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Pártoló tag", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.mem_partolo_tag = created;
-    }
-  }
-}}
-
-###
-# @name lookup-mem_erdeklodo
-{{
-  exports.failed_mem_erdeklodo = false;
-  exports.encoded = encodeURIComponent("Érdeklődő");
-}}
-GET {{baseUrl}}/api/membership-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_mem_erdeklodo = true;
-    console.error("lookup failed: Érdeklődő", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.mem_erdeklodo = found;
-    }
-  }
-}}
-
-###
-# @name create-mem_erdeklodo
-{{
-  const exists = typeof mem_erdeklodo !== "undefined" && mem_erdeklodo;
-  const failed = typeof failed_mem_erdeklodo !== "undefined" && failed_mem_erdeklodo;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/membership-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Érdeklődő",
-    "description": "Érdeklődő személy, aki még nem tag",
-    "color": "#F59E0B"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Érdeklődő", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.mem_erdeklodo = created;
+      memIds[item.name] = created;
+      exports.memIds = memIds;
     }
   }
 }}

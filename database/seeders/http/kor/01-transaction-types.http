@@ -1,17 +1,29 @@
 # Tranzakciótípusok
-# A database/seeders JS seederek httpYac változata (seed:full + initial-data).
+# A rekordok a data/transaction-types.json fájlban vannak.
 #
-#   httpyac send database/seeders/kor/0*.http --env kor --all
+#   httpyac send database/seeders/http/kor/0*.http --all --env kor
 #
 # Környezet: local | kor | edizone a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
-###
-# @name lookup-tx_elrendelt
 {{
-  exports.failed_tx_elrendelt = false;
-  exports.encoded = encodeURIComponent("Elrendelt");
+  if (typeof txItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    exports.txItems = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "data/transaction-types.json"), "utf8")
+    );
+    exports.txIds = {};
+    exports.txFailed = {};
+  }
+}}
+
+###
+# @name lookup-transaction-type
+# @loop for item of txItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
 }}
 GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
@@ -23,25 +35,26 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    exports.failed_tx_elrendelt = true;
-    console.error("lookup failed: Elrendelt", response.statusCode, response.body);
+    txFailed[item.name] = true;
+    exports.txFailed = txFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      exports.tx_elrendelt = found;
+      txIds[item.name] = found;
+      exports.txIds = txIds;
     }
   }
 }}
 
 ###
-# @name create-tx_elrendelt
+# @name create-transaction-type
+# @loop for item of txItems
 {{
-  const exists = typeof tx_elrendelt !== "undefined" && tx_elrendelt;
-  const failed = typeof failed_tx_elrendelt !== "undefined" && failed_tx_elrendelt;
-  if (exists || failed) {
+  if (txIds[item.name] || txFailed[item.name]) {
     exports.$cancel = true;
   } else {
-
+    exports.txPayload = JSON.stringify({ data: item });
   }
 }}
 POST {{baseUrl}}/api/transaction-types
@@ -49,13 +62,7 @@ Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
-{
-  "data": {
-    "name": "Elrendelt",
-    "category": "future",
-    "description": "Tervezett/elrendelt kiadás"
-  }
-}
+{{txPayload}}
 
 {{
   let parsed = response.parsedBody;
@@ -63,336 +70,12 @@ Content-Type: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Elrendelt", response.statusCode, response.body);
+    console.error("create failed: " + item.name, response.statusCode, response.body);
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
-      exports.tx_elrendelt = created;
-    }
-  }
-}}
-
-###
-# @name lookup-tx_utalas
-{{
-  exports.failed_tx_utalas = false;
-  exports.encoded = encodeURIComponent("Utalás");
-}}
-GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_tx_utalas = true;
-    console.error("lookup failed: Utalás", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.tx_utalas = found;
-    }
-  }
-}}
-
-###
-# @name create-tx_utalas
-{{
-  const exists = typeof tx_utalas !== "undefined" && tx_utalas;
-  const failed = typeof failed_tx_utalas !== "undefined" && failed_tx_utalas;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/transaction-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Utalás",
-    "category": "actual",
-    "description": "Banki átutalás"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Utalás", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.tx_utalas = created;
-    }
-  }
-}}
-
-###
-# @name lookup-tx_keszpenz
-{{
-  exports.failed_tx_keszpenz = false;
-  exports.encoded = encodeURIComponent("Készpénz");
-}}
-GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_tx_keszpenz = true;
-    console.error("lookup failed: Készpénz", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.tx_keszpenz = found;
-    }
-  }
-}}
-
-###
-# @name create-tx_keszpenz
-{{
-  const exists = typeof tx_keszpenz !== "undefined" && tx_keszpenz;
-  const failed = typeof failed_tx_keszpenz !== "undefined" && failed_tx_keszpenz;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/transaction-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Készpénz",
-    "category": "actual",
-    "description": "Készpénzes fizetés"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Készpénz", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.tx_keszpenz = created;
-    }
-  }
-}}
-
-###
-# @name lookup-tx_atvezetes
-{{
-  exports.failed_tx_atvezetes = false;
-  exports.encoded = encodeURIComponent("Átvezetés");
-}}
-GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_tx_atvezetes = true;
-    console.error("lookup failed: Átvezetés", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.tx_atvezetes = found;
-    }
-  }
-}}
-
-###
-# @name create-tx_atvezetes
-{{
-  const exists = typeof tx_atvezetes !== "undefined" && tx_atvezetes;
-  const failed = typeof failed_tx_atvezetes !== "undefined" && failed_tx_atvezetes;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/transaction-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Átvezetés",
-    "category": "internal",
-    "description": "Belső átvezetés számlák között"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Átvezetés", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.tx_atvezetes = created;
-    }
-  }
-}}
-
-###
-# @name lookup-tx_jutalek
-{{
-  exports.failed_tx_jutalek = false;
-  exports.encoded = encodeURIComponent("Jutalék");
-}}
-GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_tx_jutalek = true;
-    console.error("lookup failed: Jutalék", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.tx_jutalek = found;
-    }
-  }
-}}
-
-###
-# @name create-tx_jutalek
-{{
-  const exists = typeof tx_jutalek !== "undefined" && tx_jutalek;
-  const failed = typeof failed_tx_jutalek !== "undefined" && failed_tx_jutalek;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/transaction-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Jutalék",
-    "category": "actual",
-    "description": "Jutalék vagy bónusz kifizetés"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Jutalék", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.tx_jutalek = created;
-    }
-  }
-}}
-
-###
-# @name lookup-tx_barter
-{{
-  exports.failed_tx_barter = false;
-  exports.encoded = encodeURIComponent("Barter");
-}}
-GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200) {
-    exports.failed_tx_barter = true;
-    console.error("lookup failed: Barter", response.statusCode, response.body);
-  } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      exports.tx_barter = found;
-    }
-  }
-}}
-
-###
-# @name create-tx_barter
-{{
-  const exists = typeof tx_barter !== "undefined" && tx_barter;
-  const failed = typeof failed_tx_barter !== "undefined" && failed_tx_barter;
-  if (exists || failed) {
-    exports.$cancel = true;
-  } else {
-
-  }
-}}
-POST {{baseUrl}}/api/transaction-types
-Authorization: Bearer {{token}}
-Accept: application/json
-Content-Type: application/json
-
-{
-  "data": {
-    "name": "Barter",
-    "category": "actual",
-    "description": "Áru/szolgáltatás csere"
-  }
-}
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
-  }
-  if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: Barter", response.statusCode, response.body);
-  } else {
-    const created = parsed && parsed.data && parsed.data.documentId;
-    if (created) {
-      exports.tx_barter = created;
+      txIds[item.name] = created;
+      exports.txIds = txIds;
     }
   }
 }}
