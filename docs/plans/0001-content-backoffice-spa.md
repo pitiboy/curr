@@ -57,7 +57,7 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 - [x] Jogok: transaction és receipt find, findOne, create, update; organization és account find, findOne; content-api upload. Delete nincs
 - [x] Ismételt indulás nem duplikálja a role és permission sorokat
 
-- [ ] **Human:** Strapi Admin → Users & Permissions. Létrehozol egy `dataentry` és egy `qa` Content usert (email + jelszó). Mindkettővel a `/api/auth/local` 200-at és JWT-t ad. Ha igen, pipáld ki, és indítsd a 3. lépést.
+- [x] **Human:** Strapi Admin → Users & Permissions. Létrehozol egy `dataentry` és egy `qa` Content usert (email + jelszó). Mindkettővel a `/api/auth/local` 200-at és JWT-t ad. Ha igen, pipáld ki, és indítsd a 3. lépést.
 
 ## 3. Local login és üres route-ok
 
