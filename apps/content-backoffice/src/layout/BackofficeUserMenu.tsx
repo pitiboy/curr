@@ -28,6 +28,7 @@ import { Link } from 'react-router-dom';
 import { isContentRole } from '../auth/roles';
 import { APP_TITLE } from '../config';
 import { userMenuEntries } from '../workflows/userMenuEntries';
+import { Typography } from '@mui/material';
 
 const ProfileMenuItem = forwardRef<HTMLAnchorElement>(
   function ProfileMenuItem(props, ref) {
@@ -205,8 +206,13 @@ export function BackofficeAppBar(props: AppBarProps) {
         width={32}
         height={32}
       />
-      &nbsp;
-      <h2>{APP_TITLE}</h2>
+      <Typography
+        component="h2"
+        variant="h6"
+        sx={{ m: 0, fontWeight: 500, lineHeight: 1.2, pl: 1 }}
+      >
+        {APP_TITLE}
+      </Typography>
       <PageTitleSlot />
     </AppBar>
   );
