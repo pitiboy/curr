@@ -12,11 +12,18 @@ import {
 import { userMenuEntries } from './userMenuEntries';
 
 describe('selectWorkflows', () => {
-  it('ships with an empty known list, so env tokens stay hidden', () => {
-    expect(KNOWN_BACKOFFICE_WORKFLOWS).toEqual([]);
-    expect(selectWorkflows('member-fee')).toEqual({
+  it('enables known env tokens in catalog order and hides the rest', () => {
+    expect(KNOWN_BACKOFFICE_WORKFLOWS).toEqual([
+      'member-fee',
+      'egg-production',
+    ]);
+    expect(selectWorkflows('egg-production, member-fee, unknown')).toEqual({
+      enabled: ['member-fee', 'egg-production'],
+      available: ['member-fee', 'egg-production'],
+    });
+    expect(selectWorkflows('not-a-workflow')).toEqual({
       enabled: [],
-      available: [],
+      available: ['member-fee', 'egg-production'],
     });
   });
 
