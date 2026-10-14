@@ -34,6 +34,8 @@ Each transaction is recorded using double-entry bookkeeping principles with debi
 - **Expense tracking**: The system can track expenses that belong to specific projects or locations.
 - **Multi-currency support**: Transactions can be made in different currencies with automatic conversion.
 
+Worked double-entry **ügyletek** (cash expense through korona, eggs, fruit, land purchase, renovation, operating subsidy, and administration) are in [Ügyletek](./transaction-workflow.md). An ügylet is the whole business event; a transaction remains one debit and credit line.
+
 ```mermaid
 erDiagram
     %% === Core entities ===
