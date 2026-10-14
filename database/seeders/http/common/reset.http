@@ -1,0 +1,160 @@
+# Seed táblák ürítése. A séma, az admin felhasználók, a szerepek és az API tokenek megmaradnak.
+# A kézi tartalom (tranzakció, nyugta, tag, média, Content API felhasználó) csak wipeAll=true mellett megy.
+#
+#   npm run seed:http:reset -- prod
+#   npm run seed:http:reset:all -- prod
+#   npm run seed:http -- prod
+
+{{
+  const alsoRest = typeof wipeAll !== "undefined" && String(wipeAll) === "true";
+  const draftTypes = { transactions: true, receipts: true };
+  const seedPaths = [
+    "accounts",
+    "organizations",
+    "currency-types",
+    "currency-categories",
+    "account-categories",
+    "membership-types",
+    "transaction-types",
+  ];
+  const restPaths = [
+    "transactions",
+    "receipts",
+    "currency-rates",
+    "memberships",
+    "members",
+  ];
+
+  function rowsFrom(parsed) {
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && Array.isArray(parsed.data)) return parsed.data;
+    return [];
+  }
+
+  async function readJson(response) {
+    const text = await response.text();
+    let parsed = null;
+    try { parsed = JSON.parse(text); } catch (error) { parsed = null; }
+    return { status: response.status, text: text, parsed: parsed };
+  }
+
+  async function listPage(path, page, status) {
+    const statusQuery = status ? "&status=" + encodeURIComponent(status) : "";
+    const response = await fetch(
+      baseUrl + "/api/" + path + "?pagination[page]=" + page + "&pagination[pageSize]=100" + statusQuery,
+      { headers: { Authorization: "Bearer " + token, Accept: "application/json" } }
+    );
+    const body = await readJson(response);
+    if (body.status !== 200) {
+      throw new Error(path + " list " + body.status + " " + body.text);
+    }
+    return rowsFrom(body.parsed);
+  }
+
+  async function listAll(path) {
+    const statuses = draftTypes[path] ? ["draft", "published"] : [""];
+    const seen = {};
+    const rows = [];
+    for (let s = 0; s < statuses.length; s += 1) {
+      let page = 1;
+      while (page < 100) {
+        const batch = await listPage(path, page, statuses[s]);
+        for (let i = 0; i < batch.length; i += 1) {
+          const key = batch[i].documentId || batch[i].id;
+          if (key && !seen[key]) {
+            seen[key] = true;
+            rows.push(batch[i]);
+          }
+        }
+        if (batch.length < 100) break;
+        page += 1;
+      }
+    }
+    return rows;
+  }
+
+  async function remove(urlPath) {
+    const response = await fetch(baseUrl + urlPath, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token, Accept: "application/json" },
+    });
+    if (response.status === 200 || response.status === 204) return true;
+    const body = await readJson(response);
+    console.error(urlPath, body.status, body.text);
+    return false;
+  }
+
+  async function wipeRows(label, load, urlFor) {
+    let pass = 0;
+    while (pass < 30) {
+      pass += 1;
+      const rows = await load();
+      if (!rows.length) {
+        console.info(label + " empty");
+        return;
+      }
+      let deleted = 0;
+      for (let i = 0; i < rows.length; i += 1) {
+        const urlPath = urlFor(rows[i]);
+        if (urlPath && (await remove(urlPath))) deleted += 1;
+      }
+      console.info(label + " deleted " + deleted + ", remaining " + (rows.length - deleted));
+      if (!deleted) {
+        const hint = alsoRest
+          ? ""
+          : ". Remaining rows are still referenced; npm run seed:http:reset:all -- <env> also deletes the other content";
+        throw new Error(label + " delete stuck, " + rows.length + " remaining" + hint);
+      }
+    }
+    throw new Error(label + " delete did not finish");
+  }
+
+  async function wipeCollection(path) {
+    await wipeRows(
+      path,
+      function () { return listAll(path); },
+      function (row) { return row.documentId ? "/api/" + path + "/" + row.documentId : ""; }
+    );
+  }
+
+  async function reset() {
+    console.info(alsoRest ? "reset seed and other content" : "reset seed tables only");
+    if (alsoRest) {
+      for (let i = 0; i < restPaths.length; i += 1) {
+        await wipeCollection(restPaths[i]);
+      }
+      await wipeRows(
+        "media",
+        function () { return listAll("upload/files"); },
+        function (row) { return row.id ? "/api/upload/files/" + row.id : ""; }
+      );
+      await wipeRows(
+        "users",
+        function () { return listAll("users"); },
+        function (row) { return row.id ? "/api/users/" + row.id : ""; }
+      );
+    }
+    for (let i = 0; i < seedPaths.length; i += 1) {
+      await wipeCollection(seedPaths[i]);
+    }
+    return "ok";
+  }
+
+  exports.reset = reset();
+}}
+GET {{baseUrl}}/api/organizations?pagination[pageSize]=1
+Authorization: Bearer {{token}}
+X-Reset: {{reset}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  const left = parsed && parsed.data ? parsed.data.length : -1;
+  if (response.statusCode !== 200 || left !== 0) {
+    throw new Error("organizations not empty after reset");
+  }
+  console.info("reset finished");
+}}
