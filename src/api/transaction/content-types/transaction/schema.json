@@ -30,7 +30,6 @@
       "metadatas": {
         "label": "Költség számlaszám",
         "description": "mire ment a pénz (anyag, bér, a megvett dolog) = `Tartozik`"
-        "description": "mire ment a pénz (anyag, bér, a megvett dolog)"
       },
       "inversedBy": "debit_transactions"
     },
@@ -41,7 +40,6 @@
       "metadatas": {
         "label": "Kifizető számlaszám",
         "description": "Honnan fizetted ki (pl készpénz vagy bank) = `Követel`"
-        "description": "Honnan fizetted ki (pl készpénz vagy bank)"
       },
       "inversedBy": "credit_transactions"
     },
