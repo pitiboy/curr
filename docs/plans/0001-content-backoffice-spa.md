@@ -81,7 +81,7 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 - [x] Szűrők: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`
 - [x] Erről a nézetről nincs create, edit, publish gomb és nincs sor-kattintás szerkesztőbe
 
-- [ ] **Human:** mindkét szereppel a lista betölt. A státuszszűrő leszűkíti a sorokat. Egy sor megnyitása nem visz szerkesztőbe. Ha a lista üres, seedelt tranzakció nélkül is elfogadható, ha a szűrő és az üres állapot hibamentes. Ha igen, pipáld ki, és indítsd az 5. lépést.
+- [x] **Human:** mindkét szereppel a lista betölt. A státuszszűrő leszűkíti a sorokat. Egy sor megnyitása nem visz szerkesztőbe. Ha a lista üres, seedelt tranzakció nélkül is elfogadható, ha a szűrő és az üres állapot hibamentes. Ha igen, pipáld ki, és indítsd az 5. lépést.
 
 ## 5. Publish őr és receipt séma
 
