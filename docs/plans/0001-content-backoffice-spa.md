@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** nem indult  
+**Status:** 1. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -29,13 +29,13 @@ A fejlesztői Strapi CORS-a nyitott (`config/middlewares.ts`, nem production). A
 
 Üres React Admin keret, magyar felülettel, API hívás nélkül.
 
-- [ ] `apps/content-backoffice` Vite + React + TypeScript app, saját `package.json` és lockfile
-- [ ] Nx `project.json`: `dev` és `build` az app mappájában fut
-- [ ] `vite.config.ts` `base: '/backoffice/'`
-- [ ] `.env.example` a `VITE_STRAPI_URL` kulccsal
-- [ ] `react-admin` 5 Admin keret, MUI, üres menü, resource még nincs
-- [ ] i18nProvider: alapértelmezett `hu`, `en` katalógus a repóban; a keret feliratai magyarul jönnek
-- [ ] `vite build` lefut
+- [x] `apps/content-backoffice` Vite + React + TypeScript app, saját `package.json` és lockfile
+- [x] Nx `project.json`: `dev` és `build` az app mappájában fut
+- [x] `vite.config.ts` `base: '/backoffice/'`
+- [x] `.env.example` a `VITE_STRAPI_URL` kulccsal
+- [x] `react-admin` 5 Admin keret, MUI, üres menü, resource még nincs
+- [x] i18nProvider: alapértelmezett `hu`, `en` katalógus a repóban; a keret feliratai magyarul jönnek
+- [x] `vite build` lefut
 
 - [ ] **Human:** `dev` elindul, a böngésző a `/backoffice/` útvonalon magyar react-admin keretet mutat, konzolhiba nélkül. Ha igen, pipáld ki, és indítsd a 2. lépést.
 
