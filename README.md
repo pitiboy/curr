@@ -2,7 +2,7 @@
 
 Community Unified Resource Registry — Strapi 5 API at the repository root.
 
-Sidecar folders (not part of the Node app): `docs/`, `apps/frontend-appsmith/`, `apps/cost-planner/`.
+Sidecar folders (not part of the Node app): `docs/`, `apps/content-backoffice/`, `apps/frontend-appsmith/`, `apps/cost-planner/`.
 
 ## Requirements
 
