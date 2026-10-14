@@ -96,7 +96,7 @@ A korábban kikommentezett őr nem futott, és nem írta az audit mezőket. A RE
 - [x] `transaction` és `receipt` séma: `entered_by` és `published_by` string, nem kötelező. A middleware create-kor a Content user e-mailjét írja `entered_by`-ba. Publish-kor az `editor` e-mailjét írja `published_by`-ba, unpublish-kor üríti. A kliens payloadja egyik mezőt sem írja felül. User reláció és user `find` jog nincs
 - [x] Az `editor` transaction publish után a kapcsolt receipt is published, ha van. Receipt nélkül a tranzakció publish megáll
 
-- [ ] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre, és a válasz `entered_by` mezője a belépett user e-mailje akkor is, ha a body más e-mailt küldött (ezt a hívást utána törölheted). `editor` tokennel ugyanaz a rekord publisheddé tehető, és a `published_by` az `editor` e-mailje. Ha igen, pipáld ki, és indítsd a 6. lépést.
+- [x] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre, és a válasz `entered_by` mezője a belépett user e-mailje akkor is, ha a body más e-mailt küldött (ezt a hívást utána törölheted). `editor` tokennel ugyanaz a rekord publisheddé tehető, és a `published_by` az `editor` e-mailje. Ha igen, pipáld ki, és indítsd a 6. lépést.
 
 ## 6. Új tranzakció, receipt nélkül
 
