@@ -10,12 +10,13 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { UserMenuContextProvider } from 'ra-core';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 import type { AppBarProps } from 'react-admin';
 import {
   AppBar,
   Logout,
+  TitlePortal,
   useAuthProvider,
   useGetIdentity,
   usePermissions,
@@ -25,6 +26,7 @@ import {
 import { Link } from 'react-router-dom';
 
 import { isContentRole } from '../auth/roles';
+import { APP_TITLE } from '../config';
 import { userMenuEntries } from '../workflows/userMenuEntries';
 
 const ProfileMenuItem = forwardRef<HTMLAnchorElement>(
@@ -78,9 +80,7 @@ const FeatureFlagsMenuItem = forwardRef<HTMLAnchorElement>(
 
 function UserAvatar({ alt, src }: { alt: string; src?: string }) {
   if (src) {
-    return (
-      <Avatar alt={alt} src={src} sx={{ width: 24, height: 24 }} />
-    );
+    return <Avatar alt={alt} src={src} sx={{ width: 24, height: 24 }} />;
   }
   return <AccountCircleIcon />;
 }
@@ -160,6 +160,54 @@ function BackofficeUserMenu() {
   );
 }
 
+function PageTitleSlot() {
+  const [hasTitle, setHasTitle] = useState(false);
+
+  useEffect(() => {
+    const node = document.getElementById('react-admin-title');
+    if (!node) {
+      return;
+    }
+
+    const sync = () => {
+      const next = Boolean(node.textContent?.trim());
+      setHasTitle((current) => (current === next ? current : next));
+    };
+
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(node, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      {hasTitle ? (
+        <span aria-hidden="true" style={{ marginInline: '0.5rem' }}>
+          »
+        </span>
+      ) : null}
+      <TitlePortal />
+    </>
+  );
+}
+
 export function BackofficeAppBar(props: AppBarProps) {
-  return <AppBar {...props} userMenu={<BackofficeUserMenu />} />;
+  return (
+    <AppBar {...props} userMenu={<BackofficeUserMenu />}>
+      <img
+        src={`${import.meta.env.BASE_URL}favicon.svg`}
+        alt="Logo"
+        width={32}
+        height={32}
+      />
+      &nbsp;
+      <h2>{APP_TITLE}</h2>
+      <PageTitleSlot />
+    </AppBar>
+  );
 }
