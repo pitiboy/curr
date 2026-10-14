@@ -6,6 +6,23 @@ function allow(actions: string[]) {
   return Object.fromEntries(actions.map((action) => [action, enabled]));
 }
 
+/** Content API actions for dataentry and qa (no delete). */
+const CONTENT_ROLE_ACTIONS = [
+  'api::transaction.transaction.find',
+  'api::transaction.transaction.findOne',
+  'api::transaction.transaction.create',
+  'api::transaction.transaction.update',
+  'api::receipt.receipt.find',
+  'api::receipt.receipt.findOne',
+  'api::receipt.receipt.create',
+  'api::receipt.receipt.update',
+  'api::organization.organization.find',
+  'api::organization.organization.findOne',
+  'api::account.account.find',
+  'api::account.account.findOne',
+  'plugin::upload.content-api.upload',
+] as const;
+
 const usersPermissionsRolePermissions = {
   'api::transaction': {
     controllers: {
@@ -47,40 +64,105 @@ const usersPermissionsRoles = [
   },
 ];
 
-async function ensureUsersPermissionsRoles(strapi: {
+type StrapiLike = {
   db: {
     query: (uid: string) => {
-      findOne: (params: {
-        where: { type: string };
-      }) => Promise<{ id: number } | null>;
+      findOne: (params: Record<string, unknown>) => Promise<{ id: number } | null>;
+      create: (params: { data: Record<string, unknown> }) => Promise<{ id: number }>;
     };
   };
   plugin: (name: string) => {
     service: (name: string) => {
+      getActions: () => Record<string, { controllers?: Record<string, Record<string, unknown>> }>;
       createRole: (params: Record<string, unknown>) => Promise<void>;
     };
   };
-  log: { info: (message: string) => void };
-}) {
-  const roleService = strapi.plugin('users-permissions').service('role');
+  log: { info: (message: string) => void; warn: (message: string) => void };
+};
 
-  for (const role of usersPermissionsRoles) {
-    const existing = await strapi.db
+function parseActionId(actionId: string) {
+  const parts = actionId.split('.');
+  const actionName = parts.pop();
+  const controllerName = parts.pop();
+  const typeName = parts.join('.');
+  return { typeName, controllerName, actionName };
+}
+
+function isActionInCatalog(
+  catalog: Record<string, { controllers?: Record<string, Record<string, unknown>> }>,
+  actionId: string,
+) {
+  const { typeName, controllerName, actionName } = parseActionId(actionId);
+  if (!typeName || !controllerName || !actionName) {
+    return false;
+  }
+  return (
+    catalog[typeName]?.controllers?.[controllerName]?.[actionName] !== undefined
+  );
+}
+
+async function ensurePermission(
+  strapi: StrapiLike,
+  roleId: number,
+  action: string,
+) {
+  const existing = await strapi.db
+    .query('plugin::users-permissions.permission')
+    .findOne({
+      where: { action, role: roleId },
+    });
+
+  if (existing) {
+    return;
+  }
+
+  await strapi.db.query('plugin::users-permissions.permission').create({
+    data: { action, role: roleId },
+  });
+}
+
+async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
+  const usersPermissionsService = strapi
+    .plugin('users-permissions')
+    .service('users-permissions');
+  const roleService = strapi.plugin('users-permissions').service('role');
+  const actionCatalog = usersPermissionsService.getActions();
+
+  for (const roleDef of usersPermissionsRoles) {
+    let role = await strapi.db
       .query('plugin::users-permissions.role')
       .findOne({
-        where: { type: role.type },
+        where: { type: roleDef.type },
       });
 
-    if (existing) {
-      strapi.log.info(`Users-permissions role "${role.type}" already exists`);
-      continue;
+    if (!role) {
+      await roleService.createRole({
+        ...roleDef,
+        permissions: usersPermissionsRolePermissions,
+      });
+      role = await strapi.db
+        .query('plugin::users-permissions.role')
+        .findOne({
+          where: { type: roleDef.type },
+        });
+      strapi.log.info(`Created users-permissions role "${roleDef.type}"`);
+    } else {
+      strapi.log.info(`Users-permissions role "${roleDef.type}" already exists`);
     }
 
-    await roleService.createRole({
-      ...role,
-      permissions: usersPermissionsRolePermissions,
-    });
-    strapi.log.info(`Created users-permissions role "${role.type}"`);
+    if (!role) {
+      throw new Error(`Failed to ensure role "${roleDef.type}"`);
+    }
+
+    for (const action of CONTENT_ROLE_ACTIONS) {
+      if (!isActionInCatalog(actionCatalog, action)) {
+        strapi.log.warn(
+          `Content role bootstrap: action "${action}" not in getActions(), skipped`,
+        );
+        continue;
+      }
+      await ensurePermission(strapi, role.id, action);
+    }
   }
 }
 

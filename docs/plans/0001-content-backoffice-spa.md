@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 1. lépés Human újrapróbára vár  
+**Status:** 2. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -53,9 +53,9 @@ A nyelv nem URL. A váltó a `RaStore.locale` localStorage kulcsot írja, a cím
 
 A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és a bootstrap a `strapi-publish-guard` skill szerint készül. A publish őr és a `vendor` séma még nem ebben a lépésben van.
 
-- [ ] `src/index.ts` `bootstrap()`: idempotens `dataentry` és `qa` role `type`, productionben is
-- [ ] Jogok: transaction és receipt find, findOne, create, update; organization és account find, findOne; content-api upload. Delete nincs
-- [ ] Ismételt indulás nem duplikálja a role és permission sorokat
+- [x] `src/index.ts` `bootstrap()`: idempotens `dataentry` és `qa` role `type`, productionben is
+- [x] Jogok: transaction és receipt find, findOne, create, update; organization és account find, findOne; content-api upload. Delete nincs
+- [x] Ismételt indulás nem duplikálja a role és permission sorokat
 
 - [ ] **Human:** Strapi Admin → Users & Permissions. Létrehozol egy `dataentry` és egy `qa` Content usert (email + jelszó). Mindkettővel a `/api/auth/local` 200-at és JWT-t ad. Ha igen, pipáld ki, és indítsd a 3. lépést.
 
