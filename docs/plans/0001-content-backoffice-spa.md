@@ -108,7 +108,7 @@ A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `doc
 - [x] A `transaction_type` és a `related_transaction` nincs az űrlapon. A `currency_type` választó igen. Az `entered_by` és a `published_by` sem űrlapmező
 - [x] Sikeres mentés után a rekord a readonly listán draftként látszik
 
-- [ ] **Human:** `dataentry` felvisz egy kiadást receipt nélkül. A debit listában az `5`-tel kezdődő számlák vannak, a credit listában az `1`-gyel vagy `3`-mal kezdődők. Mentés után a lista draftot mutat, Publish gomb sehol. Ha a select üres, a seed hiányzik: azt jelezd, ne bővítsd a kódlistát. Ha igen, pipáld ki, és indítsd a 7. lépést.
+- [x] **Human:** `dataentry` felvisz egy kiadást receipt nélkül. A debit listában az `5`-tel kezdődő számlák vannak, a credit listában az `1`-gyel vagy `3`-mal kezdődők. Mentés után a lista draftot mutat, Publish gomb sehol. Ha a select üres, a seed hiányzik: azt jelezd, ne bővítsd a kódlistát. Ha igen, pipáld ki, és indítsd a 7. lépést.
 
 ## 7. Opcionális bizonylat
 
