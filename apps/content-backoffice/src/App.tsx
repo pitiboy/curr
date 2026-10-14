@@ -1,21 +1,23 @@
-import { useEffect } from 'react';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { ListItemIcon, MenuItem } from '@mui/material';
 import { deepmerge } from '@mui/utils';
 import {
   Admin,
-  Layout,
-  Menu,
-  Sidebar,
-  type SidebarProps,
-  Title,
+  CustomRoutes,
+  Resource,
   defaultDarkTheme,
   defaultLightTheme,
-  useTranslate,
 } from 'react-admin';
+import { Route } from 'react-router-dom';
 
-import { noopDataProvider } from './dataProvider';
+import { authProvider } from './auth/authProvider';
+import { RoleGuard } from './auth/RoleGuard';
+import { dataProvider } from './data/dataProvider';
 import { i18nProvider } from './i18n';
+import { BackofficeLayout } from './layout/BackofficeLayout';
+import { LoginPage } from './login/LoginPage';
+import { ProfilePage } from './pages/profile/ProfilePage';
+import { TransactionCreate } from './pages/transactions/TransactionCreate';
+import { TransactionList } from './pages/transactions/TransactionList';
+import { TransactionReview } from './pages/transactions/TransactionReview';
 
 const themeWithReadableButtons = {
   components: {
@@ -30,62 +32,35 @@ const themeWithReadableButtons = {
 const lightTheme = deepmerge(defaultLightTheme, themeWithReadableButtons);
 const darkTheme = deepmerge(defaultDarkTheme, themeWithReadableButtons);
 
-/** Visible stand-in until step 3 registers a resource. Not a route. */
-function EmptyMenu() {
-  const translate = useTranslate();
-
-  return (
-    <Menu>
-      <MenuItem disableRipple sx={{ cursor: 'default' }}>
-        <ListItemIcon>
-          <InfoOutlinedIcon fontSize="small" />
-        </ListItemIcon>
-        {translate('app.menu_placeholder')}
-      </MenuItem>
-    </Menu>
-  );
-}
-
-function FrameSidebar(props: SidebarProps) {
-  return (
-    <Sidebar
-      {...props}
-      sx={{
-        '& .MuiPaper-root': {
-          backgroundColor: 'background.paper',
-          borderRight: '1px solid',
-          borderColor: 'divider',
-        },
-      }}
-    />
-  );
-}
-
-/** Frame until a resource exists. The default Ready splash skips Layout and i18n. */
-function EmptyFrame() {
-  const translate = useTranslate();
-
-  useEffect(() => {
-    document.title = translate('app.title');
-  }, [translate]);
-
-  return (
-    <Layout menu={EmptyMenu} sidebar={FrameSidebar}>
-      <Title title="app.title" preferenceKey={false} />
-    </Layout>
-  );
-}
-
 export function App() {
   return (
     <Admin
+      authProvider={authProvider}
       darkTheme={darkTheme}
-      dataProvider={noopDataProvider}
+      dataProvider={dataProvider}
       i18nProvider={i18nProvider}
+      layout={BackofficeLayout}
       lightTheme={lightTheme}
-      ready={EmptyFrame}
-      requireAuth={false}
+      loginPage={LoginPage}
       title="app.title"
-    />
+    >
+      <Resource
+        create={TransactionCreate}
+        list={TransactionList}
+        name="transactions"
+        options={{ label: 'app.transactions_list' }}
+      />
+      <CustomRoutes>
+        <Route
+          element={
+            <RoleGuard allow={['qa']}>
+              <TransactionReview />
+            </RoleGuard>
+          }
+          path="/transactions/review"
+        />
+        <Route element={<ProfilePage />} path="/profile" />
+      </CustomRoutes>
+    </Admin>
   );
 }

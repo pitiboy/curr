@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 2. lépés kész (Human ellenőrzésre vár)  
+**Status:** 3. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -61,16 +61,16 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 
 ## 3. Local login és üres route-ok
 
-- [ ] `strapiAuthProvider` + `strapiHttpClient` + `strapiDataProvider`, `LoginWithEmail`
-- [ ] `withDocumentId`: az `id` a `documentId`. Ha a telepített `ra-strapi` 1.0.3 már így adja, a wrapper no-op, és egy Vitest teszt az app csomagjában rögzíti. A teszt a Strapi gyökerébe nem kerül
-- [ ] `getPermissions` a `/api/users/me?populate=role` role `type` mezőjéből
-- [ ] Resource név: `transactions`. Három route üres állapottal, guesser nélkül:
+- [x] `strapiAuthProvider` + `strapiHttpClient` + `strapiDataProvider`, `LoginWithEmail`
+- [x] `withDocumentId`: az `id` a `documentId`. Ha a telepített `ra-strapi` 1.0.3 már így adja, a wrapper no-op, és egy Vitest teszt az app csomagjában rögzíti. A teszt a Strapi gyökerébe nem kerül
+- [x] `getPermissions` a `/api/users/me?populate=role` role `type` mezőjéből
+- [x] Resource név: `transactions`. Három route üres állapottal, guesser nélkül:
   - `/transactions/create` csak `dataentry`
   - `/transactions/review` csak `qa`
   - `/transactions` mindkét szerep, szerkesztés nélkül
-- [ ] Profil oldal: név és email. Jelszócsere még nincs
-- [ ] A menü a szerep szerint rejti a create vagy a review elemet. Ismeretlen szerep egyik író oldalt sem látja
-- [ ] A Google gomb helye disabled, amíg a 9. lépés be nem köti
+- [x] Profil oldal: név és email. Jelszócsere még nincs
+- [x] A menü a szerep szerint rejti a create vagy a review elemet. Ismeretlen szerep egyik író oldalt sem látja
+- [x] A Google gomb helye disabled, amíg a 9. lépés be nem köti
 
 - [ ] **Human:** `dataentry` belép, látja az Új tranzakciót és a listát, a review URL-t nem éri el. Kijelentkezés után a `qa` látja a review-t és a listát, a create URL-t nem éri el. A profil a nevet és az emailt mutatja. Ha igen, pipáld ki, és indítsd a 4. lépést.
 
