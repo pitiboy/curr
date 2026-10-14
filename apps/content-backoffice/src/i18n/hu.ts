@@ -5,5 +5,6 @@ import { mergeTranslations } from 'react-admin';
 export const huMessages = mergeTranslations(hungarianMessages, {
   app: {
     title: 'Tartalom kezelő',
+    menu_placeholder: 'Nincs menüpont',
   },
 });

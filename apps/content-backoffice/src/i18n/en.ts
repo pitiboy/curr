@@ -5,5 +5,6 @@ import { mergeTranslations } from 'react-admin';
 export const enMessages = mergeTranslations(englishMessages, {
   app: {
     title: 'Content backoffice',
+    menu_placeholder: 'No menu items',
   },
 });

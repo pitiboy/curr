@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 1. lépés javításra vár (Human próba bukott: angol splash, nincs keret)  
+**Status:** 1. lépés Human újrapróbára vár  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -38,14 +38,16 @@ A váz megvan. A Human próba bukott: a `http://localhost:5173/backoffice/` a be
 - [x] `react-admin` 5 `Admin`, MUI, resource nincs, API hívás nincs (`requireAuth={false}`, noop dataProvider)
 - [x] i18nProvider bekötve: alapértelmezett `hu`, `en` katalógus a repóban
 - [x] `vite build` lefut
-- [ ] A `/backoffice/` címen a keret látszik: app sáv és oldalsó menü. A menü üres. Resource továbbra sincs. Az angol Ready splash nem marad a képernyőn.
-- [ ] A keret feliratai magyarul jönnek. A nyelvváltó „Magyar”. Az app sáv címe „Tartalom kezelő”. Konzolhiba nincs.
+- [x] A `/backoffice/` címen a keret látszik: app sáv és oldalsó menü. A menüben egy placeholder van („Nincs menüpont”), resource nincs. Az angol Ready splash nem marad a képernyőn.
+- [x] A keret feliratai magyarul jönnek. A nyelvváltó „Magyar”. Az app sáv címe „Tartalom kezelő”. Konzolhiba nincs.
 
 A react-admin 5 alap routere hash router. Resource és custom route nélkül az `Admin` a `Ready` splash-t rajzolja, a Layout és az i18n kimarad. A látható keretet a `ready` prop adja, amíg nincs resource. A 3. lépés resource-ai után ez a prop nem fut. Ne tegyél a helyére `/` custom route-ot: az ott maradna, és eltakarná a későbbi kezdő útvonalat.
 
 Az `Admin` `basename` propját ne állítsd `/backoffice`-ra. A Vite `base: '/backoffice/'` már ezt a pathot szolgálja. Hash routeren a basename a hashra vonatkozik; a `/backoffice/` cím ettől üres oldal, ezzel a konzolhibával: `<Router basename="/backoffice"> is not able to match the URL "/"`.
 
-- [ ] **Human:** `dev` elindul, a böngésző a `/backoffice/` útvonalon magyar react-admin keretet mutat (app sáv, üres menü, „Tartalom kezelő”, nyelvváltó „Magyar”), konzolhiba nélkül. Az angol „Welcome to React-admin” splash nem elég. Ha igen, pipáld ki, és indítsd a 2. lépést.
+A nyelv nem URL. A váltó a `RaStore.locale` localStorage kulcsot írja, a cím `http://localhost:5173/backoffice/` marad. A `/backoffice/en` nem locale útvonal.
+
+- [x] **Human:** `dev` elindul, a böngésző a `/backoffice/` útvonalon magyar react-admin keretet mutat (app sáv, menü a „Nincs menüpont” placeholderrel, „Tartalom kezelő”, nyelvváltó „Magyar”), konzolhiba nélkül. Az angol „Welcome to React-admin” splash nem elég. A nyelvváltó Englishre állítva a cím „Content backoffice”, a menü „No menu items”, az URL nem változik. Ha igen, pipáld ki, és indítsd a 2. lépést.
 
 ## 2. Szerepek, hogy legyen kivel belépni
 
