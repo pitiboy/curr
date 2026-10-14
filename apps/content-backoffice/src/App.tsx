@@ -1,11 +1,4 @@
-import { deepmerge } from '@mui/utils';
-import {
-  Admin,
-  CustomRoutes,
-  Resource,
-  defaultDarkTheme,
-  defaultLightTheme,
-} from 'react-admin';
+import { Admin, CustomRoutes, Resource } from 'react-admin';
 import { Route } from 'react-router-dom';
 
 import { authProvider } from './auth/authProvider';
@@ -19,21 +12,9 @@ import { ProfilePage } from './pages/profile/ProfilePage';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionReview } from './pages/transactions/TransactionReview';
+import { darkTheme, lightTheme } from './theme';
 import { workflowForms } from './workflows/registry';
 import { WorkflowFormGate } from './workflows/WorkflowFormGate';
-
-const themeWithReadableButtons = {
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: { textTransform: 'none' as const },
-      },
-    },
-  },
-};
-
-const lightTheme = deepmerge(defaultLightTheme, themeWithReadableButtons);
-const darkTheme = deepmerge(defaultDarkTheme, themeWithReadableButtons);
 
 export function App() {
   return (
