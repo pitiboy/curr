@@ -5,6 +5,7 @@ import { authProvider } from './auth/authProvider';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
 import { i18nProvider } from './i18n';
+import { AppTitle } from './layout/AppTitle';
 import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
 import { FeatureFlagsPage } from './pages/feature-flags/FeatureFlagsPage';
@@ -26,7 +27,7 @@ export function App() {
       layout={BackofficeLayout}
       lightTheme={lightTheme}
       loginPage={LoginPage}
-      title="app.title"
+      title={<AppTitle />}
     >
       <Resource
         list={TransactionList}

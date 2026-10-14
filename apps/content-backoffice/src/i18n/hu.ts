@@ -4,7 +4,7 @@ import { mergeTranslations } from 'react-admin';
 /** Hungarian message catalog (react-admin + app labels). */
 export const huMessages = mergeTranslations(hungarianMessages, {
   app: {
-    title: 'Tartalom kezelő',
+    title: 'Kezelő felület',
     menu_placeholder: 'Nincs menüpont',
     transactions_list: 'Tranzakciók',
     transactions_create: 'Új tranzakció',

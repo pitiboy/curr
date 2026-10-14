@@ -4,14 +4,15 @@ import { mergeTranslations } from 'react-admin';
 /** English message catalog (react-admin + app labels). */
 export const enMessages = mergeTranslations(englishMessages, {
   app: {
-    title: 'Content backoffice',
+    title: 'Backoffice',
     menu_placeholder: 'No menu items',
     transactions_list: 'Transactions',
     transactions_create: 'New transaction',
     transactions_review: 'Review',
     transactions_none: 'No transactions.',
     transactions_review_empty: 'Draft list and publish arrive in plan step 8.',
-    accounts_seed_missing: 'The account list is empty because the seed is missing.',
+    accounts_seed_missing:
+      'The account list is empty because the seed is missing.',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
