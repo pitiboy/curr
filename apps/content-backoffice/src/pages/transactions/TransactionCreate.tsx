@@ -1,13 +1,13 @@
 import { Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import {
+  AutocompleteInput,
   Create,
   DateInput,
   NumberInput,
   ReferenceInput,
   required,
   SaveButton,
-  SelectInput,
   SimpleForm,
   TextInput,
   Toolbar,
@@ -26,6 +26,19 @@ import {
 function currencyOptionText(record: RaRecord): string {
   const currency = record as { code?: string | null; name?: string | null };
   return [currency.code, currency.name].filter(Boolean).join(' ');
+}
+
+function nameFilterToQuery(searchText: string) {
+  const query = searchText.trim();
+  return query ? { name: { $containsi: query } } : {};
+}
+
+function codeOrNameFilterToQuery(searchText: string) {
+  const query = searchText.trim();
+  if (!query) return {};
+  return {
+    $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
+  };
 }
 
 function DraftSaveToolbar() {
@@ -83,10 +96,11 @@ function AccountCodeInput({
 
   return (
     <>
-      <SelectInput
+      <AutocompleteInput
         choices={choices}
         isLoading={isPending}
         source={source}
+        translateChoice={false}
         validate={required()}
       />
       {!isPending && !failed && choices.length === 0 ? (
@@ -117,7 +131,11 @@ export function TransactionCreate() {
           sort={{ field: 'code', order: 'ASC' }}
           source="currency_type"
         >
-          <SelectInput optionText={currencyOptionText} validate={required()} />
+          <AutocompleteInput
+            filterToQuery={codeOrNameFilterToQuery}
+            optionText={currencyOptionText}
+            validate={required()}
+          />
         </ReferenceInput>
         <TextInput multiline source="description" />
         <ReferenceInput
@@ -126,7 +144,11 @@ export function TransactionCreate() {
           sort={{ field: 'name', order: 'ASC' }}
           source="organization"
         >
-          <SelectInput optionText="name" validate={required()} />
+          <AutocompleteInput
+            filterToQuery={nameFilterToQuery}
+            optionText="name"
+            validate={required()}
+          />
         </ReferenceInput>
         <AccountCodeInput
           accounts={catalog.accounts}
