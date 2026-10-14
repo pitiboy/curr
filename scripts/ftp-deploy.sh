@@ -47,6 +47,15 @@ load_deploy_env() {
 load_deploy_env "$env_file"
 
 FTP_PORT="${FTP_PORT:-21}"
+FTP_OVERRIDE_POLICY="${FTP_OVERRIDE_POLICY:-only-newer}"
+case "$FTP_OVERRIDE_POLICY" in
+  only-newer) mirror_policy="--only-newer" ;;
+  transfer-all) mirror_policy="--transfer-all" ;;
+  *)
+    echo "Ismeretlen FTP_OVERRIDE_POLICY: ${FTP_OVERRIDE_POLICY} (only-newer vagy transfer-all)" >&2
+    exit 1
+    ;;
+esac
 
 missing=()
 [[ -n "${FTP_HOST:-}" ]] || missing+=("FTP_HOST")
@@ -76,7 +85,7 @@ fi
 
 export LFTP_PASSWORD="$FTP_PASS"
 
-echo "Feltöltés: user=${FTP_USER} host=${FTP_HOST} port=${FTP_PORT} mappa=${FTP_REMOTE_DIR}"
+echo "Feltöltés: user=${FTP_USER} host=${FTP_HOST} port=${FTP_PORT} mappa=${FTP_REMOTE_DIR} policy=${FTP_OVERRIDE_POLICY}"
 set +e
 lftp --norc <<EOF
 set cmd:fail-exit yes
@@ -87,7 +96,7 @@ set ssl:verify-certificate no
 set net:timeout 30
 set net:max-retries 2
 open --env-password -u "$FTP_USER" -p "$FTP_PORT" "$FTP_HOST"
-mirror -R -p -v --transfer-all --overwrite --no-empty-dirs $dry -i '^(dist(\$|/)|public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' -x '(^|/)public/uploads(/|\$)' -x '(^|/)\\.' . "$FTP_REMOTE_DIR"
+mirror -R -p -v $mirror_policy --overwrite --no-empty-dirs $dry -i '^(dist(\$|/)|public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' -x '(^|/)public/uploads(/|\$)' -x '(^|/)\\.' . "$FTP_REMOTE_DIR"
 bye
 EOF
 status=$?
