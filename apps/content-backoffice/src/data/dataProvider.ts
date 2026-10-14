@@ -9,6 +9,7 @@ import {
   type PublicationStatus,
   type StrapiTransaction,
 } from './transactionList';
+import { createTransactionDraft } from './transactionDraft';
 import { withDocumentId } from './withDocumentId';
 
 const httpClient = strapiHttpClient();
@@ -69,4 +70,12 @@ export const dataProvider = withDocumentId({
     resource === 'transactions'
       ? getTransactionList(params)
       : strapiProvider.getList(resource, params),
+  create: (resource, params) =>
+    resource === 'transactions'
+      ? createTransactionDraft(
+          httpClient,
+          STRAPI_URL,
+          params.data as Record<string, unknown>,
+        )
+      : strapiProvider.create(resource, params),
 } as DataProvider);

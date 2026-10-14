@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 5. lépés kész (Human ellenőrzésre vár)  
+**Status:** 6. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -102,13 +102,13 @@ A korábban kikommentezett őr nem futott, és nem írta az audit mezőket. A RE
 
 A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `docs/transaction-workflow.md` ügylet (több sor, `related_transaction`, `5800`, korona) nem váltja ki: a `workflowForms` regiszter üres marad, a create route `/transactions/create`, a review route `/transactions/review`.
 
-- [ ] Create űrlap a `dataentry` route-on: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`
-- [ ] Debit választó: `5000`, `5100`, `5400`. Credit választó: `code` illeszkedik `^1`-re
-- [ ] Mentés mindig `?status=draft`. Publish gomb nincs
-- [ ] A `transaction_type`, `currency_type`, `related_transaction` nincs az űrlapon. Az `entered_by` és a `published_by` sem űrlapmező
-- [ ] Sikeres mentés után a rekord a readonly listán draftként látszik
+- [x] Create űrlap a `dataentry` route-on: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`
+- [x] Debit választó: `VITE_DEBIT_CODES` regex, alapból `/^5/`. Credit választó: `VITE_CREDIT_CODES` regex, alapból `/^(1|3)/`
+- [x] Mentés mindig `?status=draft`. Publish gomb nincs
+- [x] A `transaction_type` és a `related_transaction` nincs az űrlapon. A `currency_type` választó igen. Az `entered_by` és a `published_by` sem űrlapmező
+- [x] Sikeres mentés után a rekord a readonly listán draftként látszik
 
-- [ ] **Human:** `dataentry` felvisz egy kiadást receipt nélkül. A debit listában csak a három költségkód van, a credit listában az `1`-gyel kezdődő számlák. Mentés után a lista draftot mutat, Publish gomb sehol. Ha a select üres, a seed hiányzik: azt jelezd, ne bővítsd a kódlistát. Ha igen, pipáld ki, és indítsd a 7. lépést.
+- [ ] **Human:** `dataentry` felvisz egy kiadást receipt nélkül. A debit listában az `5`-tel kezdődő számlák vannak, a credit listában az `1`-gyel vagy `3`-mal kezdődők. Mentés után a lista draftot mutat, Publish gomb sehol. Ha a select üres, a seed hiányzik: azt jelezd, ne bővítsd a kódlistát. Ha igen, pipáld ki, és indítsd a 7. lépést.
 
 ## 7. Opcionális bizonylat
 

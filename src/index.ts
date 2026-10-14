@@ -20,6 +20,8 @@ const CONTENT_ROLE_ACTIONS = [
   'api::organization.organization.findOne',
   'api::account.account.find',
   'api::account.account.findOne',
+  'api::currency-type.currency-type.find',
+  'api::currency-type.currency-type.findOne',
   'plugin::upload.content-api.upload',
   'plugin::users-permissions.user.me',
   'api::backoffice.backoffice.config',
@@ -44,6 +46,11 @@ const usersPermissionsRolePermissions = {
   'api::account': {
     controllers: {
       account: allow(['find', 'findOne']),
+    },
+  },
+  'api::currency-type': {
+    controllers: {
+      'currency-type': allow(['find', 'findOne']),
     },
   },
   'plugin::upload': {

@@ -84,6 +84,7 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 | mindkettő | `api::receipt.receipt.find`, `findOne`, `create`, `update` |
 | mindkettő | `api::organization.organization.find`, `findOne` |
 | mindkettő | `api::account.account.find`, `findOne` |
+| mindkettő | `api::currency-type.currency-type.find`, `findOne` |
 | mindkettő | a content-api upload action (`plugin::upload.content-api.upload`, ha a getActions így hívja) |
 | mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs) |
 

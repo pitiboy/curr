@@ -53,7 +53,7 @@ Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create é
 
 A menü a szerep szerint rejti a create vagy a review elemet. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
-A create és a review mezői: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`, opcionális `receipt`. A `transaction_type`, `currency_type` és `related_transaction` nincs a v1 űrlapon.
+A create és a review mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális `receipt`. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
 
 Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`.
 
@@ -63,8 +63,8 @@ A lista és a review mutatja az `entered_by` értéket és a `createdAt` időt. 
 
 A választó a lekért accountok kliens szűrője. Forrás a `database/seeders/org-initializer.js` asset és expense blokkja.
 
-- Debit: `code` ∈ `5000` (Anyagköltség), `5100` (Bérköltség), `5400` (Szolgáltatások).
-- Credit: `code` illeszkedik `^1`-re. A seedben legalább `1000` Készpénz és `1100` Bankszámlák. A `1200` és `1300` is `1`-gyel kezdődik, bent marad.
+- Debit: `VITE_DEBIT_CODES` regex. Ha nincs megadva, `/^5/`.
+- Credit: `VITE_CREDIT_CODES` regex. Ha nincs megadva, `/^(1|3)/`.
 
 A kódlista nem szerver policy. Üres selectnél a seed hiányzik, ne bővítsd a listát csendben más kódokkal.
 

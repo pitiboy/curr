@@ -6,11 +6,18 @@
     "categoryCode": "CASH"
   },
   {
+    "code": "KOR",
+    "name": "Korona",
+    "unit": "KOR",
+    "categoryCode": "CASH"
+  },
+  {
     "code": "EUR",
     "name": "Euro",
     "unit": "EUR",
     "categoryCode": "CASH"
   },
+
   {
     "code": "HOUR",
     "name": "emberi munkaóra",
