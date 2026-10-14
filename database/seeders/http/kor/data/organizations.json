@@ -143,6 +143,30 @@
     "parentName": "I/4.12 Termelés irányítása"
   },
   {
+    "name": "I/4.12.1.1 Növénytermesztés",
+    "description": "Növénytermesztés",
+    "address": "",
+    "parentName": "I/4.12.1 Mező- és erdőgazdálkodás"
+  },
+  {
+    "name": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+    "description": "Gyümölcsfaliget",
+    "address": "",
+    "parentName": "I/4.12.1.1 Növénytermesztés"
+  },
+  {
+    "name": "I/4.12.1.2 Állattenyésztés",
+    "description": "Állattenyésztés",
+    "address": "",
+    "parentName": "I/4.12.1 Mező- és erdőgazdálkodás"
+  },
+  {
+    "name": "I/4.12.1.2.1 Roger Milla Kameruni juh nyáj",
+    "description": "Kameruni juh nyáj",
+    "address": "",
+    "parentName": "I/4.12.1.2 Állattenyésztés"
+  },
+  {
     "name": "I/5. Minőségfelügyeleti Igazgatóság",
     "description": "Minőség és ellenőrzés",
     "address": "",
