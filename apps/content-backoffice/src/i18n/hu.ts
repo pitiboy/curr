@@ -1,0 +1,237 @@
+import type { TranslationMessages } from 'ra-core';
+
+const hungarianMessages: TranslationMessages = {
+  ra: {
+    action: {
+      add_filter: 'Szűrő hozzáadása',
+      add: 'Hozzáadás',
+      back: 'Vissza',
+      bulk_actions: '1 elem kijelölve |||| %{smart_count} elem kijelölve',
+      cancel: 'Mégsem',
+      clear_array_input: 'Lista ürítése',
+      clear_input_value: 'Érték törlése',
+      clone: 'Másolás',
+      confirm: 'Megerősítés',
+      create: 'Új',
+      create_item: '%{item} létrehozása',
+      delete: 'Törlés',
+      edit: 'Szerkesztés',
+      export: 'Exportálás',
+      list: 'Lista',
+      refresh: 'Frissítés',
+      remove_filter: 'Szűrő törlése',
+      remove_all_filters: 'Minden szűrő törlése',
+      remove: 'Eltávolítás',
+      reset: 'Visszaállítás',
+      save: 'Mentés',
+      search: 'Keresés',
+      search_columns: 'Oszlopok keresése',
+      select_all: 'Összes kijelölése',
+      select_all_button: 'Összes kijelölése',
+      select_row: 'Sor kijelölése',
+      show: 'Megtekintés',
+      sort: 'Rendezés',
+      undo: 'Visszavonás',
+      unselect: 'Kijelölés törlése',
+      expand: 'Kibontás',
+      close: 'Bezárás',
+      open_menu: 'Menü megnyitása',
+      close_menu: 'Menü bezárása',
+      update: 'Módosítás',
+      move_up: 'Felfelé',
+      move_down: 'Lefelé',
+      open: 'Megnyitás',
+      toggle_theme: 'Világos/sötét mód',
+      select_columns: 'Oszlopok',
+      update_application: 'Alkalmazás újratöltése',
+    },
+    boolean: {
+      true: 'Igen',
+      false: 'Nem',
+      null: ' ',
+    },
+    page: {
+      create: '%{name} létrehozása',
+      dashboard: 'Irányítópult',
+      edit: '%{name} %{recordRepresentation}',
+      error: 'Valami hiba történt',
+      list: '%{name}',
+      loading: 'Betöltés',
+      not_found: 'Nem található',
+      show: '%{name} %{recordRepresentation}',
+      empty: 'Még nincs %{name}.',
+      invite: 'Szeretne létrehozni egyet?',
+      access_denied: 'Hozzáférés megtagadva',
+      authentication_error: 'Hitelesítési hiba',
+    },
+    input: {
+      file: {
+        upload_several:
+          'Húzzon ide fájlokat a feltöltéshez, vagy kattintson a kiválasztáshoz.',
+        upload_single:
+          'Húzzon ide egy fájlt a feltöltéshez, vagy kattintson a kiválasztáshoz.',
+      },
+      image: {
+        upload_several:
+          'Húzzon ide képeket a feltöltéshez, vagy kattintson a kiválasztáshoz.',
+        upload_single:
+          'Húzzon ide egy képet a feltöltéshez, vagy kattintson a kiválasztáshoz.',
+      },
+      references: {
+        all_missing: 'A hivatkozott adatok nem érhetők el.',
+        many_missing:
+          'Legalább egy kapcsolódó hivatkozás már nem elérhető.',
+        single_missing: 'A kapcsolódó hivatkozás már nem elérhető.',
+      },
+      password: {
+        toggle_visible: 'Jelszó elrejtése',
+        toggle_hidden: 'Jelszó megjelenítése',
+      },
+    },
+    message: {
+      about: 'Névjegy',
+      access_denied: 'Nincs jogosultsága az oldal megnyitásához',
+      are_you_sure: 'Biztos benne?',
+      authentication_error:
+        'A hitelesítő szerver hibát adott, a belépési adatok nem ellenőrizhetők.',
+      auth_error: 'Hiba történt a hitelesítési token ellenőrzésekor.',
+      bulk_delete_content:
+        'Biztosan törli ezt: %{name}? |||| Biztosan törli ezeket a(z) %{smart_count} elemet?',
+      bulk_delete_title: '%{name} törlése |||| %{smart_count} %{name} törlése',
+      bulk_update_content:
+        'Biztosan módosítja: %{name} %{recordRepresentation}? |||| Biztosan módosítja ezeket a(z) %{smart_count} elemet?',
+      bulk_update_title:
+        '%{name} %{recordRepresentation} módosítása |||| %{smart_count} %{name} módosítása',
+      clear_array_input: 'Biztosan üríti a teljes listát?',
+      delete_content: 'Biztosan törli ezt: %{name}?',
+      delete_title: '%{name} %{recordRepresentation} törlése',
+      details: 'Részletek',
+      error: 'Klienshiba történt, a kérés nem teljesíthető.',
+      invalid_form: 'Az űrlap hibás. Kérjük, ellenőrizze a mezőket.',
+      loading: 'Kérjük, várjon',
+      no: 'Nem',
+      not_found: 'Hibás URL, vagy érvénytelen hivatkozást követett.',
+      select_all_limit_reached:
+        'Túl sok elem van az összes kijelöléséhez. Csak az első %{max} elem lett kijelölve.',
+      unsaved_changes:
+        'Néhány változtatás nincs mentve. Biztosan elveti őket?',
+      yes: 'Igen',
+      placeholder_data_warning: 'Hálózati hiba: az adatok frissítése sikertelen.',
+    },
+    navigation: {
+      clear_filters: 'Szűrők törlése',
+      no_filtered_results: 'Nincs %{name} a jelenlegi szűrőkkel.',
+      no_results: 'Nincs %{name}',
+      no_more_results:
+        'A(z) %{page}. oldal nem létezik. Próbálja az előző oldalt.',
+      page_out_of_boundaries: 'A(z) %{page}. oldal nem létezik',
+      page_out_from_end: 'Nem lehet az utolsó oldal után lapozni',
+      page_out_from_begin: 'Nem lehet az első oldal elé lapozni',
+      page_range_info: '%{offsetBegin}–%{offsetEnd} / %{total}',
+      partial_page_range_info:
+        '%{offsetBegin}–%{offsetEnd} / több mint %{offsetEnd}',
+      current_page: '%{page}. oldal',
+      page: 'Ugrás a(z) %{page}. oldalra',
+      first: 'Első oldal',
+      last: 'Utolsó oldal',
+      next: 'Következő oldal',
+      previous: 'Előző oldal',
+      page_rows_per_page: 'Sorok oldalanként:',
+      skip_nav: 'Ugrás a tartalomhoz',
+    },
+    sort: {
+      sort_by: 'Rendezés: %{field_lower_first} %{order}',
+      ASC: 'növekvő',
+      DESC: 'csökkenő',
+    },
+    auth: {
+      auth_check_error: 'A folytatáshoz jelentkezzen be',
+      user_menu: 'Profil',
+      username: 'Felhasználónév',
+      password: 'Jelszó',
+      email: 'E-mail',
+      sign_in: 'Bejelentkezés',
+      sign_in_error: 'Sikertelen bejelentkezés, próbálja újra',
+      logout: 'Kijelentkezés',
+    },
+    notification: {
+      updated: 'Elem módosítva |||| %{smart_count} elem módosítva',
+      created: 'Elem létrehozva',
+      deleted: 'Elem törölve |||| %{smart_count} elem törölve',
+      bad_item: 'Hibás elem',
+      item_doesnt_exist: 'Az elem nem létezik',
+      http_error: 'Szerverkommunikációs hiba',
+      data_provider_error:
+        'dataProvider hiba. A részletek a konzolon láthatók.',
+      i18n_error: 'A kiválasztott nyelv fordításai nem tölthetők be',
+      canceled: 'Művelet megszakítva',
+      logged_out: 'A munkamenet véget ért, jelentkezzen be újra.',
+      not_authorized: 'Nincs jogosultsága ehhez az erőforráshoz.',
+      application_update_available: 'Új verzió érhető el.',
+      offline: 'Nincs hálózat. Az adatok nem tölthetők le.',
+    },
+    validation: {
+      required: 'Kötelező',
+      minLength: 'Legalább %{min} karakter legyen',
+      maxLength: 'Legfeljebb %{max} karakter lehet',
+      minValue: 'Legalább %{min} legyen',
+      maxValue: 'Legfeljebb %{max} lehet',
+      number: 'Számnak kell lennie',
+      email: 'Érvényes e-mail címnek kell lennie',
+      oneOf: 'Egynek kell lennie ezek közül: %{options}',
+      regex: 'Az alábbi formátumhoz kell illeszkednie (regexp): %{pattern}',
+      unique: 'Egyedinek kell lennie',
+    },
+    saved_queries: {
+      label: 'Mentett lekérdezések',
+      query_name: 'Lekérdezés neve',
+      new_label: 'Jelenlegi lekérdezés mentése…',
+      new_dialog_title: 'Jelenlegi lekérdezés mentése másként',
+      remove_label: 'Mentett lekérdezés törlése',
+      remove_label_with_name: '"%{name}" lekérdezés törlése',
+      remove_dialog_title: 'Törli a mentett lekérdezést?',
+      remove_message:
+        'Biztosan törli ezt az elemet a mentett lekérdezések közül?',
+      help: 'Szűrje a listát, és mentse a lekérdezést későbbre',
+    },
+    guesser: {
+      empty: {
+        title: 'Nincs megjeleníthető adat',
+        message: 'Ellenőrizze az adatforrást',
+      },
+    },
+    configurable: {
+      customize: 'Testreszabás',
+      configureMode: 'Oldal testreszabása',
+      inspector: {
+        title: 'Ellenőr',
+        content: 'Mutasson az alkalmazás elemeire a beállításhoz',
+        reset: 'Beállítások visszaállítása',
+        hideAll: 'Összes elrejtése',
+        showAll: 'Összes megjelenítése',
+      },
+      Datagrid: {
+        title: 'Táblázat',
+        unlabeled: 'Címke nélküli oszlop #%{column}',
+      },
+      SimpleForm: {
+        title: 'Űrlap',
+        unlabeled: 'Címke nélküli mező #%{input}',
+      },
+      SimpleList: {
+        title: 'Lista',
+        primaryText: 'Elsődleges szöveg',
+        secondaryText: 'Másodlagos szöveg',
+        tertiaryText: 'Harmadlagos szöveg',
+      },
+    },
+  },
+  app: {
+    name: 'KÖR',
+    dashboard: {
+      body: 'Tartalomkezelő keret. Az erőforrások a későbbi lépésekben jelennek meg.',
+    },
+  },
+};
+
+export default hungarianMessages;
