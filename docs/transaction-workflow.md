@@ -232,18 +232,122 @@ Seedből hiányzik: `KOR`, `1900`.
 
 ## Ügylet konfigurálása Strapi-ban
 
-Ez javaslat a későbbi egyszerűsített űrlaphoz. A v1 képernyő ettől nem változik, és a `dataentry` továbbra sem publikál.
+Ez javaslat a későbbi egyszerűsített űrlaphoz. A collection és a resolver még nincs a kódban. A v1 képernyő ettől nem változik, és a `dataentry` továbbra sem publikál.
 
-A lépéseket a `transaction-type` önmagában hordozni nem tudja: az címke (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt). Az ügylet leírása külön collection, kódban szállítva, draft nélkül, neve `posting-workflow`. Szerkesztése a Strapi Admin felülete. A megjelenő név Ügylet.
+A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt). A lépéssort egy külön collection írja le, kódban szállítva, draft nélkül. A belső neve `posting-workflow`. A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
 
-Egy ügylet rekord:
+### Ki mit csinál
 
-- Azonosító, név, aktív jelző.
-- Ismétlődő beviteli mezők: kulcs, címke, fajta (dátum, szám, szöveg, szervezet, számla).
-- Ismétlődő lépések, sorrendben. A számla, a pénznem, a tranzakciótípus és a szervezet a meglévő rekordok közül választott érték. Az összeg módja zárt lista: másolt beviteli mező, vagy árfolyam-váltás a `currency-rate` szerint a bizonylat napján. Szabad képlet nincs.
-- A kiadás-blokk és a bevétel-blokk hivatkozható lépés (`korona-kiadas`, `korona-bevetel`), pénzeszközzel és projekt-mezővel. A `1900`-as sorokat az admin ügyletenként újra nem írja.
-- A lépés jelezheti, hogy a `related_transaction` az előző sorra mutat.
+A könyvelő az ügyletet egyszer állítja össze a Strapi Adminban. A rögzítő utána már csak a rövid űrlapot látja. A resolver a mentett lépésekből draft tranzakciókat ír. A `qa` a láncot ellenőrzi és publikálja.
 
-A feliratok az űrlap elkészültekor a két katalógusba kerülnek: hu `Ügylet |||| Ügyletek`, en `Deal |||| Deals`. Az új ügylet gomb magyarul Új ügylet, angolul New deal. A mostani tranzakció-képernyők szövege változatlan.
+```mermaid
+sequenceDiagram
+  participant Admin as Strapi Admin
+  participant Ugylet as Ugylet rekord
+  participant Form as Rovid urlap
+  participant Resolver as Resolver
+  participant Api as Transaction API
+  participant Qa as qa
 
-A resolver ügyletenként ugyanaz a kód. A rövid űrlap kitöltése után egy kérésben draft tranzakciókat ír, a láncot a `related_transaction` tölti ki. Új ügyletfajta admin adat, amíg az összeg módja a zárt listában marad.
+  Admin->>Ugylet: mezok es lepesek mentese
+  Form->>Ugylet: aktiv ugyletek listaja
+  Form->>Resolver: kitoltott mezok
+  Resolver->>Ugylet: lepesek olvasasa
+  Resolver->>Api: draft sorok egy keresben
+  Qa->>Api: a lanc publisha
+```
+
+### Mit tárol egy ügylet
+
+Egy rekord azonosítóból, névből, aktív jelzőből, beviteli mezőkből és lépésekből áll. A számla, a pénznem, a tranzakciótípus és a szervezet mind meglévő rekord, legördülőből. Az összegnek két módja van: a beviteli mező másolata, vagy átváltás a `currency-rate` szerint a bizonylat napján. Szabad képlet nincs.
+
+A beviteli mezők ismétlődő komponens, `posting.input`: kulcs, címke, fajta. Minden mező ugyanazt az alakot követi, ezért ide nem dynamic zone kell.
+
+A lépések dynamic zone, a Strapi 5.58 blokklistája. A szerkesztő az „Add a component” listából tesz fel blokkot, és húzással rendezi. Három komponens van, bármilyen sorrendben, többször is:
+
+- `posting.line`: egy tartozik/követel sor. A számla lehet rögzített rekord vagy a beviteli mező kulcsa. Mellette az összeg módja, a pénznem, a szervezet és a tranzakciótípus.
+- `posting.korona-kiadas`: a kiadás-blokk. Az admin a pénzeszközt és a projekt mezőjét választja.
+- `posting.korona-bevetel`: a bevétel-blokk. Az admin a pénzeszközt és a végleges követel számlát választja.
+
+A `1900`-as sorok nem admin-blokk. A resolver a blokk `__component` értékét olvassa, és a koronablokkot a [közös koronablokk](#közös-koronablokk) tábláiból bontja ki.
+
+Új ügylet a meglévő három blokkból admin adat. Negyedik blokkfajta új komponens, tehát kódváltozás, ugyanazon a határon, mint amikor az összeg sem másolat, sem árfolyam.
+
+Az 1. ügylet adminrekordja így nézne ki.
+
+Beviteli mezők, ezekből áll a rövid űrlap:
+
+| Kulcs | Címke az űrlapon | Fajta |
+| --- | --- | --- |
+| `date` | Dátum | dátum |
+| `amount` | Összeg forintban | szám |
+| `project` | Projekt | szervezet |
+| `expense` | Költség számla | számla |
+| `description` | Leírás | szöveg |
+| `receipt` | Nyugta | opcionális fájl, a meglévő receipt út |
+
+Lépések, ezekből lesznek a tranzakciók:
+
+| Sorrend | Komponens | Tartozik ← | Követel | Összeg | Szervezet |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `posting.line`, típus Utalás, pénznem HUF | `1100` rögzített | `3000` rögzített | `amount` | kincstár, rögzített |
+| 2 | `posting.line`, típus Készpénz, pénznem HUF | `1000` rögzített | `1100` rögzített | `amount` | kincstár, rögzített |
+| 3 | `posting.korona-kiadas`, pénzeszköz `1000` | a végleges sor tartozikja: `expense` | a pénzeszköz | `amount`, a korona lábat az árfolyam adja | `project` |
+
+Az első két blokk `posting.line`. A harmadik `posting.korona-kiadas`: a kiadás-blokk mind a hét sora, a végleges tartozik a rögzítő által választott költség számla.
+
+### Mit lát a rögzítő
+
+Az űrlap a beviteli mezőkből készül. Az 1. ügyletnél a rögzítő ennyit tölt ki, számlakódot és korona-sort nem választ:
+
+```text
+Ügylet: Hirtelen készpénzes projektköltség
+
+Dátum            2026-10-14
+Összeg forintban 10 000
+Projekt          Szávai Márton gyümölcsfaliget
+Költség számla   5000 Anyagköltség
+Leírás           egyszeri tagi hozzájárulás, majd anyag
+Nyugta           opcionális
+```
+
+A feliratok a két katalógusba kerülnek: hu `Ügylet |||| Ügyletek`, en `Deal |||| Deals`. Az új ügylet gomb magyarul Új ügylet, angolul New deal. A mostani tranzakció-képernyők szövege változatlan, azok továbbra is egy sort szerkesztenek.
+
+### Hogyan lesznek belőle sorok
+
+A resolver minden ügyletre ugyanaz a kód. A kitöltött mezőket és a mentett lépéseket olvassa, az árfolyamot a bizonylat napjára kéri, majd egy kérésben draft tranzakciókat ír. Minden sor `related_transaction` mezője az előző sorra mutat, így a lánc egy ügylet marad.
+
+```mermaid
+flowchart LR
+  formNode["Urlap: 10 000 Ft, gyumolcsfaliget, 5000"]
+  utalas["1. Bejovo utalas"]
+  felv["2. Keszpenzfelvetel"]
+  blokk["3. korona-kiadas"]
+  sor1["1100 ← 3000, 10 000 HUF"]
+  sor2["1000 ← 1100, 10 000 HUF"]
+  sorok["a kiadas-blokk 7 sora"]
+
+  formNode --> utalas --> sor1
+  formNode --> felv --> sor2
+  formNode --> blokk --> sorok
+```
+
+A 10 000 Ft-os mintánál, 1 korona = 100 Ft árfolyammal, a resolver az [1. ügylet tábláját](#ügylet-1--hirtelen-készpénzes-projektköltség) írja ki: a bejövő utalást, a készpénzfelvételt, majd a hét kiadás-blokk sort. A nyugta, ha van, a költség sorhoz kapcsolódik.
+
+A `korona-kiadas` egy admin-lépés, a könyvekben hét tranzakció. A bontás a közös tábla szerint megy, a pénzeszköz és a projekt a lépés paramétere:
+
+```mermaid
+flowchart TD
+  egy["korona-kiadas: penzeszkoz 1000, projekt a mezo, osszeg az amount"]
+  egy --> a1["HUF: 1900 ← 1000, kincstar"]
+  a1 --> a2["KOR: 1000 ← 1900, kincstar"]
+  a2 --> a3["KOR: 1900 ← 1000, kincstar"]
+  a3 --> a4["KOR: 1000 ← 1900, projekt"]
+  a4 --> a5["KOR: 1900 ← 1000, projekt"]
+  a5 --> a6["HUF: 1000 ← 1900, projekt"]
+  a6 --> a7["HUF: koltseg szamla ← 1000, projekt"]
+```
+
+A `korona-bevetel` ugyanígy egy lépés, és a [bevétel-blokk](#bevétel) nyolc sorára bomlik. A végleges követel a lépésen megadott számla, az 1. ügyletben ilyen lépés nincs.
+
+Új ügyletfajta, például a könyvelői számla, admin adat: új `posting.input` mezők és a három meglévő blokk új sorrendje. Negyedik blokk, vagy olyan összeg, amit sem másolni, sem árfolyammal váltani nem lehet, már kódváltozás.
