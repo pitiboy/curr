@@ -14,10 +14,13 @@ import { dataProvider } from './data/dataProvider';
 import { i18nProvider } from './i18n';
 import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
+import { FeatureFlagsPage } from './pages/feature-flags/FeatureFlagsPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionReview } from './pages/transactions/TransactionReview';
+import { workflowForms } from './workflows/registry';
+import { WorkflowFormGate } from './workflows/WorkflowFormGate';
 
 const themeWithReadableButtons = {
   components: {
@@ -67,6 +70,25 @@ export function App() {
           path="/transactions/review"
         />
         <Route element={<ProfilePage />} path="/profile" />
+        <Route
+          element={
+            <RoleGuard allow={['dataentry', 'qa']}>
+              <FeatureFlagsPage />
+            </RoleGuard>
+          }
+          path="/feature-flags"
+        />
+        {workflowForms.map((form) => (
+          <Route
+            key={form.id}
+            element={
+              <WorkflowFormGate roles={form.roles} workflowId={form.id}>
+                {form.element}
+              </WorkflowFormGate>
+            }
+            path={form.path}
+          />
+        ))}
       </CustomRoutes>
     </Admin>
   );

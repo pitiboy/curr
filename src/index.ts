@@ -22,6 +22,7 @@ const CONTENT_ROLE_ACTIONS = [
   'api::account.account.findOne',
   'plugin::upload.content-api.upload',
   'plugin::users-permissions.user.me',
+  'api::backoffice.backoffice.config',
 ] as const;
 
 const usersPermissionsRolePermissions = {
@@ -53,6 +54,11 @@ const usersPermissionsRolePermissions = {
   'plugin::users-permissions': {
     controllers: {
       user: allow(['me']),
+    },
+  },
+  'api::backoffice': {
+    controllers: {
+      backoffice: allow(['config']),
     },
   },
 };

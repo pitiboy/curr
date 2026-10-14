@@ -15,6 +15,9 @@ export const enMessages = mergeTranslations(englishMessages, {
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
+    feature_flags: 'Feature flags',
+    feature_flags_empty: 'No workflows to toggle.',
+    feature_flags_reset: 'Use server list',
     login_google: 'Sign in with Google (coming soon)',
     status: {
       draft: 'Draft',

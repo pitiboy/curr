@@ -15,6 +15,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',
+    feature_flags: 'Feature flagek',
+    feature_flags_empty: 'Nincs kapcsolható ügylet.',
+    feature_flags_reset: 'Szerver szerinti lista',
     login_google: 'Bejelentkezés Google-lel (hamarosan)',
     status: {
       draft: 'Piszkozat',
