@@ -1,10 +1,12 @@
 # Pénznemek
-# A rekordok a data/currency-types.json fájlban vannak.
+# A rekordok a dataDir/currency-types.json fájlban vannak.
 # A categoryCode a pénznem-kategória kódja, a POST-ban documentId lesz.
 #
-#   httpyac send database/seeders/http/kor/0*.http --all --env kor
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
 #
-# Környezet: local | kor | edizone a http-client.env.json-ban.
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
@@ -12,8 +14,11 @@
   if (typeof ccyItems === "undefined") {
     const fs = require("fs");
     const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
     const loaded = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "data/currency-types.json"), "utf8")
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "currency-types.json"), "utf8")
     );
     exports.ccyItems = loaded;
     exports.ccyCategoryCodes = [...new Set(loaded.map((item) => item.categoryCode))];

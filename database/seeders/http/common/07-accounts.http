@@ -1,11 +1,13 @@
 # Főkönyvi számlák, seed:full --accounts
-# A rekordok a data/accounts.json fájlban vannak.
+# A rekordok a dataDir/accounts.json fájlban vannak.
 # A categoryType számlakategória-típus, az organizationName a szervezet neve.
 # Ha a szervezet hiányzik, a mainOrganization lesz a kötés.
 #
-#   httpyac send database/seeders/http/kor/0*.http --all --env kor
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
 #
-# Környezet: local | kor | edizone a http-client.env.json-ban.
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
@@ -13,8 +15,11 @@
   if (typeof acctRecords === "undefined") {
     const fs = require("fs");
     const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
     const source = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "data/accounts.json"), "utf8")
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "accounts.json"), "utf8")
     );
     exports.acctRecords = source.accounts;
     exports.acctMainOrganization = source.mainOrganization;

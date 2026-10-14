@@ -1,31 +1,36 @@
-# Számlakategóriák
-# A rekordok a data/account-categories.json fájlban vannak.
+# Tagságtípusok
+# A rekordok a dataDir/membership-types.json fájlban vannak.
 #
-#   httpyac send database/seeders/http/kor/0*.http --all --env kor
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
 #
-# Környezet: local | kor | edizone a http-client.env.json-ban.
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
 {{
-  if (typeof catItems === "undefined") {
+  if (typeof memItems === "undefined") {
     const fs = require("fs");
     const path = require("path");
-    exports.catItems = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "data/account-categories.json"), "utf8")
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.memItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "membership-types.json"), "utf8")
     );
-    exports.catIds = {};
-    exports.catFailed = {};
+    exports.memIds = {};
+    exports.memFailed = {};
   }
 }}
 
 ###
-# @name lookup-account-category
-# @loop for item of catItems
+# @name lookup-membership-type
+# @loop for item of memItems
 {{
-  exports.encoded = encodeURIComponent(item.type);
+  exports.encoded = encodeURIComponent(item.name);
 }}
-GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
+GET {{baseUrl}}/api/membership-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -35,34 +40,34 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    catFailed[item.type] = true;
-    exports.catFailed = catFailed;
+    memFailed[item.name] = true;
+    exports.memFailed = memFailed;
     console.error("lookup failed: " + item.name, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      catIds[item.type] = found;
-      exports.catIds = catIds;
+      memIds[item.name] = found;
+      exports.memIds = memIds;
     }
   }
 }}
 
 ###
-# @name create-account-category
-# @loop for item of catItems
+# @name create-membership-type
+# @loop for item of memItems
 {{
-  if (catIds[item.type] || catFailed[item.type]) {
+  if (memIds[item.name] || memFailed[item.name]) {
     exports.$cancel = true;
   } else {
-    exports.catPayload = JSON.stringify({ data: item });
+    exports.memPayload = JSON.stringify({ data: item });
   }
 }}
-POST {{baseUrl}}/api/account-categories
+POST {{baseUrl}}/api/membership-types
 Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
-{{catPayload}}
+{{memPayload}}
 
 {{
   let parsed = response.parsedBody;
@@ -74,8 +79,8 @@ Content-Type: application/json
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
-      catIds[item.type] = created;
-      exports.catIds = catIds;
+      memIds[item.name] = created;
+      exports.memIds = memIds;
     }
   }
 }}

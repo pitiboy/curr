@@ -1,31 +1,36 @@
-# Tranzakciótípusok
-# A rekordok a data/transaction-types.json fájlban vannak.
+# Számlakategóriák
+# A rekordok a dataDir/account-categories.json fájlban vannak.
 #
-#   httpyac send database/seeders/http/kor/0*.http --all --env kor
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
 #
-# Környezet: local | kor | edizone a http-client.env.json-ban.
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Ha a természetes kulcs már létezik, a POST nem fut le.
 
 {{
-  if (typeof txItems === "undefined") {
+  if (typeof catItems === "undefined") {
     const fs = require("fs");
     const path = require("path");
-    exports.txItems = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "data/transaction-types.json"), "utf8")
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.catItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "account-categories.json"), "utf8")
     );
-    exports.txIds = {};
-    exports.txFailed = {};
+    exports.catIds = {};
+    exports.catFailed = {};
   }
 }}
 
 ###
-# @name lookup-transaction-type
-# @loop for item of txItems
+# @name lookup-account-category
+# @loop for item of catItems
 {{
-  exports.encoded = encodeURIComponent(item.name);
+  exports.encoded = encodeURIComponent(item.type);
 }}
-GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+GET {{baseUrl}}/api/account-categories?filters[type][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -35,34 +40,34 @@ Accept: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    txFailed[item.name] = true;
-    exports.txFailed = txFailed;
+    catFailed[item.type] = true;
+    exports.catFailed = catFailed;
     console.error("lookup failed: " + item.name, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      txIds[item.name] = found;
-      exports.txIds = txIds;
+      catIds[item.type] = found;
+      exports.catIds = catIds;
     }
   }
 }}
 
 ###
-# @name create-transaction-type
-# @loop for item of txItems
+# @name create-account-category
+# @loop for item of catItems
 {{
-  if (txIds[item.name] || txFailed[item.name]) {
+  if (catIds[item.type] || catFailed[item.type]) {
     exports.$cancel = true;
   } else {
-    exports.txPayload = JSON.stringify({ data: item });
+    exports.catPayload = JSON.stringify({ data: item });
   }
 }}
-POST {{baseUrl}}/api/transaction-types
+POST {{baseUrl}}/api/account-categories
 Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
 
-{{txPayload}}
+{{catPayload}}
 
 {{
   let parsed = response.parsedBody;
@@ -74,8 +79,8 @@ Content-Type: application/json
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
-      txIds[item.name] = created;
-      exports.txIds = txIds;
+      catIds[item.type] = created;
+      exports.catIds = catIds;
     }
   }
 }}
