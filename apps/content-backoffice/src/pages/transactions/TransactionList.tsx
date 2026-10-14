@@ -54,7 +54,16 @@ const transactionFilters = [
   />,
   <DateInput key="date_gte" label="app.filters.date_from" source="date_gte" />,
   <DateInput key="date_lte" label="app.filters.date_to" source="date_lte" />,
-  <NumberInput key="amount" source="amount" />,
+  <NumberInput
+    key="amount_gte"
+    label="app.filters.amount_from"
+    source="amount_gte"
+  />,
+  <NumberInput
+    key="amount_lte"
+    label="app.filters.amount_to"
+    source="amount_lte"
+  />,
   <ReferenceInput
     key="organization"
     perPage={100}

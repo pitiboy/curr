@@ -101,7 +101,8 @@ describe('buildTransactionFilters', () => {
         status: 'draft',
         date_gte: '2026-01-01T00:00:00.000Z',
         date_lte: '2026-01-31',
-        amount: 1500,
+        amount_gte: 1000,
+        amount_lte: 1500,
         organization: 'org-1',
         debit_account: 'acc-debit',
         credit_account: 'acc-credit',
@@ -111,7 +112,7 @@ describe('buildTransactionFilters', () => {
       status: 'draft',
       strapiFilters: {
         date: { $gte: '2026-01-01', $lte: '2026-01-31' },
-        amount: { $eq: 1500 },
+        amount: { $gte: 1000, $lte: 1500 },
         organization: { documentId: { $eq: 'org-1' } },
         debit_account: { documentId: { $eq: 'acc-debit' } },
         credit_account: { documentId: { $eq: 'acc-credit' } },
@@ -125,7 +126,8 @@ describe('buildTransactionFilters', () => {
       buildTransactionFilters({
         status: '',
         description: '   ',
-        amount: '',
+        amount_gte: '',
+        amount_lte: null,
         organization: null,
       }),
     ).toEqual({ status: undefined, strapiFilters: {} });

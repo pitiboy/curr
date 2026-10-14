@@ -72,9 +72,10 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   if (dateTo) date.$lte = dateTo;
   if (Object.keys(date).length > 0) strapiFilters.date = date;
 
-  if (isPresent(filter.amount)) {
-    strapiFilters.amount = { $eq: filter.amount };
-  }
+  const amount: Record<string, unknown> = {};
+  if (isPresent(filter.amount_gte)) amount.$gte = filter.amount_gte;
+  if (isPresent(filter.amount_lte)) amount.$lte = filter.amount_lte;
+  if (Object.keys(amount).length > 0) strapiFilters.amount = amount;
   if (isPresent(filter.organization)) {
     strapiFilters.organization = { documentId: { $eq: filter.organization } };
   }

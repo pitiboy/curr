@@ -24,6 +24,8 @@ export const enMessages = mergeTranslations(englishMessages, {
       status_all: 'All',
       date_from: 'Date from',
       date_to: 'Date to',
+      amount_from: 'Amount from',
+      amount_to: 'Amount to',
     },
     receipt_yes: 'Yes',
     receipt_no: 'No',
