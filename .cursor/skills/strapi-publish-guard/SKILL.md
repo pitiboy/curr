@@ -10,7 +10,7 @@ description: >-
 
 # Strapi publish őr
 
-A követelmény a `docs/prd/0001-content-backoffice-v1.md` §9. Ez a skill a repo útját rögzíti. Strapi **5.27**. A transactionnek nincs saját route-ja; a receipt route és controller gyári factory. Új policy fájlt a gyári routerre ne tegyél: a Document Service middleware minden REST írást lát.
+A követelmény a `docs/prd/0001-content-backoffice-v1.md` §9. Ez a skill a repo útját rögzíti. Strapi **5.27**. A transaction és a receipt route, controller és service gyári factory. Új policy fájlt a gyári routerre ne tegyél: a Document Service middleware minden REST írást lát.
 
 ## Séma
 
