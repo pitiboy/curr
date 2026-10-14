@@ -9,5 +9,5 @@ A szállítható szerződés a `docs/prd/0001-content-backoffice-v1.md`. A techn
 
 - Az SPA az `apps/content-backoffice` alatt él. A Strapi Admin fejlesztői felület marad.
 - Az SPA a Content API-t hívja Users & Permissions JWT-vel. Az `/admin/login` és az Admin JWT kimarad az SPA-ból.
-- Strapi-oldali v1 változás: `receipt.vendor` opcionális, `dataentry` és `qa` szerepek, publish őr a transaction és receipt dokumentumokon, `entered_by` és `published_by` audit mezők ugyanitt, Google provider a `/backoffice` SPA-hoz.
+- Strapi-oldali v1 változás: `receipt.vendor` opcionális, `dataentry` és `editor` szerepek, publish őr a transaction és receipt dokumentumokon, `entered_by` és `published_by` audit mezők ugyanitt, Google provider a `/backoffice` SPA-hoz.
 - A §8 kimarad: szervezet, tag, membership, számla és pénznem CRUD, user–member kötés, org ACL, avatar, CI/CD, subdomain, receipt N:M, Enterprise RBAC és Enterprise audit log, lista inline edit, `dataentry` publish. A saját audit mező v1.

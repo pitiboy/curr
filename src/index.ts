@@ -6,7 +6,7 @@ function allow(actions: string[]) {
   return Object.fromEntries(actions.map((action) => [action, enabled]));
 }
 
-/** Content API actions for dataentry and qa (no delete). */
+/** Content API actions for dataentry and editor (no delete). */
 const CONTENT_ROLE_ACTIONS = [
   'api::transaction.transaction.find',
   'api::transaction.transaction.findOne',
@@ -70,17 +70,24 @@ const usersPermissionsRoles = [
     description: 'Tranzakció és nyugta rögzítése.',
   },
   {
-    name: 'qa',
-    type: 'qa',
-    description: 'Tranzakció és nyugta ellenőrzése.',
+    name: 'editor',
+    type: 'editor',
+    description: 'Tranzakció és nyugta rögzítése, ellenőrzése és közzététele.',
   },
 ];
+
+/** Previous editor role type. Renamed in place so assigned users keep the role. */
+const LEGACY_EDITOR_ROLE_TYPE = 'qa';
 
 type StrapiLike = {
   db: {
     query: (uid: string) => {
       findOne: (params: Record<string, unknown>) => Promise<{ id: number } | null>;
       create: (params: { data: Record<string, unknown> }) => Promise<{ id: number }>;
+      update: (params: {
+        where: { id: number };
+        data: Record<string, unknown>;
+      }) => Promise<{ id: number }>;
     };
   };
   plugin: (name: string) => {
@@ -141,24 +148,45 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
   const actionCatalog = usersPermissionsService.getActions();
 
   for (const roleDef of usersPermissionsRoles) {
-    let role = await strapi.db
-      .query('plugin::users-permissions.role')
-      .findOne({
-        where: { type: roleDef.type },
+    const roles = strapi.db.query('plugin::users-permissions.role');
+    let role = await roles.findOne({
+      where: { type: roleDef.type },
+    });
+    let renamed = false;
+
+    if (!role && roleDef.type === 'editor') {
+      const legacy = await roles.findOne({
+        where: { type: LEGACY_EDITOR_ROLE_TYPE },
       });
+      if (legacy) {
+        await roles.update({
+          where: { id: legacy.id },
+          data: {
+            name: roleDef.name,
+            type: roleDef.type,
+            description: roleDef.description,
+          },
+        });
+        role = await roles.findOne({
+          where: { type: roleDef.type },
+        });
+        renamed = true;
+        strapi.log.info(
+          `Renamed users-permissions role "${LEGACY_EDITOR_ROLE_TYPE}" to "${roleDef.type}"`,
+        );
+      }
+    }
 
     if (!role) {
       await roleService.createRole({
         ...roleDef,
         permissions: usersPermissionsRolePermissions,
       });
-      role = await strapi.db
-        .query('plugin::users-permissions.role')
-        .findOne({
-          where: { type: roleDef.type },
-        });
+      role = await roles.findOne({
+        where: { type: roleDef.type },
+      });
       strapi.log.info(`Created users-permissions role "${roleDef.type}"`);
-    } else {
+    } else if (!renamed) {
       strapi.log.info(`Users-permissions role "${roleDef.type}" already exists`);
     }
 
@@ -228,7 +256,7 @@ function registerPublishGuard(strapi: {
       (writing && status === 'published');
 
     if (publishing) {
-      throw new errors.ForbiddenError('Publishing is limited to the qa role');
+      throw new errors.ForbiddenError('Publishing is limited to the editor role');
     }
 
     return next();

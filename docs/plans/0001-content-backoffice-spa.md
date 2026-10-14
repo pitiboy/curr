@@ -53,11 +53,11 @@ A nyelv nem URL. A váltó a `RaStore.locale` localStorage kulcsot írja, a cím
 
 A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és a bootstrap a `strapi-publish-guard` skill szerint készül. A publish őr és a `vendor` séma még nem ebben a lépésben van.
 
-- [x] `src/index.ts` `bootstrap()`: idempotens `dataentry` és `qa` role `type`, productionben is
+- [x] `src/index.ts` `bootstrap()`: idempotens `dataentry` és `editor` role `type`, productionben is
 - [x] Jogok: transaction és receipt find, findOne, create, update; organization és account find, findOne; content-api upload. Delete nincs
 - [x] Ismételt indulás nem duplikálja a role és permission sorokat
 
-- [x] **Human:** Strapi Admin → Users & Permissions. Létrehozol egy `dataentry` és egy `qa` Content usert (email + jelszó). Mindkettővel a `/api/auth/local` 200-at és JWT-t ad. Ha igen, pipáld ki, és indítsd a 3. lépést.
+- [x] **Human:** Strapi Admin → Users & Permissions. Létrehozol egy `dataentry` és egy `editor` Content usert (email + jelszó). Mindkettővel a `/api/auth/local` 200-at és JWT-t ad. Ha igen, pipáld ki, és indítsd a 3. lépést.
 
 ## 3. Local login és üres route-ok
 
@@ -66,13 +66,13 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 - [x] `getPermissions` a `/api/users/me?populate=role` role `type` mezőjéből
 - [x] Resource név: `transactions`. Három route üres állapottal, guesser nélkül:
   - `/transactions/create` csak `dataentry`
-  - `/transactions/review` csak `qa`
+  - `/transactions/review` csak az `editor`
   - `/transactions` mindkét szerep, szerkesztés nélkül
 - [x] Profil oldal: név és email. Jelszócsere még nincs
 - [x] A menü a szerep szerint rejti a create vagy a review elemet. Ismeretlen szerep egyik író oldalt sem látja
 - [x] A Google gomb helye disabled, amíg a 9. lépés be nem köti
 
-- [x] **Human:** `dataentry` belép, látja az Új tranzakciót és a listát, a review URL-t nem éri el. Kijelentkezés után a `qa` látja a review-t és a listát, a create URL-t nem éri el. A profil a nevet és az emailt mutatja. Ha igen, pipáld ki, és indítsd a 4. lépést.
+- [x] **Human:** `dataentry` belép, látja az Új tranzakciót és a listát, a review URL-t nem éri el. Kijelentkezés után az `editor` látja a review-t és a listát, a create URL-t nem éri el. A profil a nevet és az emailt mutatja. Ha igen, pipáld ki, és indítsd a 4. lépést.
 
 ## 4. Readonly lista
 
@@ -85,15 +85,15 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 
 ## 5. Publish őr és receipt séma
 
-A create űrlap előtt a szervernek draftot kell kényszerítenie, és a vendor mezőnek opcionálisnak kell lennie. Részletek a `strapi-publish-guard` skillben.
+A create űrlap előtt a szervernek draftot kell kényszerítenie dataentry user esetén, és a vendor mezőnek opcionálisnak kell lennie. Részletek a `strapi-publish-guard` skillben.
 
 - [ ] `receipt.vendor` `required: false`. A `document` kötelező marad
 - [ ] Document Service middleware a `src/index.ts` `register()`-ben, transaction és receipt uid-ra
-- [ ] Content API-n csak `qa` publikálhat. A `dataentry` publish / unpublish / `status=published` írása 403, a mentés nem válik csendben publisheddé
+- [ ] Content API-n csak az `editor` publikálhat. A `dataentry` publish / unpublish / `status=published` írása 403, a mentés nem válik csendben publisheddé
 - [ ] Admin Content Manager publish továbbra is megy
-- [ ] `transaction` és `receipt` séma: `entered_by` és `published_by` string, nem kötelező. A middleware create-kor a Content user e-mailjét írja `entered_by`-ba. Publish-kor a `qa` e-mailjét írja `published_by`-ba, unpublish-kor üríti. A kliens payloadja egyik mezőt sem írja felül. User reláció és user `find` jog nincs
+- [ ] `transaction` és `receipt` séma: `entered_by` és `published_by` string, nem kötelező. A middleware create-kor a Content user e-mailjét írja `entered_by`-ba. Publish-kor az `editor` e-mailjét írja `published_by`-ba, unpublish-kor üríti. A kliens payloadja egyik mezőt sem írja felül. User reláció és user `find` jog nincs
 
-- [ ] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre, és a válasz `entered_by` mezője a belépett user e-mailje akkor is, ha a body más e-mailt küldött (ezt a hívást utána törölheted). `qa` tokennel ugyanaz a rekord publisheddé tehető, és a `published_by` a `qa` e-mailje. Ha igen, pipáld ki, és indítsd a 6. lépést.
+- [ ] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre, és a válasz `entered_by` mezője a belépett user e-mailje akkor is, ha a body más e-mailt küldött (ezt a hívást utána törölheted). `editor` tokennel ugyanaz a rekord publisheddé tehető, és a `published_by` az `editor` e-mailje. Ha igen, pipáld ki, és indítsd a 6. lépést.
 
 ## 6. Új tranzakció, receipt nélkül
 
@@ -112,17 +112,17 @@ A create űrlap előtt a szervernek draftot kell kényszerítenie, és a vendor 
 - [ ] A transaction `receipt` mezője a receipt `documentId`
 - [ ] A lista receipt oszlopa jelzi, ha van bizonylat. A review megnyitja a fájlt
 
-- [ ] **Human:** egy tranzakció receipt nélkül menthető. Egy másik fájllal, üres vendorral menthető, és a listán valamint a `qa` review-n a fájl megnyitható. Ha igen, pipáld ki, és indítsd a 8. lépést.
+- [ ] **Human:** egy tranzakció receipt nélkül menthető. Egy másik fájllal, üres vendorral menthető, és a listán valamint az `editor` review-n a fájl megnyitható. Ha igen, pipáld ki, és indítsd a 8. lépést.
 
-## 8. QA review és publish
+## 8. Editor review és publish
 
 - [ ] A review lista csak `status=draft`
 - [ ] Show/edit: a tranzakció mezői és a receipt, ha van
-- [ ] Publish gomb csak itt, csak `qa` szerepnek. Sikeres publish után a rekord published, és a kapcsolt receipt published verziója is megvan
+- [ ] Publish gomb csak itt, csak az `editor` szerepnek. Sikeres publish után a rekord published, és a kapcsolt receipt published verziója is megvan
 - [ ] A review és a readonly lista mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A mezők nem szerkeszthetők
 - [ ] A `dataentry` a review route-ot továbbra sem éri el, és a listáról nem publikál
 
-- [ ] **Human:** `qa` egy draftot megnyit, látja a bizonylatot, ha van, és a rögzítő e-mailjét. A Publish után a lista published státuszt mutat, a publikáló e-mailjével. `dataentry` ugyanezt a rekordot nem tudja publikálni a felületről. Ha igen, pipáld ki, és indítsd a 9. lépést.
+- [ ] **Human:** `editor` egy draftot megnyit, látja a bizonylatot, ha van, és a rögzítő e-mailjét. A Publish után a lista published státuszt mutat, a publikáló e-mailjével. `dataentry` ugyanezt a rekordot nem tudja publikálni a felületről. Ha igen, pipáld ki, és indítsd a 9. lépést.
 
 ## 9. Profil jelszó és Google
 

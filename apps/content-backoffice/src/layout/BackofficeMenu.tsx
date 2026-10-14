@@ -40,7 +40,7 @@ export function BackofficeMenu() {
           to="/transactions/create"
         />
       )}
-      {permissions === 'qa' && (
+      {permissions === 'editor' && (
         <Menu.Item
           leftIcon={<FactCheckIcon />}
           primaryText={translate('app.transactions_review')}

@@ -35,7 +35,7 @@ const dataProvider = withDocumentId(
 
 A `loginPage` a react-admin `LoginWithEmail`, plusz egy Google gomb. A Google a Strapi `/api/connect/google` flow-ja. A visszakapott Content JWT-t ugyanoda tedd, ahová a `strapiAuthProvider` a local login tokenjét írja; a tárolást a telepített `ra-strapi` auth provider forrásából olvasd ki, ne találj ki második tokenkulcsot.
 
-Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry` vagy `qa`. Az `ra-strapi` ezt nem tölti ki.
+Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry` vagy `editor`. Az `ra-strapi` ezt nem tölti ki.
 
 Minden dataentry írás queryje `status=draft`. A REST status nélkül publishedet ír, és a szerver a `dataentry` publisht 403-mal elutasítja.
 
@@ -46,7 +46,7 @@ Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create é
 | Route | Szerep | Viselkedés |
 | --- | --- | --- |
 | `/transactions/create` | `dataentry` | Create. Mentés draft. Publish nincs. |
-| `/transactions/review` | `qa` | Lista `status=draft`. Show/edit. Publish gomb. |
+| `/transactions/review` | `editor` | Lista `status=draft`. Show/edit. Publish gomb. |
 | `/transactions` | mindkettő | Draft és published. Szűrő. Nincs create, edit, publish. |
 | `/login` | vendég | Email/jelszó és Google. |
 | `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |

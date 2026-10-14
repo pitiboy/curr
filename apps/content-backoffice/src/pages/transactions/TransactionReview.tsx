@@ -1,6 +1,6 @@
 import { EmptyState } from '../EmptyState';
 
-/** QA review shell; draft list and publish arrive in plan step 8. */
+/** Editor review shell; draft list and publish arrive in plan step 8. */
 export function TransactionReview() {
   return (
     <EmptyState

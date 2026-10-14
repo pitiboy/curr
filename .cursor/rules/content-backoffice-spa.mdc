@@ -12,7 +12,7 @@ Vite + TypeScript + React Admin 5 + `ra-strapi` + MUI. Env: `VITE_STRAPI_URL`. A
 - Éles képernyőn nincs `ListGuesser`, `EditGuesser`, `ShowGuesser`.
 - Menü csak a tranzakció-domain. Resource név: `transactions`.
 - `dataentry`: `/transactions/create` és a readonly `/transactions`. Publish gomb nincs. Mentés `status=draft`.
-- `qa`: `/transactions/review` (csak draft) és a readonly `/transactions`. Publish csak a review nézeten.
+- `editor`: `/transactions/review` (csak draft) és a readonly `/transactions`. Publish csak a review nézeten.
 - A readonly listáról nincs create, edit, publish.
 - A lista és a review mutatja az `entered_by` / `createdAt` értéket, published soron a `published_by` / `publishedAt` értéket is. Ezek nem űrlapmezők.
 - Debit választó: `account.code` ∈ `5000`, `5100`, `5400`. Credit választó: `code` illeszkedik `^1`-re (a seedben legalább `1000`, `1100`). A szűrés kliens oldali.

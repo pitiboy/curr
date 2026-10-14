@@ -2,7 +2,7 @@
 name: strapi-publish-guard
 description: >-
   Enforces Strapi 5.58 draft versus publish for transaction and receipt,
-  seeds the dataentry and qa Users & Permissions roles, makes receipt.vendor
+  seeds the dataentry and editor Users & Permissions roles, makes receipt.vendor
   optional, and configures the Google provider. Use when editing draft and
   publish, Users & Permissions roles, the receipt schema, src/index.ts
   bootstrap, or the Google grant in config/plugins.ts.
@@ -33,7 +33,7 @@ strapi.documents.use(async (context, next) => {
   if (!GUARDED.includes(context.uid)) return next();
 
   const roleType = await contentApiRoleType(strapi);
-  if (roleType === null || roleType === 'qa') return next();
+  if (roleType === null || roleType === 'editor') return next();
 
   const publishing =
     context.action === 'publish' ||
@@ -43,7 +43,7 @@ strapi.documents.use(async (context, next) => {
 
   if (publishing) {
     throw new errors.ForbiddenError(
-      'Only the qa role can publish transactions and receipts'
+      'Only the editor role can publish transactions and receipts'
     );
   }
 
@@ -58,13 +58,13 @@ A REST API `status` nélkül publishedet ír. Az SPA ezért `?status=draft` quer
 Ugyanebben a middleware-ben, a publish döntés után, ha a hívás mehet tovább:
 
 - `create`: `entered_by` a Content user e-mailje. A body-ból jövő `entered_by` és `published_by` nem számít.
-- `publish`, vagy create/update `status === 'published'` a `qa` szerepnél: `published_by` a `qa` e-mailje.
+- `publish`, vagy create/update `status === 'published'` az `editor` szerepnél: `published_by` az `editor` e-mailje.
 - `unpublish`: `published_by` üres.
 - `update`: a body `entered_by` és `published_by` mezőjét dobd el, a tárolt rögzítő marad.
 
 Admin, seed és user nélküli hívásnál az audit mezőt ne írd felül.
 
-A `qa` publish után a kapcsolt receipt is published legyen, különben a published transaction populate üres receiptet ad. Az őr a `qa`-nak mindkét uid-ot engedi.
+Az `editor` publish után a kapcsolt receipt is published legyen, különben a published transaction populate üres receiptet ad. Az őr az `editor`-nak mindkét uid-ot engedi.
 
 Ne a member lifecycle mintát másold. Az entityService lifecycle nem látja megbízhatóan a `publish()` actiont.
 
@@ -72,7 +72,7 @@ Ne a member lifecycle mintát másold. Az entityService lifecycle nem látja meg
 
 Idempotens ensure a `src/index.ts` `bootstrap({ strapi })` függvényében. Productionben is fusson. A `database/seeders/initial-data.js` productionben kilép, oda ne tedd a szerepeket.
 
-`plugin::users-permissions.role` `type` értéke: `dataentry` és `qa`. Ha a `type` már létezik, ne hozz létre másodikat. A permission sorokat az aktuális action-listából vedd:
+`plugin::users-permissions.role` `type` értéke: `dataentry` és `editor`. Ha a `type` már létezik, ne hozz létre másodikat. Ha `editor` nincs, de `qa` igen, a meglévő sort nevezd át (`name`, `type`, `description`); a permission a role id-n marad. Ha `editor` már van, a `qa` sort hagyd. A permission sorokat az aktuális action-listából vedd:
 
 `strapi.plugin('users-permissions').service('users-permissions').getActions()`.
 
@@ -103,7 +103,7 @@ Content API JWT-vel, nem Admin tokennel:
 
 - `dataentry` `POST /api/transactions` status nélkül vagy `?status=published`: 403, a dokumentum nem published.
 - `dataentry` `POST /api/transactions?status=draft`: 200, draft.
-- `qa` publish: a transaction `status=published`, a `published_by` a `qa` e-mailje. Receipttel együtt a receipt published verziója is létezik.
+- `editor` publish: a transaction `status=published`, a `published_by` az `editor` e-mailje. Receipttel együtt a receipt published verziója is létezik.
 - `dataentry` draft create: az `entered_by` a belépett e-mail, akkor is, ha a body más értéket küld.
 - `vendor` nélküli receipt `document` fájllal menthető.
 - Admin Content Manager publish továbbra is működik.

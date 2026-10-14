@@ -1,4 +1,4 @@
-export const CONTENT_ROLES = ['dataentry', 'qa'] as const;
+export const CONTENT_ROLES = ['dataentry', 'editor'] as const;
 
 export type ContentRole = (typeof CONTENT_ROLES)[number];
 

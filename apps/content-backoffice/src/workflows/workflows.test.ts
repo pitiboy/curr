@@ -77,7 +77,7 @@ describe('parseWorkflowOverride', () => {
 describe('visibleWorkflowForms', () => {
   const forms = [
     { id: 'member-fee', roles: ['dataentry'] },
-    { id: 'egg', roles: ['qa'] },
+    { id: 'egg', roles: ['editor'] },
   ];
 
   it('shows the intersection of the effective list, the registry, and the role', () => {

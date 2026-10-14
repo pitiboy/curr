@@ -61,7 +61,7 @@ Az ADR szerinti resourceok SPA menüben (schema-driven list/edit ahol elég):
 - Review sor / hozzárendelés
 - Visszautasítás kötelező megjegyzéssel (ha üzletileg kell)
 
-A rögzítő és a publikáló audit mező (`entered_by`, `published_by`, `createdAt`, `publishedAt`) a [v1 §9.5](./0001-content-backoffice-v1.md#95-audit-mezők) része. A publish őr a `qa` szerepen marad.
+A rögzítő és a publikáló audit mező (`entered_by`, `published_by`, `createdAt`, `publishedAt`) a [v1 §9.5](./0001-content-backoffice-v1.md#95-audit-mezők) része. A publish őr az `editor` szerepen marad.
 
 ### 3.6 Könyvelési kör
 
@@ -138,7 +138,7 @@ Megjegyzések:
 ### 4.3 Üzemeltetési alap
 
 - Strukturált log kérésazonosítóval, és hibagyűjtő a Strapi és az SPA oldalán is, hogy egy mentés utólag köthető legyen egy Neon- vagy cPanel-hibához.
-- Health endpoint, és egy rövid üzemeltetési jegyzet: Neon backup, Cloudinary, env, seedelt számlakódok, smoke login `dataentry` és `qa` szereppel.
+- Health endpoint, és egy rövid üzemeltetési jegyzet: Neon backup, Cloudinary, env, seedelt számlakódok, smoke login `dataentry` és `editor` szereppel.
 - Séma- és jogosultságváltozás csak kódból, a bootstrapból. Az Admin UI-n kattintott eltérés később nem reprodukálható.
 
 ## 5. Teljesítmény

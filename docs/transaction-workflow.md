@@ -238,7 +238,7 @@ A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jut
 
 ### Ki mit csinál
 
-A könyvelő az ügyletet egyszer állítja össze a Strapi Adminban. A rögzítő utána már csak a rövid űrlapot látja. A resolver a mentett lépésekből draft tranzakciókat ír. A `qa` a láncot ellenőrzi és publikálja.
+A könyvelő az ügyletet egyszer állítja össze a Strapi Adminban. A rögzítő utána már csak a rövid űrlapot látja. A resolver a mentett lépésekből draft tranzakciókat ír. Az `editor` a láncot ellenőrzi és publikálja.
 
 ```mermaid
 sequenceDiagram
@@ -247,14 +247,14 @@ sequenceDiagram
   participant Form as Rovid urlap
   participant Resolver as Resolver
   participant Api as Transaction API
-  participant Qa as qa
+  participant Editor as editor
 
   Admin->>Ugylet: mezok es lepesek mentese
   Form->>Ugylet: aktiv ugyletek listaja
   Form->>Resolver: kitoltott mezok
   Resolver->>Ugylet: lepesek olvasasa
   Resolver->>Api: draft sorok egy keresben
-  Qa->>Api: a lanc publisha
+  Editor->>Api: a lanc publisha
 ```
 
 ### Mit tárol egy ügylet

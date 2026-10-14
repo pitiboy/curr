@@ -63,7 +63,7 @@ export function App() {
         />
         <Route
           element={
-            <RoleGuard allow={['qa']}>
+            <RoleGuard allow={['editor']}>
               <TransactionReview />
             </RoleGuard>
           }
@@ -72,7 +72,7 @@ export function App() {
         <Route element={<ProfilePage />} path="/profile" />
         <Route
           element={
-            <RoleGuard allow={['dataentry', 'qa']}>
+            <RoleGuard allow={['dataentry', 'editor']}>
               <FeatureFlagsPage />
             </RoleGuard>
           }

@@ -26,7 +26,7 @@ A Strapi Admin megmarad fejlesztői felületnek. A szervezeti backoffice a Conte
 1. Bejelentkezhető backoffice SPA ugyanazon a hoston (`/backoffice`).
 2. Három tranzakció-oldal: új felvitel, draft review, readonly szűrhető lista.
 3. Opcionális bizonylat a felvételi / review flow-ban.
-4. Két Content szerep: `dataentry` (csak draft) és `qa` (publish).
+4. Két Content szerep: `dataentry` (csak draft) és `editor` (publish).
 5. Magyar alapértelmezésű i18n, profil (név, email, jelszócsere).
 6. Audit a tranzakción és a bizonylaton: ki rögzítette, ki publikálta, és mikor. A mezőket a szerver írja.
 
@@ -41,7 +41,7 @@ Csak **Users & Permissions** (Content API). Strapi Admin JWT **nem** része az S
 | Role id | Ki | Jogok az SPA-ban | Backend elvárás |
 | --- | --- | --- | --- |
 | `dataentry` | Adatrögzítő | Új tranzakció; readonly lista; profil | `transaction` / `receipt` create & update **csak draft**; nincs publish |
-| `qa` | Quality assurance reviewer | Draft review + publish; readonly lista; profil | Draft olvasás; `status=published` írás engedélyezett |
+| `editor` | Szerkesztő | Draft review + publish; readonly lista; profil | Draft olvasás; `status=published` írás engedélyezett |
 | Strapi Admin | Fejlesztő / üzemeltető | SPA-n kívül | Content user kézi létrehozás + invite; Google provider config |
 
 ### Felhasználókezelés
@@ -72,8 +72,8 @@ A menü v1-ben **csak a tranzakció-domain**. Nincs külön Organizations / Memb
 | Oldal | Javasolt route | Szerep | Viselkedés |
 | --- | --- | --- | --- |
 | **Új tranzakció felvitele** | `/transactions/create` | `dataentry` | Create űrlap; mentés mindig **draft**; Publish gomb nincs |
-| **Draftok review-ja** | `/transactions/review` | `qa` | Csak `status=draft`; megnyitás, ellenőrzés, **Publish**; receipt megjelenik ha van |
-| **Tranzakciók (readonly lista)** | `/transactions` | `dataentry` és `qa` | Draft **és** published; receipt oszlop/preview; szűrés statusra és mezőkre; **nincs szerkesztés** erről a nézetről |
+| **Draftok review-ja** | `/transactions/review` | `editor` | Csak `status=draft`; megnyitás, ellenőrzés, **Publish**; receipt megjelenik ha van |
+| **Tranzakciók (readonly lista)** | `/transactions` | `dataentry` és `editor` | Draft **és** published; receipt oszlop/preview; szűrés statusra és mezőkre; **nincs szerkesztés** erről a nézetről |
 | Bejelentkezés | `/login` | vendég | Email/jelszó + Google |
 | Profil | `/profile` | mindkét szerep | Név, email, jelszócsere (local usereknél) |
 
@@ -99,7 +99,7 @@ Receipt (ha a felhasználó csatol):
 
 Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
 
-### 5.2 Draft review (`qa`)
+### 5.2 Draft review (`editor`)
 
 - Lista alapértelmezett szűrése: `status=draft`.
 - Show / edit nézet: tranzakció mezők + kapcsolódó receipt (ha van), dokumentum megtekintése.
@@ -119,7 +119,7 @@ Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
   - `organization`
   - `debit_account` / `credit_account`
   - `description` (szöveg)
-- Erről a page-ről **nincs** create / edit / publish. A `dataentry` a create page-re megy; a `qa` a review page-re.
+- Erről a page-ről **nincs** create / edit / publish. A `dataentry` a create page-re megy; az `editor` a review page-re.
 
 ### 5.4 Profil
 
@@ -200,13 +200,13 @@ A Users & Permissions alapból nem választja szét a „draft create” és a �
 
 Követelmény:
 
-- Szerveroldali policy / controller / lifecycle: `status=published` (vagy publish akció) **csak `qa`** szerepnek.
+- Szerveroldali policy / controller / lifecycle: `status=published` (vagy publish akció) **csak az `editor`** szerepnek.
 - `dataentry` create/update esetén a rendszer draftot kényszerít / elutasítja a publish kísérletet.
 - Az SPA elrejti a Publish UI-t `dataentry` elől; a szerver a forrásigazság.
 
 ### 9.3 Szerepek és jogosultságok
 
-- Létrehozni a `dataentry` és `qa` Roles-t a Users & Permissionsben.
+- Létrehozni a `dataentry` és `editor` Roles-t a Users & Permissionsben.
 - Legalább: `transaction`, `receipt`, `organization`, `account` find; create/update a szerep szerint; media upload a receipthez.
 - Google provider engedélyezése + callback URL-ek a `/backoffice` SPA-hoz.
 
@@ -216,12 +216,12 @@ Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider
 
 ### 9.5 Audit mezők
 
-A Strapi `createdBy` / `updatedBy` admin usert jelent, a Content API-n nem a belépett `dataentry` vagy `qa` user. A v1 ezért saját mezőt ír a `transaction` és a `receipt` sémába. Users & Permissions user `find` jog továbbra sincs, ezért a mező szöveg, nem reláció: a szerver a belépett user e-mailjét menti, a kliens nem tud userlistát olvasni.
+A Strapi `createdBy` / `updatedBy` admin usert jelent, a Content API-n nem a belépett `dataentry` vagy `editor` user. A v1 ezért saját mezőt ír a `transaction` és a `receipt` sémába. Users & Permissions user `find` jog továbbra sincs, ezért a mező szöveg, nem reláció: a szerver a belépett user e-mailjét menti, a kliens nem tud userlistát olvasni.
 
 | Mező | Típus | Ki írja |
 | --- | --- | --- |
 | `entered_by` | string | Szerver, create-kor, a Content user e-mailje. Ügyfélpayload nem írja felül. |
-| `published_by` | string | Szerver, publish-kor, a `qa` user e-mailje. Unpublish-kor üres. |
+| `published_by` | string | Szerver, publish-kor, az `editor` user e-mailje. Unpublish-kor üres. |
 
 A „mikor” a dokumentum saját `createdAt` és `publishedAt` mezője. Külön datetime mező nem kell.
 
@@ -241,11 +241,11 @@ A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly
 4. **Nincs publish dataentrynek**  
    UI és API elutasítja a publish kísérletet.
 
-5. **QA review**  
+5. **Editor review**  
    A Review page csak draftokat listáz; receipt látszik; Publish sikeres → published státusz.
 
 6. **Readonly lista**  
-   dataentry és qa látja draft + published tételeket receipttel; szűrhet statusra és mezőkre; nincs szerkesztés.
+   dataentry és editor látja draft + published tételeket receipttel; szűrhet statusra és mezőkre; nincs szerkesztés.
 
 7. **Profil**  
    Név, email látszik; local usernél jelszócsere működik.
@@ -278,7 +278,7 @@ A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly
 - [ ] Három oldal a [§5](#5-termékfelület--oldalak-ia) szerint működik szerepkörönként
 - [ ] Receipt opcionális; média feltöltés működik
 - [ ] `receipt.vendor` optional a sémában
-- [ ] Publish csak `qa`-nak (UI + szerver)
+- [ ] Publish csak az `editor`-nak (UI + szerver)
 - [ ] Audit: `entered_by` és `published_by` a tranzakción és a bizonylaton, szerver írja, a lista és a review mutatja
 - [ ] Profil: név, email, jelszócsere
 - [ ] i18n default `hu`
