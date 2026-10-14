@@ -1,14 +1,17 @@
 # PRD 0002: Content Backoffice v2 (roadmap)
 
 **Status:** draft  
-**Date:** 2026-10-12  
+**Date:** 2026-10-12, kiegészítve 2026-10-14  
 **Product:** `content-backoffice`  
 **Depends on:** [0001-content-backoffice-v1](./0001-content-backoffice-v1.md)  
-**Related ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)
+**Related ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
+**Domain:** [docs/readme.md](../readme.md)
 
 ## 1. Cél
 
-Ez a dokumentum a v1-ből **szándékosan kihagyott** funkciókat gyűjti össze. Nem szállítható sprint-scope; prioritás és szeletelés a v1 élesítése után történik.
+Ez a dokumentum a v1-ből **szándékosan kihagyott** funkciókat gyűjti össze, és a későbbi üzemeltetés meg a teljesítmény megfontolásait. Nem szállítható sprint-scope; prioritás és szeletelés a v1 élesítése után történik.
+
+A menükatalógus előtt a könyvelési kör és a futási alap kerül sorra. A kompetenciák, a telephely, a feladatkezelés és a munkaidő a [domain-leírás](../readme.md#missing-items-to-consider-for-further-addition) későbbi tételei, nem ennek a PRD-nek a scope-ja.
 
 ## 2. Access és multi-tenancy
 
@@ -57,7 +60,17 @@ Az ADR szerinti resourceok SPA menüben (schema-driven list/edit ahol elég):
 - Értesítés új draftokról
 - Review sor / hozzárendelés
 - Visszautasítás kötelező megjegyzéssel (ha üzletileg kell)
-- Audit trail (Enterprise nélkül: saját mezők / log)
+
+A rögzítő és a publikáló audit mező (`entered_by`, `published_by`, `createdAt`, `publishedAt`) a [v1 §9.5](./0001-content-backoffice-v1.md#95-audit-mezők) része. A publish őr a `qa` szerepen marad.
+
+### 3.6 Könyvelési kör
+
+A [domain use case-ek](../readme.md#use-cases) magja. A lista önmagában nem helyettesíti.
+
+- Egyenleg és előzmény tagonként, illetve projektenként; a boardnak összesítve. Az egyenleg előre számolt összesítés (szervezet, számla, pénznem, időszak), nem lista-soronként újraszámolt összeg.
+- Ismétlődő tagdíj és ütemezett terhelés, idempotens futással: egy újrafuttatás nem dupláz sort.
+- Kivonat- és számlatükör-import előnézettel és az elutasított sorok naplójával.
+- A pénznem és az árfolyam a rögzítéskor rögzített érték a tranzakción. A későbbi törzsadat-változás a régi egyenleget nem írja át. A részletes adatmodell-megjegyzés a [readme](../readme.md#accounting-loop-before-new-domains) alatt van.
 
 ## 4. Hosting és CI/CD
 
@@ -118,23 +131,47 @@ jobs:
 Megjegyzések:
 
 - A pontos `nx build` target neve az app `project.json` szerint állítandó.
+- A pipeline a build mellett a publish őrt is teszteli, mielőtt a `/backoffice` kikerül.
 - Deploy job legyen `environment: production` + manuális approval, amíg a cPanel feltöltés stabil.
 - Ne commitoljunk FTP jelszót; GitHub Secrets.
 
-## 5. Auth bővítések (ha kell)
+### 4.3 Üzemeltetési alap
+
+- Strukturált log kérésazonosítóval, és hibagyűjtő a Strapi és az SPA oldalán is, hogy egy mentés utólag köthető legyen egy Neon- vagy cPanel-hibához.
+- Health endpoint, és egy rövid üzemeltetési jegyzet: Neon backup, Cloudinary, env, seedelt számlakódok, smoke login `dataentry` és `qa` szereppel.
+- Séma- és jogosultságváltozás csak kódból, a bootstrapból. Az Admin UI-n kattintott eltérés később nem reprodukálható.
+
+## 5. Teljesítmény
+
+Amíg az adat még kicsi, a lista- és jelentésút legyen olcsó.
+
+- A lista lapozott, szűk mezőlistával: dátum, összeg, státusz, szervezet, debit és credit kód, bizonylat azonosító. A teljes `populate` a részletezőn marad.
+- Index a szűrőoszlopokra: `date`, publikált státusz, szervezet, debit és credit számla. A Strapi draft és published párokat státuszszűrővel kéri az API.
+- Árfolyam dátum szerint cache-elt lookup, nem soronkénti rate-lekérdezés. A rögzítéskori árfolyam a [§3.6](#36-könyvelési-kör) szerint a tranzakción van.
+- A listában a bizonylat bélyegkép vagy link. Az eredeti fájl a Cloudinaryn marad, a részletező tölti le.
+- Az SPA resource-onként töltődik. Az organizations, members és accounts képernyők nincsenek az első bundle-ben.
+
+## 6. Auth bővítések (ha kell)
+
+Ezek a könyvelési kör és az üzemeltetési alap után jönnek.
 
 - További OAuth providerek a Google mellé (Users & Permissions).
 - Invite email UX finomítás (sablon, lejárat, újraKüldés).
 - Jelszó reset self-service a profil / login flow-ból (ha v1-ben nincs).
 
-## 6. Priorizálási javaslat (nem kötelező sorrend)
+## 7. Priorizálási javaslat (nem kötelező sorrend)
 
-1. Org–user ACL + szerveroldali szűrés (biztonság)
-2. CI build + artifact; utána deploy stub
-3. Menükatalógus bővítés resourceonként (schema-driven)
-4. Receipt N:1 UI + allowlist konfiguráció
-5. Avatar, QA értesítések, subdomain
+1. Org–user ACL + szerveroldali szűrés
+2. Strukturált log, hibagyűjtő, health endpoint, üzemeltetési jegyzet
+3. CI: build és a publish őr tesztje; a deploy kézi jóváhagyásos marad
+4. Allowlist configba, hogy számlatükör-változáskor ne kelljen új frontendet szállítani
+5. Séma és jog csak kódból, bootstrapból
+6. Lapozott lista, szűk mezők, indexek, bizonylat bélyegkép, resource-onkénti bundle
+7. Előre számolt egyenleg, rögzítéskori árfolyam, cache-elt rate lookup
+8. Tag- és projektegyenleg, ismétlődő tagdíj, import előnézettel
+9. Receipt N:1 UI, majd a QA sor (értesítés, hozzárendelés, visszautasítás megjegyzéssel)
+10. Csak utána: menükatalógus, user–member összerendelés, avatar, további OAuth, jelszó-reset, meghívó, subdomain
 
-## 7. Kapcsolat a v1 DoD-hoz
+## 8. Kapcsolat a v1 DoD-hoz
 
 A v2 elemek **nem** részei a [v1 Definition of Done](./0001-content-backoffice-v1.md#12-sikerkritérium-definition-of-done)-nak. Új PRD / ticket vágás a v1 ship után.

@@ -65,7 +65,7 @@ Az `ra-strapi` 1.0.3 (2025 március) ezeket még nem fedi le teljesen:
 - egynél mélyebb `populate`
 - a Users & Permissions jogosultságlista bekötése az `authProvider.getPermissions`-be
 
-A haladó RBAC, az audit log és a realtime a react-admin Enterprise csomagjában van. Az első verzió ezek nélkül készül: a jogosultságot a Strapi szerep adja, a képernyő a katalógusból jön.
+A haladó RBAC és a realtime a react-admin Enterprise csomagjában van. Az első verzió ezek nélkül készül: a jogosultságot a Strapi szerep adja. Az Enterprise audit log kimarad. A v1 saját auditja a transaction és a receipt `entered_by` / `published_by` stringje, amit a szerver ír; a generált katalógus a Strapi `createdBy` / `updatedBy` admin relációt továbbra sem rajzolja ki.
 
 ## Consequences
 

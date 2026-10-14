@@ -16,6 +16,8 @@ A követelmény a `docs/prd/0001-content-backoffice-v1.md` §9. Ez a skill a rep
 
 A `src/api/receipt/content-types/receipt/schema.json` fájlban a `vendor` `required` mezője legyen `false`. A `document` maradjon `required: true`. A `description` required marad. A `transaction.receipt` reláció maradjon opcionális `manyToOne`.
 
+A `transaction` és a `receipt` sémán legyen `entered_by` és `published_by`, mindkettő `string`, nem kötelező. Nem reláció: a Content user e-mailjét tárolják, user `find` jog nélkül. A `createdAt` és a `publishedAt` a dokumentum saját mezője, külön datetime nem kell.
+
 Más content type `draftAndPublish` értéke nem változik.
 
 ## Middleware
@@ -52,6 +54,15 @@ strapi.documents.use(async (context, next) => {
 `contentApiRoleType` csak akkor ad vissza szerep-`type` stringet, ha a kérés users-permissions stratégiájú. Admin, seed és user nélküli hívás `null`. A szerepet a user rekordról töltsd, `role` populate-tal; a JWT-ben lévő id önmagában nem elég, ha a role nincs a state-en.
 
 A REST API `status` nélkül publishedet ír. Az SPA ezért `?status=draft` queryt küld. A middleware-ben a hiányzó `params.status` nem publish: a Document Service alapja a draft. Csak a `published` és a `publish` / `unpublish` action tiltott.
+
+Ugyanebben a middleware-ben, a publish döntés után, ha a hívás mehet tovább:
+
+- `create`: `entered_by` a Content user e-mailje. A body-ból jövő `entered_by` és `published_by` nem számít.
+- `publish`, vagy create/update `status === 'published'` a `qa` szerepnél: `published_by` a `qa` e-mailje.
+- `unpublish`: `published_by` üres.
+- `update`: a body `entered_by` és `published_by` mezőjét dobd el, a tárolt rögzítő marad.
+
+Admin, seed és user nélküli hívásnál az audit mezőt ne írd felül.
 
 A `qa` publish után a kapcsolt receipt is published legyen, különben a published transaction populate üres receiptet ad. Az őr a `qa`-nak mindkét uid-ot engedi.
 
@@ -92,6 +103,7 @@ Content API JWT-vel, nem Admin tokennel:
 
 - `dataentry` `POST /api/transactions` status nélkül vagy `?status=published`: 403, a dokumentum nem published.
 - `dataentry` `POST /api/transactions?status=draft`: 200, draft.
-- `qa` publish: a transaction `status=published`. Receipttel együtt a receipt published verziója is létezik.
+- `qa` publish: a transaction `status=published`, a `published_by` a `qa` e-mailje. Receipttel együtt a receipt published verziója is létezik.
+- `dataentry` draft create: az `entered_by` a belépett e-mail, akkor is, ha a body más értéket küld.
 - `vendor` nélküli receipt `document` fájllal menthető.
 - Admin Content Manager publish továbbra is működik.

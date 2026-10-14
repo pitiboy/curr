@@ -6,7 +6,7 @@
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
 **Szabályok:** `.cursor/rules/backoffice-v1-scope.mdc`, `content-backoffice-spa.mdc`, `strapi-publish-guard.mdc`
 
-Egy másik agent ezt a fájlt hajtja végre. A PRD §8 (szervezet, tag, ACL, avatar, CI, subdomain, receipt N:M, Enterprise) nem része egyik lépésnek sem.
+Egy másik agent ezt a fájlt hajtja végre. A PRD §8 (szervezet, tag, ACL, avatar, CI, subdomain, receipt N:M, Enterprise RBAC és realtime) nem része egyik lépésnek sem. Az audit mezők igen: a PRD §9.5, az 5. és a 8. lépés.
 
 ## Hogyan kell végrehajtani
 
@@ -91,15 +91,16 @@ A create űrlap előtt a szervernek draftot kell kényszerítenie, és a vendor 
 - [ ] Document Service middleware a `src/index.ts` `register()`-ben, transaction és receipt uid-ra
 - [ ] Content API-n csak `qa` publikálhat. A `dataentry` publish / unpublish / `status=published` írása 403, a mentés nem válik csendben publisheddé
 - [ ] Admin Content Manager publish továbbra is megy
+- [ ] `transaction` és `receipt` séma: `entered_by` és `published_by` string, nem kötelező. A middleware create-kor a Content user e-mailjét írja `entered_by`-ba. Publish-kor a `qa` e-mailjét írja `published_by`-ba, unpublish-kor üríti. A kliens payloadja egyik mezőt sem írja felül. User reláció és user `find` jog nincs
 
-- [ ] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre (ezt a hívást utána törölheted). `qa` tokennel ugyanaz a rekord publisheddé tehető. Ha igen, pipáld ki, és indítsd a 6. lépést.
+- [ ] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre, és a válasz `entered_by` mezője a belépett user e-mailje akkor is, ha a body más e-mailt küldött (ezt a hívást utána törölheted). `qa` tokennel ugyanaz a rekord publisheddé tehető, és a `published_by` a `qa` e-mailje. Ha igen, pipáld ki, és indítsd a 6. lépést.
 
 ## 6. Új tranzakció, receipt nélkül
 
 - [ ] Create űrlap a `dataentry` route-on: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`
 - [ ] Debit választó: `5000`, `5100`, `5400`. Credit választó: `code` illeszkedik `^1`-re
 - [ ] Mentés mindig `?status=draft`. Publish gomb nincs
-- [ ] A `transaction_type`, `currency_type`, `related_transaction` nincs az űrlapon
+- [ ] A `transaction_type`, `currency_type`, `related_transaction` nincs az űrlapon. Az `entered_by` és a `published_by` sem űrlapmező
 - [ ] Sikeres mentés után a rekord a readonly listán draftként látszik
 
 - [ ] **Human:** `dataentry` felvisz egy kiadást receipt nélkül. A debit listában csak a három költségkód van, a credit listában az `1`-gyel kezdődő számlák. Mentés után a lista draftot mutat, Publish gomb sehol. Ha a select üres, a seed hiányzik: azt jelezd, ne bővítsd a kódlistát. Ha igen, pipáld ki, és indítsd a 7. lépést.
@@ -118,9 +119,10 @@ A create űrlap előtt a szervernek draftot kell kényszerítenie, és a vendor 
 - [ ] A review lista csak `status=draft`
 - [ ] Show/edit: a tranzakció mezői és a receipt, ha van
 - [ ] Publish gomb csak itt, csak `qa` szerepnek. Sikeres publish után a rekord published, és a kapcsolt receipt published verziója is megvan
+- [ ] A review és a readonly lista mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A mezők nem szerkeszthetők
 - [ ] A `dataentry` a review route-ot továbbra sem éri el, és a listáról nem publikál
 
-- [ ] **Human:** `qa` egy draftot megnyit, látja a bizonylatot, ha van, és a Publish után a lista published státuszt mutat. `dataentry` ugyanezt a rekordot nem tudja publikálni a felületről. Ha igen, pipáld ki, és indítsd a 9. lépést.
+- [ ] **Human:** `qa` egy draftot megnyit, látja a bizonylatot, ha van, és a rögzítő e-mailjét. A Publish után a lista published státuszt mutat, a publikáló e-mailjével. `dataentry` ugyanezt a rekordot nem tudja publikálni a felületről. Ha igen, pipáld ki, és indítsd a 9. lépést.
 
 ## 9. Profil jelszó és Google
 

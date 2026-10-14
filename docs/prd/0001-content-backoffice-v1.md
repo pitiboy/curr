@@ -1,7 +1,7 @@
 # PRD 0001: Content Backoffice v1
 
 **Status:** draft  
-**Date:** 2026-10-12  
+**Date:** 2026-10-12, kiegészítve 2026-10-14  
 **Product:** `content-backoffice`  
 **Target URL:** `https://kor.fejlesztesek.hu/backoffice`  
 **Related ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
@@ -28,6 +28,7 @@ A Strapi Admin megmarad fejlesztői felületnek. A szervezeti backoffice a Conte
 3. Opcionális bizonylat a felvételi / review flow-ban.
 4. Két Content szerep: `dataentry` (csak draft) és `qa` (publish).
 5. Magyar alapértelmezésű i18n, profil (név, email, jelszócsere).
+6. Audit a tranzakción és a bizonylaton: ki rögzítette, ki publikálta, és mikor. A mezőket a szerver írja.
 
 ### Nem-cél (v1)
 
@@ -103,12 +104,14 @@ Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
 - Lista alapértelmezett szűrése: `status=draft`.
 - Show / edit nézet: tranzakció mezők + kapcsolódó receipt (ha van), dokumentum megtekintése.
 - **Publish** művelet elérhető.
-- v1: nincs külön „visszautasítás + kötelező megjegyzés” workflow; a QA javíthat draftot vagy visszavonhatja a publish szándékot (nem publishol). Részletes QA sor / értesítés → v2.
+- Látszik, ki rögzítette a draftot és mikor (`entered_by`, `createdAt`). Publish után az is, ki publikálta és mikor (`published_by`, `publishedAt`).
+- v1: nincs külön „visszautasítás + kötelező megjegyzés” workflow; a QA javíthat draftot vagy visszavonhatja a publish szándékot (nem publishol). Részletes QA sor, értesítés és a visszautasítás megjegyzése → v2.
 
 ### 5.3 Readonly lista (mindkét szerep)
 
 - Tartalmazza a draft **és** published rekordokat.
 - Megjeleníti a receipt jelenlétét / előnézetét (ha van).
+- Megjeleníti a rögzítő és a publikáló audit mezőit ([§9.5](#95-audit-mezők)). Ezek nem szerkeszthetők.
 - Szűrők legalább:
   - `status` (draft / published)
   - `date` (tartomány)
@@ -173,7 +176,7 @@ flowchart LR
 - Automatikus CI/CD pipeline (→ v2 skeleton)
 - `backoffice.kor.fejlesztesek.hu` subdomain
 - Receipt N:M gazdag UI (v1: 1:1 a felvételi flow-ban)
-- React Admin Enterprise RBAC / audit / realtime
+- React Admin Enterprise RBAC / realtime. A saját audit mezők a [§9.5](#95-audit-mezők), nem az Enterprise audit log.
 - Inline edit / publish a readonly listáról
 - `dataentry` publish
 
@@ -211,6 +214,19 @@ Követelmény:
 
 Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider már a projektben van). Az `ra-strapi` natív média gapjét a v1 implementáció megkerüli.
 
+### 9.5 Audit mezők
+
+A Strapi `createdBy` / `updatedBy` admin usert jelent, a Content API-n nem a belépett `dataentry` vagy `qa` user. A v1 ezért saját mezőt ír a `transaction` és a `receipt` sémába. Users & Permissions user `find` jog továbbra sincs, ezért a mező szöveg, nem reláció: a szerver a belépett user e-mailjét menti, a kliens nem tud userlistát olvasni.
+
+| Mező | Típus | Ki írja |
+| --- | --- | --- |
+| `entered_by` | string | Szerver, create-kor, a Content user e-mailje. Ügyfélpayload nem írja felül. |
+| `published_by` | string | Szerver, publish-kor, a `qa` user e-mailje. Unpublish-kor üres. |
+
+A „mikor” a dokumentum saját `createdAt` és `publishedAt` mezője. Külön datetime mező nem kell.
+
+A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly lista mutatja őket. A Document Service middleware, ami a publish őrt adja, ezeket is állítja.
+
 ## 10. User story-k és acceptance criteria
 
 1. **Belépés (dataentry)**  
@@ -240,6 +256,9 @@ Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider
 9. **Deploy path**  
    Az app a `/backoffice` alatt töltődik; API ugyanazon a hoston elérhető.
 
+10. **Audit**  
+    Draft mentés után a tranzakción és a bizonylaton a rögzítő e-mailje és a `createdAt` látszik. Publish után a publikáló e-mailje és a `publishedAt` is. A kliens ezeket a mezőket nem tudja átírni.
+
 ## 11. Kockázatok
 
 | Kockázat | Hatás | Mitigáció |
@@ -250,6 +269,7 @@ Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider
 | `vendor` required marad | Opcionális receipt flow törik | Séma módosítás a v1 előtt ([§9.1](#91-receipt-séma)) |
 | Seed kódok hiányoznak a környezetben | Üres debit/credit select | Seed / smoke check a deploy előtt |
 | Draft+published Strapi 5 document párok | Lista / szűrés zavaros | Status filter és `documentId` konzisztens kezelés (ADR) |
+| A kliens küldi az `entered_by` / `published_by` értéket | Hamis audit | A middleware felülírja create-kor és publish-kor, update payloadból eldobja ([§9.5](#95-audit-mezők)) |
 
 ## 12. Sikerkritérium (Definition of Done)
 
@@ -259,6 +279,7 @@ Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider
 - [ ] Receipt opcionális; média feltöltés működik
 - [ ] `receipt.vendor` optional a sémában
 - [ ] Publish csak `qa`-nak (UI + szerver)
+- [ ] Audit: `entered_by` és `published_by` a tranzakción és a bizonylaton, szerver írja, a lista és a review mutatja
 - [ ] Profil: név, email, jelszócsere
 - [ ] i18n default `hu`
 - [ ] Manuális deploy a `kor.fejlesztesek.hu/backoffice` pathra dokumentálva
@@ -266,5 +287,5 @@ Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider
 ## 13. Nyitott implementációs részletek (nem blokkolják a PRD-t)
 
 - Pontos credit `1xxx` allowlist (minimum `1000`, `1100`; bővíthető a seed asset kódjaival).
-- QA „visszadobás” csak nem-publish vs. későbbi reject mező (v2).
+- QA „visszadobás” csak nem-publish vs. későbbi reject mező (v2). A rögzítő és a publikáló audit mező v1 ([§9.5](#95-audit-mezők)).
 - Invite email konkrét Strapi plugin / kézi flow üzemeltetési leírása.

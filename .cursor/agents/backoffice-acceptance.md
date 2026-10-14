@@ -23,11 +23,12 @@ Minden storyra adj egy sort: pass vagy fail, és a bizonyíték fájlútvonala. 
 7. **Profil.** Név és email. Local usernél jelszócsere. Google-only fióknál a jelszó űrlap hiányzik.
 8. **i18n.** Az alapnyelv `hu`. Az `en` katalógus a repóban van.
 9. **Deploy path.** A Vite `base` a `/backoffice/`. A deploy lépés le van írva. Az API ugyanaz a host.
+10. **Audit.** A transaction és a receipt `entered_by` / `published_by` stringjeit a szerver írja, a kliens payloadja nem. A review és a readonly lista mutatja a rögzítőt és a `createdAt` időt, published soron a publikálót és a `publishedAt` időt. User reláció és user `find` jog nincs.
 
 ## Határ
 
-Fail, ha a diffben megjelenik a PRD §8 bármelyike: organization/member/account/currency menü vagy CRUD, user–member kötés, org ACL, avatar, CI pipeline, subdomain, receipt N:M szerkesztő, Enterprise RBAC, inline edit a listán.
+Fail, ha a diffben megjelenik a PRD §8 bármelyike: organization/member/account/currency menü vagy CRUD, user–member kötés, org ACL, avatar, CI pipeline, subdomain, receipt N:M szerkesztő, Enterprise RBAC, Enterprise audit log, inline edit a listán. A saját `entered_by` / `published_by` mező nem fail.
 
 Fail az éles SPA-ban, ha `ListGuesser`, `EditGuesser` vagy `ShowGuesser` a resource-on marad, vagy ha a react-admin azonosító a numerikus `id` a `documentId` helyett.
 
-A válasz végén egy mondat: a §12 hány eleme teljesül a kilencből, és melyik a következő blokkoló.
+A válasz végén egy mondat: a §12 hány eleme teljesül, és melyik a következő blokkoló.

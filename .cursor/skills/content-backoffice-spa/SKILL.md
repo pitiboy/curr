@@ -57,6 +57,8 @@ A create és a review mezői: `date`, `amount`, `description`, `organization`, `
 
 Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`.
 
+A lista és a review mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A create és az edit űrlapon ezek a mezők nincsenek.
+
 ## Számlakód
 
 A választó a lekért accountok kliens szűrője. Forrás a `database/seeders/org-initializer.js` asset és expense blokkja.
@@ -90,4 +92,4 @@ Profil: `GET /api/users/me`. Jelszócsere: `POST /api/auth/change-password` (`cu
 
 ## Kész, ha
 
-A §10 kilenc storyja és a §12 checklistje teljesül. Az acceptance subagent (`backoffice-acceptance`) a diffet storynként pass/fail listára bontja; a DoD pipa csak azután kerül a PRD-be.
+A §10 storyjai és a §12 checklistje teljesül. Az acceptance subagent (`backoffice-acceptance`) a diffet storynként pass/fail listára bontja; a DoD pipa csak azután kerül a PRD-be.
