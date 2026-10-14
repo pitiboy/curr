@@ -102,6 +102,14 @@
         "description": "A tranzakcióhoz tartozó nyugta"
       },
       "inversedBy": "transactions"
+    },
+    "entered_by": {
+      "type": "string",
+      "required": false
+    },
+    "published_by": {
+      "type": "string",
+      "required": false
     }
   }
 }

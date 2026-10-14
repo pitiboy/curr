@@ -894,12 +894,14 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
     description: Schema.Attribute.Text & Schema.Attribute.Required;
     document: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'> &
       Schema.Attribute.Required;
+    entered_by: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::receipt.receipt'
     > &
       Schema.Attribute.Private;
+    published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     reference: Schema.Attribute.UID;
     transactions: Schema.Attribute.Relation<
@@ -909,7 +911,7 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    vendor: Schema.Attribute.String & Schema.Attribute.Required;
+    vendor: Schema.Attribute.String;
   };
 }
 
@@ -984,6 +986,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       'api::account.account'
     >;
     description: Schema.Attribute.Text;
+    entered_by: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -994,6 +997,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::organization.organization'
     >;
+    published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     receipt: Schema.Attribute.Relation<'manyToOne', 'api::receipt.receipt'>;
     related_transaction: Schema.Attribute.Relation<

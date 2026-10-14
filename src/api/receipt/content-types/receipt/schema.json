@@ -44,7 +44,7 @@
     },
     "vendor": {
       "type": "string",
-      "required": true,
+      "required": false,
       "metadatas": {
         "label": "Eladó",
         "description": "Az eladó vagy szolgáltató neve"
@@ -70,6 +70,14 @@
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "receipt"
+    },
+    "entered_by": {
+      "type": "string",
+      "required": false
+    },
+    "published_by": {
+      "type": "string",
+      "required": false
     }
   }
 }

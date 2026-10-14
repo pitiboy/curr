@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 4. lépés kész (Human ellenőrzésre vár)  
+**Status:** 5. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -87,15 +87,20 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 
 A create űrlap előtt a szervernek draftot kell kényszerítenie dataentry user esetén, és a vendor mezőnek opcionálisnak kell lennie. Részletek a `strapi-publish-guard` skillben.
 
-- [ ] `receipt.vendor` `required: false`. A `document` kötelező marad
-- [ ] Document Service middleware a `src/index.ts` `register()`-ben, transaction és receipt uid-ra
-- [ ] Content API-n csak az `editor` publikálhat. A `dataentry` publish / unpublish / `status=published` írása 403, a mentés nem válik csendben publisheddé
-- [ ] Admin Content Manager publish továbbra is megy
-- [ ] `transaction` és `receipt` séma: `entered_by` és `published_by` string, nem kötelező. A middleware create-kor a Content user e-mailjét írja `entered_by`-ba. Publish-kor az `editor` e-mailjét írja `published_by`-ba, unpublish-kor üríti. A kliens payloadja egyik mezőt sem írja felül. User reláció és user `find` jog nincs
+A korábban kikommentezett őr nem futott, és nem írta az audit mezőket. A REST create/update `status` query nélkül a core-api `getFetchParams` miatt `status=published`-ként ér a middleware-hez, ezért a hiányzó status és a `?status=published` egyaránt 403 `dataentry` usernek. A Document Service közvetlen hívása status nélkül draft marad; azt az őr nem tiltja.
+
+- [x] `receipt.vendor` `required: false`. A `document` kötelező marad
+- [x] Document Service middleware a `src/index.ts` `register()`-ben, transaction és receipt uid-ra
+- [x] Content API-n csak az `editor` publikálhat. A `dataentry` publish / unpublish / `status=published` írása 403, a mentés nem válik csendben publisheddé
+- [x] Admin Content Manager publish továbbra is megy
+- [x] `transaction` és `receipt` séma: `entered_by` és `published_by` string, nem kötelező. A middleware create-kor a Content user e-mailjét írja `entered_by`-ba. Publish-kor az `editor` e-mailjét írja `published_by`-ba, unpublish-kor üríti. A kliens payloadja egyik mezőt sem írja felül. User reláció és user `find` jog nincs
+- [x] Az `editor` transaction publish után a kapcsolt receipt is published, ha van. Receipt nélkül a tranzakció publish megáll
 
 - [ ] **Human:** `dataentry` JWT-vel a `POST /api/transactions` status nélkül vagy `?status=published` 403. Ugyanez a token `?status=draft` mellett draftot hoz létre, és a válasz `entered_by` mezője a belépett user e-mailje akkor is, ha a body más e-mailt küldött (ezt a hívást utána törölheted). `editor` tokennel ugyanaz a rekord publisheddé tehető, és a `published_by` az `editor` e-mailje. Ha igen, pipáld ki, és indítsd a 6. lépést.
 
 ## 6. Új tranzakció, receipt nélkül
+
+A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `docs/transaction-workflow.md` ügylet (több sor, `related_transaction`, `5800`, korona) nem váltja ki: a `workflowForms` regiszter üres marad, a create route `/transactions/create`, a review route `/transactions/review`.
 
 - [ ] Create űrlap a `dataentry` route-on: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`
 - [ ] Debit választó: `5000`, `5100`, `5400`. Credit választó: `code` illeszkedik `^1`-re

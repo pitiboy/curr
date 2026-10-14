@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-14T20:58:52.482Z"
+    "x-generation-date": "2026-10-14T21:13:09.849Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -9754,7 +9754,6 @@
               "date",
               "amount",
               "description",
-              "vendor",
               "document"
             ],
             "type": "object",
@@ -9800,6 +9799,12 @@
                   ],
                   "example": "string or id"
                 }
+              },
+              "entered_by": {
+                "type": "string"
+              },
+              "published_by": {
+                "type": "string"
               },
               "locale": {
                 "type": "string"
@@ -9863,7 +9868,6 @@
           "date",
           "amount",
           "description",
-          "vendor",
           "document"
         ],
         "properties": {
@@ -10075,6 +10079,12 @@
               "$ref": "#/components/schemas/Transaction"
             }
           },
+          "entered_by": {
+            "type": "string"
+          },
+          "published_by": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -10260,6 +10270,12 @@
                 ],
                 "example": "string or id"
               },
+              "entered_by": {
+                "type": "string"
+              },
+              "published_by": {
+                "type": "string"
+              },
               "locale": {
                 "type": "string"
               },
@@ -10373,6 +10389,12 @@
           },
           "receipt": {
             "$ref": "#/components/schemas/Receipt"
+          },
+          "entered_by": {
+            "type": "string"
+          },
+          "published_by": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",

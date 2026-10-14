@@ -1,4 +1,4 @@
-import { errors } from '@strapi/utils';
+import { registerPublishGuard } from './publish-guard';
 
 const enabled = { enabled: true, policy: '' };
 
@@ -206,67 +206,9 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
   }
 }
 
-const PUBLISH_GUARDED_UIDS = new Set([
-  'api::transaction.transaction',
-  'api::receipt.receipt',
-]);
-
-function registerPublishGuard(strapi: {
-  documents: {
-    use: (
-      middleware: (
-        context: {
-          uid: string;
-          action: string;
-          params?: { status?: string };
-        },
-        next: () => Promise<unknown>,
-      ) => Promise<unknown>,
-    ) => void;
-  };
-  requestContext: {
-    get: () =>
-      | {
-          state?: {
-            auth?: { strategy?: { name?: string } };
-            user?: { role?: { type?: string } };
-          };
-        }
-      | undefined;
-  };
-}) {
-  strapi.documents.use(async (context, next) => {
-    if (!PUBLISH_GUARDED_UIDS.has(context.uid)) {
-      return next();
-    }
-
-    const ctx = strapi.requestContext.get();
-    const strategyName = ctx?.state?.auth?.strategy?.name;
-    const roleType = ctx?.state?.user?.role?.type;
-
-    if (strategyName !== 'users-permissions' || roleType !== 'dataentry') {
-      return next();
-    }
-
-    const status = context.params?.status;
-    const writing = context.action === 'create' || context.action === 'update';
-    const publishing =
-      context.action === 'publish' ||
-      context.action === 'unpublish' ||
-      (writing && status === 'published');
-
-    if (publishing) {
-      throw new errors.ForbiddenError('Publishing is limited to the editor role');
-    }
-
-    return next();
-  });
-}
-
 export default {
   register({ strapi }) {
-    // TODO: Uncomment this when we have a way to publish transactions and receipts
-    // registerPublishGuard(strapi);
+    registerPublishGuard(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
     // socket is plain HTTP. The `cookies` package checks socket.encrypted and
