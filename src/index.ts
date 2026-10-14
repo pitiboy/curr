@@ -21,6 +21,7 @@ const CONTENT_ROLE_ACTIONS = [
   'api::account.account.find',
   'api::account.account.findOne',
   'plugin::upload.content-api.upload',
+  'plugin::users-permissions.user.me',
 ] as const;
 
 const usersPermissionsRolePermissions = {
@@ -47,6 +48,11 @@ const usersPermissionsRolePermissions = {
   'plugin::upload': {
     controllers: {
       'content-api': allow(['upload']),
+    },
+  },
+  'plugin::users-permissions': {
+    controllers: {
+      user: allow(['me']),
     },
   },
 };

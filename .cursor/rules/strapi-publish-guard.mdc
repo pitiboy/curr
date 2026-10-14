@@ -13,5 +13,5 @@ A Users & Permissions action-mátrix nem választja szét a draft írást és a 
 - Content API híváson csak a `qa` szerep publikálhat (`action` `publish` / `unpublish`, vagy create/update `params.status === 'published'`). A `dataentry` ilyen kérésre 403-at kap, a mentés nem íródik át csendben publisheddé.
 - Admin stratégia, seed és a users-permissions user nélküli hívás nem esik a őr alá.
 - A `dataentry` és `qa` szerepek `type` mezője pontosan ez a két szó. Létrehozásuk a `bootstrap()`-ban fut, productionben is, idempotensen. A dev-only seeder nem elég.
-- Jog: transaction és receipt find, findOne, create, update; organization és account find, findOne; content-api upload. Delete nincs. A mátrix nem helyettesíti az őrt.
+- Jog: transaction és receipt find, findOne, create, update; organization és account find, findOne; content-api upload; `plugin::users-permissions.user.me`. Delete és user admin (`find`, `create`, `update`, `destroy`) nincs. A mátrix nem helyettesíti az őrt.
 - A Google provider a `config/plugins.ts` users-permissions grant blokkja, env kulcsokkal. Titok nem kerül a repóba.

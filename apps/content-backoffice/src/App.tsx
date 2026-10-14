@@ -45,12 +45,19 @@ export function App() {
       title="app.title"
     >
       <Resource
-        create={TransactionCreate}
         list={TransactionList}
         name="transactions"
         options={{ label: 'app.transactions_list' }}
       />
       <CustomRoutes>
+        <Route
+          element={
+            <RoleGuard allow={['dataentry']}>
+              <TransactionCreate />
+            </RoleGuard>
+          }
+          path="/transactions/create"
+        />
         <Route
           element={
             <RoleGuard allow={['qa']}>

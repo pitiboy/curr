@@ -74,6 +74,9 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 | mindkettő | `api::organization.organization.find`, `findOne` |
 | mindkettő | `api::account.account.find`, `findOne` |
 | mindkettő | a content-api upload action (`plugin::upload.content-api.upload`, ha a getActions így hívja) |
+| mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs) |
+
+A Content API sanitize leveszi a `role` relációt, ha nincs `role.find`. Azt ne add ki: a `GET /roles` a szereplistát nyitná meg. A `src/extensions/users-permissions/strapi-server.ts` a `/api/users/me` válaszba a hívó saját role-ját teszi vissza (`type` a `ctx.state.user.role`-ból).
 
 Delete, users-permissions user admin és az upload destroy kimarad. A publishhez nincs külön action: az őr dönt.
 
