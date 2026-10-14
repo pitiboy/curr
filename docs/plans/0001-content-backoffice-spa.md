@@ -121,13 +121,15 @@ A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `doc
 
 ## 8. Editor review és publish
 
-- [ ] A review lista csak `status=draft`
-- [ ] Show/edit: a tranzakció mezői és a receipt, ha van
-- [ ] Publish gomb csak itt, csak az `editor` szerepnek. Sikeres publish után a rekord published, és a kapcsolt receipt published verziója is megvan
-- [ ] A review és a readonly lista mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A mezők nem szerkeszthetők
-- [ ] A `dataentry` a review route-ot továbbra sem éri el, és a listáról nem publikál
+Az `editor` a draftot két listából is megnyithatja jóváhagyásra. A 4. lépés „nincs sor-kattintás” szabálya ennyiben változik: a lista továbbra sem szerkeszt és nem publikál, a draft sor viszont a review űrlapra visz.
 
-- [ ] **Human:** `editor` egy draftot megnyit, látja a bizonylatot, ha van, és a rögzítő e-mailjét. A Publish után a lista published státuszt mutat, a publikáló e-mailjével. `dataentry` ugyanezt a rekordot nem tudja publikálni a felületről. Ha igen, pipáld ki, és indítsd a 9. lépést.
+- [ ] Új menüpont, csak az `editor` szerepnek: tranzakciólista, csak `status=draft` rekordokkal. A 3. lépés „Ellenőrzés” pontja ezt a listát nyitja; külön üres review menü nem marad. A `dataentry` a menüt nem látja
+- [ ] Review űrlap: a tranzakció mezői és a receipt, ha van. Az `editor` egy draft sort a `/transactions` oldalról és erről a draft listáról is megnyithat rajta, jóváhagyásra. Published sor nem nyit review űrlapot
+- [ ] Publish gomb csak a review űrlapon, csak az `editor` szerepnek. Sikeres publish után a rekord published, és a kapcsolt receipt published verziója is megvan
+- [ ] A review űrlap és a listák mutatják az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A mezők nem szerkeszthetők
+- [ ] A `dataentry` a review route-ot továbbra sem éri el, és egyik listáról sem publikál
+
+- [ ] **Human:** `editor` a menüben látja a csak-draft listát. Egy draftot a `/transactions` oldalról és a draft listáról is meg tud nyitni a review űrlapon, látja a bizonylatot, ha van, és a rögzítő e-mailjét. A Publish után a lista published státuszt mutat, a publikáló e-mailjével. `dataentry` a draft menüt nem látja, a review route-ot nem éri el, és a listáról nem publikál. Ha igen, pipáld ki, és indítsd a 9. lépést.
 
 ## 9. Profil jelszó és Google
 
