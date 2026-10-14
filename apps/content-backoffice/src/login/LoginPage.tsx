@@ -9,11 +9,14 @@ import {
   useTranslate,
 } from 'react-admin';
 
+import { DocumentTitle } from '../layout/AppTitle';
+
 export function LoginPage() {
   const translate = useTranslate();
 
   return (
     <Login>
+      <DocumentTitle />
       <LoginForm>
         <TextInput
           autoComplete="email"
