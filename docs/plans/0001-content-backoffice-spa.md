@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 3. lépés kész (Human ellenőrzésre vár)  
+**Status:** 4. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -76,10 +76,10 @@ A login próba előtt a két Content szerepnek léteznie kell. A jogmátrix és 
 
 ## 4. Readonly lista
 
-- [ ] A lista a Content API-ról jön, `documentId` azonosítóval. A REST find alapból csak publishedet ad, ezért a lista külön kéri a `status=draft` és a `status=published` rekordokat, és a kettőt együtt mutatja
-- [ ] Oszlopok: dátum, összeg, leírás, szervezet, debit, credit, státusz, receipt jelzés
-- [ ] Szűrők: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`
-- [ ] Erről a nézetről nincs create, edit, publish gomb és nincs sor-kattintás szerkesztőbe
+- [x] A lista a Content API-ról jön, `documentId` azonosítóval. A REST find alapból csak publishedet ad, ezért a lista külön kéri a `status=draft` és a `status=published` rekordokat, és a kettőt együtt mutatja
+- [x] Oszlopok: dátum, összeg, leírás, szervezet, debit, credit, státusz, receipt jelzés
+- [x] Szűrők: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`
+- [x] Erről a nézetről nincs create, edit, publish gomb és nincs sor-kattintás szerkesztőbe
 
 - [ ] **Human:** mindkét szereppel a lista betölt. A státuszszűrő leszűkíti a sorokat. Egy sor megnyitása nem visz szerkesztőbe. Ha a lista üres, seedelt tranzakció nélkül is elfogadható, ha a szűrő és az üres állapot hibamentes. Ha igen, pipáld ki, és indítsd az 5. lépést.
 
