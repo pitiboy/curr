@@ -8,6 +8,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { UserMenuContextProvider } from 'ra-core';
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
@@ -28,7 +29,7 @@ import { Link } from 'react-router-dom';
 import { isContentRole } from '../auth/roles';
 import { APP_TITLE } from '../config';
 import { userMenuEntries } from '../workflows/userMenuEntries';
-import { Typography } from '@mui/material';
+import { WhiteLogo } from './WhiteLogo';
 
 const ProfileMenuItem = forwardRef<HTMLAnchorElement>(
   function ProfileMenuItem(props, ref) {
@@ -200,12 +201,8 @@ function PageTitleSlot() {
 export function BackofficeAppBar(props: AppBarProps) {
   return (
     <AppBar {...props} userMenu={<BackofficeUserMenu />}>
-      <img
-        src={`${import.meta.env.BASE_URL}favicon.svg`}
-        alt="Logo"
-        width={32}
-        height={32}
-      />
+      <WhiteLogo />
+
       <Typography
         component="h2"
         variant="h6"
