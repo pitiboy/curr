@@ -29,7 +29,7 @@
       "target": "api::account.account",
       "metadatas": {
         "label": "Költség számlaszám",
-        "description": "mire ment a pénz (anyag, bér, a megvett dolog)"
+        "description": "mire ment a pénz (anyag, bér, a megvett dolog) = `Tartozik`"
       },
       "inversedBy": "debit_transactions"
     },
@@ -39,7 +39,7 @@
       "target": "api::account.account",
       "metadatas": {
         "label": "Kifizető számlaszám",
-        "description": "Honnan fizetted ki (pl készpénz vagy bank)"
+        "description": "Honnan fizetted ki (pl készpénz vagy bank) = `Követel`"
       },
       "inversedBy": "credit_transactions"
     },
