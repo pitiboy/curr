@@ -27,10 +27,10 @@ import {
   loadAllAccounts,
   type AccountChoice,
 } from '../../data/accountCodes';
-import { receiptCardInvalid } from '../../data/receiptDraft';
 import { bandedForm, bandedSpanClass } from '../../theme';
 import { AccountFieldLabel } from './accountField';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
+import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
 
 function currencyOptionText(record: RaRecord): string {
@@ -214,23 +214,13 @@ export function TransactionCreate() {
       <SimpleForm
         sx={bandedForm}
         toolbar={<DraftSaveToolbar />}
-        validate={(values: { description?: unknown }) => {
-          const description =
-            typeof values.description === 'string'
-              ? values.description.trim()
-              : '';
-          const hasFile = receiptCards.some(
-            (card) => card.file && card.file.size > 0,
-          );
-          const errors: Record<string, string> = {};
-          if (hasFile && !description) {
-            errors.description = translate('app.receipt_description_required');
-          }
-          if (receiptCards.some(receiptCardInvalid)) {
-            errors.receipt_cards = translate('app.receipt_card_required');
-          }
-          return errors;
-        }}
+        validate={(values) =>
+          transactionFormErrors(
+            values as Record<string, unknown>,
+            receiptCards,
+            translate,
+          )
+        }
       >
         <CreateLeaveGuard receiptCardCount={receiptCards.length} />
 

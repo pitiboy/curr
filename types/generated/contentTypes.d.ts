@@ -1017,16 +1017,19 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     credit_account: Schema.Attribute.Relation<
       'manyToOne',
       'api::account.account'
-    >;
+    > &
+      Schema.Attribute.Required;
     currency_type: Schema.Attribute.Relation<
       'manyToOne',
       'api::currency-type.currency-type'
-    >;
+    > &
+      Schema.Attribute.Required;
     date: Schema.Attribute.Date & Schema.Attribute.Required;
     debit_account: Schema.Attribute.Relation<
       'manyToOne',
       'api::account.account'
-    >;
+    > &
+      Schema.Attribute.Required;
     description: Schema.Attribute.Text;
     entered_by: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -1038,7 +1041,8 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     organization: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
-    >;
+    > &
+      Schema.Attribute.Required;
     published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;

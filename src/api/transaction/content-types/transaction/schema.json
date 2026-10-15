@@ -27,6 +27,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
+      "required": true,
       "metadatas": {
         "label": "Költség számlaszám",
         "description": "mire ment a pénz (anyag, bér, a megvett dolog) = `Tartozik`"
@@ -37,6 +38,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
+      "required": true,
       "metadatas": {
         "label": "Kifizető számlaszám",
         "description": "Honnan fizetted ki (pl készpénz vagy bank) = `Követel`"
@@ -57,6 +59,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::currency-type.currency-type",
+      "required": true,
       "metadatas": {
         "label": "Pénznem típus",
         "description": "A tranzakció pénzneme vagy erőforrás típusa"
@@ -87,6 +90,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::organization.organization",
+      "required": true,
       "metadatas": {
         "label": "Szervezet",
         "description": "A szervezeti fa azon csomópontja, amelyre a költség tartozik (a projekt)"

@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { errors } from '@strapi/utils';
 
 import {
   contentApiActor,
   guardEffect,
+  missingTransactionFields,
   readPublishPolicy,
   registerPublishGuard,
   relationDocumentId,
@@ -164,10 +166,20 @@ describe('relationDocumentId', () => {
   });
 });
 
+const completeTransaction = {
+  date: '2026-10-15',
+  amount: 10,
+  currency_type: 'cur-1',
+  organization: 'org-1',
+  debit_account: 'deb-1',
+  credit_account: 'cre-1',
+};
+
 function fakeStrapi(options: {
   strategy?: string;
   userId?: number;
   user?: Record<string, unknown> | null;
+  request?: boolean;
   onUpdate?: (uid: string, data: Record<string, unknown>) => void;
   documentsApi?: PublishGuardStrapi['documents'];
 }): PublishGuardStrapi {
@@ -176,12 +188,15 @@ function fakeStrapi(options: {
       throw new Error('documents() was not expected');
     }) as unknown as PublishGuardStrapi['documents']),
     requestContext: {
-      get: () => ({
-        state: {
-          auth: { strategy: { name: options.strategy ?? 'users-permissions' } },
-          user: options.userId == null ? undefined : { id: options.userId },
-        },
-      }),
+      get: () =>
+        options.request === false
+          ? undefined
+          : {
+              state: {
+                auth: { strategy: { name: options.strategy ?? 'users-permissions' } },
+                user: options.userId == null ? undefined : { id: options.userId },
+              },
+            },
     },
     db: {
       query: (uid: string) => ({
@@ -271,7 +286,11 @@ describe('registerPublishGuard', () => {
 
     const params = {
       status: 'draft' as const,
-      data: { amount: 10, entered_by: 'forged@example.com', published_by: 'forged@example.com' },
+      data: {
+        ...completeTransaction,
+        entered_by: 'forged@example.com',
+        published_by: 'forged@example.com',
+      },
     };
     const result = await middleware(
       { uid: transaction, action: 'create', params },
@@ -368,5 +387,124 @@ describe('registerPublishGuard', () => {
       },
     );
     assert.equal(nextCalled, false);
+  });
+
+  it('rejects a draft create that omits required fields', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 1,
+      user: { email: dataentry.email, role: { type: 'dataentry' } },
+    });
+    let middleware: (
+      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          {
+            uid: transaction,
+            action: 'create',
+            params: { status: 'draft', data: { description: 'csak leírás' } },
+          },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'doc_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof errors.ValidationError);
+        assert.match(error.message, /date, amount, currency_type, organization, debit_account, credit_account/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('rejects an admin draft that clears a required relation', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({ strategy: 'admin', userId: 1 });
+    let middleware: (
+      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          {
+            uid: transaction,
+            action: 'update',
+            params: { data: { organization: null } },
+          },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'doc_1' };
+          },
+        ),
+      (error: unknown) => error instanceof errors.ValidationError,
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('lets a request-less seed write an incomplete transaction', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({ request: false });
+    let middleware: (
+      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      { uid: transaction, action: 'create', params: { data: { description: 'seed' } } },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+});
+
+describe('missingTransactionFields', () => {
+  it('requires every field on create and only the sent fields on update', () => {
+    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'create'), [
+      'date',
+      'amount',
+      'currency_type',
+      'organization',
+      'debit_account',
+      'credit_account',
+    ]);
+    assert.deepEqual(missingTransactionFields(completeTransaction, 'create'), []);
+    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ amount: 0, organization: { connect: [] } }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ organization: { set: [] } }, 'update'), [
+      'organization',
+    ]);
+    assert.deepEqual(
+      missingTransactionFields({ organization: { connect: [] } }, 'create'),
+      ['date', 'amount', 'currency_type', 'organization', 'debit_account', 'credit_account'],
+    );
+    assert.deepEqual(
+      missingTransactionFields(
+        { currency_type: { set: [{ documentId: 'cur-1' }] } },
+        'update',
+      ),
+      [],
+    );
   });
 });

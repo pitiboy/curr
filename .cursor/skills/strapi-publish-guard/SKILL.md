@@ -18,6 +18,8 @@ A `src/api/receipt/content-types/receipt/schema.json` fájlban a `vendor` `requi
 
 A `transaction` és a `receipt` sémán legyen `entered_by` és `published_by`, mindkettő `string`, nem kötelező. Nem reláció: a Content user e-mailjét tárolják, user `find` jog nélkül. A `createdAt` és a `publishedAt` a dokumentum saját mezője, külön datetime nem kell.
 
+A transaction `date`, `amount`, `currency_type`, `organization`, `debit_account` és `credit_account` mezője `required: true`. A `description` nem kötelező. A `config/api.ts` `documents.strictRelations` értéke `true`, hogy a publish a kötelező relációkat is ellenőrizze.
+
 Más content type `draftAndPublish` értéke nem változik.
 
 ## Middleware
@@ -25,6 +27,7 @@ Más content type `draftAndPublish` értéke nem változik.
 A `src/index.ts` `register({ strapi })` a `src/publish-guard.ts` `registerPublishGuard` függvényét köti a Document Service-re. Az `editor` nem lép ki korán: a `guardEffect` dönt.
 
 - Admin, seed és user nélküli hívás (`actor` null): az őr nem ír és nem tilt.
+- Transaction create és update, drafton is: a `date`, `amount`, `currency_type`, `organization`, `debit_account` és `credit_account` kötelező. A Strapi a draft mentésnél a `required` kényszert kihagyja, ezért a middleware 400-at dob, ha HTTP kérésből valamelyik hiányzik vagy ürül. Update-nél a kimaradó kulcs a tárolt értéket hagyja. Request nélküli seed nem esik az ellenőrzés alá.
 - `dataentry` publish, unpublish, vagy create/update `status=published`: 403.
 - `CONTENT_DEFAULT_STATUS` `draft` (alap): create/update `status=published` 403, editornek is. `published`: az editor create/update publikálhat, ha a másik szabály engedi.
 - `CONTENT_PUBLISHER_MUST_DIFFER` igaz (alap): az `entered_by` e-mailje nem publikálhatja ugyanazt a dokumentumot. `false` vagy `0`: ugyanaz a user publikálhat. Üres `entered_by` nem blokkol.

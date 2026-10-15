@@ -12,6 +12,18 @@ const DRAFT_ONLY =
 const SAME_PERSON =
   'The person who entered the document cannot publish it';
 
+/** Draft saves skip Strapi `required`. These are still mandatory on every HTTP write. */
+export const TRANSACTION_REQUIRED_FIELDS = [
+  'date',
+  'amount',
+  'currency_type',
+  'organization',
+  'debit_account',
+  'credit_account',
+] as const;
+
+export type TransactionRequiredField = (typeof TRANSACTION_REQUIRED_FIELDS)[number];
+
 export type PublishPolicy = {
   /** `draft`: create/update cannot publish. `published`: an editor may save as published. */
   defaultStatus: 'draft' | 'published';
@@ -229,6 +241,61 @@ function samePerson(
   return creator.length > 0 && creator === publisher;
 }
 
+/**
+ * Fields missing from a transaction write.
+ * On update, an omitted key keeps the stored value. `connect: []` without
+ * `set` is that same no-op. A create must include every required field.
+ */
+export function missingTransactionFields(
+  data: Record<string, unknown> | undefined,
+  action: 'create' | 'update',
+): TransactionRequiredField[] {
+  const source = data ?? {};
+  return TRANSACTION_REQUIRED_FIELDS.filter((field) => {
+    if (action === 'update' && !(field in source)) return false;
+    return !transactionFieldFilled(field, source[field], action);
+  });
+}
+
+function transactionFieldFilled(
+  field: TransactionRequiredField,
+  value: unknown,
+  action: 'create' | 'update',
+): boolean {
+  if (field === 'date') return dateFilled(value);
+  if (field === 'amount') return amountFilled(value);
+  return relationFilled(value, action);
+}
+
+function dateFilled(value: unknown): boolean {
+  if (value instanceof Date) return !Number.isNaN(value.getTime());
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value.trim());
+}
+
+function amountFilled(value: unknown): boolean {
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value !== 'string' || value.trim() === '') return false;
+  return Number.isFinite(Number(value));
+}
+
+function relationFilled(value: unknown, action: 'create' | 'update'): boolean {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.some((item) => relationFilled(item, action));
+  if (!value || typeof value !== 'object') return false;
+
+  const row = value as Record<string, unknown>;
+  if ('set' in row) return relationFilled(row.set, action);
+  if ('connect' in row) {
+    if (relationFilled(row.connect, action)) return true;
+    return action === 'update';
+  }
+  if ('disconnect' in row) return false;
+  if (typeof row.documentId === 'string') return row.documentId.trim().length > 0;
+  if ('id' in row) return relationFilled(row.id, action);
+  return false;
+}
+
 function asData(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -328,12 +395,34 @@ export function registerPublishGuard(
       linkedPublish,
     });
 
-    if (effect.type === 'ignore') {
-      return next();
-    }
-
     if (effect.type === 'forbid') {
       throw new errors.ForbiddenError(effect.message);
+    }
+
+    const writingTransaction =
+      context.uid === TRANSACTION_UID &&
+      (context.action === 'create' || context.action === 'update');
+    if (writingTransaction && strapi.requestContext.get()) {
+      const missing = missingTransactionFields(
+        asData(context.params?.data),
+        context.action === 'update' ? 'update' : 'create',
+      );
+      if (missing.length > 0) {
+        throw new errors.ValidationError(
+          `Missing required transaction fields: ${missing.join(', ')}`,
+          {
+            errors: missing.map((path) => ({
+              path: [path],
+              message: `${path} is a required field`,
+              name: 'ValidationError',
+            })),
+          },
+        );
+      }
+    }
+
+    if (effect.type === 'ignore') {
+      return next();
     }
 
     const params = context.params ?? {};

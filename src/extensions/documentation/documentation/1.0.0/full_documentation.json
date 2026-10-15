@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-15T11:44:40.418Z"
+    "x-generation-date": "2026-10-15T12:05:46.523Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -11062,7 +11062,11 @@
           "data": {
             "required": [
               "date",
-              "amount"
+              "amount",
+              "debit_account",
+              "credit_account",
+              "currency_type",
+              "organization"
             ],
             "type": "object",
             "properties": {
@@ -11237,7 +11241,11 @@
         "type": "object",
         "required": [
           "date",
-          "amount"
+          "amount",
+          "debit_account",
+          "credit_account",
+          "currency_type",
+          "organization"
         ],
         "properties": {
           "id": {
