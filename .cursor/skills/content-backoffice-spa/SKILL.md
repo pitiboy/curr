@@ -88,7 +88,7 @@ Profil: `GET /api/users/me`. Jelszócsere: `POST /api/auth/change-password` (`cu
 
 ## Deploy
 
-`vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` path statikus fájljai. Az API ugyanaz az origin. A lépést a `docs/deploy/` alá írd, a meglévő cPanel alias jegyzet mellé. CI pipeline nincs.
+`npm run deploy:f` a repo gyökerében. Előtte `build:f:kor.fejlesztesek.hu` beégeti a `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` értéket. Az FTP a `dist` tartalmát a Strapi `public/backoffice` mappájába teszi; a `strapi::public` middleware a `/backoffice/` útvonalon adja. Ugyanaz az `.env.deploy:kor.fejlesztesek.hu`, mint a Strapi deploy. A jegyzet: `docs/deploy/cpanel/backoffice.md`. CI pipeline nincs.
 
 ## Kész, ha
 

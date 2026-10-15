@@ -158,8 +158,8 @@ A Google kliens azonosító és titok a Humané. Az agent env kulcsot olvas, ér
 
 ## 10. Deploy jegyzet és átvétel
 
-- [ ] `docs/deploy/` alá rövid jegyzet: `vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` pathra, `VITE_STRAPI_URL` ugyanaz az origin. CI pipeline nincs
+- [ ] legyen `npm run deploy:f` a gyökér `package.json`-ban, az LFTP szükséges új változók az .env.deploy-ból jöjjenek.production `vite build` után(`VITE_STRAPI_URL=https://kor.fejlesztesek.hu`, majd `dist` FTP-je a Strapi `public/backoffice` mappába. )Jegyzet: `docs/deploy/cpanel/backoffice.md`. CI pipeline nincs
 - [ ] A `backoffice-acceptance` subagent a §10 storykra és a §12 DoD-ra pass/fail listát ad
 - [ ] A PRD §12 négyzeteit csak a Human pipálja, az agent nem
 
-- [ ] **Human:** a deploy jegyzet alapján a build kimegy a `kor.fejlesztesek.hu/backoffice` pathra, az oldal a hoston betölt, az API ugyanaz az origin. Az acceptance lista storynként pass, vagy a nyitott fail nevén van. Utána a PRD §12 sorai kipipálhatók. A fejlesztés alatti helyi adat és a helyi userök nem kerülnek az éles adatbázisba.
+- [ ] **Human:** `npm run deploy:f` kiteszi a buildet a `kor.fejlesztesek.hu/backoffice` pathra, az oldal a hoston betölt, az API ugyanaz az origin. Az acceptance lista storynként pass, vagy a nyitott fail nevén van. Utána a PRD §12 sorai kipipálhatók. A fejlesztés alatti helyi adat és a helyi userök nem kerülnek az éles adatbázisba.
