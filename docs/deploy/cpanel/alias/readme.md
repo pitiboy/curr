@@ -1,5 +1,7 @@
 # cPanel alias példány
 
+A `/backoffice` SPA feltöltése: [backoffice.md](./backoffice.md).
+
 Egy Strapi build fut több domainen. A kód, a `dist`, a `public` és a `node_modules` egy helyen van. Minden további domain külön cPanel Node.js alkalmazás, saját Neon adatbázissal és saját Cloudinary fiókkal. Az alias mappája nem tartalmazza az alkalmazást, csak elindítja a közös fát.
 
 Jelenlegi elsődleges példány: `kor.fejlesztesek.hu`, mappa `node/kor-szupatak`. Az itteni `server.js` és `package.json` az `edizone.fejlesztesek.hu` aliasa, mappa `node/kor-edizone`.

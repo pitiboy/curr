@@ -27,6 +27,7 @@ license.txt
 # uploads
 public/uploads/*
 !public/uploads/.gitkeep
+public/backoffice
 
 # logs
 *.log
