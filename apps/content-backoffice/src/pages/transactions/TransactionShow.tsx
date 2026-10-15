@@ -1,6 +1,9 @@
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, Button, Typography } from '@mui/material';
-import { useState } from 'react';
+import type { Theme } from '@mui/material/styles';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
+  Confirm,
   DateField,
   FunctionField,
   ListButton,
@@ -10,6 +13,8 @@ import {
   SimpleShowLayout,
   TextField,
   TopToolbar,
+  useBlocker,
+  useCanBlock,
   useLocaleState,
   useNotify,
   usePermissions,
@@ -23,16 +28,18 @@ import {
   attachTransactionReceipt,
   publishTransaction,
 } from '../../data/dataProvider';
-import { receiptCardInvalid } from '../../data/receiptDraft';
+import { receiptCardInvalid, receiptIsPresent } from '../../data/receiptDraft';
 import {
   isSamePersonPublishError,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
 import type { TransactionRow } from '../../data/transactionList';
 import { bandedShow } from '../../theme';
+import { dateFieldProps } from './dateField';
+import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
-  ReceiptFileList,
   ReceiptRail,
+  SavedReceiptSection,
   type ReceiptCardValue,
 } from './ReceiptFields';
 
@@ -85,9 +92,47 @@ function TransactionShowBody() {
     !isPending && permissions === 'editor' && record.status === 'draft';
 
   return (
+    <TransactionShowContent
+      key={String(record.id)}
+      canReview={canReview}
+      locale={locale}
+      locales={locales}
+      record={record}
+    />
+  );
+}
+
+function TransactionShowContent({
+  canReview,
+  locale,
+  locales,
+  record,
+}: {
+  canReview: boolean;
+  locale: string;
+  locales: string;
+  record: TransactionRow;
+}) {
+  const translate = useTranslate();
+  const [cards, setCards] = useState<ReceiptCardValue[]>([]);
+  const pending = cards.some((card) => card.file && card.file.size > 0);
+  const finalize = useFinalizeTransaction(record.documentId, pending);
+  const saved = hasSavedReceipts(record.receipts);
+
+  return (
     <Box>
-      <SimpleShowLayout sx={bandedShow}>
-        <DateField locales={locales} source="date" />
+      {canReview ? <DraftLeaveGuard /> : null}
+      {canReview ? (
+        <Box sx={{ px: 1, pt: 1 }}>
+          <FinalizeForm
+            blocked={pending}
+            saving={finalize.saving}
+            onSubmit={finalize.onSubmit}
+          />
+        </Box>
+      ) : null}
+      <SimpleShowLayout spacing={0} sx={bandedShow}>
+        <DateField source="date" {...dateFieldProps(locale)} />
         <NumberField locales={locales} source="amount" />
         <FunctionField
           render={(row: RaRecord) => currencyLabel(row.currency_type)}
@@ -107,44 +152,96 @@ function TransactionShowBody() {
           source="credit_account"
         />
         <SelectField choices={statusChoices} source="status" translateChoice />
-        <FunctionField
-          label="resources.transactions.fields.receipt"
-          render={(row: RaRecord) => <ReceiptFileList receipts={row.receipts} />}
-          source="receipts"
-        />
+        {!saved && !canReview ? (
+          <FunctionField
+            label="resources.transactions.fields.receipt"
+            render={() => translate('app.receipt_no')}
+            source="receipts"
+          />
+        ) : null}
+      </SimpleShowLayout>
+      {canReview ? (
+        <Box sx={{ px: 1 }}>
+          <ReceiptAttach cards={cards} record={record} onChange={setCards} />
+        </Box>
+      ) : saved ? (
+        <Box sx={{ px: 1 }}>
+          <SavedReceiptSection receipts={record.receipts} />
+        </Box>
+      ) : null}
+      <SimpleShowLayout spacing={0} sx={bandedShow}>
         <TextField emptyText="—" source="entered_by" />
-        <DateField locales={locales} showTime source="createdAt" />
+        <DateField source="createdAt" {...dateFieldProps(locale, true)} />
         {record.status === 'published' ? (
           <TextField emptyText="—" source="published_by" />
         ) : null}
         {record.status === 'published' ? (
           <DateField
             emptyText="—"
-            locales={locales}
-            showTime
             source="publishedAt"
+            {...dateFieldProps(locale, true)}
           />
         ) : null}
       </SimpleShowLayout>
-      {canReview ? <DraftReview key={record.id} /> : null}
+      {canReview ? (
+        <Box sx={{ px: 1, pb: 1 }}>
+          <Box sx={{ mt: 1 }}>
+            <FinalizeForm
+              blocked={pending}
+              saving={finalize.saving}
+              onSubmit={finalize.onSubmit}
+            />
+          </Box>
+        </Box>
+      ) : null}
     </Box>
   );
 }
 
-function DraftReview() {
-  const record = useRecordContext<TransactionRow>();
-  const [cards, setCards] = useState<ReceiptCardValue[]>([]);
-  if (!record) return null;
-  const pending = cards.some((card) => card.file && card.file.size > 0);
+function blockDraftLeave({
+  currentLocation,
+  nextLocation,
+}: {
+  currentLocation: { pathname: string };
+  nextLocation: { pathname: string };
+}): boolean {
+  return shouldConfirmDraftLeave({
+    isEditor: true,
+    status: 'draft',
+    currentPathname: currentLocation.pathname,
+    nextPathname: nextLocation.pathname,
+  });
+}
+
+function DraftLeaveGuard() {
+  useEffect(() => {
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  const canBlock = useCanBlock();
+  if (!canBlock) return null;
+  return <DraftLeaveBlocker />;
+}
+
+function DraftLeaveBlocker() {
+  const blocker = useBlocker(blockDraftLeave);
+
   return (
-    <Box sx={{ px: 2, pb: 2 }}>
-      <ReceiptAttach
-        cards={cards}
-        record={record}
-        onChange={setCards}
-      />
-      <FinalizeForm blocked={pending} documentId={record.documentId} />
-    </Box>
+    <Confirm
+      cancel="app.transactions_leave_stay"
+      confirm="app.transactions_leave_go"
+      confirmColor="warning"
+      content="app.transactions_leave_body"
+      isOpen={blocker.state === 'blocked'}
+      title="app.transactions_leave_title"
+      onClose={() => blocker.reset?.()}
+      onConfirm={() => blocker.proceed?.()}
+    />
   );
 }
 
@@ -204,7 +301,7 @@ function ReceiptAttach({
           .finally(() => setSaving(false));
       }}
     >
-      <ReceiptRail cards={cards} onChange={onChange} />
+      <ReceiptRail cards={cards} saved={record.receipts} onChange={onChange} />
       {pending.length > 0 && !description ? (
         <Typography color="error" variant="body2">
           {translate('app.receipt_description_required')}
@@ -224,68 +321,121 @@ function ReceiptAttach({
   );
 }
 
-function FinalizeForm({
-  blocked,
-  documentId,
-}: {
-  blocked: boolean;
-  documentId: string;
-}) {
-  const translate = useTranslate();
+function useFinalizeTransaction(documentId: string, blocked: boolean) {
   const notify = useNotify();
   const refresh = useRefresh();
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (blocked || savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    publishTransaction(documentId)
+      .then(() => {
+        notify('app.transactions_finalized', { type: 'success' });
+        refresh();
+      })
+      .catch((error: unknown) => {
+        const message = strapiErrorMessage(error);
+        notify(
+          isSamePersonPublishError(message)
+            ? 'app.transactions_finalize_same_person'
+            : message || 'ra.notification.http_error',
+          { type: 'error' },
+        );
+      })
+      .finally(() => {
+        savingRef.current = false;
+        setSaving(false);
+      });
+  };
+
+  return { saving, onSubmit };
+}
+
+function FinalizeForm({
+  blocked,
+  onSubmit,
+  saving,
+}: {
+  blocked: boolean;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  saving: boolean;
+}) {
+  const translate = useTranslate();
 
   return (
-    <Box
-      component="form"
-      sx={{ mt: 3 }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (blocked || saving) return;
-        setSaving(true);
-        publishTransaction(documentId)
-          .then(() => {
-            notify('app.transactions_finalized', { type: 'success' });
-            refresh();
-          })
-          .catch((error: unknown) => {
-            const message = strapiErrorMessage(error);
-            notify(
-              isSamePersonPublishError(message)
-                ? 'app.transactions_finalize_same_person'
-                : message || 'ra.notification.http_error',
-              { type: 'error' },
-            );
-          })
-          .finally(() => setSaving(false));
-      }}
-    >
-      <Typography component="h2" variant="subtitle1">
-        {translate('app.transactions_review')}
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 1 }} variant="body2">
-        {translate('app.transactions_finalize_hint')}
-      </Typography>
-      {blocked ? (
-        <Typography color="warning.main" sx={{ mb: 1 }} variant="body2">
-          {translate('app.transactions_finalize_pending')}
+    <Box component="form" onSubmit={onSubmit}>
+      <Box component="fieldset" sx={reviewFieldset}>
+        <Box component="legend" sx={reviewLegend}>
+          <WarningAmberIcon aria-hidden sx={reviewIcon} />
+          <Typography
+            component="span"
+            sx={{ fontWeight: 700 }}
+            variant="subtitle1"
+          >
+            {translate('app.transactions_review')}
+          </Typography>
+        </Box>
+        <Typography sx={{ mb: 1 }} variant="body2">
+          {translate('app.transactions_finalize_hint')}
         </Typography>
-      ) : null}
-      <Button
-        disabled={blocked || saving}
-        type="submit"
-        variant="contained"
-      >
-        {translate('app.transactions_finalize')}
-      </Button>
+        {blocked ? (
+          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
+            {translate('app.transactions_finalize_pending')}
+          </Typography>
+        ) : null}
+        <Button disabled={blocked || saving} type="submit" variant="contained">
+          {translate('app.transactions_finalize')}
+        </Button>
+      </Box>
     </Box>
   );
+}
+
+function reviewFieldset(theme: Theme) {
+  const dark = theme.palette.mode === 'dark';
+  return {
+    backgroundColor: dark ? 'rgba(226, 177, 0, 0.16)' : '#FFF4CC',
+    border: '2px solid',
+    borderColor: dark ? '#E6C36A' : '#E2B100',
+    borderRadius: 1,
+    boxSizing: 'border-box',
+    color: dark ? '#F6E7B2' : '#5C4810',
+    m: 0,
+    minWidth: 0,
+    px: 2,
+    py: 1.5,
+    width: '100%',
+  };
+}
+
+const reviewLegend = {
+  alignItems: 'center',
+  color: 'inherit',
+  display: 'flex',
+  gap: 0.75,
+  px: 0.75,
+};
+
+function reviewIcon(theme: Theme) {
+  return {
+    color: theme.palette.mode === 'dark' ? '#F0D060' : '#C48A00',
+    fontSize: 28,
+  };
 }
 
 function errorText(error: unknown, fallback: string): string {
   const message = strapiErrorMessage(error);
   return message || (error instanceof Error ? error.message : fallback);
+}
+
+function hasSavedReceipts(receipts: unknown): boolean {
+  return (
+    Array.isArray(receipts) && receipts.some((item) => receiptIsPresent(item))
+  );
 }
 
 function isFilled(value: unknown): boolean {

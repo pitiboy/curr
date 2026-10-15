@@ -1,4 +1,5 @@
-import FactCheckIcon from '@mui/icons-material/FactCheck';
+import GradingIcon from '@mui/icons-material/Grading';
+import QuizIcon from '@mui/icons-material/Quiz';
 import { Box, Button, Typography } from '@mui/material';
 import {
   AutocompleteInput,
@@ -27,6 +28,7 @@ import {
 
 import { receiptCount } from '../../data/receiptDraft';
 import { bandedRow } from '../../theme';
+import { dateFieldProps } from './dateField';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -144,11 +146,7 @@ function ClearFiltersButton() {
   const translate = useTranslate();
   const { setFilters } = useListContext();
   return (
-    <Button
-      size="small"
-      variant="outlined"
-      onClick={() => setFilters({}, {})}
-    >
+    <Button size="small" variant="outlined" onClick={() => setFilters({}, {})}>
       {translate('app.filters.clear')}
     </Button>
   );
@@ -177,7 +175,7 @@ function TransactionOpenField(_props: {
     <Button
       component={Link}
       size="small"
-      startIcon={review ? <FactCheckIcon /> : undefined}
+      startIcon={review ? <QuizIcon color="warning" /> : <GradingIcon />}
       sx={
         review
           ? {
@@ -188,7 +186,9 @@ function TransactionOpenField(_props: {
       }
       to={`/transactions/${encodeURIComponent(String(record.id))}/show`}
       variant="outlined"
-      onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+        event.stopPropagation()
+      }
     >
       {translate(review ? 'app.transactions_review' : 'app.transactions_show')}
     </Button>
@@ -225,13 +225,7 @@ export function TransactionList() {
         rowClick={false}
         rowSx={bandedRow}
       >
-        <DateField source="date" />
-        <DateField
-          locales={locale === 'en' ? 'en' : 'hu-HU'}
-          showTime
-          source="createdAt"
-        />
-        <TextField emptyText="—" source="entered_by" />
+        <DateField source="date" {...dateFieldProps(locale)} />
         <NumberField
           locales={locale === 'en' ? 'en' : 'hu-HU'}
           source="amount"
@@ -241,17 +235,19 @@ export function TransactionList() {
           source="currency_type"
         />
         <TextField emptyText="—" source="description" />
+        <SelectField choices={statusChoices} source="status" translateChoice />
+        <TransactionOpenField label={false} sortable={false} source="open" />
         <FunctionField
           render={(record: RaRecord) => relationName(record.organization)}
           source="organization"
         />
         <FunctionField
-          render={(record: RaRecord) => accountLabel(record.debit_account)}
-          source="debit_account"
-        />
-        <FunctionField
           render={(record: RaRecord) => accountLabel(record.credit_account)}
           source="credit_account"
+        />
+        <FunctionField
+          render={(record: RaRecord) => accountLabel(record.debit_account)}
+          source="debit_account"
         />
         <FunctionField
           label="resources.transactions.fields.receipt"
@@ -259,15 +255,14 @@ export function TransactionList() {
           sortBy="receipts"
           source="receipts"
         />
+        <DateField source="createdAt" {...dateFieldProps(locale, true)} />
+        <TextField emptyText="—" source="entered_by" />
         <TextField emptyText="—" source="published_by" />
         <DateField
           emptyText="—"
-          locales={locale === 'en' ? 'en' : 'hu-HU'}
-          showTime
           source="publishedAt"
+          {...dateFieldProps(locale, true)}
         />
-        <SelectField choices={statusChoices} source="status" translateChoice />
-        <TransactionOpenField label={false} sortable={false} source="open" />
       </Datagrid>
     </List>
   );

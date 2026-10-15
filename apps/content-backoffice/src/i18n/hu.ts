@@ -21,6 +21,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A rögzítő nem véglegesítheti a saját tranzakcióját.',
     transactions_leave_title: 'A tranzakció még piszkozat',
     transactions_leave_body: 'A véglegesítés még hátravan. Elhagyod az oldalt?',
+    transactions_leave_unsaved_title: 'A tranzakció még nincs mentve',
+    transactions_leave_unsaved_body:
+      'A kitöltött adatok elvesznek. Elhagyod az oldalt?',
     transactions_leave_go: 'Elhagyom',
     transactions_leave_stay: 'Maradok',
     accounts_seed_missing: 'A számlalista üres, mert a seed hiányzik.',

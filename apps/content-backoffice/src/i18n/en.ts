@@ -21,6 +21,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       'The person who entered the transaction cannot finalize it.',
     transactions_leave_title: 'This transaction is still a draft',
     transactions_leave_body: 'Finalizing is still pending. Leave this page?',
+    transactions_leave_unsaved_title: 'This transaction is not saved yet',
+    transactions_leave_unsaved_body:
+      'The data you entered will be lost. Leave this page?',
     transactions_leave_go: 'Leave',
     transactions_leave_stay: 'Stay',
     accounts_seed_missing:
