@@ -1,4 +1,6 @@
-# Content backoffice — Google OAuth
+# Content backoffice — Google OAuth (deploy)
+
+Részletes folyamat (Strapi provider + SPA + admin / regisztráció): [content-backoffice-oauth.md](../content-backoffice-oauth.md).
 
 A backoffice SPA Google belépése a Strapi Users & Permissions `google` providerén megy. A kliens azonosító és titok csak környezeti változó (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), nem kerül a repóba.
 
