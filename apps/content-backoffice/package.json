@@ -4,11 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/patch-mui9-text-field-props.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/patch-mui9-text-field-props.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "pretest": "node scripts/patch-mui9-text-field-props.mjs",
+    "test": "vitest run",
+    "postinstall": "node scripts/patch-mui9-text-field-props.mjs"
   },
   "dependencies": {
     "ra-i18n-polyglot": "^5.13.3",
