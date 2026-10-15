@@ -37,7 +37,7 @@ import {
   publishTransaction,
   saveTransactionDraft,
 } from '../../data/dataProvider';
-import { receiptCardInvalid } from '../../data/receiptDraft';
+import { receiptCardInvalid, receiptCount } from '../../data/receiptDraft';
 import {
   isSamePersonPublishError,
   strapiErrorMessage,
@@ -259,9 +259,11 @@ function DraftLeaveBlocker() {
 function FinalizeSection({
   blocked,
   documentId,
+  missingReceipt,
 }: {
   blocked: boolean;
   documentId: string;
+  missingReceipt: boolean;
 }) {
   const translate = useTranslate();
   const notify = useNotify();
@@ -323,6 +325,11 @@ function FinalizeSection({
         <Typography sx={{ mb: 1 }} variant="body2">
           {translate('app.transactions_finalize_hint')}
         </Typography>
+        {missingReceipt ? (
+          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
+            {translate('app.transactions_finalize_no_receipt')}
+          </Typography>
+        ) : null}
         {blocked ? (
           <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
             {translate('app.transactions_finalize_pending')}
@@ -476,9 +483,17 @@ export function TransactionReviewEditor({
   const pendingReceipt = cards.some((card) => card.file && card.file.size > 0);
   const blocked =
     pendingReceipt || cards.some((card) => receiptCardInvalid(card));
+  const missingReceipt = receiptCount(record.receipts) === 0;
 
   return (
     <>
+      <SimpleShowLayout spacing={0} sx={bandedShow}>
+        <FunctionField
+          render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
+          source="vendor"
+        />
+        <SelectField choices={statusChoices} source="status" translateChoice />
+      </SimpleShowLayout>
       <SimpleForm
         key={record.documentId}
         record={flatRecord}
@@ -493,12 +508,15 @@ export function TransactionReviewEditor({
           record={record}
           onCardsChange={onCardsChange}
         />
-        <FinalizeSection blocked={blocked} documentId={record.documentId} />
+        <FinalizeSection
+          blocked={blocked}
+          documentId={record.documentId}
+          missingReceipt={missingReceipt}
+        />
       </SimpleForm>
       <SimpleShowLayout spacing={0} sx={bandedShow}>
         <TextField emptyText="—" source="entered_by" />
         <DateField source="createdAt" {...dateFieldProps(locale, true)} />
-        <SelectField choices={statusChoices} source="status" translateChoice />
       </SimpleShowLayout>
     </>
   );

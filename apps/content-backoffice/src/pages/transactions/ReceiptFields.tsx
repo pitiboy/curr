@@ -3,13 +3,7 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
-import {
-  Box,
-  Button,
-  MenuItem,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { alpha, type SxProps, type Theme } from '@mui/material/styles';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -89,7 +83,9 @@ function ReceiptHint({ sx }: { sx?: SxProps<Theme> }) {
   const translate = useTranslate();
   return (
     <Typography color="text.secondary" sx={sx} variant="body2">
-      {translate('app.receipt_optional')} {translate('app.receipt_prefill')}
+      {translate('app.receipt_optional')}
+      <br />
+      {translate('app.receipt_prefill')}
     </Typography>
   );
 }
@@ -245,7 +241,11 @@ function ReceiptCard({
 const HATCH_PERIOD = 8;
 
 /** Empty dropzone: the hatch opacity breathes. One full pulse is 2s. */
-function receiptDropCue(playing: boolean, drag: boolean, filled: boolean): SxProps<Theme> {
+function receiptDropCue(
+  playing: boolean,
+  drag: boolean,
+  filled: boolean,
+): SxProps<Theme> {
   return (theme) => {
     const line = alpha(
       theme.palette.primary.main,
@@ -315,7 +315,10 @@ function ReceiptFileMark({
   if (type === 'application/pdf' || name.endsWith('.pdf')) {
     return <PictureAsPdfOutlinedIcon sx={sx} />;
   }
-  if (type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/.test(name)) {
+  if (
+    type.startsWith('image/') ||
+    /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/.test(name)
+  ) {
     return <ImageOutlinedIcon sx={sx} />;
   }
   if (
@@ -326,7 +329,11 @@ function ReceiptFileMark({
   ) {
     return <TableChartOutlinedIcon sx={sx} />;
   }
-  if (type.includes('word') || type.startsWith('text/') || /\.(docx?|odt|rtf|txt)$/.test(name)) {
+  if (
+    type.includes('word') ||
+    type.startsWith('text/') ||
+    /\.(docx?|odt|rtf|txt)$/.test(name)
+  ) {
     return <DescriptionOutlinedIcon sx={sx} />;
   }
   return <InsertDriveFileOutlinedIcon sx={sx} />;
@@ -466,8 +473,18 @@ function SavedReceiptCard({ receipt }: { receipt: unknown }) {
         width: { xs: '100%', sm: '18rem' },
       })}
     >
-      <Box sx={{ alignItems: 'flex-start', display: 'flex', gap: 1.5, minWidth: 0 }}>
-        <ReceiptFileMark file={{ name: file.name, type: file.mime }} prominent />
+      <Box
+        sx={{
+          alignItems: 'flex-start',
+          display: 'flex',
+          gap: 1.5,
+          minWidth: 0,
+        }}
+      >
+        <ReceiptFileMark
+          file={{ name: file.name, type: file.mime }}
+          prominent
+        />
         <Box sx={{ minWidth: 0 }}>
           <Typography
             sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
@@ -502,7 +519,9 @@ function SavedReceiptCard({ receipt }: { receipt: unknown }) {
         </Button>
       ) : (
         <Typography color="text.secondary" sx={{ mt: 'auto' }} variant="body2">
-          {translate(receiptIsPresent(receipt) ? 'app.receipt_yes' : 'app.receipt_no')}
+          {translate(
+            receiptIsPresent(receipt) ? 'app.receipt_yes' : 'app.receipt_no',
+          )}
         </Typography>
       )}
     </Box>

@@ -15,6 +15,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalized: 'Transaction finalized.',
     transactions_finalize_hint:
       'This transaction is not finalized yet, which means it will not appear in financial statements. Once you have reviewed and found the data and attached receipts to be correct, finalize the transaction and its receipts.',
+    transactions_finalize_no_receipt:
+      'This transaction has no attached receipt. After finalizing, a receipt can no longer be uploaded, so finalize only if you are sure that no expected receipt will arrive.',
     transactions_finalize_pending:
       'The attached file is not saved yet. Save the receipt first.',
     transactions_finalize_same_person:
