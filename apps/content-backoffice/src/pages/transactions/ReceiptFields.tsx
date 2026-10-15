@@ -16,7 +16,7 @@ import { useDropzone } from 'react-dropzone';
 import { useDataProvider, useTranslate } from 'react-admin';
 
 import { STRAPI_URL } from '../../config';
-import { withBands } from '../../theme';
+import { bandedSpanClass, withBands } from '../../theme';
 import {
   receiptCardInvalid,
   receiptDocumentUrl,
@@ -66,6 +66,7 @@ function ReceiptFrame({ children }: { children: ReactNode }) {
   const translate = useTranslate();
   return (
     <Box
+      className={bandedSpanClass}
       sx={{
         maxWidth: '100%',
         minInlineSize: 0,

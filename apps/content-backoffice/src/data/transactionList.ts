@@ -28,10 +28,20 @@ export type StrapiTransaction = {
   } | null;
   receipts?: Array<{
     documentId?: string;
+    vendor?: string | null;
     document?: { url?: string | null } | { url?: string | null }[] | null;
     receipt_type?: { documentId?: string; name?: string | null } | null;
   }> | null;
 };
+
+/** Vendor of the first receipt, or an empty string when there is none. */
+export function firstReceiptVendor(receipts: unknown): string {
+  if (!Array.isArray(receipts) || receipts.length === 0) return '';
+  const first = receipts[0];
+  if (!first || typeof first !== 'object') return '';
+  const vendor = (first as { vendor?: unknown }).vendor;
+  return typeof vendor === 'string' ? vendor.trim() : '';
+}
 
 /**
  * One-level relations, plus each receipt file url and type name.
@@ -74,7 +84,9 @@ export function assembleTransactionList(
   params: ListParams,
 ): { data: TransactionRow[]; total: number } {
   const { status } = buildTransactionFilters(params.filter ?? {});
-  const merged = mergeByStatus(drafts, published, status);
+  const merged = mergeByStatus(drafts, published, status).filter((row) =>
+    matchesFirstReceiptVendor(row.receipts, params.filter?.vendor),
+  );
   const sorted = sortTransactionRows(
     merged,
     params.sort?.field || 'date',
@@ -129,6 +141,9 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   }
   if (typeof filter.description === 'string' && filter.description.trim()) {
     strapiFilters.description = { $containsi: filter.description.trim() };
+  }
+  if (typeof filter.vendor === 'string' && filter.vendor.trim()) {
+    strapiFilters.receipts = { vendor: { $containsi: filter.vendor.trim() } };
   }
 
   return { status, strapiFilters };
@@ -237,6 +252,8 @@ function sortValue(row: TransactionRow, field: string): string | number {
       return row.published_by ?? '';
     case 'currency_type':
       return currencySortKey(row.currency_type);
+    case 'vendor':
+      return firstReceiptVendor(row.receipts);
     default: {
       const value = (row as Record<string, unknown>)[field];
       if (typeof value === 'number' || typeof value === 'string') return value;
@@ -263,6 +280,12 @@ function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const parsed = parseFloat(String(value ?? ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function matchesFirstReceiptVendor(receipts: unknown, query: unknown): boolean {
+  if (typeof query !== 'string' || !query.trim()) return true;
+  const vendor = firstReceiptVendor(receipts).toLocaleLowerCase('hu');
+  return vendor.includes(query.trim().toLocaleLowerCase('hu'));
 }
 
 function isPresent(value: unknown): boolean {

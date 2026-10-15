@@ -26,6 +26,41 @@ function childBands(theme: Theme) {
   };
 }
 
+/**
+ * Mark a direct child of a banded form or show stack so it keeps the full
+ * width when the stack is two columns.
+ */
+export const bandedSpanClass = 'banded-span';
+
+/**
+ * From `md` the stack is two columns, so a row's two cells share a color.
+ * A full-width cell sits on its own row: when it lands on an even slot it
+ * takes the next stripe instead of its pair partner's color.
+ */
+function rowPairBands(theme: Theme) {
+  const sage = bandColor(theme.palette.mode, 0);
+  const sand = bandColor(theme.palette.mode, 1);
+  return {
+    [theme.breakpoints.up('md')]: {
+      // Extra :nth-of-type(n) outranks the one-column odd/even stripe.
+      '& > :nth-of-type(4n+1):nth-of-type(n), & > :nth-of-type(4n+2):nth-of-type(n)':
+        {
+          backgroundColor: sage,
+        },
+      '& > :nth-of-type(4n+3):nth-of-type(n), & > :nth-of-type(4n+4):nth-of-type(n)':
+        {
+          backgroundColor: sand,
+        },
+      [`& > .${bandedSpanClass}:nth-of-type(4n+2)`]: {
+        backgroundColor: sand,
+      },
+      [`& > .${bandedSpanClass}:nth-of-type(4n+4)`]: {
+        backgroundColor: sage,
+      },
+    },
+  };
+}
+
 /** Direct children alternate sage and sand. Spread into the parent's styles. */
 export function withBands(styles: SystemStyleObject<Theme> = {}) {
   return (theme: Theme) => ({
@@ -43,14 +78,21 @@ export function bandedRow(_record: unknown, index: number): UntypedSx {
 
 /** Form and show fields sit in a stack; that stack owns the stripe. */
 function bandedStack(theme: Theme) {
+  const desktop = theme.breakpoints.up('md');
   return {
-    '& > .MuiStack-root': {
+    // `&&` beats the Stack root's own `display: flex`.
+    '&& > .MuiStack-root': {
+      alignItems: 'stretch',
+      display: 'grid',
       gap: 0.5,
+      gridTemplateColumns: 'minmax(0, 1fr)',
       width: '100%',
       '& > *': {
         borderRadius: 1,
         boxSizing: 'border-box',
         m: 0,
+        maxWidth: '100%',
+        minWidth: 0,
         px: 1,
         py: 0.5,
         width: '100%',
@@ -63,6 +105,13 @@ function bandedStack(theme: Theme) {
         display: 'none',
       },
       ...childBands(theme),
+      [desktop]: {
+        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+        [`& > .${bandedSpanClass}`]: {
+          gridColumn: '1 / -1',
+        },
+        ...rowPairBands(theme)[desktop],
+      },
     },
   };
 }

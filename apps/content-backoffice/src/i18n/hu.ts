@@ -84,6 +84,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         debit_account: 'Költség számla',
         credit_account: 'Kifizető számla',
         currency_type: 'Pénznem',
+        vendor: 'Eladó',
         status: 'Státusz',
         receipt: 'Bizonylat',
       },

@@ -86,6 +86,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         debit_account: 'Debit',
         credit_account: 'Credit',
         currency_type: 'Currency',
+        vendor: 'Vendor',
         status: 'Status',
         receipt: 'Receipt',
       },

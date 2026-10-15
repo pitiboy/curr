@@ -27,7 +27,9 @@ import {
 } from 'react-admin';
 
 import { receiptCount } from '../../data/receiptDraft';
+import { firstReceiptVendor } from '../../data/transactionList';
 import { bandedRow } from '../../theme';
+import { AccountFieldLabel, AccountValue } from './accountField';
 import { dateFieldProps } from './dateField';
 
 const statusChoices = [
@@ -97,6 +99,7 @@ const transactionFilters = [
   </ReferenceInput>,
   <ReferenceInput
     key="debit_account"
+    label={<AccountFieldLabel kind="debit" />}
     perPage={100}
     reference="accounts"
     sort={{ field: 'code', order: 'ASC' }}
@@ -104,11 +107,13 @@ const transactionFilters = [
   >
     <AutocompleteInput
       filterToQuery={accountFilterToQuery}
+      label={<AccountFieldLabel kind="debit" />}
       optionText={accountOptionText}
     />
   </ReferenceInput>,
   <ReferenceInput
     key="credit_account"
+    label={<AccountFieldLabel kind="credit" />}
     perPage={100}
     reference="accounts"
     sort={{ field: 'code', order: 'ASC' }}
@@ -116,23 +121,18 @@ const transactionFilters = [
   >
     <AutocompleteInput
       filterToQuery={accountFilterToQuery}
+      label={<AccountFieldLabel kind="credit" />}
       optionText={accountOptionText}
     />
   </ReferenceInput>,
   <TextInput key="description" source="description" />,
+  <TextInput key="vendor" source="vendor" />,
 ];
 
 function relationName(value: unknown): string {
   if (!value || typeof value !== 'object') return '—';
   const name = (value as { name?: string | null }).name;
   return name || '—';
-}
-
-function accountLabel(value: unknown): string {
-  if (!value || typeof value !== 'object') return '—';
-  const account = value as { code?: string | null; name?: string | null };
-  const label = [account.code, account.name].filter(Boolean).join(' ');
-  return label || '—';
 }
 
 function currencyLabel(value: unknown): string {
@@ -226,6 +226,10 @@ export function TransactionList() {
         rowSx={bandedRow}
       >
         <DateField source="date" {...dateFieldProps(locale)} />
+        <FunctionField
+          render={(record: RaRecord) => firstReceiptVendor(record.receipts)}
+          source="vendor"
+        />
         <NumberField
           locales={locale === 'en' ? 'en' : 'hu-HU'}
           source="amount"
@@ -242,11 +246,17 @@ export function TransactionList() {
           source="organization"
         />
         <FunctionField
-          render={(record: RaRecord) => accountLabel(record.credit_account)}
+          label={<AccountFieldLabel kind="credit" />}
+          render={(record: RaRecord) => (
+            <AccountValue kind="credit" value={record.credit_account} />
+          )}
           source="credit_account"
         />
         <FunctionField
-          render={(record: RaRecord) => accountLabel(record.debit_account)}
+          label={<AccountFieldLabel kind="debit" />}
+          render={(record: RaRecord) => (
+            <AccountValue kind="debit" value={record.debit_account} />
+          )}
           source="debit_account"
         />
         <FunctionField

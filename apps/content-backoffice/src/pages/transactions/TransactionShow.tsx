@@ -34,7 +34,8 @@ import {
   strapiErrorMessage,
 } from '../../data/transactionPublish';
 import type { TransactionRow } from '../../data/transactionList';
-import { bandedShow } from '../../theme';
+import { bandedShow, bandedSpanClass } from '../../theme';
+import { AccountFieldLabel, AccountValue } from './accountField';
 import { dateFieldProps } from './dateField';
 import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
@@ -52,12 +53,6 @@ function relationName(value: unknown): string {
   if (!value || typeof value !== 'object') return '—';
   const name = (value as { name?: string | null }).name;
   return name || '—';
-}
-
-function accountLabel(value: unknown): string {
-  if (!value || typeof value !== 'object') return '—';
-  const account = value as { code?: string | null; name?: string | null };
-  return [account.code, account.name].filter(Boolean).join(' ') || '—';
 }
 
 function currencyLabel(value: unknown): string {
@@ -138,22 +133,29 @@ function TransactionShowContent({
           render={(row: RaRecord) => currencyLabel(row.currency_type)}
           source="currency_type"
         />
-        <TextField emptyText="—" source="description" />
         <FunctionField
           render={(row: RaRecord) => relationName(row.organization)}
           source="organization"
         />
         <FunctionField
-          render={(row: RaRecord) => accountLabel(row.debit_account)}
-          source="debit_account"
-        />
-        <FunctionField
-          render={(row: RaRecord) => accountLabel(row.credit_account)}
+          label={<AccountFieldLabel kind="credit" />}
+          render={(row: RaRecord) => (
+            <AccountValue kind="credit" value={row.credit_account} />
+          )}
           source="credit_account"
         />
+        <FunctionField
+          label={<AccountFieldLabel kind="debit" />}
+          render={(row: RaRecord) => (
+            <AccountValue kind="debit" value={row.debit_account} />
+          )}
+          source="debit_account"
+        />
+        <TextField emptyText="—" source="description" />
         <SelectField choices={statusChoices} source="status" translateChoice />
         {!saved && !canReview ? (
           <FunctionField
+            className={bandedSpanClass}
             label="resources.transactions.fields.receipt"
             render={() => translate('app.receipt_no')}
             source="receipts"

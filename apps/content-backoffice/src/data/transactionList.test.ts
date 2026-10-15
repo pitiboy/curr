@@ -4,6 +4,7 @@ import {
   assembleTransactionList,
   buildTransactionFilters,
   encodeStrapiQuery,
+  firstReceiptVendor,
   preferTransaction,
   transactionPopulate,
   type StrapiTransaction,
@@ -105,6 +106,51 @@ describe('assembleTransactionList', () => {
     expect(data.map((row) => row.id)).toEqual(['b']);
   });
 
+  it('keeps a row only when the first receipt vendor contains the search', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'match',
+        date: '2026-01-02',
+        receipts: [{ vendor: '  Bolt  ' }, { vendor: 'Más' }],
+      },
+      {
+        documentId: 'later-only',
+        date: '2026-01-03',
+        receipts: [{ vendor: 'Más' }, { vendor: 'Bolt' }],
+      },
+      {
+        documentId: 'none',
+        date: '2026-01-01',
+        receipts: [],
+      },
+    ];
+    const { data, total } = assembleTransactionList([], rows, {
+      filter: { vendor: ' bol ' },
+    });
+    expect(total).toBe(1);
+    expect(data.map((row) => row.id)).toEqual(['match']);
+  });
+
+  it('sorts by the first receipt vendor', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'z',
+        date: '2026-01-01',
+        receipts: [{ vendor: 'Zöldség' }],
+      },
+      { documentId: 'empty', date: '2026-01-02', receipts: [] },
+      {
+        documentId: 'a',
+        date: '2026-01-03',
+        receipts: [{ vendor: 'Alma' }, { vendor: 'Zöldség' }],
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      sort: { field: 'vendor', order: 'ASC' },
+    });
+    expect(data.map((row) => row.id)).toEqual(['empty', 'a', 'z']);
+  });
+
   it('ignores rows without a documentId', () => {
     const { data, total } = assembleTransactionList(
       [{ id: 9, description: 'no document' }],
@@ -113,6 +159,17 @@ describe('assembleTransactionList', () => {
     );
     expect(total).toBe(0);
     expect(data).toEqual([]);
+  });
+});
+
+describe('firstReceiptVendor', () => {
+  it('reads the first receipt vendor and leaves the rest empty', () => {
+    expect(
+      firstReceiptVendor([{ vendor: '  Bolt  ' }, { vendor: 'Más' }]),
+    ).toBe('Bolt');
+    expect(firstReceiptVendor([])).toBe('');
+    expect(firstReceiptVendor(null)).toBe('');
+    expect(firstReceiptVendor([{ vendor: null }])).toBe('');
   });
 });
 
@@ -129,6 +186,7 @@ describe('buildTransactionFilters', () => {
         debit_account: 'acc-debit',
         credit_account: 'acc-credit',
         description: '  kávé  ',
+        vendor: '  Bolt  ',
       }),
     ).toEqual({
       status: 'draft',
@@ -139,6 +197,7 @@ describe('buildTransactionFilters', () => {
         debit_account: { documentId: { $eq: 'acc-debit' } },
         credit_account: { documentId: { $eq: 'acc-credit' } },
         description: { $containsi: 'kávé' },
+        receipts: { vendor: { $containsi: 'Bolt' } },
       },
     });
   });
@@ -165,6 +224,7 @@ describe('buildTransactionFilters', () => {
       buildTransactionFilters({
         status: '',
         description: '   ',
+        vendor: '   ',
         amount_gte: '',
         amount_lte: null,
         organization: null,

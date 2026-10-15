@@ -28,7 +28,8 @@ import {
   type AccountChoice,
 } from '../../data/accountCodes';
 import { receiptCardInvalid } from '../../data/receiptDraft';
-import { bandedForm } from '../../theme';
+import { bandedForm, bandedSpanClass } from '../../theme';
+import { AccountFieldLabel } from './accountField';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
 
@@ -79,9 +80,7 @@ function CreateLeaveGuard({ receiptCardCount }: { receiptCardCount: number }) {
 
   const canBlock = useCanBlock();
   if (!canBlock) return null;
-  return (
-    <CreateLeaveBlocker dirtyRef={dirtyRef} submittedRef={submittedRef} />
-  );
+  return <CreateLeaveBlocker dirtyRef={dirtyRef} submittedRef={submittedRef} />;
 }
 
 function CreateLeaveBlocker({
@@ -137,7 +136,9 @@ function useAccountCatalog() {
 
   useEffect(() => {
     let cancelled = false;
-    loadAllAccounts((resource, params) => dataProvider.getList(resource, params))
+    loadAllAccounts((resource, params) =>
+      dataProvider.getList(resource, params),
+    )
       .then((rows) => {
         if (!cancelled) setAccounts(rows);
       })
@@ -180,6 +181,7 @@ function AccountCodeInput({
         choices={choices}
         fullWidth
         isLoading={isPending}
+        label={<AccountFieldLabel kind={kind} required />}
         source={source}
         translateChoice={false}
         validate={required()}
@@ -214,7 +216,9 @@ export function TransactionCreate() {
         toolbar={<DraftSaveToolbar />}
         validate={(values: { description?: unknown }) => {
           const description =
-            typeof values.description === 'string' ? values.description.trim() : '';
+            typeof values.description === 'string'
+              ? values.description.trim()
+              : '';
           const hasFile = receiptCards.some(
             (card) => card.file && card.file.size > 0,
           );
@@ -244,7 +248,6 @@ export function TransactionCreate() {
             validate={required()}
           />
         </ReferenceInput>
-        <TextInput fullWidth multiline source="description" />
         <ReferenceInput
           perPage={100}
           reference="organizations"
@@ -262,15 +265,22 @@ export function TransactionCreate() {
           accounts={catalog.accounts}
           failed={catalog.failed}
           isPending={catalog.isPending}
-          kind="debit"
-          source="debit_account"
+          kind="credit"
+          source="credit_account"
         />
         <AccountCodeInput
           accounts={catalog.accounts}
           failed={catalog.failed}
           isPending={catalog.isPending}
-          kind="credit"
-          source="credit_account"
+          kind="debit"
+          source="debit_account"
+        />
+
+        <TextInput
+          className={bandedSpanClass}
+          fullWidth
+          multiline
+          source="description"
         />
         <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
       </SimpleForm>
