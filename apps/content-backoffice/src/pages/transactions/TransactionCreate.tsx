@@ -161,12 +161,14 @@ function AccountCodeInput({
   failed,
   isPending,
   kind,
+  required = false,
   source,
 }: {
   accounts: AccountChoice[];
   failed: boolean;
   isPending: boolean;
   kind: 'debit' | 'credit';
+  required?: boolean;
   source: string;
 }) {
   const translate = useTranslate();
@@ -181,10 +183,9 @@ function AccountCodeInput({
         choices={choices}
         fullWidth
         isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} required />}
+        label={<AccountFieldLabel kind={kind} required={required} />}
         source={source}
         translateChoice={false}
-        validate={required()}
       />
       {!isPending && !failed && choices.length === 0 ? (
         <Typography color="warning.main" variant="body2">
@@ -235,7 +236,6 @@ export function TransactionCreate() {
             filterToQuery={nameFilterToQuery}
             fullWidth
             optionText="name"
-            validate={required()}
           />
         </ReferenceInput>
 
@@ -259,6 +259,7 @@ export function TransactionCreate() {
           fullWidth
           multiline
           source="description"
+          validate={required()}
         />
 
         <AccountCodeInput

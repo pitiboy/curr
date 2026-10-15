@@ -1030,7 +1030,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       'api::account.account'
     > &
       Schema.Attribute.Required;
-    description: Schema.Attribute.Text;
+    description: Schema.Attribute.Text & Schema.Attribute.Required;
     entered_by: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

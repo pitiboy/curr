@@ -53,7 +53,7 @@ Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create é
 
 A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
-A create és a megtekintés mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
+A create és a megtekintés mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. Create-en a négyes (`date`, `amount`, `currency_type`, `description`) kötelező és csillagos; a három reláció opcionális, csillag és validáció nélkül. `editor` + draft megtekintésen mind a hét mező szerkeszthető; a Véglegesít csak a hetes kitöltése után megy (draft update, majd publish). A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
 
 Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`. A Szűrők törlése minden szűrőt alapra állít, a menüből hozott draft szűrőt is.
 

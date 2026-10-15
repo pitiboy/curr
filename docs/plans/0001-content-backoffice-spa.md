@@ -172,12 +172,12 @@ A sémában a `description` legyen `required: true`. A `date`, az `amount`, a `c
 
 A `transactionForm` teszt, a `publish-guard` teszt, a `strapi-publish-guard` skill és a hozzá tartozó cursor rule ezt a kettős szabályt írja. A content-backoffice skill create mondata is: a create-en a négyes kötelező, a három reláció opcionális; az ellenőrzésen a hetes a publish feltétele.
 
-- [ ] Create: a négyes kötelező és csillagos, a három reláció sem csillagos, sem validált. Üres szervezettel és üres számlákkal a draft menthető, ha a dátum, az összeg, a pénznem és a leírás megvan
-- [ ] `editor` + draft megtekintés: a hét mező szerkeszthető, a tárolt értékkel vagy üresen. Véglegesít üres mezővel nem indul. Kitöltve draft update, majd a meglévő publish
-- [ ] A szerver a draft írásnál csak a négyest kéri, publish-nál a tárolt draft mind a hét mezőjét. A bizonylat útvonal és a különböző-ember szabály változatlan
-- [ ] A create, a publish-guard és a skill tesztjei ezt rögzítik
+- [x] Create: a négyes kötelező és csillagos, a három reláció sem csillagos, sem validált. Üres szervezettel és üres számlákkal a draft menthető, ha a dátum, az összeg, a pénznem és a leírás megvan
+- [x] `editor` + draft megtekintés: a hét mező szerkeszthető, a tárolt értékkel vagy üresen. Véglegesít üres mezővel nem indul. Kitöltve draft update, majd a meglévő publish
+- [x] A szerver a draft írásnál csak a négyest kéri, publish-nál a tárolt draft mind a hét mezőjét. A bizonylat útvonal és a különböző-ember szabály változatlan
+- [x] A create, a publish-guard és a skill tesztjei ezt rögzítik
 
-- [ ] **Human:** `dataentry` csak leírással nem ment. Dátum, összeg, pénznem és leírás mellett üres szervezettel és üres számlákkal a draft létrejön; a három reláción nincs csillag. `editor` az Ellenőrzésen ezeket szerkeszti: az üres mező üres, a kitöltött az értékét mutatja. Üres mezővel a Véglegesít nem publikál. Mind a héttel a sor published lesz. A bizonylat fájl nélkül kihagyható, fájllal üres eladó vagy üres típus továbbra sem menthető. Ha igen, pipáld ki. A 9. lépést ez a szakasz nem indítja.
+- [x] **Human:** `dataentry` csak leírással nem ment. Dátum, összeg, pénznem és leírás mellett üres szervezettel és üres számlákkal a draft létrejön; a három reláción nincs csillag. `editor` az Ellenőrzésen ezeket szerkeszti: az üres mező üres, a kitöltött az értékét mutatja. Üres mezővel a Véglegesít nem publikál. Mind a héttel a sor published lesz. A bizonylat fájl nélkül kihagyható, fájllal üres eladó vagy üres típus továbbra sem menthető. Ha igen, pipáld ki. A 9. lépést ez a szakasz nem indítja.
 
 ## 9. Profil jelszó és Google
 

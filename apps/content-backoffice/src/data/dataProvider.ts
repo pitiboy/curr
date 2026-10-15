@@ -13,7 +13,7 @@ import {
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
 import { publishTransactionDraft } from './transactionPublish';
-import { createTransactionDraft } from './transactionDraft';
+import { createTransactionDraft, updateTransactionDraft } from './transactionDraft';
 import { withDocumentId } from './withDocumentId';
 
 const httpClient = strapiHttpClient();
@@ -102,6 +102,13 @@ export const dataProvider = withDocumentId({
 
 export function publishTransaction(documentId: string) {
   return publishTransactionDraft(httpClient, STRAPI_URL, documentId);
+}
+
+export function saveTransactionDraft(
+  documentId: string,
+  data: Record<string, unknown>,
+) {
+  return updateTransactionDraft(httpClient, STRAPI_URL, documentId, data);
 }
 
 export function attachTransactionReceipt(

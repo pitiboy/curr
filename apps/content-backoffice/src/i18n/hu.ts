@@ -8,17 +8,19 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     menu_placeholder: 'Nincs menüpont',
     transactions_list: 'Tranzakciók',
     transactions_create: 'Új tranzakció',
-    transactions_review: 'Ellenőrzés',
+    transactions_review: 'Véglegesítés',
     transactions_show: 'Megtekintés',
     transactions_none: 'Nincs tranzakció.',
     transactions_finalize: 'Véglegesít',
     transactions_finalized: 'A tranzakció véglegesítve.',
     transactions_finalize_hint:
-      'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg a kimutatásokban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
+      'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg minden kimutatásban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
+    transactions_finalize_no_receipt:
+      'Ehhez a tranzakcióhoz nincs csatolt bizonylat. Véglegesítés után már nem lehet bizonylatot feltölteni, ezért csak akkor véglegesítse, ha biztos benne, hogy nem érkezik hozzá várható bizonylat.',
     transactions_finalize_pending:
       'A csatolt fájl még nincs mentve. Előbb mentsd a bizonylatot.',
     transactions_finalize_same_person:
-      'A rögzítő nem véglegesítheti a saját tranzakcióját.',
+      'A módosítások elmentve, a tranzakció piszkozat maradt. A rögzítő nem véglegesítheti a saját tranzakcióját.',
     transactions_leave_title: 'A tranzakció még piszkozat',
     transactions_leave_body: 'A véglegesítés még hátravan. Elhagyod az oldalt?',
     transactions_leave_unsaved_title: 'A tranzakció még nincs mentve',
@@ -52,7 +54,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     receipt_no: 'Nincs',
     receipt_block: 'Bizonylatok',
     receipt_optional:
-      'A bizonylat kihagyható. Fájl nélkül nem jön létre bizonylat.',
+      'A bizonylat feltöltése nem kötelező, feltöltött Fájl nélkül nem kapcsolunk bizonylatot.',
     receipt_drop: 'Húzd ide a fájlt, vagy kattints a tallózáshoz.',
     receipt_clear: 'Fájl elvetése',
     receipt_vendor: 'Eladó',
@@ -63,7 +65,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     receipt_card_required:
       'Fájl csatolásakor az eladó és a bizonylattípus kötelező.',
     receipt_prefill:
-      'A dátum, az összeg és a leírás a tranzakcióból kerül a bizonylatra.',
+      'Azonban ha bizonylat feltöltésre kerül, később már módosítani nem lehet. \nÚj bizonylatot fel lehet tölteni később is, amíg a tranzakció nincs még véglegesítve.  ',
     receipt_description_required: 'Fájl csatolásakor a leírás kötelező.',
     receipt_open: 'Megnyitás',
     receipt_save: 'Bizonylat mentése',
