@@ -22,6 +22,7 @@ import {
   loadAllAccounts,
   type AccountChoice,
 } from '../../data/accountCodes';
+import { ReceiptFields } from './ReceiptFields';
 
 function currencyOptionText(record: RaRecord): string {
   const currency = record as { code?: string | null; name?: string | null };
@@ -115,14 +116,34 @@ function AccountCodeInput({
 /** Dataentry create. Save always goes out as a draft; there is no publish action. */
 export function TransactionCreate() {
   const catalog = useAccountCatalog();
+  const translate = useTranslate();
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptVendor, setReceiptVendor] = useState('');
 
   return (
     <Create
       redirect="list"
       resource="transactions"
       title="app.transactions_create"
+      transform={(data) => ({
+        ...data,
+        receipt_file: receiptFile,
+        receipt_vendor: receiptVendor,
+      })}
     >
-      <SimpleForm toolbar={<DraftSaveToolbar />}>
+      <SimpleForm
+        toolbar={<DraftSaveToolbar />}
+        validate={(values: { description?: unknown }) => {
+          const description =
+            typeof values.description === 'string' ? values.description.trim() : '';
+          if (receiptFile && receiptFile.size > 0 && !description) {
+            return {
+              description: translate('app.receipt_description_required'),
+            };
+          }
+          return {};
+        }}
+      >
         <DateInput source="date" validate={required()} />
         <NumberInput source="amount" validate={required()} />
         <ReferenceInput
@@ -163,6 +184,12 @@ export function TransactionCreate() {
           isPending={catalog.isPending}
           kind="credit"
           source="credit_account"
+        />
+        <ReceiptFields
+          file={receiptFile}
+          vendor={receiptVendor}
+          onFile={setReceiptFile}
+          onVendor={setReceiptVendor}
         />
       </SimpleForm>
     </Create>

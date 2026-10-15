@@ -10,7 +10,9 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_create: 'New transaction',
     transactions_review: 'Review',
     transactions_none: 'No transactions.',
-    transactions_review_empty: 'Draft list and publish arrive in plan step 8.',
+    transactions_review_empty: 'No drafts.',
+    transactions_review_hint:
+      'Open a draft receipt from here. Attaching a new file is optional.',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
     profile: 'Profile',
@@ -33,6 +35,21 @@ export const enMessages = mergeTranslations(englishMessages, {
     },
     receipt_yes: 'Yes',
     receipt_no: 'No',
+    receipt_block: 'Receipt',
+    receipt_optional:
+      'The receipt can be skipped. Without a file, no receipt is created.',
+    receipt_file: 'File',
+    receipt_clear: 'Remove file',
+    receipt_skip: 'No file attached.',
+    receipt_vendor: 'Vendor',
+    receipt_vendor_hint: 'The vendor can be left empty.',
+    receipt_prefill:
+      'Date, amount, and description are copied from the transaction.',
+    receipt_description_required:
+      'A description is required when a file is attached.',
+    receipt_open: 'Open',
+    receipt_save: 'Save receipt',
+    receipt_saved: 'Receipt saved.',
   },
   resources: {
     transactions: {

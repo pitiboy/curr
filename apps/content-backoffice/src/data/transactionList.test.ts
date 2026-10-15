@@ -4,6 +4,7 @@ import {
   assembleTransactionList,
   buildTransactionFilters,
   encodeStrapiQuery,
+  transactionPopulate,
   type StrapiTransaction,
 } from './transactionList';
 
@@ -148,5 +149,23 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('pagination[page]')).toBe('1');
     expect(params.get('pagination[pageSize]')).toBe('100');
     expect(params.get('filters[date][$gte]')).toBe('2026-01-01');
+  });
+
+  it('populates the receipt file along with the list relations', () => {
+    const params = new URLSearchParams(
+      encodeStrapiQuery({ populate: transactionPopulate }),
+    );
+    expect(params.get('populate[organization]')).toBe('true');
+    expect(params.get('populate[debit_account]')).toBe('true');
+    expect(params.get('populate[credit_account]')).toBe('true');
+    expect(params.get('populate[receipt][populate][document][fields][0]')).toBe(
+      'url',
+    );
+    expect(params.get('populate[receipt][populate][document][fields][1]')).toBe(
+      'name',
+    );
+    expect(params.get('populate[receipt][populate][document][fields][2]')).toBe(
+      'mime',
+    );
   });
 });

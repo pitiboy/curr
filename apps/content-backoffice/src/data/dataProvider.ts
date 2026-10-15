@@ -2,10 +2,12 @@ import { strapiDataProvider, strapiHttpClient } from 'ra-strapi';
 import type { DataProvider, GetListParams } from 'react-admin';
 
 import { STRAPI_URL } from '../config';
+import { attachReceiptToTransaction } from './receiptDraft';
 import {
   assembleTransactionList,
   buildTransactionFilters,
   encodeStrapiQuery,
+  transactionPopulate,
   type PublicationStatus,
   type StrapiTransaction,
 } from './transactionList';
@@ -30,7 +32,7 @@ async function fetchTransactions(
 
   do {
     const query = encodeStrapiQuery({
-      populate: ['organization', 'debit_account', 'credit_account', 'receipt'],
+      populate: transactionPopulate,
       status,
       pagination: { page, pageSize: PAGE_SIZE, withCount: true },
       ...(Object.keys(strapiFilters).length > 0
@@ -79,3 +81,16 @@ export const dataProvider = withDocumentId({
         )
       : strapiProvider.create(resource, params),
 } as DataProvider);
+
+export function attachTransactionReceipt(
+  documentId: string,
+  input: {
+    file: File;
+    vendor: unknown;
+    date: unknown;
+    amount: unknown;
+    description: unknown;
+  },
+) {
+  return attachReceiptToTransaction(httpClient, STRAPI_URL, documentId, input);
+}

@@ -18,6 +18,8 @@ import {
   type RaRecord,
 } from 'react-admin';
 
+import { ReceiptLink } from './ReceiptFields';
+
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
   { id: 'published', name: 'app.status.published' },
@@ -125,7 +127,6 @@ function TransactionListEmpty() {
 }
 
 export function TransactionList() {
-  const translate = useTranslate();
   const [locale] = useLocaleState();
 
   return (
@@ -162,11 +163,7 @@ export function TransactionList() {
         />
         <SelectField choices={statusChoices} source="status" translateChoice />
         <FunctionField
-          render={(record: RaRecord) =>
-            record.receipt
-              ? translate('app.receipt_yes')
-              : translate('app.receipt_no')
-          }
+          render={(record: RaRecord) => <ReceiptLink receipt={record.receipt} />}
           source="receipt"
         />
       </Datagrid>

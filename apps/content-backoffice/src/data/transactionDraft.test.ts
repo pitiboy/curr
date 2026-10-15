@@ -95,4 +95,65 @@ describe('createTransactionDraft', () => {
     expect(result.data.id).toBe('doc-new');
     expect(result.data.documentId).toBe('doc-new');
   });
+
+  it('uploads a receipt and stores its documentId when a file is attached', async () => {
+    const file = new File(['pdf'], 'szamla.pdf', { type: 'application/pdf' });
+    const httpClient = vi
+      .fn()
+      .mockResolvedValueOnce({ json: [{ id: 7, documentId: 'file-1' }] })
+      .mockResolvedValueOnce({ json: { data: { documentId: 'receipt-9' } } })
+      .mockResolvedValueOnce({
+        json: { data: { documentId: 'doc-new', amount: 1500 } },
+      });
+
+    const result = await createTransactionDraft(
+      httpClient,
+      'http://localhost:1337',
+      {
+        date: '2026-10-14',
+        amount: 1500,
+        description: 'papír',
+        organization: 'org-1',
+        debit_account: 'debit-1',
+        credit_account: 'credit-1',
+        receipt_file: file,
+        receipt_vendor: '  ',
+        receipt: 'forged-receipt',
+        entered_by: 'ignored@example.com',
+      },
+    );
+
+    expect(httpClient.mock.calls.map((call) => call[0])).toEqual([
+      'http://localhost:1337/api/upload',
+      'http://localhost:1337/api/receipts?status=draft',
+      'http://localhost:1337/api/transactions?status=draft',
+    ]);
+    expect(JSON.parse(String(httpClient.mock.calls[2]?.[1]?.body))).toEqual({
+      data: {
+        date: '2026-10-14',
+        amount: 1500,
+        description: 'papír',
+        organization: 'org-1',
+        debit_account: 'debit-1',
+        credit_account: 'credit-1',
+        receipt: 'receipt-9',
+      },
+    });
+    expect(result.data.id).toBe('doc-new');
+  });
+
+  it('does not create a transaction when the receipt file has no description', async () => {
+    const httpClient = vi.fn();
+    await expect(
+      createTransactionDraft(httpClient, 'http://localhost:1337', {
+        date: '2026-10-14',
+        amount: 1500,
+        description: '   ',
+        receipt_file: new File(['pdf'], 'szamla.pdf', {
+          type: 'application/pdf',
+        }),
+      }),
+    ).rejects.toThrow(/description/i);
+    expect(httpClient).not.toHaveBeenCalled();
+  });
 });

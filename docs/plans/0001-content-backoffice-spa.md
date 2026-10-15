@@ -1,6 +1,6 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 6. lépés kész (Human ellenőrzésre vár)  
+**Status:** 7. lépés kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
@@ -112,10 +112,10 @@ A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `doc
 
 ## 7. Opcionális bizonylat
 
-- [ ] A create és a review űrlapon a receipt blokk kihagyható
-- [ ] Csatoláskor: `POST /api/upload` a Content JWT-vel, majd receipt create `?status=draft`. A `document` a feltöltött fájl. A `vendor` üres lehet. A dátum, összeg és leírás előtöltődik a tranzakcióból
-- [ ] A transaction `receipt` mezője a receipt `documentId`
-- [ ] A lista receipt oszlopa jelzi, ha van bizonylat. A review megnyitja a fájlt
+- [x] A create és a review űrlapon a receipt blokk kihagyható
+- [x] Csatoláskor: `POST /api/upload` a Content JWT-vel, majd receipt create `?status=draft`. A `document` a feltöltött fájl. A `vendor` üres lehet. A dátum, összeg és leírás előtöltődik a tranzakcióból
+- [x] A transaction `receipt` mezője a receipt `documentId`
+- [x] A lista receipt oszlopa jelzi, ha van bizonylat. A review megnyitja a fájlt
 
 - [ ] **Human:** egy tranzakció receipt nélkül menthető. Egy másik fájllal, üres vendorral menthető, és a listán valamint az `editor` review-n a fájl megnyitható. Ha igen, pipáld ki, és indítsd a 8. lépést.
 

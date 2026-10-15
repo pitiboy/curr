@@ -1,7 +1,4 @@
-type DraftHttpClient = (
-  url: string,
-  options?: { method?: string; body?: string },
-) => Promise<{ json: { data?: Record<string, unknown> } }>;
+import { createReceiptDraft, type ContentHttpClient } from './receiptDraft';
 
 /** REST create without this query publishes, and dataentry publish is 403. */
 export function transactionDraftUrl(strapiUrl: string): string {
@@ -39,15 +36,26 @@ export function transactionDraftBody(
 }
 
 export async function createTransactionDraft(
-  httpClient: DraftHttpClient,
+  httpClient: ContentHttpClient,
   strapiUrl: string,
   data: Record<string, unknown>,
 ) {
+  const body = transactionDraftBody(data);
+  const file = data.receipt_file;
+  if (file instanceof File && file.size > 0) {
+    body.receipt = await createReceiptDraft(httpClient, strapiUrl, {
+      file,
+      vendor: data.receipt_vendor,
+      date: body.date,
+      amount: body.amount,
+      description: body.description,
+    });
+  }
   const { json } = await httpClient(transactionDraftUrl(strapiUrl), {
     method: 'POST',
-    body: JSON.stringify({ data: transactionDraftBody(data) }),
+    body: JSON.stringify({ data: body }),
   });
-  const created = json.data ?? {};
+  const created = recordData(json);
   const documentId =
     typeof created.documentId === 'string' ? created.documentId : '';
   return {
@@ -57,6 +65,12 @@ export async function createTransactionDraft(
       documentId,
     },
   };
+}
+
+function recordData(json: unknown): Record<string, unknown> {
+  if (!json || typeof json !== 'object' || !('data' in json)) return {};
+  const data = (json as { data?: unknown }).data;
+  return data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
 }
 
 function asDate(value: unknown): string | undefined {

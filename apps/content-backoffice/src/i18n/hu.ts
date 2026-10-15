@@ -10,7 +10,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_create: 'Új tranzakció',
     transactions_review: 'Ellenőrzés',
     transactions_none: 'Nincs tranzakció.',
-    transactions_review_empty: 'A draft lista és a publish a 8. lépésben jön.',
+    transactions_review_empty: 'Nincs piszkozat.',
+    transactions_review_hint:
+      'A piszkozat bizonylata innen nyitható meg. Új fájl csatolása kihagyható.',
     accounts_seed_missing: 'A számlalista üres, mert a seed hiányzik.',
     profile: 'Profil',
     profile_name: 'Név',
@@ -32,6 +34,19 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     },
     receipt_yes: 'Van',
     receipt_no: 'Nincs',
+    receipt_block: 'Bizonylat',
+    receipt_optional: 'A bizonylat kihagyható. Fájl nélkül nem jön létre bizonylat.',
+    receipt_file: 'Fájl',
+    receipt_clear: 'Fájl elvetése',
+    receipt_skip: 'Nincs csatolva fájl.',
+    receipt_vendor: 'Eladó',
+    receipt_vendor_hint: 'Az eladó üresen hagyható.',
+    receipt_prefill:
+      'A dátum, az összeg és a leírás a tranzakcióból kerül a bizonylatra.',
+    receipt_description_required: 'Fájl csatolásakor a leírás kötelező.',
+    receipt_open: 'Megnyitás',
+    receipt_save: 'Bizonylat mentése',
+    receipt_saved: 'A bizonylat mentve.',
   },
   resources: {
     transactions: {
