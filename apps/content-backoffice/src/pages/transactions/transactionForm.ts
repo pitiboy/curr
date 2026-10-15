@@ -86,6 +86,27 @@ function relationDefault(value: unknown): string | undefined {
     : undefined;
 }
 
+/**
+ * Flat form record for editor review: relation sources are documentId strings,
+ * not populated objects from the show record (ReferenceInput would 500 on getMany).
+ */
+export function reviewFormRecord(record: {
+  amount?: string | number | null;
+  credit_account?: { documentId?: string } | null;
+  currency_type?: { documentId?: string } | null;
+  date?: string | null;
+  debit_account?: { documentId?: string } | null;
+  description?: string | null;
+  documentId?: string;
+  id?: string;
+  organization?: { documentId?: string } | null;
+}): Record<string, unknown> {
+  return {
+    id: record.id ?? record.documentId,
+    ...reviewFormDefaults(record),
+  };
+}
+
 /** Default values for the editor draft review form (empty stays empty). */
 export function reviewFormDefaults(record: {
   amount?: string | number | null;

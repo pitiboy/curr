@@ -1,18 +1,19 @@
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, Button, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
   AutocompleteInput,
   Confirm,
   DateField,
   DateInput,
-  Form,
   FunctionField,
   NumberInput,
   ReferenceInput,
+  required,
   SelectField,
+  SimpleForm,
   SimpleShowLayout,
   TextField,
   TextInput,
@@ -51,9 +52,11 @@ import { dateFieldProps } from './dateField';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
-  reviewFormDefaults,
+  reviewFormRecord,
   transactionPublishFormErrors,
 } from './transactionForm';
+
+const requiredMark = required();
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -131,9 +134,10 @@ function ReviewAccountInput({
         choices={choices}
         fullWidth
         isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} />}
+        label={<AccountFieldLabel kind={kind} required />}
         source={source}
         translateChoice={false}
+        validate={requiredMark}
       />
       {!isPending && !failed && choices.length === 0 ? (
         <Typography color="warning.main" variant="body2">
@@ -150,8 +154,8 @@ function ReviewEditableFields({
   catalog: ReturnType<typeof useAccountCatalog>;
 }) {
   return (
-    <Box sx={bandedForm}>
-      <DateInput fullWidth source="date" />
+    <>
+      <DateInput fullWidth source="date" validate={requiredMark} />
       <ReferenceInput
         perPage={100}
         reference="organizations"
@@ -162,9 +166,10 @@ function ReviewEditableFields({
           filterToQuery={nameFilterToQuery}
           fullWidth
           optionText="name"
+          validate={requiredMark}
         />
       </ReferenceInput>
-      <NumberInput fullWidth source="amount" />
+      <NumberInput fullWidth source="amount" validate={requiredMark} />
       <ReferenceInput
         perPage={100}
         reference="currency-types"
@@ -175,9 +180,16 @@ function ReviewEditableFields({
           filterToQuery={codeOrNameFilterToQuery}
           fullWidth
           optionText={currencyOptionText}
+          validate={requiredMark}
         />
       </ReferenceInput>
-      <TextInput className={bandedSpanClass} fullWidth multiline source="description" />
+      <TextInput
+        className={bandedSpanClass}
+        fullWidth
+        multiline
+        source="description"
+        validate={requiredMark}
+      />
       <ReviewAccountInput
         accounts={catalog.accounts}
         failed={catalog.failed}
@@ -192,7 +204,7 @@ function ReviewEditableFields({
         kind="debit"
         source="debit_account"
       />
-    </Box>
+    </>
   );
 }
 
@@ -258,8 +270,7 @@ function FinalizeSection({
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onFinalize = () => {
     if (blocked || savingRef.current) return;
 
     const values = getValues() as Record<string, unknown>;
@@ -269,6 +280,7 @@ function FinalizeSection({
       setError(field, { type: 'manual', message });
     }
     if (Object.keys(errors).length > 0) {
+      notify('ra.message.invalid_form', { type: 'warning' });
       return;
     }
 
@@ -296,7 +308,7 @@ function FinalizeSection({
   };
 
   return (
-    <Box component="form" onSubmit={onSubmit} sx={{ px: 1, pb: 1, pt: 1 }}>
+    <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
       <Box component="fieldset" sx={reviewFieldset}>
         <Box component="legend" sx={reviewLegend}>
           <WarningAmberIcon aria-hidden sx={reviewIcon} />
@@ -316,7 +328,12 @@ function FinalizeSection({
             {translate('app.transactions_finalize_pending')}
           </Typography>
         ) : null}
-        <Button disabled={blocked || saving} type="submit" variant="contained">
+        <Button
+          disabled={blocked || saving}
+          type="button"
+          variant="contained"
+          onClick={onFinalize}
+        >
           {translate('app.transactions_finalize')}
         </Button>
       </Box>
@@ -350,56 +367,53 @@ function ReceiptAttachEditor({
       isFilled(values.amount),
   );
 
+  const saveReceipts = () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    Promise.all(
+      pending.map((card) =>
+        attachTransactionReceipt(record.documentId, {
+          file: card.file as File,
+          vendor: card.vendor,
+          receiptTypeId: card.receiptTypeId,
+          date: values.date,
+          amount: values.amount,
+          description: formDescription,
+        }),
+      ),
+    )
+      .then(() => {
+        onCardsChange([]);
+        notify('app.receipt_saved', { type: 'success' });
+        refresh();
+      })
+      .catch((error: unknown) => {
+        notify(strapiErrorMessage(error) || 'ra.notification.http_error', {
+          type: 'error',
+        });
+      })
+      .finally(() => setSaving(false));
+  };
+
   return (
-    <Box sx={{ px: 1 }}>
-      <Box
-        component="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!canSave || saving) return;
-          setSaving(true);
-          Promise.all(
-            pending.map((card) =>
-              attachTransactionReceipt(record.documentId, {
-                file: card.file as File,
-                vendor: card.vendor,
-                receiptTypeId: card.receiptTypeId,
-                date: values.date,
-                amount: values.amount,
-                description: formDescription,
-              }),
-            ),
-          )
-            .then(() => {
-              onCardsChange([]);
-              notify('app.receipt_saved', { type: 'success' });
-              refresh();
-            })
-            .catch((error: unknown) => {
-              notify(strapiErrorMessage(error) || 'ra.notification.http_error', {
-                type: 'error',
-              });
-            })
-            .finally(() => setSaving(false));
-        }}
-      >
-        <ReceiptRail cards={cards} saved={record.receipts} onChange={onCardsChange} />
-        {pending.length > 0 && !formDescription ? (
-          <Typography color="error" variant="body2">
-            {translate('app.receipt_description_required')}
-          </Typography>
-        ) : null}
-        {pending.length > 0 ? (
-          <Button
-            disabled={!canSave || saving}
-            sx={{ mt: 1 }}
-            type="submit"
-            variant="contained"
-          >
-            {translate('app.receipt_save')}
-          </Button>
-        ) : null}
-      </Box>
+    <Box className={bandedSpanClass} sx={{ px: 1 }}>
+      <ReceiptRail cards={cards} saved={record.receipts} onChange={onCardsChange} />
+      {pending.length > 0 && !formDescription ? (
+        <Typography color="error" variant="body2">
+          {translate('app.receipt_description_required')}
+        </Typography>
+      ) : null}
+      {pending.length > 0 ? (
+        <Button
+          disabled={!canSave || saving}
+          sx={{ mt: 1 }}
+          type="button"
+          variant="contained"
+          onClick={saveReceipts}
+        >
+          {translate('app.receipt_save')}
+        </Button>
+      ) : null}
     </Box>
   );
 }
@@ -454,35 +468,40 @@ export function TransactionReviewEditor({
   record: TransactionRow;
 }) {
   const catalog = useAccountCatalog();
+  const flatRecord = useMemo(() => reviewFormRecord(record), [record]);
   const pendingReceipt = cards.some((card) => card.file && card.file.size > 0);
   const blocked =
     pendingReceipt || cards.some((card) => receiptCardInvalid(card));
 
   return (
-    <Form defaultValues={reviewFormDefaults(record)}>
-      <DraftLeaveGuard />
+    <>
       <SimpleShowLayout spacing={0} sx={bandedShow}>
         <FunctionField
           render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
           source="vendor"
         />
       </SimpleShowLayout>
-      <Box sx={{ px: 1 }}>
+      <SimpleForm
+        key={record.documentId}
+        record={flatRecord}
+        sx={bandedForm}
+        toolbar={false}
+        onSubmit={() => undefined}
+      >
+        <DraftLeaveGuard />
         <ReviewEditableFields catalog={catalog} />
-      </Box>
+        <ReceiptAttachEditor
+          cards={cards}
+          record={record}
+          onCardsChange={onCardsChange}
+        />
+        <FinalizeSection blocked={blocked} documentId={record.documentId} />
+      </SimpleForm>
       <SimpleShowLayout spacing={0} sx={bandedShow}>
         <SelectField choices={statusChoices} source="status" translateChoice />
-      </SimpleShowLayout>
-      <ReceiptAttachEditor
-        cards={cards}
-        record={record}
-        onCardsChange={onCardsChange}
-      />
-      <SimpleShowLayout spacing={0} sx={bandedShow}>
         <TextField emptyText="—" source="entered_by" />
         <DateField source="createdAt" {...dateFieldProps(locale, true)} />
       </SimpleShowLayout>
-      <FinalizeSection blocked={blocked} documentId={record.documentId} />
-    </Form>
+    </>
   );
 }
