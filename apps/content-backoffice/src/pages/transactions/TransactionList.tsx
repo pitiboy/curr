@@ -30,6 +30,7 @@ import { receiptCount } from '../../data/receiptDraft';
 import { firstReceiptVendor } from '../../data/transactionList';
 import { bandedRow } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
+import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
 
 const statusChoices = [
@@ -135,13 +136,6 @@ function relationName(value: unknown): string {
   return name || '—';
 }
 
-function currencyLabel(value: unknown): string {
-  if (!value || typeof value !== 'object') return '—';
-  const currency = value as { code?: string | null; name?: string | null };
-  const label = [currency.code, currency.name].filter(Boolean).join(' ');
-  return label || '—';
-}
-
 function ClearFiltersButton() {
   const translate = useTranslate();
   const { setFilters } = useListContext();
@@ -235,7 +229,9 @@ export function TransactionList() {
           source="amount"
         />
         <FunctionField
-          render={(record: RaRecord) => currencyLabel(record.currency_type)}
+          render={(record: RaRecord) => (
+            <CurrencyValue value={record.currency_type} />
+          )}
           source="currency_type"
         />
         <TextField emptyText="—" source="description" />

@@ -7,7 +7,6 @@ import {
   DateField,
   FunctionField,
   ListButton,
-  NumberField,
   SelectField,
   Show,
   SimpleShowLayout,
@@ -33,9 +32,13 @@ import {
   isSamePersonPublishError,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
-import type { TransactionRow } from '../../data/transactionList';
+import {
+  firstReceiptVendor,
+  type TransactionRow,
+} from '../../data/transactionList';
 import { bandedShow, bandedSpanClass } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
+import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
 import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
@@ -53,12 +56,6 @@ function relationName(value: unknown): string {
   if (!value || typeof value !== 'object') return '—';
   const name = (value as { name?: string | null }).name;
   return name || '—';
-}
-
-function currencyLabel(value: unknown): string {
-  if (!value || typeof value !== 'object') return '—';
-  const currency = value as { code?: string | null; name?: string | null };
-  return [currency.code, currency.name].filter(Boolean).join(' ') || '—';
 }
 
 function ShowActions() {
@@ -128,11 +125,32 @@ function TransactionShowContent({
       ) : null}
       <SimpleShowLayout spacing={0} sx={bandedShow}>
         <DateField source="date" {...dateFieldProps(locale)} />
-        <NumberField locales={locales} source="amount" />
         <FunctionField
-          render={(row: RaRecord) => currencyLabel(row.currency_type)}
-          source="currency_type"
+          render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
+          source="vendor"
         />
+        <FunctionField
+          label="resources.transactions.fields.amount"
+          render={(row: RaRecord) => (
+            <Box
+              component="span"
+              sx={{
+                alignItems: 'center',
+                display: 'inline-flex',
+                flexWrap: 'wrap',
+                gap: 0.75,
+                verticalAlign: 'middle',
+              }}
+            >
+              <span>{formatAmount(row.amount, locales)}</span>
+              <CurrencyValue value={row.currency_type} />
+            </Box>
+          )}
+          source="amount"
+        />
+        <TextField emptyText="—" source="description" />
+
+        <SelectField choices={statusChoices} source="status" translateChoice />
         <FunctionField
           render={(row: RaRecord) => relationName(row.organization)}
           source="organization"
@@ -151,8 +169,6 @@ function TransactionShowContent({
           )}
           source="debit_account"
         />
-        <TextField emptyText="—" source="description" />
-        <SelectField choices={statusChoices} source="status" translateChoice />
         {!saved && !canReview ? (
           <FunctionField
             className={bandedSpanClass}
@@ -438,6 +454,13 @@ function hasSavedReceipts(receipts: unknown): boolean {
   return (
     Array.isArray(receipts) && receipts.some((item) => receiptIsPresent(item))
   );
+}
+
+function formatAmount(value: unknown, locales: string): string {
+  if (value === null || value === undefined || value === '') return '—';
+  const amount = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(amount)) return '—';
+  return new Intl.NumberFormat(locales).format(amount);
 }
 
 function isFilled(value: unknown): boolean {

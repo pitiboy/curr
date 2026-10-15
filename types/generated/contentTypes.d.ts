@@ -670,6 +670,7 @@ export interface ApiCurrencyTypeCurrencyType
       'oneToMany',
       'api::currency-rate.currency-rate'
     >;
+    icon: Schema.Attribute.Media<'images'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

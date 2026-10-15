@@ -256,7 +256,15 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('populate[organization]')).toBe('true');
     expect(params.get('populate[debit_account]')).toBe('true');
     expect(params.get('populate[credit_account]')).toBe('true');
-    expect(params.get('populate[currency_type]')).toBe('true');
+    expect(params.get('populate[currency_type][populate][icon][fields][0]')).toBe(
+      'url',
+    );
+    expect(params.get('populate[currency_type][populate][icon][fields][1]')).toBe(
+      'name',
+    );
+    expect(params.get('populate[currency_type][populate][icon][fields][2]')).toBe(
+      'mime',
+    );
     expect(params.get('populate[receipts][populate][document][fields][0]')).toBe(
       'url',
     );
@@ -328,7 +336,11 @@ describe('loadTransactionRecord', () => {
       true,
     );
     expect(
-      parsed.every((params) => params.get('populate[currency_type]') === 'true'),
+      parsed.every(
+        (params) =>
+          params.get('populate[currency_type][populate][icon][fields][0]') ===
+          'url',
+      ),
     ).toBe(true);
     expect(row?.status).toBe('published');
     expect(row?.description).toBe('published');

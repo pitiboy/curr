@@ -14,6 +14,7 @@ export type StrapiTransaction = {
     documentId?: string;
     code?: string | null;
     name?: string | null;
+    icon?: { url?: string | null } | { url?: string | null }[] | null;
   } | null;
   organization?: { documentId?: string; name?: string | null } | null;
   debit_account?: {
@@ -44,7 +45,7 @@ export function firstReceiptVendor(receipts: unknown): string {
 }
 
 /**
- * One-level relations, plus each receipt file url and type name.
+ * One-level relations, plus the currency icon and each receipt file url.
  * A star on these relations is rejected: organization.parent and the file
  * `related` morph are not valid populate keys.
  */
@@ -52,7 +53,11 @@ export const transactionPopulate = {
   organization: true,
   debit_account: true,
   credit_account: true,
-  currency_type: true,
+  currency_type: {
+    populate: {
+      icon: { fields: ['url', 'name', 'mime'] },
+    },
+  },
   receipts: {
     populate: {
       document: { fields: ['url', 'name', 'mime'] },
