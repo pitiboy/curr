@@ -3,6 +3,11 @@ import { mergeTranslations } from 'react-admin';
 
 /** Hungarian message catalog (react-admin + app labels). */
 export const huMessages = mergeTranslations(hungarianMessages, {
+  ra: {
+    validation: {
+      required: 'Kötelező',
+    },
+  },
   app: {
     title: 'Kezelő felület',
     menu_placeholder: 'Nincs menüpont',
