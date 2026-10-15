@@ -288,8 +288,8 @@ describe('registerPublishGuard', () => {
     const published: string[] = [];
     const documents = Object.assign(
       (uid: string) => ({
-        findOne: async () =>
-          uid === transaction ? { documentId: 'tx_1', receipt: { documentId: 'rc_1' } } : null,
+        findOne: async () => null,
+        findMany: async () => [{ documentId: 'rc_1' }, { documentId: 'rc_2' }],
         publish: async ({ documentId }: { documentId: string }) => {
           published.push(documentId);
           return { documentId };
@@ -323,7 +323,7 @@ describe('registerPublishGuard', () => {
     assert.deepEqual(updates, [
       { uid: transaction, data: { published_by: editor.email } },
     ]);
-    assert.deepEqual(published, ['rc_1']);
+    assert.deepEqual(published, ['rc_1', 'rc_2']);
   });
 
   it('rejects editor publish of a document that the same person entered', async () => {

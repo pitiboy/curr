@@ -18,7 +18,7 @@ import {
   type RaRecord,
 } from 'react-admin';
 
-import { ReceiptLink } from './ReceiptFields';
+import { receiptCount } from '../../data/receiptDraft';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -163,8 +163,10 @@ export function TransactionList() {
         />
         <SelectField choices={statusChoices} source="status" translateChoice />
         <FunctionField
-          render={(record: RaRecord) => <ReceiptLink receipt={record.receipt} />}
-          source="receipt"
+          label="resources.transactions.fields.receipt"
+          render={(record: RaRecord) => receiptCount(record.receipts)}
+          sortBy="receipts"
+          source="receipts"
         />
       </Datagrid>
     </List>

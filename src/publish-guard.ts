@@ -61,6 +61,10 @@ type DocumentParams = {
 
 type DocumentsApi = {
   findOne: (params: DocumentParams) => Promise<Record<string, unknown> | null>;
+  findMany: (params: {
+    status?: string;
+    filters?: Record<string, unknown>;
+  }) => Promise<Array<Record<string, unknown>>>;
   publish: (params: { documentId: string }) => Promise<unknown>;
 };
 
@@ -262,21 +266,24 @@ async function writeDraftPublishedBy(
   });
 }
 
-async function publishLinkedReceipt(strapi: PublishGuardStrapi, documentId: string) {
-  const draft = await strapi.documents(TRANSACTION_UID).findOne({
-    documentId,
+async function publishLinkedReceipts(strapi: PublishGuardStrapi, documentId: string) {
+  const rows = await strapi.documents(RECEIPT_UID).findMany({
     status: 'draft',
-    populate: ['receipt'],
+    filters: { transaction: { documentId: { $eq: documentId } } },
   });
-  const receiptId = relationDocumentId(draft?.receipt);
-  if (!receiptId) {
+  const receiptIds = rows
+    .map((row) => relationDocumentId(row))
+    .filter((id): id is string => Boolean(id));
+  if (receiptIds.length === 0) {
     return;
   }
 
   const state = strapi.requestContext.get()?.state;
   if (state) state.publishGuardLinked = true;
   try {
-    await strapi.documents(RECEIPT_UID).publish({ documentId: receiptId });
+    for (const receiptId of receiptIds) {
+      await strapi.documents(RECEIPT_UID).publish({ documentId: receiptId });
+    }
   } finally {
     if (state) state.publishGuardLinked = false;
   }
@@ -371,7 +378,7 @@ export function registerPublishGuard(
           ? params.documentId
           : documentIdOf(result);
       if (documentId) {
-        await publishLinkedReceipt(strapi, documentId);
+        await publishLinkedReceipts(strapi, documentId);
       }
     }
 

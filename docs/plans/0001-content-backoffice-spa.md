@@ -1,12 +1,12 @@
 # Implementation plan: Content backoffice SPA
 
-**Status:** 7. lépés kész (Human ellenőrzésre vár)  
+**Status:** Több bizonylat kész (Human ellenőrzésre vár)  
 **PRD:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md)  
 **ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
 **Skillek:** `.cursor/skills/content-backoffice-spa`, `.cursor/skills/strapi-publish-guard`  
 **Szabályok:** `.cursor/rules/backoffice-v1-scope.mdc`, `content-backoffice-spa.mdc`, `strapi-publish-guard.mdc`
 
-Egy másik agent ezt a fájlt hajtja végre. A PRD §8 (szervezet, tag, ACL, avatar, CI, subdomain, receipt N:M, Enterprise RBAC és realtime) nem része egyik lépésnek sem. Az audit mezők igen: a PRD §9.5, az 5. és a 8. lépés.
+Egy másik agent ezt a fájlt hajtja végre. A PRD §8 (szervezet, tag, ACL, avatar, CI, subdomain, receipt N:M, Enterprise RBAC és realtime) nem része egyik lépésnek sem. A transaction 1:N receipt és a receipt-type törzs nem N:M: a Több bizonylat szakasz része. Az audit mezők igen: a PRD §9.5, az 5. és a 8. lépés.
 
 ## Hogyan kell végrehajtani
 
@@ -113,11 +113,22 @@ A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `doc
 ## 7. Opcionális bizonylat
 
 - [x] A create és a review űrlapon a receipt blokk kihagyható
-- [x] Csatoláskor: `POST /api/upload` a Content JWT-vel, majd receipt create `?status=draft`. A `document` a feltöltött fájl. A `vendor` üres lehet. A dátum, összeg és leírás előtöltődik a tranzakcióból
-- [x] A transaction `receipt` mezője a receipt `documentId`
+- [x] Csatoláskor: `POST /api/upload` a Content JWT-vel, majd receipt create `?status=draft`. A `document` a feltöltött fájl. A dátum, összeg és leírás előtöltődik a tranzakcióból. A fájlos, üres eladós mentést a Több bizonylat szakasz váltja
+- [x] A transaction `receipt` mezője a receipt `documentId` volt; a Több bizonylat szakasz ezt 1:N kapcsolatra cseréli
 - [x] A lista receipt oszlopa jelzi, ha van bizonylat. A review megnyitja a fájlt
 
-- [ ] **Human:** egy tranzakció receipt nélkül menthető. Egy másik fájllal, üres vendorral menthető, és a listán valamint az `editor` review-n a fájl megnyitható. Ha igen, pipáld ki, és indítsd a 8. lépést.
+- [ ] **Human:** egy tranzakció receipt nélkül menthető. A fájlos, üres eladós próbát a Több bizonylat szakasz váltja: üres eladóval fájlos mentés már nem elég. Ha a fájl nélküli mentés megvan, pipáld ki, és a Több bizonylat Human sorával folytasd.
+
+## Több bizonylat
+
+Egy tranzakcióhoz több bizonylat tartozhat. A bizonylattípus közös törzs, kötelező `manyToOne`: sok bizonylat használhatja ugyanazt a típust. A `vendor` a sémában `required: false` marad. A 8. lépést ez a szakasz nem indítja.
+
+- [x] `receipt-type` collection, `draftAndPublish: false`. Kötelező `name`, opcionális `description`. Az azonosító a `documentId`. Idempotens seed a `bootstrap()`-ból, productionben is, a 13 névvel, leírás nélkül. `find` és `findOne` a `dataentry` és az `editor` szerepnek. Létrehozás, módosítás, törlés a SPA-ból nincs
+- [x] A `transaction.receipt` kikerül. A receipt `transaction` mezője `manyToOne`, a transaction `receipts` mezője `oneToMany`. A receipt `receipt_type` kötelező `manyToOne`
+- [x] Az `editor` transaction publish a tranzakció minden kapcsolt receiptjét publikálja
+- [x] A create és a review űrlapon kártyasín: típus, eladó, fájlnév, megnyitás, elvetés, a sor végén „Új bizonylat”. Asztalon vízszintesen görgethető, keskeny képernyőn a kártyák egymás alá kerülnek. Nulla kártya vagy fájl nélküli kártya: a tranzakció bizonylat nélkül menthető. Fájlnál az eladó és a típus üresen nem menthető. Sorrend: tranzakció `?status=draft`, majd fájlonként `POST /api/upload` és receipt `?status=draft`. A receipt `transaction` a tranzakció `documentId`-ja, a `document` a feltöltés id-ja, a `receipt_type` a típus `documentId`-ja. A lista oszlopa a darabszám. A review minden fájlt külön linkkel nyit. Publish gomb nincs
+
+- [ ] **Human:** egy tranzakció bizonylat nélkül menthető, és egy fájl nélküli kártya sem hoz létre bizonylatot. Fájllal üres eladó vagy üres típus nem menthető. Fájllal, kitöltött eladóval és típussal a lista a darabszámot mutatja, az `editor` review minden fájlt külön linkkel nyit. Publish gomb nincs. Ha igen, pipáld ki, és indítsd a 8. lépést.
 
 ## 8. Editor review és publish
 
@@ -125,7 +136,7 @@ Az `editor` a draftot két listából is megnyithatja jóváhagyásra. A 4. lép
 
 - [ ] Új menüpont, csak az `editor` szerepnek: tranzakciólista, csak `status=draft` rekordokkal. A 3. lépés „Ellenőrzés” pontja ezt a listát nyitja; külön üres review menü nem marad. A `dataentry` a menüt nem látja
 - [ ] Review űrlap: a tranzakció mezői és a receipt, ha van. Az `editor` egy draft sort a `/transactions` oldalról és erről a draft listáról is megnyithat rajta, jóváhagyásra. Published sor nem nyit review űrlapot
-- [ ] Publish gomb csak a review űrlapon, csak az `editor` szerepnek. Sikeres publish után a rekord published, és a kapcsolt receipt published verziója is megvan
+- [ ] Publish gomb csak a review űrlapon, csak az `editor` szerepnek. Sikeres publish után a rekord published, és minden kapcsolt receipt published verziója is megvan
 - [ ] A review űrlap és a listák mutatják az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A mezők nem szerkeszthetők
 - [ ] A `dataentry` a review route-ot továbbra sem éri el, és egyik listáról sem publikál
 

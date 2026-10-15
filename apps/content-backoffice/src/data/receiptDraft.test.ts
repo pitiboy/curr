@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   attachReceiptToTransaction,
   createReceiptDraft,
+  receiptAttachments,
   receiptDocumentUrl,
   receiptDraftBody,
   receiptIsPresent,
@@ -10,40 +11,47 @@ import {
 
 const file = new File(['pdf'], 'szamla.pdf', { type: 'application/pdf' });
 
+const receiptFields = {
+  vendor: 'Bolt',
+  transactionId: 'tx-1',
+  receiptTypeId: 'type-1',
+};
+
 describe('receiptDraftBody', () => {
-  it('prefills date, amount, and description and keeps an empty vendor off the payload', () => {
+  it('copies the transaction fields and links the type', () => {
     expect(
       receiptDraftBody({
         date: '2026-10-14',
         amount: 1500,
         description: '  papír  ',
-        vendor: '   ',
+        vendor: '  Bolt  ',
+        transactionId: 'tx-1',
+        receiptTypeId: 'type-1',
         document: 7,
       }),
     ).toEqual({
       date: '2026-10-14T00:00:00.000Z',
       amount: 1500,
       description: 'papír',
+      vendor: 'Bolt',
+      transaction: 'tx-1',
+      receipt_type: 'type-1',
       document: 7,
     });
   });
 
-  it('sends a trimmed vendor when one was typed', () => {
-    expect(
+  it('rejects a file attachment that has no vendor or type', () => {
+    expect(() =>
       receiptDraftBody({
-        date: '2026-10-14T08:30:00.000Z',
-        amount: '20',
+        date: '2026-10-14',
+        amount: 10,
         description: 'papír',
-        vendor: '  Bolt  ',
-        document: 'file-doc',
+        vendor: '   ',
+        transactionId: 'tx-1',
+        receiptTypeId: 'type-1',
+        document: 1,
       }),
-    ).toEqual({
-      date: '2026-10-14T08:30:00.000Z',
-      amount: '20',
-      description: 'papír',
-      vendor: 'Bolt',
-      document: 'file-doc',
-    });
+    ).toThrow(/vendor/i);
   });
 
   it('rejects a file attachment that has no description', () => {
@@ -52,10 +60,24 @@ describe('receiptDraftBody', () => {
         date: '2026-10-14',
         amount: 10,
         description: '  ',
-        vendor: '',
+        ...receiptFields,
         document: 1,
       }),
     ).toThrow(/description/i);
+  });
+});
+
+describe('receiptAttachments', () => {
+  it('skips a card without a file and rejects a file without a type', () => {
+    expect(
+      receiptAttachments([
+        { file: null, vendor: '', receiptTypeId: '' },
+        { file, vendor: 'Bolt', receiptTypeId: 'type-1' },
+      ]),
+    ).toEqual([{ file, vendor: 'Bolt', receiptTypeId: 'type-1' }]);
+    expect(() =>
+      receiptAttachments([{ file, vendor: 'Bolt', receiptTypeId: '' }]),
+    ).toThrow(/receipt type/i);
   });
 });
 
@@ -75,7 +97,7 @@ describe('createReceiptDraft', () => {
       'http://localhost:1337',
       {
         file,
-        vendor: '',
+        ...receiptFields,
         date: '2026-10-14',
         amount: 1500,
         description: 'papír',
@@ -101,6 +123,9 @@ describe('createReceiptDraft', () => {
             date: '2026-10-14T00:00:00.000Z',
             amount: 1500,
             description: 'papír',
+            vendor: 'Bolt',
+            transaction: 'tx-1',
+            receipt_type: 'type-1',
             document: 7,
           },
         }),
@@ -113,7 +138,7 @@ describe('createReceiptDraft', () => {
     await expect(
       createReceiptDraft(httpClient, 'http://localhost:1337', {
         file,
-        vendor: '',
+        ...receiptFields,
         date: '2026-10-14',
         amount: 1500,
         description: '',
@@ -124,12 +149,11 @@ describe('createReceiptDraft', () => {
 });
 
 describe('attachReceiptToTransaction', () => {
-  it('stores the receipt documentId on the draft transaction', async () => {
+  it('creates the receipt on the transaction without updating the transaction', async () => {
     const httpClient = vi
       .fn()
       .mockResolvedValueOnce({ json: [{ id: 4 }] })
-      .mockResolvedValueOnce({ json: { data: { documentId: 'receipt-4' } } })
-      .mockResolvedValueOnce({ json: { data: { documentId: 'tx-1' } } });
+      .mockResolvedValueOnce({ json: { data: { documentId: 'receipt-4' } } });
 
     const receiptId = await attachReceiptToTransaction(
       httpClient,
@@ -138,6 +162,7 @@ describe('attachReceiptToTransaction', () => {
       {
         file,
         vendor: 'Bolt',
+        receiptTypeId: 'type-1',
         date: '2026-10-14',
         amount: 10,
         description: 'papír',
@@ -145,13 +170,18 @@ describe('attachReceiptToTransaction', () => {
     );
 
     expect(receiptId).toBe('receipt-4');
-    expect(httpClient).toHaveBeenLastCalledWith(
-      'http://localhost:1337/api/transactions/tx-1?status=draft',
-      {
-        method: 'PUT',
-        body: JSON.stringify({ data: { receipt: 'receipt-4' } }),
+    expect(httpClient).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(String(httpClient.mock.calls[1]?.[1]?.body))).toEqual({
+      data: {
+        date: '2026-10-14T00:00:00.000Z',
+        amount: 10,
+        description: 'papír',
+        vendor: 'Bolt',
+        transaction: 'tx-1',
+        receipt_type: 'type-1',
+        document: 4,
       },
-    );
+    });
   });
 });
 

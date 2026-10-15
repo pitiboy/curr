@@ -1,4 +1,5 @@
 import { registerPublishGuard } from './publish-guard';
+import { ensureReceiptTypes } from './receipt-types';
 
 const enabled = { enabled: true, policy: '' };
 
@@ -22,6 +23,8 @@ const CONTENT_ROLE_ACTIONS = [
   'api::account.account.findOne',
   'api::currency-type.currency-type.find',
   'api::currency-type.currency-type.findOne',
+  'api::receipt-type.receipt-type.find',
+  'api::receipt-type.receipt-type.findOne',
   'plugin::upload.content-api.upload',
   'plugin::users-permissions.user.me',
   'api::backoffice.backoffice.config',
@@ -51,6 +54,11 @@ const usersPermissionsRolePermissions = {
   'api::currency-type': {
     controllers: {
       'currency-type': allow(['find', 'findOne']),
+    },
+  },
+  'api::receipt-type': {
+    controllers: {
+      'receipt-type': allow(['find', 'findOne']),
     },
   },
   'plugin::upload': {
@@ -241,5 +249,6 @@ export default {
   },
   async bootstrap({ strapi }) {
     await ensureUsersPermissionsRoles(strapi);
+    await ensureReceiptTypes(strapi);
   },
 };

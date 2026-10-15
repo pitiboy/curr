@@ -15,7 +15,7 @@ const draftOnly: StrapiTransaction = {
   amount: '10.00',
   description: 'piszkozat',
   organization: { documentId: 'org-1', name: 'Kör' },
-  receipt: null,
+  receipts: [],
 };
 
 const publishedTwin: StrapiTransaction = {
@@ -24,7 +24,7 @@ const publishedTwin: StrapiTransaction = {
   date: '2026-01-15',
   amount: '9',
   description: 'published copy',
-  receipt: { documentId: 'receipt-1' },
+  receipts: [{ documentId: 'receipt-1' }],
 };
 
 const draftTwin: StrapiTransaction = {
@@ -158,14 +158,15 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('populate[organization]')).toBe('true');
     expect(params.get('populate[debit_account]')).toBe('true');
     expect(params.get('populate[credit_account]')).toBe('true');
-    expect(params.get('populate[receipt][populate][document][fields][0]')).toBe(
+    expect(params.get('populate[receipts][populate][document][fields][0]')).toBe(
       'url',
     );
-    expect(params.get('populate[receipt][populate][document][fields][1]')).toBe(
+    expect(params.get('populate[receipts][populate][document][fields][1]')).toBe(
       'name',
     );
-    expect(params.get('populate[receipt][populate][document][fields][2]')).toBe(
+    expect(params.get('populate[receipts][populate][document][fields][2]')).toBe(
       'mime',
     );
+    expect(params.get('populate[receipts][populate][receipt_type]')).toBe('true');
   });
 });

@@ -17,5 +17,5 @@ Vite + TypeScript + React Admin 5 + `ra-strapi` + MUI. Env: `VITE_STRAPI_URL`. A
 - A lista és a review mutatja az `entered_by` / `createdAt` értéket, published soron a `published_by` / `publishedAt` értéket is. Ezek nem űrlapmezők.
 - Debit választó: `VITE_DEBIT_CODES` regex, alapból `/^5/`. Credit választó: `VITE_CREDIT_CODES` regex, alapból `/^(1|3)/`. A szűrés kliens oldali.
 - Alapnyelv `hu`. Az `en` katalógus is a repóban van.
-- A receipt fájl saját upload úton megy a Content API `/api/upload` végpontjára. Az `ra-strapi` média mezője nem elég.
+- A receipt fájl saját upload úton megy a Content API `/api/upload` végpontjára, a tranzakció mentése után, fájlonként. Fájlnál az eladó és a bizonylattípus kötelező. Az `ra-strapi` média mezője nem elég.
 - Local login a `strapiAuthProvider`. Google-only fióknál a jelszócsere rejtett.

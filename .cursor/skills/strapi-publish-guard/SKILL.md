@@ -14,7 +14,7 @@ A követelmény a `docs/prd/0001-content-backoffice-v1.md` §9. Ez a skill a rep
 
 ## Séma
 
-A `src/api/receipt/content-types/receipt/schema.json` fájlban a `vendor` `required` mezője legyen `false`. A `document` maradjon `required: true`. A `description` required marad. A `transaction.receipt` reláció maradjon opcionális `manyToOne`.
+A `src/api/receipt/content-types/receipt/schema.json` fájlban a `vendor` `required` mezője legyen `false`. A `document` maradjon `required: true`. A `description` required marad. A transaction `receipts` mezője opcionális `oneToMany`, a receipt `transaction` mezője `manyToOne`. A `receipt_type` kötelező `manyToOne` a `receipt-type` törzsre. A törzs `draftAndPublish: false`, a nevét a `bootstrap()` idempotensen tölti.
 
 A `transaction` és a `receipt` sémán legyen `entered_by` és `published_by`, mindkettő `string`, nem kötelező. Nem reláció: a Content user e-mailjét tárolják, user `find` jog nélkül. A `createdAt` és a `publishedAt` a dokumentum saját mezője, külön datetime nem kell.
 
@@ -33,7 +33,7 @@ A szerepet a user rekordról töltsd, `role` populate-tal. A JWT-ben lévő id �
 
 A REST API `status` nélkül publishedet ír. Az SPA ezért `?status=draft` queryt küld. A middleware-ben a hiányzó `params.status` nem publish: a Document Service alapja a draft. Csak a `published` és a `publish` / `unpublish` action tiltott.
 
-A kapcsolt receipt automatikus publishje a különböző-ember szabályt nem futtatja újra.
+A kapcsolt receipt-ek automatikus publishje a különböző-ember szabályt nem futtatja újra.
 
 Ugyanebben a middleware-ben, a publish döntés után, ha a hívás mehet tovább:
 
@@ -44,7 +44,7 @@ Ugyanebben a middleware-ben, a publish döntés után, ha a hívás mehet továb
 
 Admin, seed és user nélküli hívásnál az audit mezőt ne írd felül.
 
-Az `editor` publish után a kapcsolt receipt is published legyen, különben a published transaction populate üres receiptet ad. Az őr az `editor`-nak mindkét uid-ot engedi.
+Az `editor` publish után a tranzakció minden kapcsolt receiptje published legyen, különben a published transaction populate üres receipts tömböt ad. Az őr az `editor`-nak mindkét uid-ot engedi.
 
 Ne a member lifecycle mintát másold. Az entityService lifecycle nem látja megbízhatóan a `publish()` actiont.
 
@@ -65,6 +65,7 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 | mindkettő | `api::organization.organization.find`, `findOne` |
 | mindkettő | `api::account.account.find`, `findOne` |
 | mindkettő | `api::currency-type.currency-type.find`, `findOne` |
+| mindkettő | `api::receipt-type.receipt-type.find`, `findOne` |
 | mindkettő | a content-api upload action (`plugin::upload.content-api.upload`, ha a getActions így hívja) |
 | mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs) |
 
@@ -84,7 +85,7 @@ Content API JWT-vel, nem Admin tokennel:
 
 - `dataentry` `POST /api/transactions` status nélkül vagy `?status=published`: 403, a dokumentum nem published.
 - `dataentry` `POST /api/transactions?status=draft`: 200, draft.
-- `editor` publish: a transaction `status=published`, a `published_by` az `editor` e-mailje. Receipttel együtt a receipt published verziója is létezik.
+- `editor` publish: a transaction `status=published`, a `published_by` az `editor` e-mailje. A tranzakció minden kapcsolt receiptjének published verziója is létezik.
 - `dataentry` draft create: az `entered_by` a belépett e-mail, akkor is, ha a body más értéket küld.
-- `vendor` nélküli receipt `document` fájllal menthető.
+- A séma `vendor` nélkül is ment receiptet. Fájl csatolásakor a felület az eladót és a típust megköveteli.
 - Admin Content Manager publish továbbra is működik.

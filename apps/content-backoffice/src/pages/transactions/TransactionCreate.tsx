@@ -22,7 +22,8 @@ import {
   loadAllAccounts,
   type AccountChoice,
 } from '../../data/accountCodes';
-import { ReceiptFields } from './ReceiptFields';
+import { receiptCardInvalid } from '../../data/receiptDraft';
+import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 
 function currencyOptionText(record: RaRecord): string {
   const currency = record as { code?: string | null; name?: string | null };
@@ -117,8 +118,7 @@ function AccountCodeInput({
 export function TransactionCreate() {
   const catalog = useAccountCatalog();
   const translate = useTranslate();
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptVendor, setReceiptVendor] = useState('');
+  const [receiptCards, setReceiptCards] = useState<ReceiptCardValue[]>([]);
 
   return (
     <Create
@@ -127,8 +127,7 @@ export function TransactionCreate() {
       title="app.transactions_create"
       transform={(data) => ({
         ...data,
-        receipt_file: receiptFile,
-        receipt_vendor: receiptVendor,
+        receipt_cards: receiptCards,
       })}
     >
       <SimpleForm
@@ -136,12 +135,17 @@ export function TransactionCreate() {
         validate={(values: { description?: unknown }) => {
           const description =
             typeof values.description === 'string' ? values.description.trim() : '';
-          if (receiptFile && receiptFile.size > 0 && !description) {
-            return {
-              description: translate('app.receipt_description_required'),
-            };
+          const hasFile = receiptCards.some(
+            (card) => card.file && card.file.size > 0,
+          );
+          const errors: Record<string, string> = {};
+          if (hasFile && !description) {
+            errors.description = translate('app.receipt_description_required');
           }
-          return {};
+          if (receiptCards.some(receiptCardInvalid)) {
+            errors.receipt_cards = translate('app.receipt_card_required');
+          }
+          return errors;
         }}
       >
         <DateInput source="date" validate={required()} />
@@ -185,12 +189,7 @@ export function TransactionCreate() {
           kind="credit"
           source="credit_account"
         />
-        <ReceiptFields
-          file={receiptFile}
-          vendor={receiptVendor}
-          onFile={setReceiptFile}
-          onVendor={setReceiptVendor}
-        />
+        <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
       </SimpleForm>
     </Create>
   );

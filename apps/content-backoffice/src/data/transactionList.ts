@@ -17,14 +17,15 @@ export type StrapiTransaction = {
     code?: string | null;
     name?: string | null;
   } | null;
-  receipt?: {
+  receipts?: Array<{
     documentId?: string;
     document?: { url?: string | null } | { url?: string | null }[] | null;
-  } | null;
+    receipt_type?: { documentId?: string; name?: string | null } | null;
+  }> | null;
 };
 
 /**
- * One-level relations, plus the receipt file url.
+ * One-level relations, plus each receipt file url and type name.
  * A star on these relations is rejected: organization.parent and the file
  * `related` morph are not valid populate keys.
  */
@@ -32,9 +33,10 @@ export const transactionPopulate = {
   organization: true,
   debit_account: true,
   credit_account: true,
-  receipt: {
+  receipts: {
     populate: {
       document: { fields: ['url', 'name', 'mime'] },
+      receipt_type: true,
     },
   },
 };
@@ -190,7 +192,8 @@ function sortValue(row: TransactionRow, field: string): string | number {
     case 'credit_account':
       return accountSortKey(row.credit_account);
     case 'receipt':
-      return row.receipt ? 1 : 0;
+    case 'receipts':
+      return Array.isArray(row.receipts) ? row.receipts.length : 0;
     case 'status':
       return row.status;
     case 'description':

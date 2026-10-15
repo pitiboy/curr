@@ -1,4 +1,9 @@
-import { createReceiptDraft, type ContentHttpClient } from './receiptDraft';
+import {
+  assertReceiptShared,
+  createReceiptDraft,
+  receiptAttachments,
+  type ContentHttpClient,
+} from './receiptDraft';
 
 /** REST create without this query publishes, and dataentry publish is 403. */
 export function transactionDraftUrl(strapiUrl: string): string {
@@ -41,11 +46,9 @@ export async function createTransactionDraft(
   data: Record<string, unknown>,
 ) {
   const body = transactionDraftBody(data);
-  const file = data.receipt_file;
-  if (file instanceof File && file.size > 0) {
-    body.receipt = await createReceiptDraft(httpClient, strapiUrl, {
-      file,
-      vendor: data.receipt_vendor,
+  const attachments = receiptAttachments(data.receipt_cards);
+  if (attachments.length > 0) {
+    assertReceiptShared({
       date: body.date,
       amount: body.amount,
       description: body.description,
@@ -58,6 +61,17 @@ export async function createTransactionDraft(
   const created = recordData(json);
   const documentId =
     typeof created.documentId === 'string' ? created.documentId : '';
+  for (const attachment of attachments) {
+    await createReceiptDraft(httpClient, strapiUrl, {
+      file: attachment.file,
+      vendor: attachment.vendor,
+      receiptTypeId: attachment.receiptTypeId,
+      transactionId: documentId,
+      date: body.date,
+      amount: body.amount,
+      description: body.description,
+    });
+  }
   return {
     data: {
       ...created,

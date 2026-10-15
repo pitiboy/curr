@@ -87,6 +87,7 @@ export function attachTransactionReceipt(
   input: {
     file: File;
     vendor: unknown;
+    receiptTypeId: unknown;
     date: unknown;
     amount: unknown;
     description: unknown;

@@ -93,15 +93,15 @@
       },
       "inversedBy": "transactions"
     },
-    "receipt": {
+    "receipts": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "oneToMany",
       "target": "api::receipt.receipt",
+      "mappedBy": "transaction",
       "metadatas": {
-        "label": "Nyugta",
-        "description": "A tranzakcióhoz tartozó nyugta"
-      },
-      "inversedBy": "transactions"
+        "label": "Bizonylatok",
+        "description": "A tranzakcióhoz tartozó bizonylatok"
+      }
     },
     "entered_by": {
       "type": "string",

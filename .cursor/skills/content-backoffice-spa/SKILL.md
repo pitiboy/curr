@@ -53,7 +53,7 @@ Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create é
 
 A menü mindkét szerepnek mutatja a create elemet. A review elemet csak az `editor` látja. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
-A create és a review mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális `receipt`. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
+A create és a review mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
 
 Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`.
 
@@ -70,15 +70,15 @@ A kódlista nem szerver policy. Üres selectnél a seed hiányzik, ne bővítsd 
 
 ## Receipt
 
-A transaction `receipt` reláció opcionális. Üres receipttel a tranzakció menthető.
+Egy tranzakcióhoz több bizonylat tartozhat. A `receipts` reláció opcionális: nulla kártyával vagy fájl nélkül a tranzakció menthető. A `vendor` a sémában nem kötelező. Ha a kártyán van fájl, az eladó és a `receipt_type` üresen nem menthető.
 
-Ha a felhasználó bizonylatot csatol:
+A külső kulcs a receipten van, ezért a sorrend:
 
-1. `POST /api/upload` multipart, a Content JWT-vel, a fájl a `files` mezőben.
-2. Receipt create `?status=draft`: a `document` a feltöltés id-ja. A `vendor` mehet üresen. A `date`, `amount` és `description` előtöltés a tranzakcióból; a séma ezeket kötelezőnek tartja a receipt soron.
-3. A transaction `receipt` mezője a receipt `documentId`.
+1. Tranzakció create `?status=draft`.
+2. Fájlonként `POST /api/upload` multipart, a Content JWT-vel, a fájl a `files` mezőben.
+3. Receipt create `?status=draft`. A `document` a feltöltés id-ja, a `transaction` a tranzakció `documentId`-ja, a `receipt_type` a típus `documentId`-ja. A `date`, `amount` és `description` a tranzakcióból másolódik.
 
-A review a receipt dokumentumát linkkel vagy előnézettel mutatja, ha van. A lista egy receipt oszlopot mutat.
+A `receipt-type` törzset a SPA csak olvassa (`find`, `findOne`). A lista a bizonylatok darabszámát mutatja. A review minden fájlt külön linkkel nyit. A populate a `receipts` tömb `document` url mezőit és a `receipt_type` nevet kéri; `document=*` tilos.
 
 ## Profil és i18n
 

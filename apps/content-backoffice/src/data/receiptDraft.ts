@@ -8,14 +8,70 @@ type ReceiptInput = {
   amount: unknown;
   description: unknown;
   vendor: unknown;
+  transactionId: unknown;
+  receiptTypeId: unknown;
 };
 
 type ReceiptPrefill = {
   date: string;
   amount: unknown;
   description: string;
-  vendor?: string;
+  vendor: string;
+  transaction: string;
+  receipt_type: string;
 };
+
+export type ReceiptAttachment = {
+  file: File;
+  vendor: string;
+  receiptTypeId: string;
+};
+
+/** Cards with a file. A file without a vendor or a type is rejected. */
+export function receiptAttachments(input: unknown): ReceiptAttachment[] {
+  if (!Array.isArray(input)) return [];
+  const attachments: ReceiptAttachment[] = [];
+  for (const item of input) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as {
+      file?: unknown;
+      vendor?: unknown;
+      receiptTypeId?: unknown;
+    };
+    if (!(row.file instanceof File) || row.file.size <= 0) continue;
+    const vendor = typeof row.vendor === 'string' ? row.vendor.trim() : '';
+    const receiptTypeId =
+      typeof row.receiptTypeId === 'string' ? row.receiptTypeId.trim() : '';
+    if (!vendor || !receiptTypeId) {
+      throw new Error(
+        'A vendor and a receipt type are required when a receipt file is attached.',
+      );
+    }
+    attachments.push({ file: row.file, vendor, receiptTypeId });
+  }
+  return attachments;
+}
+
+/** Shared transaction fields every attached receipt copies. Throws before any HTTP. */
+export function assertReceiptShared(input: {
+  date: unknown;
+  amount: unknown;
+  description: unknown;
+}): void {
+  const date = asDateTime(input.date);
+  if (!date || !isAmount(input.amount)) {
+    throw new Error(
+      'A date and amount are required when a receipt file is attached.',
+    );
+  }
+  const description =
+    typeof input.description === 'string' ? input.description.trim() : '';
+  if (!description) {
+    throw new Error(
+      'A description is required when a receipt file is attached.',
+    );
+  }
+}
 
 export function receiptDraftBody(
   input: ReceiptInput & { document: number | string },
@@ -24,9 +80,8 @@ export function receiptDraftBody(
 }
 
 /**
- * Upload the file with the Content JWT, then create the receipt as a draft.
- * Date, amount, and description are the transaction values. Vendor may be empty.
- * The returned id is the receipt documentId.
+ * Upload the file with the Content JWT, then create the receipt as a draft
+ * linked to the transaction. The returned id is the receipt documentId.
  */
 export async function createReceiptDraft(
   httpClient: ContentHttpClient,
@@ -42,26 +97,35 @@ export async function createReceiptDraft(
   return documentIdOf(json);
 }
 
-/** Point an existing draft transaction at a newly created receipt. */
+/** Create one draft receipt on an existing transaction. */
 export async function attachReceiptToTransaction(
   httpClient: ContentHttpClient,
   strapiUrl: string,
   documentId: string,
-  input: ReceiptInput & { file: File },
+  input: Omit<ReceiptInput, 'transactionId'> & { file: File },
 ): Promise<string> {
-  const receiptDocumentId = await createReceiptDraft(
-    httpClient,
-    strapiUrl,
-    input,
+  return createReceiptDraft(httpClient, strapiUrl, {
+    ...input,
+    transactionId: documentId,
+  });
+}
+
+export function receiptCount(receipts: unknown): number {
+  if (!Array.isArray(receipts)) return 0;
+  return receipts.filter((item) => receiptIsPresent(item)).length;
+}
+
+/** A file without a vendor or a type cannot be saved. */
+export function receiptCardInvalid(card: {
+  file: File | null;
+  vendor: string;
+  receiptTypeId: string;
+}): boolean {
+  return Boolean(
+    card.file &&
+      card.file.size > 0 &&
+      (!card.vendor.trim() || !card.receiptTypeId),
   );
-  await httpClient(
-    `${strapiUrl}/api/transactions/${encodeURIComponent(documentId)}?status=draft`,
-    {
-      method: 'PUT',
-      body: JSON.stringify({ data: { receipt: receiptDocumentId } }),
-    },
-  );
-  return receiptDocumentId;
 }
 
 export function receiptIsPresent(receipt: unknown): boolean {
@@ -96,15 +160,28 @@ function receiptPrefill(input: ReceiptInput): ReceiptPrefill {
       'A description is required when a receipt file is attached.',
     );
   }
-  const prefill: ReceiptPrefill = {
+  const vendor = typeof input.vendor === 'string' ? input.vendor.trim() : '';
+  const transaction = relationId(input.transactionId);
+  const receiptType = relationId(input.receiptTypeId);
+  if (!vendor || !transaction || !receiptType) {
+    throw new Error(
+      'A vendor and a receipt type are required when a receipt file is attached.',
+    );
+  }
+  return {
     date,
     amount: input.amount,
     description,
+    vendor,
+    transaction,
+    receipt_type: receiptType,
   };
-  if (typeof input.vendor === 'string' && input.vendor.trim()) {
-    prefill.vendor = input.vendor.trim();
-  }
-  return prefill;
+}
+
+function relationId(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return undefined;
 }
 
 async function uploadReceiptFile(

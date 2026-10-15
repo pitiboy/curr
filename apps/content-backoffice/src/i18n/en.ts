@@ -12,7 +12,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_none: 'No transactions.',
     transactions_review_empty: 'No drafts.',
     transactions_review_hint:
-      'Open a draft receipt from here. Attaching a new file is optional.',
+      'Open the draft receipts from here. Attaching a new file is optional.',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
     profile: 'Profile',
@@ -42,7 +42,12 @@ export const enMessages = mergeTranslations(englishMessages, {
     receipt_clear: 'Remove file',
     receipt_skip: 'No file attached.',
     receipt_vendor: 'Vendor',
-    receipt_vendor_hint: 'The vendor can be left empty.',
+    receipt_vendor_hint: 'A vendor is required when a file is attached.',
+    receipt_type: 'Receipt type',
+    receipt_add: 'New receipt',
+    receipt_remove: 'Remove',
+    receipt_card_required:
+      'A vendor and a receipt type are required when a file is attached.',
     receipt_prefill:
       'Date, amount, and description are copied from the transaction.',
     receipt_description_required:

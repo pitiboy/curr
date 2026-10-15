@@ -9,9 +9,14 @@ import {
 } from 'react-admin';
 
 import { attachTransactionReceipt } from '../../data/dataProvider';
+import { receiptCardInvalid, receiptCount } from '../../data/receiptDraft';
 import type { TransactionRow } from '../../data/transactionList';
 import { EmptyState } from '../EmptyState';
-import { ReceiptFields, ReceiptLink } from './ReceiptFields';
+import {
+  ReceiptFileList,
+  ReceiptRail,
+  type ReceiptCardValue,
+} from './ReceiptFields';
 
 const draftListParams = {
   pagination: { page: 1, perPage: 100 },
@@ -105,13 +110,13 @@ export function TransactionReview() {
               <span>{row.date || '—'}</span>
               <span>{formatAmount(row.amount, locale)}</span>
               <span>{row.description || '—'}</span>
-              <ReceiptLink receipt={row.receipt} />
+              <span>{receiptCount(row.receipts)}</span>
             </Box>
           );
         })}
       </Box>
       <ReviewReceiptForm
-        key={`${selected.id}:${selected.receipt?.documentId ?? ''}`}
+        key={`${selected.id}:${receiptCount(selected.receipts)}`}
         row={selected}
         onSaved={() => refetch()}
       />
@@ -128,30 +133,40 @@ function ReviewReceiptForm({
 }) {
   const translate = useTranslate();
   const notify = useNotify();
-  const [file, setFile] = useState<File | null>(null);
-  const [vendor, setVendor] = useState('');
+  const [cards, setCards] = useState<ReceiptCardValue[]>([]);
   const [saving, setSaving] = useState(false);
   const description =
     typeof row.description === 'string' ? row.description.trim() : '';
-  const canSave = Boolean(file && description && row.date && isFilled(row.amount));
+  const pending = cards.filter((card) => card.file && card.file.size > 0);
+  const canSave = Boolean(
+    pending.length > 0 &&
+      !pending.some((card) => receiptCardInvalid(card)) &&
+      description &&
+      row.date &&
+      isFilled(row.amount),
+  );
 
   return (
     <Box
       component="form"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!file || !canSave || saving) return;
+        if (!canSave || saving) return;
         setSaving(true);
-        attachTransactionReceipt(row.documentId, {
-          file,
-          vendor,
-          date: row.date,
-          amount: row.amount,
-          description,
-        })
+        Promise.all(
+          pending.map((card) =>
+            attachTransactionReceipt(row.documentId, {
+              file: card.file as File,
+              vendor: card.vendor,
+              receiptTypeId: card.receiptTypeId,
+              date: row.date,
+              amount: row.amount,
+              description,
+            }),
+          ),
+        )
           .then(async () => {
-            setFile(null);
-            setVendor('');
+            setCards([]);
             notify('app.receipt_saved', { type: 'success' });
             await onSaved();
           })
@@ -169,19 +184,14 @@ function ReviewReceiptForm({
         {row.date || '—'}
         {row.description ? ` — ${row.description}` : ''}
       </Typography>
-      <ReceiptLink receipt={row.receipt} />
-      <ReceiptFields
-        file={file}
-        vendor={vendor}
-        onFile={setFile}
-        onVendor={setVendor}
-      />
-      {file && !description ? (
+      <ReceiptFileList receipts={row.receipts} />
+      <ReceiptRail cards={cards} onChange={setCards} />
+      {pending.length > 0 && !description ? (
         <Typography color="error" variant="body2">
           {translate('app.receipt_description_required')}
         </Typography>
       ) : null}
-      {file ? (
+      {pending.length > 0 ? (
         <Button
           disabled={!canSave || saving}
           sx={{ mt: 1 }}

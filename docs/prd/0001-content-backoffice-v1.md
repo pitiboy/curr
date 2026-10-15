@@ -89,12 +89,12 @@ Kötelező / választható mezők:
 | `organization` | relation | kötelező — a szervezeti fa csomópontja (projekt) |
 | `debit_account` | relation | kötelező — SPA szűrés: `code` ∈ `{5000, 5100, 5400}` |
 | `credit_account` | relation | kötelező — SPA szűrés / javaslat: `1xxx` (pl. `1000` Készpénz, `1100` Bankszámlák) |
-| `receipt` | relation | **opcionális** — 1:1 UI a v1 felvételi flow-ban |
+| `receipt` | relation | **opcionális** — egy tranzakcióhoz több bizonylat (1:N). A bizonylattípus kötelező, közös törzs |
 
 Receipt (ha a felhasználó csatol):
 
 - Fájl feltöltés (média) — custom upload path, mert az `ra-strapi` média támogatása hiányos (ADR).
-- `vendor` opcionális (séma-követelmény: lásd [§9](#9-backend-követelmények)).
+- `vendor` a sémában opcionális. Fájl csatolásakor a felület az eladót és a bizonylattípust megköveteli.
 - Összeg / dátum / leírás a receipten: a UI a tranzakció értékeiből előtöltheti; finomhangolás implementációkor.
 
 Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
@@ -175,7 +175,7 @@ flowchart LR
 - Profil avatar
 - Automatikus CI/CD pipeline (→ v2 skeleton)
 - `backoffice.kor.fejlesztesek.hu` subdomain
-- Receipt N:M gazdag UI (v1: 1:1 a felvételi flow-ban)
+- Receipt N:M gazdag UI kimarad. A transaction 1:N receipt és a receipt-type törzs a v1 része.
 - React Admin Enterprise RBAC / realtime. A saját audit mezők a [§9.5](#95-audit-mezők), nem az Enterprise audit log.
 - Inline edit / publish a readonly listáról
 - `dataentry` publish
@@ -190,9 +190,9 @@ Jelenlegi [`receipt` schema](../../src/api/receipt/content-types/receipt/schema.
 
 v1 követelmény:
 
-- `vendor` legyen **optional** (lehet kiadás vendor nélkül; a receipt maga is opcionális a tranzakción).
+- `vendor` legyen **optional** a sémában. Fájl csatolásakor a felület az eladót és a bizonylattípust megköveteli.
 - Ha a felhasználó létrehoz receipt sort, a `document` továbbra is kötelező lehet (van mit feltölteni).
-- `transaction.receipt` reláció marad opcionális.
+- A transaction `receipts` mezője `oneToMany`, a receipt `transaction` mezője opcionális `manyToOne`. A `receipt_type` kötelező `manyToOne` a közös törzsre.
 
 ### 9.2 Draft / publish policy
 
@@ -236,7 +236,7 @@ A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly
    Org, összeg, dátum, debit (`5000|5100|5400`), credit (`1xxx`), opcionális leírás és receipt. Mentés draft. Publish nincs.
 
 3. **Opcionális receipt**  
-   Receipt nélkül is menthető a tranzakció. Receipttel: fájl kötelező; vendor üres lehet (séma után).
+   Receipt nélkül is menthető a tranzakció. Fájllal az eladó és a bizonylattípus kötelező. A séma `vendor` mezője nem required.
 
 4. **Nincs publish dataentrynek**  
    UI és API elutasítja a publish kísérletet.

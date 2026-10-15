@@ -16,6 +16,7 @@
     "account-categories",
     "membership-types",
     "transaction-types",
+    "receipt-types",
   ];
   const restPaths = [
     "transactions",

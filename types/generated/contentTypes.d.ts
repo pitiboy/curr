@@ -875,6 +875,42 @@ export interface ApiOrganizationOrganization
   };
 }
 
+export interface ApiReceiptTypeReceiptType extends Struct.CollectionTypeSchema {
+  collectionName: 'receipt_types';
+  info: {
+    description: 'Shared kind of a receipt document';
+    displayName: 'Receipt Type';
+    pluralName: 'receipt-types';
+    singularName: 'receipt-type';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::receipt-type.receipt-type'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
   collectionName: 'receipts';
   info: {
@@ -903,9 +939,14 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    receipt_type: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::receipt-type.receipt-type'
+    > &
+      Schema.Attribute.Required;
     reference: Schema.Attribute.UID;
-    transactions: Schema.Attribute.Relation<
-      'oneToMany',
+    transaction: Schema.Attribute.Relation<
+      'manyToOne',
       'api::transaction.transaction'
     >;
     updatedAt: Schema.Attribute.DateTime;
@@ -999,7 +1040,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     >;
     published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    receipt: Schema.Attribute.Relation<'manyToOne', 'api::receipt.receipt'>;
+    receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;
     related_transaction: Schema.Attribute.Relation<
       'manyToOne',
       'api::transaction.transaction'
@@ -1538,6 +1579,7 @@ declare module '@strapi/strapi' {
       'api::membership-type.membership-type': ApiMembershipTypeMembershipType;
       'api::membership.membership': ApiMembershipMembership;
       'api::organization.organization': ApiOrganizationOrganization;
+      'api::receipt-type.receipt-type': ApiReceiptTypeReceiptType;
       'api::receipt.receipt': ApiReceiptReceipt;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
       'api::transaction.transaction': ApiTransactionTransaction;

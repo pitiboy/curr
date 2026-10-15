@@ -16,10 +16,10 @@ Minden storyra adj egy sort: pass vagy fail, és a bizonyíték fájlútvonala. 
 
 1. **Belépés (dataentry).** Local és Google Content JWT. A menüben Új tranzakció és a lista van. A review route a `dataentry` elől zárva van. Admin login nincs az SPA-ban.
 2. **Új tranzakció.** Org, összeg, dátum, debit `5000|5100|5400`, credit `^1`, opcionális leírás és receipt. Mentés draft. Publish kontroll nincs.
-3. **Opcionális receipt.** Tranzakció receipt nélkül menthető. Receipttel a fájl kötelező. A `receipt` schema `vendor` mezője nem required.
+3. **Opcionális receipt.** Tranzakció receipt nélkül menthető. Fájllal az eladó és a bizonylattípus kötelező. A `receipt` schema `vendor` mezője nem required.
 4. **Nincs publish a dataentrynek.** Az UI rejti, és a szerver 403-at ad Content API JWT-vel (`publish` / `unpublish`, vagy create/update `status=published`) a transactionre és a receipre. Az Admin útvonal nincs letiltva.
-5. **Editor review.** A review lista csak draft. A receipt látszik, ha van. A Publish published státuszt ír, a kapcsolt receipt published verziójával együtt.
-6. **Readonly lista.** Mindkét szerep látja a draft és published tételeket, receipt oszloppal. Szűrő: status, date, amount, organization, debit_account, credit_account, description. Erről a nézetről nincs create, edit, publish.
+5. **Editor review.** A review lista csak draft. Minden bizonylat külön linkkel látszik, ha van. A Publish published státuszt ír, minden kapcsolt receipt published verziójával együtt.
+6. **Readonly lista.** Mindkét szerep látja a draft és published tételeket, a bizonylatok darabszámával. Szűrő: status, date, amount, organization, debit_account, credit_account, description. Erről a nézetről nincs create, edit, publish.
 7. **Profil.** Név és email. Local usernél jelszócsere. Google-only fióknál a jelszó űrlap hiányzik.
 8. **i18n.** Az alapnyelv `hu`. Az `en` katalógus a repóban van.
 9. **Deploy path.** A Vite `base` a `/backoffice/`. A deploy lépés le van írva. Az API ugyanaz a host.
