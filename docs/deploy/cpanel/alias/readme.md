@@ -36,6 +36,7 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
 - `CLOUDINARY_FOLDER` — az aliastól függő mappa, például `edizone`
 - `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok
 - `BACKOFFICE_WORKFLOWS` — vesszővel elválasztott ügyletazonosítók. Üres értéknél nincs extra űrlap. Az aliasnél ezt is el kell menteni, különben a közös `.env` listája marad. A backoffice rejtett kapcsolója csak abban a böngészőben él, a többi felhasználó továbbra is ezt a listát látja.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — Users & Permissions Google provider. A callback URL-ek: [google-oauth.md](../../google-oauth.md).
 
 A `PORT` értékét a Passenger adja, nem kell beállítani. Üres Neon adatbázison az első indulás létrehozza a sémát. Az admin felhasználó az alias `/admin` címén külön jön létre.
 

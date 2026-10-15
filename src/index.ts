@@ -27,6 +27,7 @@ const CONTENT_ROLE_ACTIONS = [
   'api::receipt-type.receipt-type.findOne',
   'plugin::upload.content-api.upload',
   'plugin::users-permissions.user.me',
+  'plugin::users-permissions.auth.changePassword',
   'api::backoffice.backoffice.config',
 ] as const;
 
@@ -69,6 +70,7 @@ const usersPermissionsRolePermissions = {
   'plugin::users-permissions': {
     controllers: {
       user: allow(['me']),
+      auth: allow(['changePassword']),
     },
   },
   'api::backoffice': {
