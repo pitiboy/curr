@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Korona</title>
+  <g fill="#3A4048">
+    <path d="M8 46 H56 V52.5 Q56 58 49 58 H15 Q8 58 8 52.5 Z"/>
+    <path d="M12 46 L18 27 L24 46 Z"/>
+    <path d="M28 46 L32 16 L36 46 Z"/>
+    <path d="M40 46 L46 27 L52 46 Z"/>
+    <circle cx="18" cy="23" r="5.2"/>
+    <circle cx="32" cy="13.2" r="5.4"/>
+    <circle cx="46" cy="23" r="5.2"/>
+  </g>
+  <path d="M32 3.2 V11.2 M27.6 6.6 H36.4" fill="none" stroke="#3A4048" stroke-width="3.3" stroke-linecap="round"/>
+</svg>

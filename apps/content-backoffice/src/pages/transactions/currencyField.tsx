@@ -9,27 +9,25 @@ const rowSx = {
   verticalAlign: 'middle',
 } as const;
 
-export function CurrencyValue({ value }: { value: unknown }) {
+export function CurrencyValue({
+  value,
+}: {
+  value: { name: string | null | undefined };
+}) {
   const src = currencyIconSrc(value);
   return (
     <Box component="span" sx={rowSx}>
       {src ? (
         <Box
-          alt=""
+          alt={value?.name || ''}
           component="img"
           src={src}
           sx={{ flexShrink: 0, height: 22, objectFit: 'contain', width: 22 }}
         />
       ) : null}
-      {currencyLabel(value)}
+      <small style={{ fontSize: '0.5em' }}>({value?.name || '?'})</small>
     </Box>
   );
-}
-
-function currencyLabel(value: unknown): string {
-  if (!value || typeof value !== 'object') return '—';
-  const currency = value as { code?: string | null; name?: string | null };
-  return [currency.code, currency.name].filter(Boolean).join(' ') || '—';
 }
 
 function currencyIconSrc(value: unknown): string | null {
