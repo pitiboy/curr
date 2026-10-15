@@ -177,13 +177,13 @@ export function TransactionList() {
           render={(record: RaRecord) => accountLabel(record.credit_account)}
           source="credit_account"
         />
-        <SelectField choices={statusChoices} source="status" translateChoice />
         <FunctionField
           label="resources.transactions.fields.receipt"
           render={(record: RaRecord) => receiptCount(record.receipts)}
           sortBy="receipts"
           source="receipts"
         />
+        <SelectField choices={statusChoices} source="status" translateChoice />
       </Datagrid>
     </List>
   );

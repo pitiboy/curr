@@ -1,3 +1,8 @@
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
+import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 import {
   Box,
   Button,
@@ -6,7 +11,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { alpha, type SxProps, type Theme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { useDataProvider, useTranslate } from 'react-admin';
 
 import { STRAPI_URL } from '../../config';
@@ -46,11 +53,21 @@ export function ReceiptRail({ cards, onChange }: ReceiptRailProps) {
   const types = useReceiptTypes();
 
   function update(key: string, patch: Partial<ReceiptCardValue>) {
-    onChange(cards.map((card) => (card.key === key ? { ...card, ...patch } : card)));
+    onChange(
+      cards.map((card) => (card.key === key ? { ...card, ...patch } : card)),
+    );
   }
 
   return (
-    <Box sx={{ maxWidth: '100%', minInlineSize: 0, minWidth: 0, mt: 2, width: '100%' }}>
+    <Box
+      sx={{
+        maxWidth: '100%',
+        minInlineSize: 0,
+        minWidth: 0,
+        mt: 2,
+        width: '100%',
+      }}
+    >
       <Box
         component="fieldset"
         sx={{
@@ -187,21 +204,7 @@ function ReceiptCard({
         value={card.vendor}
         onChange={(event) => onChange({ vendor: event.target.value })}
       />
-      <Button component="label" size="small" type="button" variant="outlined">
-        {translate('app.receipt_file')}
-        <input
-          hidden
-          type="file"
-          onChange={(event) => {
-            const next = event.target.files?.[0] ?? null;
-            onChange({ file: next && next.size > 0 ? next : null });
-            event.target.value = '';
-          }}
-        />
-      </Button>
-      <Typography color="text.secondary" variant="body2">
-        {card.file ? card.file.name : translate('app.receipt_skip')}
-      </Typography>
+      <ReceiptDropzone file={card.file} onFile={(file) => onChange({ file })} />
       {invalid ? (
         <Typography color="error" variant="body2">
           {translate('app.receipt_card_required')}
@@ -210,6 +213,126 @@ function ReceiptCard({
       <Button size="small" type="button" onClick={onRemove}>
         {translate('app.receipt_remove')}
       </Button>
+    </Box>
+  );
+}
+
+const HATCH_PERIOD = 8;
+
+/** Empty dropzone: the hatch opacity breathes. One full pulse is 2s. */
+function receiptDropCue(playing: boolean, drag: boolean, filled: boolean): SxProps<Theme> {
+  return (theme) => {
+    const line = alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'dark' ? 0.28 : 0.14,
+    );
+    const filledBg =
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.common.white, 0.08)
+        : theme.palette.grey[200];
+    return {
+      '@keyframes receiptDropHatch': {
+        '0%, 100%': { opacity: 0.35 },
+        '50%': { opacity: 1 },
+      },
+      '@media (prefers-reduced-motion: reduce)': {
+        '&::before': { animation: 'none', opacity: 1 },
+      },
+      '&:focus-visible': {
+        outline: '2px solid',
+        outlineColor: 'primary.main',
+        outlineOffset: 2,
+      },
+      '&::before': playing
+        ? {
+            animation: 'receiptDropHatch 2s ease-in-out infinite',
+            backgroundImage: `repeating-linear-gradient(45deg, transparent 0 7px, ${line} 7px ${HATCH_PERIOD}px)`,
+            borderRadius: 'inherit',
+            content: '""',
+            inset: 0,
+            pointerEvents: 'none',
+            position: 'absolute',
+          }
+        : undefined,
+      alignItems: 'center',
+      bgcolor: filled ? filledBg : drag ? 'action.hover' : 'transparent',
+      border: '1px dashed',
+      borderColor: drag ? 'primary.main' : 'divider',
+      borderRadius: 1,
+      cursor: 'pointer',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 0.5,
+      justifyContent: 'center',
+      position: 'relative',
+      px: 2,
+      py: 3,
+      textAlign: 'center',
+    };
+  };
+}
+
+function ReceiptFileMark({ file }: { file: File }) {
+  const type = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  const sx = { color: 'text.secondary', fontSize: 40, position: 'relative' } as const;
+  if (type === 'application/pdf' || name.endsWith('.pdf')) {
+    return <PictureAsPdfOutlinedIcon sx={sx} />;
+  }
+  if (type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/.test(name)) {
+    return <ImageOutlinedIcon sx={sx} />;
+  }
+  if (
+    type.includes('sheet') ||
+    type.includes('excel') ||
+    type === 'text/csv' ||
+    /\.(xlsx?|csv|ods)$/.test(name)
+  ) {
+    return <TableChartOutlinedIcon sx={sx} />;
+  }
+  if (type.includes('word') || type.startsWith('text/') || /\.(docx?|odt|rtf|txt)$/.test(name)) {
+    return <DescriptionOutlinedIcon sx={sx} />;
+  }
+  return <InsertDriveFileOutlinedIcon sx={sx} />;
+}
+
+function ReceiptDropzone({
+  file,
+  onFile,
+}: {
+  file: File | null;
+  onFile: (file: File | null) => void;
+}) {
+  const translate = useTranslate();
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    multiple: false,
+    onDrop: (accepted) => {
+      const next = accepted[0];
+      if (next && next.size > 0) onFile(next);
+    },
+  });
+
+  return (
+    <Box>
+      <Box
+        {...getRootProps()}
+        sx={receiptDropCue(!file && !isDragActive, isDragActive, Boolean(file))}
+      >
+        <input {...getInputProps()} />
+        {file ? <ReceiptFileMark file={file} /> : null}
+        <Typography
+          color={file ? 'text.primary' : 'text.secondary'}
+          sx={{ overflowWrap: 'anywhere', position: 'relative' }}
+          variant="body2"
+        >
+          {file ? file.name : translate('app.receipt_drop')}
+        </Typography>
+      </Box>
+      {file ? (
+        <Button size="small" type="button" onClick={() => onFile(null)}>
+          {translate('app.receipt_clear')}
+        </Button>
+      ) : null}
     </Box>
   );
 }
@@ -261,11 +384,7 @@ export function ReceiptFileList({ receipts }: { receipts: unknown }) {
   return (
     <Box component="ul" sx={{ m: 0, mb: 1, pl: 2 }}>
       {items.map((receipt, index) => (
-        <Box
-          component="li"
-          key={receiptKey(receipt, index)}
-          sx={{ mb: 0.5 }}
-        >
+        <Box component="li" key={receiptKey(receipt, index)} sx={{ mb: 0.5 }}>
           {receiptTypeName(receipt) ? `${receiptTypeName(receipt)} · ` : null}
           <ReceiptLink receipt={receipt} />
         </Box>
@@ -299,7 +418,8 @@ function receiptTypeName(receipt: unknown): string {
   if (!receipt || typeof receipt !== 'object' || !('receipt_type' in receipt)) {
     return '';
   }
-  const type = (receipt as { receipt_type?: { name?: unknown } | null }).receipt_type;
+  const type = (receipt as { receipt_type?: { name?: unknown } | null })
+    .receipt_type;
   return type && typeof type.name === 'string' ? type.name : '';
 }
 

@@ -39,9 +39,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     receipt_block: 'Bizonylatok',
     receipt_optional:
       'A bizonylat kihagyható. Fájl nélkül nem jön létre bizonylat.',
-    receipt_file: 'Fájl',
+    receipt_drop: 'Húzd ide a fájlt, vagy kattints a tallózáshoz.',
     receipt_clear: 'Fájl elvetése',
-    receipt_skip: 'Nincs csatolva fájl.',
     receipt_vendor: 'Eladó',
     receipt_vendor_hint: 'Fájl csatolásakor az eladó kötelező.',
     receipt_type: 'Bizonylattípus',

@@ -40,9 +40,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     receipt_block: 'Receipts',
     receipt_optional:
       'The receipt can be skipped. Without a file, no receipt is created.',
-    receipt_file: 'File',
+    receipt_drop: 'Drop a file here, or click to browse.',
     receipt_clear: 'Remove file',
-    receipt_skip: 'No file attached.',
     receipt_vendor: 'Vendor',
     receipt_vendor_hint: 'A vendor is required when a file is attached.',
     receipt_type: 'Receipt type',
