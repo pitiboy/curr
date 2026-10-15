@@ -34,6 +34,8 @@ Each transaction is recorded using double-entry bookkeeping principles with debi
 - **Expense tracking**: The system can track expenses that belong to specific projects or locations.
 - **Multi-currency support**: Transactions can be made in different currencies with automatic conversion.
 
+Worked double-entry **ügyletek** (cash expense through korona, eggs, fruit, land purchase, renovation, operating subsidy, and administration) are in [Ügyletek](./transaction-workflow.md). An ügylet is the whole business event; a transaction remains one debit and credit line.
+
 ```mermaid
 erDiagram
     %% === Core entities ===
@@ -191,7 +193,18 @@ erDiagram
 - **Receipt Attachments**: Transactions can include receipt images/files
 - **Cloudinary Integration**: Media files stored on Cloudinary CDN
 
+### Accounting loop before new domains
+
+The [use cases](#use-cases) above are the product core: member balance and history, scheduled fees, invoice registration, file import, and project or board reports. Backoffice operations, list performance, and delivery order are in the [v2 roadmap](prd/0002-content-backoffice-v2.md). The data-model rules for this loop:
+
+- **Stored balances**: aggregates by organization, account, currency, and period. A list row does not recompute the balance.
+- **Rate at booking**: the transaction stores the currency and the rate used when it was recorded. A later change to `CurrencyRate` does not rewrite old balances.
+- **Idempotent scheduled fees**: retrying a member-fee run does not insert a second row.
+- **Import with a reject log**: statement and chart-of-accounts import shows a preview and keeps the rejected rows.
+
 #### Missing items to consider for further addition
+
+These wait until the accounting loop above is in place.
 
 - Member's Competencies
 - Organization might required further physical Location entity

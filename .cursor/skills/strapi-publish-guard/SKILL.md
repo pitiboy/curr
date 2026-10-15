@@ -2,7 +2,7 @@
 name: strapi-publish-guard
 description: >-
   Enforces Strapi 5.58 draft versus publish for transaction and receipt,
-  seeds the dataentry and qa Users & Permissions roles, makes receipt.vendor
+  seeds the dataentry and editor Users & Permissions roles, makes receipt.vendor
   optional, and configures the Google provider. Use when editing draft and
   publish, Users & Permissions roles, the receipt schema, src/index.ts
   bootstrap, or the Google grant in config/plugins.ts.
@@ -14,46 +14,41 @@ A követelmény a `docs/prd/0001-content-backoffice-v1.md` §9. Ez a skill a rep
 
 ## Séma
 
-A `src/api/receipt/content-types/receipt/schema.json` fájlban a `vendor` `required` mezője legyen `false`. A `document` maradjon `required: true`. A `description` required marad. A `transaction.receipt` reláció maradjon opcionális `manyToOne`.
+A `src/api/receipt/content-types/receipt/schema.json` fájlban a `vendor` `required` mezője legyen `false`. A `document` maradjon `required: true`. A `description` required marad. A transaction `receipts` mezője opcionális `oneToMany`, a receipt `transaction` mezője `manyToOne`. A `receipt_type` kötelező `manyToOne` a `receipt-type` törzsre. A törzs `draftAndPublish: false`, a nevét a `bootstrap()` idempotensen tölti.
+
+A `transaction` és a `receipt` sémán legyen `entered_by` és `published_by`, mindkettő `string`, nem kötelező. Nem reláció: a Content user e-mailjét tárolják, user `find` jog nélkül. A `createdAt` és a `publishedAt` a dokumentum saját mezője, külön datetime nem kell.
+
+A transaction `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account` és `credit_account` mezője a sémában `required: true`. Piszkozatnál a Strapi a `required` kényszert kihagyja; a HTTP draft írást a middleware négyesre szűkíti (`date`, `amount`, `currency_type`, `description`). Publish-nál a tárolt draft mind a hét mezője kötelező: a middleware a link táblás relációkat `db.query` populate-val olvassa, nem `documents().findOne`-nal. A `config/api.ts` `documents.strictRelations` értéke `true`, hogy a publish a kötelező relációkat is ellenőrizze.
 
 Más content type `draftAndPublish` értéke nem változik.
 
 ## Middleware
 
-A `src/index.ts` `register({ strapi })` törzsében, a meglévő proxy middleware mellett:
+A `src/index.ts` `register({ strapi })` a `src/publish-guard.ts` `registerPublishGuard` függvényét köti a Document Service-re. Az `editor` nem lép ki korán: a `guardEffect` dönt.
 
-```ts
-import { errors } from '@strapi/utils';
+- Admin, seed és user nélküli hívás (`actor` null): az őr nem ír és nem tilt.
+- Transaction create és update, drafton is: a `date`, `amount`, `currency_type` és a `description` kötelező HTTP kérésből. Az `organization`, a `debit_account` és a `credit_account` hiánya vagy ürítése draft írásnál nem 400. Update-nél a kimaradó kulcs a tárolt értéket hagyja. Request nélküli seed nem esik az ellenőrzés alá.
+- Transaction `publish`: a tárolt draft mind a hét mezője kitöltött legyen, különben 400 és a dokumentum nem lesz published. A publish action nem hoz mezőket; a middleware a mentett sort olvassa.
+- `dataentry` publish, unpublish, vagy create/update `status=published`: 403.
+- `CONTENT_DEFAULT_STATUS` `draft` (alap): create/update `status=published` 403, editornek is. `published`: az editor create/update publikálhat, ha a másik szabály engedi.
+- `CONTENT_PUBLISHER_MUST_DIFFER` igaz (alap): az `entered_by` e-mailje nem publikálhatja ugyanazt a dokumentumot. `false` vagy `0`: ugyanaz a user publikálhat. Üres `entered_by` nem blokkol.
 
-const GUARDED = ['api::transaction.transaction', 'api::receipt.receipt'];
-
-strapi.documents.use(async (context, next) => {
-  if (!GUARDED.includes(context.uid)) return next();
-
-  const roleType = await contentApiRoleType(strapi);
-  if (roleType === null || roleType === 'qa') return next();
-
-  const publishing =
-    context.action === 'publish' ||
-    context.action === 'unpublish' ||
-    ((context.action === 'create' || context.action === 'update') &&
-      context.params?.status === 'published');
-
-  if (publishing) {
-    throw new errors.ForbiddenError(
-      'Only the qa role can publish transactions and receipts'
-    );
-  }
-
-  return next();
-});
-```
-
-`contentApiRoleType` csak akkor ad vissza szerep-`type` stringet, ha a kérés users-permissions stratégiájú. Admin, seed és user nélküli hívás `null`. A szerepet a user rekordról töltsd, `role` populate-tal; a JWT-ben lévő id önmagában nem elég, ha a role nincs a state-en.
+A szerepet a user rekordról töltsd, `role` populate-tal. A JWT-ben lévő id önmagában nem elég, ha a role nincs a state-en. Admin, seed és user nélküli hívás `null`.
 
 A REST API `status` nélkül publishedet ír. Az SPA ezért `?status=draft` queryt küld. A middleware-ben a hiányzó `params.status` nem publish: a Document Service alapja a draft. Csak a `published` és a `publish` / `unpublish` action tiltott.
 
-A `qa` publish után a kapcsolt receipt is published legyen, különben a published transaction populate üres receiptet ad. Az őr a `qa`-nak mindkét uid-ot engedi.
+A kapcsolt receipt-ek automatikus publishje a különböző-ember szabályt nem futtatja újra.
+
+Ugyanebben a middleware-ben, a publish döntés után, ha a hívás mehet tovább:
+
+- `create`: `entered_by` a Content user e-mailje. A body-ból jövő `entered_by` és `published_by` nem számít.
+- `publish`, vagy create/update `status === 'published'` az `editor` szerepnél: `published_by` az `editor` e-mailje.
+- `unpublish`: `published_by` üres.
+- `update`: a body `entered_by` és `published_by` mezőjét dobd el, a tárolt rögzítő marad.
+
+Admin, seed és user nélküli hívásnál az audit mezőt ne írd felül.
+
+Az `editor` publish után a tranzakció minden kapcsolt receiptje published legyen, különben a published transaction populate üres receipts tömböt ad. Az őr az `editor`-nak mindkét uid-ot engedi.
 
 Ne a member lifecycle mintát másold. Az entityService lifecycle nem látja megbízhatóan a `publish()` actiont.
 
@@ -61,7 +56,7 @@ Ne a member lifecycle mintát másold. Az entityService lifecycle nem látja meg
 
 Idempotens ensure a `src/index.ts` `bootstrap({ strapi })` függvényében. Productionben is fusson. A `database/seeders/initial-data.js` productionben kilép, oda ne tedd a szerepeket.
 
-`plugin::users-permissions.role` `type` értéke: `dataentry` és `qa`. Ha a `type` már létezik, ne hozz létre másodikat. A permission sorokat az aktuális action-listából vedd:
+`plugin::users-permissions.role` `type` értéke: `dataentry` és `editor`. Ha a `type` már létezik, ne hozz létre másodikat. Ha `editor` nincs, de `qa` igen, a meglévő sort nevezd át (`name`, `type`, `description`); a permission a role id-n marad. Ha `editor` már van, a `qa` sort hagyd. A permission sorokat az aktuális action-listából vedd:
 
 `strapi.plugin('users-permissions').service('users-permissions').getActions()`.
 
@@ -73,7 +68,12 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 | mindkettő | `api::receipt.receipt.find`, `findOne`, `create`, `update` |
 | mindkettő | `api::organization.organization.find`, `findOne` |
 | mindkettő | `api::account.account.find`, `findOne` |
+| mindkettő | `api::currency-type.currency-type.find`, `findOne` |
+| mindkettő | `api::receipt-type.receipt-type.find`, `findOne` |
 | mindkettő | a content-api upload action (`plugin::upload.content-api.upload`, ha a getActions így hívja) |
+| mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs) |
+
+A Content API sanitize leveszi a `role` relációt, ha nincs `role.find`. Azt ne add ki: a `GET /roles` a szereplistát nyitná meg. A `src/extensions/users-permissions/strapi-server.ts` a `/api/users/me` válaszba a hívó saját role-ját teszi vissza (`type` a `ctx.state.user.role`-ból).
 
 Delete, users-permissions user admin és az upload destroy kimarad. A publishhez nincs külön action: az őr dönt.
 
@@ -89,6 +89,7 @@ Content API JWT-vel, nem Admin tokennel:
 
 - `dataentry` `POST /api/transactions` status nélkül vagy `?status=published`: 403, a dokumentum nem published.
 - `dataentry` `POST /api/transactions?status=draft`: 200, draft.
-- `qa` publish: a transaction `status=published`. Receipttel együtt a receipt published verziója is létezik.
-- `vendor` nélküli receipt `document` fájllal menthető.
+- `editor` publish: a transaction `status=published`, a `published_by` az `editor` e-mailje. A tranzakció minden kapcsolt receiptjének published verziója is létezik.
+- `dataentry` draft create: az `entered_by` a belépett e-mail, akkor is, ha a body más értéket küld.
+- A séma `vendor` nélkül is ment receiptet. Fájl csatolásakor a felület az eladót és a típust megköveteli.
 - Admin Content Manager publish továbbra is működik.

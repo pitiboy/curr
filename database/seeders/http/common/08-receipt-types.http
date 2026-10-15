@@ -1,0 +1,86 @@
+# Bizonylattípusok
+# A rekordok a dataDir/receipt-types.json fájlban vannak.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a természetes kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof rtItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.rtItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "receipt-types.json"), "utf8")
+    );
+    exports.rtIds = {};
+    exports.rtFailed = {};
+  }
+}}
+
+###
+# @name lookup-receipt-type
+# @loop for item of rtItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
+}}
+GET {{baseUrl}}/api/receipt-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    rtFailed[item.name] = true;
+    exports.rtFailed = rtFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      rtIds[item.name] = found;
+      exports.rtIds = rtIds;
+    }
+  }
+}}
+
+###
+# @name create-receipt-type
+# @loop for item of rtItems
+{{
+  if (rtIds[item.name] || rtFailed[item.name]) {
+    exports.$cancel = true;
+  } else {
+    exports.rtPayload = JSON.stringify({ data: item });
+  }
+}}
+POST {{baseUrl}}/api/receipt-types
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{rtPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      rtIds[item.name] = created;
+      exports.rtIds = rtIds;
+    }
+  }
+}}

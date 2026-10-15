@@ -44,7 +44,7 @@
     },
     "vendor": {
       "type": "string",
-      "required": true,
+      "required": false,
       "metadatas": {
         "label": "Eladó",
         "description": "Az eladó vagy szolgáltató neve"
@@ -65,11 +65,26 @@
         "description": "A nyugta dokumentuma (kép, PDF, stb.)"
       }
     },
-    "transactions": {
+    "transaction": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToOne",
       "target": "api::transaction.transaction",
-      "mappedBy": "receipt"
+      "inversedBy": "receipts"
+    },
+    "receipt_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::receipt-type.receipt-type",
+      "required": true,
+      "inversedBy": "receipts"
+    },
+    "entered_by": {
+      "type": "string",
+      "required": false
+    },
+    "published_by": {
+      "type": "string",
+      "required": false
     }
   }
 }

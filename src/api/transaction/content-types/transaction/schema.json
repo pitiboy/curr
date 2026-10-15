@@ -21,12 +21,14 @@
       "required": true
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "required": true
     },
     "debit_account": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
+      "required": true,
       "metadatas": {
         "label": "Költség számlaszám",
         "description": "mire ment a pénz (anyag, bér, a megvett dolog) = `Tartozik`"
@@ -37,6 +39,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::account.account",
+      "required": true,
       "metadatas": {
         "label": "Kifizető számlaszám",
         "description": "Honnan fizetted ki (pl készpénz vagy bank) = `Követel`"
@@ -57,6 +60,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::currency-type.currency-type",
+      "required": true,
       "metadatas": {
         "label": "Pénznem típus",
         "description": "A tranzakció pénzneme vagy erőforrás típusa"
@@ -87,21 +91,30 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::organization.organization",
+      "required": true,
       "metadatas": {
         "label": "Szervezet",
         "description": "A szervezeti fa azon csomópontja, amelyre a költség tartozik (a projekt)"
       },
       "inversedBy": "transactions"
     },
-    "receipt": {
+    "receipts": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "oneToMany",
       "target": "api::receipt.receipt",
+      "mappedBy": "transaction",
       "metadatas": {
-        "label": "Nyugta",
-        "description": "A tranzakcióhoz tartozó nyugta"
-      },
-      "inversedBy": "transactions"
+        "label": "Bizonylatok",
+        "description": "A tranzakcióhoz tartozó bizonylatok"
+      }
+    },
+    "entered_by": {
+      "type": "string",
+      "required": false
+    },
+    "published_by": {
+      "type": "string",
+      "required": false
     }
   }
 }

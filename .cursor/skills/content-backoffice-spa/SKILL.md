@@ -35,48 +35,50 @@ const dataProvider = withDocumentId(
 
 A `loginPage` a react-admin `LoginWithEmail`, plusz egy Google gomb. A Google a Strapi `/api/connect/google` flow-ja. A visszakapott Content JWT-t ugyanoda tedd, ahová a `strapiAuthProvider` a local login tokenjét írja; a tárolást a telepített `ra-strapi` auth provider forrásából olvasd ki, ne találj ki második tokenkulcsot.
 
-Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry` vagy `qa`. Az `ra-strapi` ezt nem tölti ki.
+Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry` vagy `editor`. Az `ra-strapi` ezt nem tölti ki.
 
-Minden dataentry írás queryje `status=draft`. A REST status nélkül publishedet ír, és a szerver a `dataentry` publisht 403-mal elutasítja.
+A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél is. A REST status nélkül publishedet ír, és a szerver a `dataentry` publisht 403-mal elutasítja.
 
 ## Oldalak
 
-Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és a review route. Guesser nincs az éles fában.
+Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és megtekintés. Guesser nincs az éles fában. Külön review lista nincs.
 
 | Route | Szerep | Viselkedés |
 | --- | --- | --- |
-| `/transactions/create` | `dataentry` | Create. Mentés draft. Publish nincs. |
-| `/transactions/review` | `qa` | Lista `status=draft`. Show/edit. Publish gomb. |
-| `/transactions` | mindkettő | Draft és published. Szűrő. Nincs create, edit, publish. |
+| `/transactions/create` | `dataentry`, `editor` | Create. Mentés draft. Publish nincs. |
+| `/transactions/:id/show` | mindkettő | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít. |
+| `/transactions` | mindkettő | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
 | `/login` | vendég | Email/jelszó és Google. |
 | `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |
 
-A menü a szerep szerint rejti a create vagy a review elemet. Ismeretlen szerep egyik író oldalt sem kapja meg.
+A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
-A create és a review mezői: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`, opcionális `receipt`. A `transaction_type`, `currency_type` és `related_transaction` nincs a v1 űrlapon.
+A create és a megtekintés mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. Create-en a négyes (`date`, `amount`, `currency_type`, `description`) kötelező és csillagos; a három reláció opcionális, csillag és validáció nélkül. `editor` + draft megtekintésen mind a hét mező szerkeszthető; a Véglegesít csak a hetes kitöltése után megy (draft update, majd publish). A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
 
-Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`.
+Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`. A Szűrők törlése minden szűrőt alapra állít, a menüből hozott draft szűrőt is.
+
+A lista és a megtekintés mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A create űrlapon ezek a mezők nincsenek. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`.
 
 ## Számlakód
 
 A választó a lekért accountok kliens szűrője. Forrás a `database/seeders/org-initializer.js` asset és expense blokkja.
 
-- Debit: `code` ∈ `5000` (Anyagköltség), `5100` (Bérköltség), `5400` (Szolgáltatások).
-- Credit: `code` illeszkedik `^1`-re. A seedben legalább `1000` Készpénz és `1100` Bankszámlák. A `1200` és `1300` is `1`-gyel kezdődik, bent marad.
+- Debit: `VITE_DEBIT_CODES` regex. Ha nincs megadva, `/^5/`.
+- Credit: `VITE_CREDIT_CODES` regex. Ha nincs megadva, `/^(1|3)/`.
 
 A kódlista nem szerver policy. Üres selectnél a seed hiányzik, ne bővítsd a listát csendben más kódokkal.
 
 ## Receipt
 
-A transaction `receipt` reláció opcionális. Üres receipttel a tranzakció menthető.
+Egy tranzakcióhoz több bizonylat tartozhat. A `receipts` reláció opcionális: nulla kártyával vagy fájl nélkül a tranzakció menthető. A `vendor` a sémában nem kötelező. Ha a kártyán van fájl, az eladó és a `receipt_type` üresen nem menthető.
 
-Ha a felhasználó bizonylatot csatol:
+A külső kulcs a receipten van, ezért a sorrend:
 
-1. `POST /api/upload` multipart, a Content JWT-vel, a fájl a `files` mezőben.
-2. Receipt create `?status=draft`: a `document` a feltöltés id-ja. A `vendor` mehet üresen. A `date`, `amount` és `description` előtöltés a tranzakcióból; a séma ezeket kötelezőnek tartja a receipt soron.
-3. A transaction `receipt` mezője a receipt `documentId`.
+1. Tranzakció create `?status=draft`.
+2. Fájlonként `POST /api/upload` multipart, a Content JWT-vel, a fájl a `files` mezőben.
+3. Receipt create `?status=draft`. A `document` a feltöltés id-ja, a `transaction` a tranzakció `documentId`-ja, a `receipt_type` a típus `documentId`-ja. A `date`, `amount` és `description` a tranzakcióból másolódik.
 
-A review a receipt dokumentumát linkkel vagy előnézettel mutatja, ha van. A lista egy receipt oszlopot mutat.
+A `receipt-type` törzset a SPA csak olvassa (`find`, `findOne`). A lista a bizonylatok darabszámát mutatja. A megtekintés minden fájlt külön linkkel nyit. A populate a `receipts` tömb `document` url mezőit és a `receipt_type` nevet kéri; `document=*` tilos.
 
 ## Profil és i18n
 
@@ -86,8 +88,8 @@ Profil: `GET /api/users/me`. Jelszócsere: `POST /api/auth/change-password` (`cu
 
 ## Deploy
 
-`vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` path statikus fájljai. Az API ugyanaz az origin. A lépést a `docs/deploy/` alá írd, a meglévő cPanel alias jegyzet mellé. CI pipeline nincs.
+`npm run deploy:f` a repo gyökerében. Előtte `build:f:kor.fejlesztesek.hu` beégeti a `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` értéket. Az FTP a `dist` tartalmát a Strapi `public/backoffice` mappájába teszi; a `strapi::public` middleware a `/backoffice/` útvonalon adja. Ugyanaz az `.env.deploy:kor.fejlesztesek.hu`, mint a Strapi deploy. A jegyzet: `docs/deploy/cpanel/backoffice.md`. CI pipeline nincs.
 
 ## Kész, ha
 
-A §10 kilenc storyja és a §12 checklistje teljesül. Az acceptance subagent (`backoffice-acceptance`) a diffet storynként pass/fail listára bontja; a DoD pipa csak azután kerül a PRD-be.
+A §10 storyjai és a §12 checklistje teljesül. Az acceptance subagent (`backoffice-acceptance`) a diffet storynként pass/fail listára bontja; a DoD pipa csak azután kerül a PRD-be.

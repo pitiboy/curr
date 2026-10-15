@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "receipt_types",
+  "info": {
+    "singularName": "receipt-type",
+    "pluralName": "receipt-types",
+    "displayName": "Receipt Type",
+    "description": "Shared kind of a receipt document"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Név",
+        "description": "A bizonylat típus neve"
+      }
+    },
+    "description": {
+      "type": "text",
+      "required": false,
+      "metadatas": {
+        "label": "Leírás",
+        "description": "A bizonylat típus leírása"
+      }
+    },
+    "receipts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::receipt.receipt",
+      "mappedBy": "receipt_type"
+    }
+  }
+}

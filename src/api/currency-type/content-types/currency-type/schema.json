@@ -50,6 +50,16 @@
         "description": "A pénznem mértékegysége (pl. Ft, €, óra)"
       }
     },
+    "icon": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "metadatas": {
+        "label": "Ikon",
+        "description": "Egy kis PNG vagy SVG kép a pénznem mellé"
+      }
+    },
     "transactions": {
       "type": "relation",
       "relation": "oneToMany",

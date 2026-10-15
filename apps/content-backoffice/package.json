@@ -1,0 +1,37 @@
+{
+  "name": "content-backoffice",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/patch-mui9-text-field-props.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/patch-mui9-text-field-props.mjs",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "pretest": "node scripts/patch-mui9-text-field-props.mjs",
+    "test": "vitest run",
+    "postinstall": "node scripts/patch-mui9-text-field-props.mjs"
+  },
+  "dependencies": {
+    "ra-i18n-polyglot": "^5.13.3",
+    "ra-language-english": "^5.13.3",
+    "ra-language-hungarian": "^1.4.0",
+    "ra-strapi": "1.0.3",
+    "react": "^19.2.8",
+    "react-admin": "^5.13.3",
+    "react-dom": "^19.2.8",
+    "react-dropzone": "^14.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vitest": "^3.2.4"
+  }
+}

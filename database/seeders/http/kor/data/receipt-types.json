@@ -1,0 +1,15 @@
+[
+  { "name": "Számla" },
+  { "name": "Előlegszámla" },
+  { "name": "Végszámla" },
+  { "name": "Módosító számla" },
+  { "name": "Sztornó számla" },
+  { "name": "Nyugta" },
+  { "name": "Díjbekérő" },
+  { "name": "Bankkivonat" },
+  { "name": "Bevételi pénztárbizonylat" },
+  { "name": "Kiadási pénztárbizonylat" },
+  { "name": "Szerződés" },
+  { "name": "Teljesítésigazolás" },
+  { "name": "Egyéb" }
+]

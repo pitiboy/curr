@@ -1,0 +1,625 @@
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import { errors } from '@strapi/utils';
+
+import {
+  contentApiActor,
+  guardEffect,
+  missingStoredPublishFields,
+  missingTransactionFields,
+  readPublishPolicy,
+  registerPublishGuard,
+  relationDocumentId,
+  type PublishGuardStrapi,
+} from './publish-guard.ts';
+
+const dataentry = { roleType: 'dataentry', email: 'entry@example.com' };
+const editor = { roleType: 'editor', email: 'editor@example.com' };
+const transaction = 'api::transaction.transaction';
+const receipt = 'api::receipt.receipt';
+
+describe('guardEffect', () => {
+  it('ignores content types outside transaction and receipt', () => {
+    assert.deepEqual(
+      guardEffect('api::organization.organization', 'publish', undefined, dataentry),
+      { type: 'ignore' },
+    );
+  });
+
+  it('lets admin and seed through without rewriting audit fields', () => {
+    assert.deepEqual(
+      guardEffect(transaction, 'publish', undefined, null),
+      { type: 'ignore' },
+    );
+    assert.deepEqual(
+      guardEffect(transaction, 'create', 'published', null),
+      { type: 'ignore' },
+    );
+  });
+
+  it('forbids dataentry publish, unpublish, and published writes', () => {
+    for (const [action, status] of [
+      ['publish', undefined],
+      ['unpublish', undefined],
+      ['create', 'published'],
+      ['update', 'published'],
+    ] as const) {
+      assert.equal(
+        guardEffect(transaction, action, status, dataentry).type,
+        'forbid',
+      );
+      assert.equal(guardEffect(receipt, action, status, dataentry).type, 'forbid');
+    }
+  });
+
+  it('treats a missing document-service status as draft for dataentry', () => {
+    const effect = guardEffect(transaction, 'create', undefined, dataentry);
+    assert.equal(effect.type, 'allow');
+    if (effect.type !== 'allow') return;
+    assert.equal(effect.enteredBy, dataentry.email);
+    assert.equal(effect.publishedByOnData, undefined);
+    assert.equal(effect.publishLinkedReceipt, false);
+  });
+
+  it('overwrites entered_by on create and drops client audit fields', () => {
+    const effect = guardEffect(receipt, 'create', 'draft', dataentry);
+    assert.equal(effect.type, 'allow');
+    if (effect.type !== 'allow') return;
+    assert.equal(effect.clearAuditOnData, true);
+    assert.equal(effect.enteredBy, dataentry.email);
+  });
+
+  it('keeps the stored entered_by on update', () => {
+    const effect = guardEffect(transaction, 'update', 'draft', dataentry);
+    assert.equal(effect.type, 'allow');
+    if (effect.type !== 'allow') return;
+    assert.equal(effect.clearAuditOnData, true);
+    assert.equal(effect.enteredBy, undefined);
+    assert.equal(effect.publishedByOnData, undefined);
+  });
+
+  it('keeps editor create and update as draft unless the env allows published writes', () => {
+    assert.equal(
+      guardEffect(transaction, 'update', 'published', editor).type,
+      'forbid',
+    );
+    assert.equal(
+      guardEffect(transaction, 'create', 'published', editor).type,
+      'forbid',
+    );
+
+    const effect = guardEffect(transaction, 'update', 'published', editor, {
+      policy: { defaultStatus: 'published', publisherMustDiffer: false },
+    });
+    assert.equal(effect.type, 'allow');
+    if (effect.type !== 'allow') return;
+    assert.equal(effect.publishedByOnData, editor.email);
+    assert.equal(effect.publishLinkedReceipt, true);
+  });
+
+  it('rejects publish by the person who entered the document', () => {
+    const own = guardEffect(transaction, 'publish', undefined, editor, {
+      enteredBy: 'Editor@example.com',
+    });
+    assert.equal(own.type, 'forbid');
+    if (own.type === 'forbid') {
+      assert.match(own.message, /cannot publish/);
+    }
+
+    const other = guardEffect(transaction, 'publish', undefined, editor, {
+      enteredBy: dataentry.email,
+    });
+    assert.equal(other.type, 'allow');
+  });
+
+  it('allows the same person to publish when the env says so', () => {
+    const effect = guardEffect(transaction, 'publish', undefined, editor, {
+      policy: { defaultStatus: 'draft', publisherMustDiffer: false },
+      enteredBy: editor.email,
+    });
+    assert.equal(effect.type, 'allow');
+  });
+
+  it('writes published_by on the draft for the publish action and clears it on unpublish', () => {
+    const publish = guardEffect(transaction, 'publish', undefined, editor);
+    const unpublish = guardEffect(receipt, 'unpublish', undefined, editor);
+    assert.equal(publish.type, 'allow');
+    assert.equal(unpublish.type, 'allow');
+    if (publish.type !== 'allow' || unpublish.type !== 'allow') return;
+    assert.equal(publish.draftPublishedBy, editor.email);
+    assert.equal(publish.publishLinkedReceipt, true);
+    assert.equal(unpublish.draftPublishedBy, null);
+    assert.equal(unpublish.publishLinkedReceipt, false);
+  });
+
+  it('does not cascade a receipt publish back onto transactions', () => {
+    const effect = guardEffect(receipt, 'publish', undefined, editor);
+    assert.equal(effect.type, 'allow');
+    if (effect.type !== 'allow') return;
+    assert.equal(effect.publishLinkedReceipt, false);
+  });
+});
+
+describe('readPublishPolicy', () => {
+  it('defaults to draft writes and a different publisher', () => {
+    assert.deepEqual(readPublishPolicy({}), {
+      defaultStatus: 'draft',
+      publisherMustDiffer: true,
+    });
+  });
+
+  it('reads the published default and turns off the different-person rule', () => {
+    assert.deepEqual(
+      readPublishPolicy({
+        CONTENT_DEFAULT_STATUS: 'published',
+        CONTENT_PUBLISHER_MUST_DIFFER: 'false',
+      }),
+      { defaultStatus: 'published', publisherMustDiffer: false },
+    );
+  });
+});
+
+describe('relationDocumentId', () => {
+  it('reads a populated relation documentId', () => {
+    assert.equal(relationDocumentId({ documentId: 'rec_1' }), 'rec_1');
+    assert.equal(relationDocumentId(null), undefined);
+    assert.equal(relationDocumentId({ id: 3 }), undefined);
+  });
+});
+
+const completeDraft = {
+  date: '2026-10-15',
+  amount: 10,
+  currency_type: 'cur-1',
+  description: 'leírás',
+};
+
+const completeTransaction = {
+  ...completeDraft,
+  organization: 'org-1',
+  debit_account: 'deb-1',
+  credit_account: 'cre-1',
+};
+
+function fakeStrapi(options: {
+  strategy?: string;
+  userId?: number;
+  user?: Record<string, unknown> | null;
+  request?: boolean;
+  onUpdate?: (uid: string, data: Record<string, unknown>) => void;
+  documentsApi?: PublishGuardStrapi['documents'];
+}): PublishGuardStrapi {
+  return {
+    documents: options.documentsApi ?? ((() => {
+      throw new Error('documents() was not expected');
+    }) as unknown as PublishGuardStrapi['documents']),
+    requestContext: {
+      get: () =>
+        options.request === false
+          ? undefined
+          : {
+              state: {
+                auth: { strategy: { name: options.strategy ?? 'users-permissions' } },
+                user: options.userId == null ? undefined : { id: options.userId },
+              },
+            },
+    },
+    db: {
+      query: (uid: string) => ({
+        findOne: async () => {
+          if (uid === 'plugin::users-permissions.user') {
+            return options.user ?? null;
+          }
+          return { id: 9, documentId: 'doc_1' };
+        },
+        update: async ({ data }) => {
+          options.onUpdate?.(uid, data);
+          return {};
+        },
+      }),
+    },
+  };
+}
+
+describe('contentApiActor', () => {
+  it('returns null for admin and for a users-permissions request without a user', async () => {
+    const admin = fakeStrapi({ strategy: 'admin', userId: 1, user: { email: 'a@b.c', role: { type: 'editor' } } });
+    assert.equal(await contentApiActor(admin), null);
+
+    const anonymous = fakeStrapi({ user: { email: 'a@b.c', role: { type: 'editor' } } });
+    assert.equal(await contentApiActor(anonymous), null);
+  });
+
+  it('loads the role from the user record, not from a role already on the request', async () => {
+    const strapi = fakeStrapi({
+      userId: 4,
+      user: { email: 'entry@example.com', role: { type: 'dataentry' } },
+    });
+    assert.deepEqual(await contentApiActor(strapi), dataentry);
+  });
+});
+
+describe('registerPublishGuard', () => {
+  it('rejects a dataentry published create before next, and keeps the client payload', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 1,
+      user: { email: dataentry.email, role: { type: 'dataentry' } },
+    });
+    let middleware: (
+      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+
+    registerPublishGuard(strapi);
+    const params = {
+      status: 'published' as const,
+      data: { amount: 10, entered_by: 'forged@example.com' },
+    };
+
+    await assert.rejects(
+      () =>
+        middleware({ uid: transaction, action: 'create', params }, async () => {
+          nextCalled = true;
+          return { documentId: 'doc_1' };
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.match(error.message, /editor role/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+    assert.equal(params.data.entered_by, 'forged@example.com');
+  });
+
+  it('stores the caller email on a dataentry draft and ignores a forged entered_by', async () => {
+    const strapi = fakeStrapi({
+      userId: 1,
+      user: { email: dataentry.email, role: { type: 'dataentry' } },
+    });
+    let middleware: (
+      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    const params = {
+      status: 'draft' as const,
+      data: {
+        ...completeTransaction,
+        entered_by: 'forged@example.com',
+        published_by: 'forged@example.com',
+      },
+    };
+    const result = await middleware(
+      { uid: transaction, action: 'create', params },
+      async () => ({ documentId: 'doc_1' }),
+    );
+
+    assert.deepEqual(result, { documentId: 'doc_1' });
+    assert.equal(params.data.entered_by, dataentry.email);
+    assert.equal(params.data.published_by, undefined);
+  });
+
+  it('sets published_by on editor publish and publishes the linked receipt', async () => {
+    const updates: Array<{ uid: string; data: Record<string, unknown> }> = [];
+    const published: string[] = [];
+    const documents = Object.assign(
+      (uid: string) => ({
+        findOne: async () => null,
+        findMany: async () => [{ documentId: 'rc_1' }, { documentId: 'rc_2' }],
+        publish: async ({ documentId }: { documentId: string }) => {
+          published.push(documentId);
+          return { documentId };
+        },
+      }),
+      {
+        use: (_fn: unknown) => undefined,
+      },
+    ) as PublishGuardStrapi['documents'];
+
+    const strapi = fakeStrapi({
+      userId: 2,
+      user: { email: editor.email, role: { type: 'editor' } },
+      onUpdate: (uid, data) => updates.push({ uid, data }),
+      documentsApi: documents,
+    });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async (params: Record<string, unknown>) => {
+          if (uid === 'plugin::users-permissions.user') {
+            return { email: editor.email, role: { type: 'editor' } };
+          }
+          if (uid === transaction && params?.populate) {
+            return {
+              id: 9,
+              documentId: 'tx_1',
+              entered_by: dataentry.email,
+              ...completeTransaction,
+              currency_type: { id: 1, documentId: 'cur-1' },
+              organization: { id: 2, documentId: 'org-1' },
+              debit_account: { id: 3, documentId: 'deb-1' },
+              credit_account: { id: 4, documentId: 'cre-1' },
+            };
+          }
+          return { id: 9, documentId: 'tx_1', entered_by: dataentry.email };
+        },
+      };
+    };
+    let middleware: (
+      context: { uid: string; action: string; params?: { documentId?: string } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+      async () => ({ documentId: 'tx_1' }),
+    );
+
+    assert.deepEqual(updates, [
+      { uid: transaction, data: { published_by: editor.email } },
+    ]);
+    assert.deepEqual(published, ['rc_1', 'rc_2']);
+  });
+
+  it('rejects editor publish of a document that the same person entered', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 2,
+      user: { email: editor.email, role: { type: 'editor' } },
+    });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async () =>
+          uid === 'plugin::users-permissions.user'
+            ? { email: editor.email, role: { type: 'editor' } }
+            : { id: 9, documentId: 'tx_1', entered_by: 'editor@example.com' },
+      };
+    };
+    let middleware: (
+      context: { uid: string; action: string; params?: { documentId?: string } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'tx_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.match(error.message, /cannot publish/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('rejects a draft create that omits required fields', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 1,
+      user: { email: dataentry.email, role: { type: 'dataentry' } },
+    });
+    let middleware: (
+      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          {
+            uid: transaction,
+            action: 'create',
+            params: { status: 'draft', data: { description: 'csak leírás' } },
+          },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'doc_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof errors.ValidationError);
+        assert.match(error.message, /date, amount, currency_type/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('lets an admin draft update clear an optional relation', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({ strategy: 'admin', userId: 1 });
+    let middleware: (
+      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      {
+        uid: transaction,
+        action: 'update',
+        params: { data: { organization: null } },
+      },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+
+  it('rejects publish when the stored draft is missing publish fields', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 2,
+      user: { email: editor.email, role: { type: 'editor' } },
+    });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async (params: Record<string, unknown>) => {
+          if (uid === 'plugin::users-permissions.user') {
+            return { email: editor.email, role: { type: 'editor' } };
+          }
+          if (uid === transaction && params?.populate) {
+            return {
+              id: 9,
+              documentId: 'tx_1',
+              date: '2026-10-15',
+              amount: 10,
+              description: 'leírás',
+              currency_type: { id: 1, documentId: 'cur-1' },
+              entered_by: dataentry.email,
+            };
+          }
+          return { id: 9, documentId: 'tx_1', entered_by: dataentry.email };
+        },
+      };
+    };
+    let middleware: (
+      context: { uid: string; action: string; params?: { documentId?: string } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'tx_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof errors.ValidationError);
+        assert.match(error.message, /organization, debit_account, credit_account/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('lets a request-less seed write an incomplete transaction', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({ request: false });
+    let middleware: (
+      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      { uid: transaction, action: 'create', params: { data: { description: 'seed' } } },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+});
+
+describe('missingTransactionFields', () => {
+  it('requires the draft quartet on create and only sent keys on update', () => {
+    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'create'), [
+      'date',
+      'amount',
+      'currency_type',
+    ]);
+    assert.deepEqual(missingTransactionFields(completeDraft, 'create'), []);
+    assert.deepEqual(
+      missingTransactionFields(
+        { ...completeDraft, organization: 'org-1' },
+        'create',
+      ),
+      [],
+    );
+    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ amount: 0 }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ organization: { set: [] } }, 'update'), []);
+    assert.deepEqual(
+      missingTransactionFields(
+        { currency_type: { set: [{ documentId: 'cur-1' }] } },
+        'update',
+      ),
+      [],
+    );
+  });
+});
+
+describe('missingStoredPublishFields', () => {
+  it('requires all seven fields on the stored draft row', () => {
+    assert.deepEqual(missingStoredPublishFields(null), [
+      'date',
+      'amount',
+      'currency_type',
+      'description',
+      'organization',
+      'debit_account',
+      'credit_account',
+    ]);
+    assert.deepEqual(
+      missingStoredPublishFields({
+        date: '2026-10-15',
+        amount: 10,
+        description: 'x',
+        currency_type: { id: 1 },
+        organization: { id: 2 },
+        debit_account: { id: 3 },
+        credit_account: { id: 4 },
+      }),
+      [],
+    );
+    assert.deepEqual(
+      missingStoredPublishFields({
+        ...completeDraft,
+        currency_type: { id: 1 },
+      }),
+      ['organization', 'debit_account', 'credit_account'],
+    );
+  });
+});
