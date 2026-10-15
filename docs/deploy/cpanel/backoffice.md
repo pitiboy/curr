@@ -6,11 +6,11 @@ A Strapi FTP mintája változatlan: `deploy`, `deploy:kor.fejlesztesek.hu`, `scr
 
 ## Mit hova
 
-| Lépés | Parancs | Eredmény |
-| --- | --- | --- |
-| Build | `npm run _predeploy:f:kor.fejlesztesek.hu` | `apps/content-backoffice/dist`, `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` |
-| Feltöltés | `npm run deploy:f` | A `dist` a `kor-szupatak/public/backoffice` mappába megy |
-| URL | — | `https://kor.fejlesztesek.hu/backoffice/` |
+| Lépés     | Parancs                                   | Eredmény                                                                      |
+| --------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
+| Build     | `npm run predeploy:f:kor.fejlesztesek.hu` | `apps/content-backoffice/dist`, `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` |
+| Feltöltés | `npm run deploy:f`                        | A `dist` a `kor-szupatak/public/backoffice` mappába megy                      |
+| URL       | —                                         | `https://kor.fejlesztesek.hu/backoffice/`                                     |
 
 A `strapi::public` a `public/` tartalmát a host gyökerén szolgálja, ezért a távoli `public/backoffice` a `/backoffice` path. A gyökér `package.json` nem kap React Admin függőséget; az SPA saját `node_modules` az `apps/content-backoffice` alatt.
 
@@ -23,7 +23,6 @@ A `strapi::public` a `public/` tartalmát a host gyökerén szolgálja, ezért a
 ## Feltöltés
 
 ```bash
-npm run _predeploy:f:kor.fejlesztesek.hu
 npm run deploy:f
 ```
 
