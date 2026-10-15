@@ -159,7 +159,7 @@ A Google kliens azonosító és titok a Humané. Az agent env kulcsot olvas, ér
 ## 10. Deploy jegyzet és átvétel
 
 - [x] `docs/deploy/` alá rövid jegyzet: `vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` pathra, `VITE_STRAPI_URL` ugyanaz az origin. CI pipeline nincs
-- [ ] A `backoffice-acceptance` subagent a §10 storykra és a §12 DoD-ra pass/fail listát ad
+- [x] A `backoffice-acceptance` subagent a §10 storykra és a §12 DoD-ra pass/fail listát ad
 - [x] A PRD §12 négyzeteit csak a Human pipálja, az agent nem
 
 - [ ] **Human:** a deploy jegyzet alapján a build kimegy a `kor.fejlesztesek.hu/backoffice` pathra, az oldal a hoston betölt, az API ugyanaz az origin. Az acceptance lista storynként pass, vagy a nyitott fail nevén van. Utána a PRD §12 sorai kipipálhatók. A fejlesztés alatti helyi adat és a helyi userök nem kerülnek az éles adatbázisba.
