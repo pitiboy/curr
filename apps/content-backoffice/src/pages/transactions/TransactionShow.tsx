@@ -124,11 +124,16 @@ function TransactionShowContent({
         </Box>
       ) : null}
       <SimpleShowLayout spacing={0} sx={bandedShow}>
-        <DateField source="date" {...dateFieldProps(locale)} />
         <FunctionField
           render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
           source="vendor"
         />
+        <FunctionField
+          render={(row: RaRecord) => relationName(row.organization)}
+          source="organization"
+        />
+
+        <DateField source="date" {...dateFieldProps(locale)} />
         <FunctionField
           label="resources.transactions.fields.amount"
           render={(row: RaRecord) => (
@@ -151,10 +156,7 @@ function TransactionShowContent({
         <TextField emptyText="—" source="description" />
 
         <SelectField choices={statusChoices} source="status" translateChoice />
-        <FunctionField
-          render={(row: RaRecord) => relationName(row.organization)}
-          source="organization"
-        />
+
         <FunctionField
           label={<AccountFieldLabel kind="credit" />}
           render={(row: RaRecord) => (

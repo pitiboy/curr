@@ -233,7 +233,22 @@ export function TransactionCreate() {
         }}
       >
         <CreateLeaveGuard receiptCardCount={receiptCards.length} />
+
         <DateInput fullWidth source="date" validate={required()} />
+        <ReferenceInput
+          perPage={100}
+          reference="organizations"
+          sort={{ field: 'name', order: 'ASC' }}
+          source="organization"
+        >
+          <AutocompleteInput
+            filterToQuery={nameFilterToQuery}
+            fullWidth
+            optionText="name"
+            validate={required()}
+          />
+        </ReferenceInput>
+
         <NumberInput fullWidth source="amount" validate={required()} />
         <ReferenceInput
           perPage={100}
@@ -248,19 +263,14 @@ export function TransactionCreate() {
             validate={required()}
           />
         </ReferenceInput>
-        <ReferenceInput
-          perPage={100}
-          reference="organizations"
-          sort={{ field: 'name', order: 'ASC' }}
-          source="organization"
-        >
-          <AutocompleteInput
-            filterToQuery={nameFilterToQuery}
-            fullWidth
-            optionText="name"
-            validate={required()}
-          />
-        </ReferenceInput>
+
+        <TextInput
+          className={bandedSpanClass}
+          fullWidth
+          multiline
+          source="description"
+        />
+
         <AccountCodeInput
           accounts={catalog.accounts}
           failed={catalog.failed}
@@ -276,12 +286,6 @@ export function TransactionCreate() {
           source="debit_account"
         />
 
-        <TextInput
-          className={bandedSpanClass}
-          fullWidth
-          multiline
-          source="description"
-        />
         <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
       </SimpleForm>
     </Create>
