@@ -5,8 +5,16 @@ export type StrapiTransaction = {
   documentId?: string;
   date?: string | null;
   createdAt?: string | null;
+  publishedAt?: string | null;
+  entered_by?: string | null;
+  published_by?: string | null;
   amount?: string | number | null;
   description?: string | null;
+  currency_type?: {
+    documentId?: string;
+    code?: string | null;
+    name?: string | null;
+  } | null;
   organization?: { documentId?: string; name?: string | null } | null;
   debit_account?: {
     documentId?: string;
@@ -34,6 +42,7 @@ export const transactionPopulate = {
   organization: true,
   debit_account: true,
   credit_account: true,
+  currency_type: true,
   receipts: {
     populate: {
       document: { fields: ['url', 'name', 'mime'] },
@@ -162,6 +171,16 @@ function toListRecord(
   };
 }
 
+/** A published version wins over the draft with the same documentId. */
+export function preferTransaction(
+  draft: StrapiTransaction | null,
+  published: StrapiTransaction | null,
+): TransactionRow | null {
+  if (published?.documentId) return toListRecord(published, 'published');
+  if (draft?.documentId) return toListRecord(draft, 'draft');
+  return null;
+}
+
 function uniqueByDocumentId(rows: StrapiTransaction[]): StrapiTransaction[] {
   const seen = new Set<string>();
   const unique: StrapiTransaction[] = [];
@@ -210,6 +229,14 @@ function sortValue(row: TransactionRow, field: string): string | number {
       return row.date ?? '';
     case 'createdAt':
       return row.createdAt ?? '';
+    case 'publishedAt':
+      return row.publishedAt ?? '';
+    case 'entered_by':
+      return row.entered_by ?? '';
+    case 'published_by':
+      return row.published_by ?? '';
+    case 'currency_type':
+      return currencySortKey(row.currency_type);
     default: {
       const value = (row as Record<string, unknown>)[field];
       if (typeof value === 'number' || typeof value === 'string') return value;
@@ -223,6 +250,13 @@ function accountSortKey(
 ): string {
   if (!account) return '';
   return [account.code, account.name].filter(Boolean).join(' ');
+}
+
+function currencySortKey(
+  currency: TransactionRow['currency_type'],
+): string {
+  if (!currency) return '';
+  return [currency.code, currency.name].filter(Boolean).join(' ');
 }
 
 function toNumber(value: string | number | null | undefined): number {

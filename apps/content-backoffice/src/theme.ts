@@ -41,19 +41,35 @@ export function bandedRow(_record: unknown, index: number): UntypedSx {
   })) as UntypedSx;
 }
 
-/** SimpleForm fields sit in a stack; that stack owns the stripe. */
-export const bandedForm: SxProps<Theme> = (theme) => ({
-  '& > .MuiStack-root': {
-    gap: 1,
-    width: '100%',
-    '& > *': {
-      borderRadius: 1,
-      boxSizing: 'border-box',
-      px: 1.5,
-      py: 1,
+/** Form and show fields sit in a stack; that stack owns the stripe. */
+function bandedStack(theme: Theme) {
+  return {
+    '& > .MuiStack-root': {
+      gap: 1,
       width: '100%',
+      '& > *': {
+        borderRadius: 1,
+        boxSizing: 'border-box',
+        px: 1.5,
+        py: 1,
+        width: '100%',
+      },
+      ...childBands(theme),
     },
-    ...childBands(theme),
+  };
+}
+
+export const bandedForm: SxProps<Theme> = (theme) => bandedStack(theme);
+
+/**
+ * SimpleShowLayout rows are inline, so the shared stripe also stretches them.
+ */
+export const bandedShow: SxProps<Theme> = (theme) => ({
+  ...bandedStack(theme),
+  '& > .MuiStack-root > .RaSimpleShowLayout-row': {
+    display: 'flex',
+    flexDirection: 'column',
+    mb: 0,
   },
 });
 

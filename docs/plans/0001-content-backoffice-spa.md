@@ -134,13 +134,13 @@ Egy tranzakcióhoz több bizonylat tartozhat. A bizonylattípus közös törzs, 
 
 A 3. lépés `/transactions/review` listája ebben a lépésben kikerül. Az Ellenőrzés menü a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanezt a listát szűrő nélkül nyitja; a két menüpont nem hagyja rajta a másik szűrőjét. A 4. lépés „nincs sor-kattintás” szabálya megmarad: a lista nem szerkeszt és nem publikál. A státusz oszlop után egy gomb nyitja a megtekintést. A review és a publish nincs kész.
 
-- [ ] Az `editor` Ellenőrzés menüpontja a `/transactions` listát nyitja, `status=draft` szűrővel. A `dataentry` a menüt nem látja. Külön review lista nincs. A `/transactions/review` route és a `TransactionReview.tsx` kikerül
-- [ ] A tranzakciók menü a `/transactions` listát szűrő nélkül nyitja. Az Ellenőrzés menü draft szűrője nem marad rajta, és a tranzakciók menü szűrője sem marad rajta az Ellenőrzésen
-- [ ] Új route és fájl: `apps/content-backoffice/src/pages/transactions/TransactionShow.tsx`, `/transactions/:id/show`, az azonosító a `documentId`. Mindkét szerep minden sort megnyithat. A lista sora nem visz sehova. A státusz oszlop után egy gomb van: `editor` + draft soron „Ellenőrzés”, minden más soron „Megtekintés”
-- [ ] A megtekintés readonly: tranzakciómezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron a `published_by` és a `publishedAt` is. A lista ugyanezeket mutatja. A mezők nem szerkeszthetők
-- [ ] `editor` + draft: a megtekintésen a mostani bizonylat-csatolás megmarad. Az adatok után ellenőrző űrlap, azon a „Véglegesít” gomb. Más szerepnél és published soron nincs csatolás és nincs Véglegesít. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`
-- [ ] Sikeres véglegesítés után a rekord published, és minden kapcsolt receipt published verziója is megvan. A `dataentry` a megtekintést eléri, véglegesíteni nem tud
-- [ ] A listán „Szűrők törlése” gomb minden szűrőt alapra állít, a menüből hozott draft szűrőt is
+- [x] Az `editor` Ellenőrzés menüpontja a `/transactions` listát nyitja, `status=draft` szűrővel. A `dataentry` a menüt nem látja. Külön review lista nincs. A `/transactions/review` route és a `TransactionReview.tsx` kikerül
+- [x] A tranzakciók menü a `/transactions` listát szűrő nélkül nyitja. Az Ellenőrzés menü draft szűrője nem marad rajta, és a tranzakciók menü szűrője sem marad rajta az Ellenőrzésen
+- [x] Új route és fájl: `apps/content-backoffice/src/pages/transactions/TransactionShow.tsx`, `/transactions/:id/show`, az azonosító a `documentId`. Mindkét szerep minden sort megnyithat. A lista sora nem visz sehova. A státusz oszlop után egy gomb van: `editor` + draft soron „Ellenőrzés”, minden más soron „Megtekintés”
+- [x] A megtekintés readonly: tranzakciómezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron a `published_by` és a `publishedAt` is. A lista ugyanezeket mutatja. A mezők nem szerkeszthetők
+- [x] `editor` + draft: a megtekintésen a mostani bizonylat-csatolás megmarad. Az adatok után ellenőrző űrlap, azon a „Véglegesít” gomb. Más szerepnél és published soron nincs csatolás és nincs Véglegesít. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`
+- [x] Sikeres véglegesítés után a rekord published, és minden kapcsolt receipt published verziója is megvan. A `dataentry` a megtekintést eléri, véglegesíteni nem tud
+- [x] A listán „Szűrők törlése” gomb minden szűrőt alapra állít, a menüből hozott draft szűrőt is
 
 - [ ] **Human:** `editor` az Ellenőrzés menüvel a draftokra szűrt `/transactions` listát látja, a tranzakciók menü szűrő nélkül nyit. Egy draft soron az „Ellenőrzés” gomb a megtekintésre visz: látja a bizonylatot, ha van, csatolhat újat, látja a rögzítő e-mailjét, és az adatok után a „Véglegesít” gombot. Véglegesítés után a lista published státuszt mutat, a publikáló e-mailjével. Published soron a gomb „Megtekintés”, Véglegesít nincs. A „Szűrők törlése” minden szűrőt alapra állít. `dataentry` az Ellenőrzés menüt nem látja, a megtekintést eléri, véglegesíteni nem tud. Ha igen, pipáld ki, és indítsd a 9. lépést.
 

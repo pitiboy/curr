@@ -9,10 +9,16 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_list: 'Tranzakciók',
     transactions_create: 'Új tranzakció',
     transactions_review: 'Ellenőrzés',
+    transactions_show: 'Megtekintés',
     transactions_none: 'Nincs tranzakció.',
-    transactions_review_empty: 'Nincs piszkozat.',
-    transactions_review_hint:
-      'A piszkozat bizonylatai innen nyithatók meg. Új fájl csatolása kihagyható.',
+    transactions_finalize: 'Véglegesít',
+    transactions_finalized: 'A tranzakció véglegesítve.',
+    transactions_finalize_hint:
+      'A véglegesítés közzéteszi a tranzakciót és a kapcsolt bizonylatokat.',
+    transactions_finalize_pending:
+      'A csatolt fájl még nincs mentve. Előbb mentsd a bizonylatot.',
+    transactions_finalize_same_person:
+      'A rögzítő nem véglegesítheti a saját tranzakcióját.',
     accounts_seed_missing: 'A számlalista üres, mert a seed hiányzik.',
     profile: 'Profil',
     profile_name: 'Név',
@@ -27,6 +33,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     },
     filters: {
       status_all: 'Mind',
+      clear: 'Szűrők törlése',
       date_from: 'Dátumtól',
       date_to: 'Dátumig',
       created_from: 'Rögzítve ettől',
@@ -61,6 +68,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       fields: {
         date: 'Dátum',
         createdAt: 'Rögzítve',
+        entered_by: 'Rögzítette',
+        published_by: 'Közzétette',
+        publishedAt: 'Közzétéve',
         amount: 'Összeg',
         description: 'Leírás',
         organization: 'Szervezet',

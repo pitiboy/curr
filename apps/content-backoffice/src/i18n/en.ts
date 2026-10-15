@@ -9,10 +9,16 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_list: 'Transactions',
     transactions_create: 'New transaction',
     transactions_review: 'Review',
+    transactions_show: 'View',
     transactions_none: 'No transactions.',
-    transactions_review_empty: 'No drafts.',
-    transactions_review_hint:
-      'Open the draft receipts from here. Attaching a new file is optional.',
+    transactions_finalize: 'Finalize',
+    transactions_finalized: 'Transaction finalized.',
+    transactions_finalize_hint:
+      'Finalizing publishes the transaction and its receipts.',
+    transactions_finalize_pending:
+      'The attached file is not saved yet. Save the receipt first.',
+    transactions_finalize_same_person:
+      'The person who entered the transaction cannot finalize it.',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
     profile: 'Profile',
@@ -28,6 +34,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     },
     filters: {
       status_all: 'All',
+      clear: 'Clear filters',
       date_from: 'Date from',
       date_to: 'Date to',
       created_from: 'Created from',
@@ -63,6 +70,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       fields: {
         date: 'Date',
         createdAt: 'Created',
+        entered_by: 'Entered by',
+        published_by: 'Published by',
+        publishedAt: 'Published at',
         amount: 'Amount',
         description: 'Description',
         organization: 'Organization',

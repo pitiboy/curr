@@ -1,9 +1,11 @@
-import { Box, Typography } from '@mui/material';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import { Box, Button, Typography } from '@mui/material';
 import {
   AutocompleteInput,
   Datagrid,
   DateField,
   DateInput,
+  FilterButton,
   FunctionField,
   List,
   NumberField,
@@ -13,8 +15,13 @@ import {
   SelectInput,
   TextField,
   TextInput,
+  TopToolbar,
+  useListContext,
   useLocaleState,
+  usePermissions,
+  useRecordContext,
   useTranslate,
+  Link,
   type RaRecord,
 } from 'react-admin';
 
@@ -126,6 +133,68 @@ function accountLabel(value: unknown): string {
   return label || '—';
 }
 
+function currencyLabel(value: unknown): string {
+  if (!value || typeof value !== 'object') return '—';
+  const currency = value as { code?: string | null; name?: string | null };
+  const label = [currency.code, currency.name].filter(Boolean).join(' ');
+  return label || '—';
+}
+
+function ClearFiltersButton() {
+  const translate = useTranslate();
+  const { setFilters } = useListContext();
+  return (
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={() => setFilters({}, {})}
+    >
+      {translate('app.filters.clear')}
+    </Button>
+  );
+}
+
+function TransactionListActions() {
+  return (
+    <TopToolbar>
+      <ClearFiltersButton />
+      <FilterButton />
+    </TopToolbar>
+  );
+}
+
+function TransactionOpenField(_props: {
+  label?: false;
+  sortable?: false;
+  source?: string;
+}) {
+  const record = useRecordContext<RaRecord & { status?: string }>();
+  const { permissions, isPending } = usePermissions();
+  const translate = useTranslate();
+  if (!record || isPending) return null;
+  const review = permissions === 'editor' && record.status === 'draft';
+  return (
+    <Button
+      component={Link}
+      size="small"
+      startIcon={review ? <FactCheckIcon /> : undefined}
+      sx={
+        review
+          ? {
+              bgcolor: '#FFF4C2',
+              '&:hover': { bgcolor: '#FFE99A' },
+            }
+          : undefined
+      }
+      to={`/transactions/${encodeURIComponent(String(record.id))}/show`}
+      variant="outlined"
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
+    >
+      {translate(review ? 'app.transactions_review' : 'app.transactions_show')}
+    </Button>
+  );
+}
+
 function TransactionListEmpty() {
   const translate = useTranslate();
   return (
@@ -142,6 +211,7 @@ export function TransactionList() {
 
   return (
     <List
+      actions={<TransactionListActions />}
       empty={false}
       exporter={false}
       filters={transactionFilters}
@@ -158,11 +228,17 @@ export function TransactionList() {
         <DateField source="date" />
         <DateField
           locales={locale === 'en' ? 'en' : 'hu-HU'}
+          showTime
           source="createdAt"
         />
+        <TextField emptyText="—" source="entered_by" />
         <NumberField
           locales={locale === 'en' ? 'en' : 'hu-HU'}
           source="amount"
+        />
+        <FunctionField
+          render={(record: RaRecord) => currencyLabel(record.currency_type)}
+          source="currency_type"
         />
         <TextField emptyText="—" source="description" />
         <FunctionField
@@ -183,7 +259,15 @@ export function TransactionList() {
           sortBy="receipts"
           source="receipts"
         />
+        <TextField emptyText="—" source="published_by" />
+        <DateField
+          emptyText="—"
+          locales={locale === 'en' ? 'en' : 'hu-HU'}
+          showTime
+          source="publishedAt"
+        />
         <SelectField choices={statusChoices} source="status" translateChoice />
+        <TransactionOpenField label={false} sortable={false} source="open" />
       </Datagrid>
     </List>
   );

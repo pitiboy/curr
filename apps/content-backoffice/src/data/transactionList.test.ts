@@ -4,9 +4,11 @@ import {
   assembleTransactionList,
   buildTransactionFilters,
   encodeStrapiQuery,
+  preferTransaction,
   transactionPopulate,
   type StrapiTransaction,
 } from './transactionList';
+import { loadTransactionRecord } from './transactionRecord';
 
 const draftOnly: StrapiTransaction = {
   id: 1,
@@ -194,6 +196,7 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('populate[organization]')).toBe('true');
     expect(params.get('populate[debit_account]')).toBe('true');
     expect(params.get('populate[credit_account]')).toBe('true');
+    expect(params.get('populate[currency_type]')).toBe('true');
     expect(params.get('populate[receipts][populate][document][fields][0]')).toBe(
       'url',
     );
@@ -204,5 +207,99 @@ describe('encodeStrapiQuery', () => {
       'mime',
     );
     expect(params.get('populate[receipts][populate][receipt_type]')).toBe('true');
+  });
+});
+
+describe('preferTransaction', () => {
+  it('keeps the published version when both rows exist', () => {
+    const row = preferTransaction(
+      { documentId: 'both', description: 'draft copy', entered_by: 'a@b.c' },
+      {
+        documentId: 'both',
+        description: 'published copy',
+        published_by: 'editor@b.c',
+        publishedAt: '2026-04-01T12:00:00.000Z',
+      },
+    );
+    expect(row?.status).toBe('published');
+    expect(row?.id).toBe('both');
+    expect(row?.description).toBe('published copy');
+    expect(row?.published_by).toBe('editor@b.c');
+  });
+
+  it('keeps a draft when no published version exists', () => {
+    const row = preferTransaction(
+      { documentId: 'draft-only', entered_by: 'a@b.c' },
+      null,
+    );
+    expect(row?.status).toBe('draft');
+    expect(row?.entered_by).toBe('a@b.c');
+    expect(row?.published_by).toBeUndefined();
+  });
+});
+
+describe('loadTransactionRecord', () => {
+  it('requests both statuses and prefers published', async () => {
+    const calls: string[] = [];
+    const row = await loadTransactionRecord(
+      async (url) => {
+        calls.push(url);
+        const status = new URL(url).searchParams.get('status');
+        return {
+          json: {
+            data: {
+              documentId: 'doc-1',
+              description: status,
+              entered_by: 'a@b.c',
+            },
+          },
+        };
+      },
+      'http://localhost:1337',
+      'doc-1',
+    );
+    expect(calls).toHaveLength(2);
+    expect(calls.every((url) => url.includes('/api/transactions/doc-1?'))).toBe(
+      true,
+    );
+    const parsed = calls.map((url) => new URL(url).searchParams);
+    expect(parsed.some((params) => params.get('status') === 'draft')).toBe(true);
+    expect(parsed.some((params) => params.get('status') === 'published')).toBe(
+      true,
+    );
+    expect(
+      parsed.every((params) => params.get('populate[currency_type]') === 'true'),
+    ).toBe(true);
+    expect(row?.status).toBe('published');
+    expect(row?.description).toBe('published');
+  });
+
+  it('treats a missing status as absent and throws other errors', async () => {
+    const missing = await loadTransactionRecord(
+      async (url) => {
+        const status = new URL(url).searchParams.get('status');
+        if (status === 'published') {
+          const error = new Error('Not Found') as Error & { status: number };
+          error.status = 404;
+          throw error;
+        }
+        return { json: { data: { documentId: 'doc-1', description: 'draft' } } };
+      },
+      'http://localhost:1337',
+      'doc-1',
+    );
+    expect(missing?.status).toBe('draft');
+
+    await expect(
+      loadTransactionRecord(
+        async () => {
+          const error = new Error('Nope') as Error & { status: number };
+          error.status = 500;
+          throw error;
+        },
+        'http://localhost:1337',
+        'doc-1',
+      ),
+    ).rejects.toThrow('Nope');
   });
 });
