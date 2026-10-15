@@ -117,7 +117,7 @@ A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `doc
 - [x] A transaction `receipt` mezője a receipt `documentId` volt; a Több bizonylat szakasz ezt 1:N kapcsolatra cseréli
 - [x] A lista receipt oszlopa jelzi, ha van bizonylat. A review megnyitja a fájlt
 
-- [ ] **Human:** egy tranzakció receipt nélkül menthető. A fájlos, üres eladós próbát a Több bizonylat szakasz váltja: üres eladóval fájlos mentés már nem elég. Ha a fájl nélküli mentés megvan, pipáld ki, és a Több bizonylat Human sorával folytasd.
+- [x] **Human:** egy tranzakció receipt nélkül menthető. A fájlos, üres eladós próbát a Több bizonylat szakasz váltja: üres eladóval fájlos mentés már nem elég. Ha a fájl nélküli mentés megvan, pipáld ki, és a Több bizonylat Human sorával folytasd.
 
 ## Több bizonylat
 
