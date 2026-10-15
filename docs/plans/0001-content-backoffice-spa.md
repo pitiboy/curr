@@ -177,7 +177,7 @@ A `transactionForm` teszt, a `publish-guard` teszt, a `strapi-publish-guard` ski
 - [x] A szerver a draft írásnál csak a négyest kéri, publish-nál a tárolt draft mind a hét mezőjét. A bizonylat útvonal és a különböző-ember szabály változatlan
 - [x] A create, a publish-guard és a skill tesztjei ezt rögzítik
 
-- [ ] **Human:** `dataentry` csak leírással nem ment. Dátum, összeg, pénznem és leírás mellett üres szervezettel és üres számlákkal a draft létrejön; a három reláción nincs csillag. `editor` az Ellenőrzésen ezeket szerkeszti: az üres mező üres, a kitöltött az értékét mutatja. Üres mezővel a Véglegesít nem publikál. Mind a héttel a sor published lesz. A bizonylat fájl nélkül kihagyható, fájllal üres eladó vagy üres típus továbbra sem menthető. Ha igen, pipáld ki. A 9. lépést ez a szakasz nem indítja.
+- [x] **Human:** `dataentry` csak leírással nem ment. Dátum, összeg, pénznem és leírás mellett üres szervezettel és üres számlákkal a draft létrejön; a három reláción nincs csillag. `editor` az Ellenőrzésen ezeket szerkeszti: az üres mező üres, a kitöltött az értékét mutatja. Üres mezővel a Véglegesít nem publikál. Mind a héttel a sor published lesz. A bizonylat fájl nélkül kihagyható, fájllal üres eladó vagy üres típus továbbra sem menthető. Ha igen, pipáld ki. A 9. lépést ez a szakasz nem indítja.
 
 ## 9. Profil jelszó és Google
 
