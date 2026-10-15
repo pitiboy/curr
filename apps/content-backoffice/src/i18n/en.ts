@@ -18,7 +18,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalize_pending:
       'The attached file is not saved yet. Save the receipt first.',
     transactions_finalize_same_person:
-      'The person who entered the transaction cannot finalize it.',
+      'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
     transactions_leave_title: 'This transaction is still a draft',
     transactions_leave_body: 'Finalizing is still pending. Leave this page?',
     transactions_leave_unsaved_title: 'This transaction is not saved yet',

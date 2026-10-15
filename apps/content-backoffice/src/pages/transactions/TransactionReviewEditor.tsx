@@ -397,7 +397,11 @@ function ReceiptAttachEditor({
 
   return (
     <Box className={bandedSpanClass} sx={{ px: 1 }}>
-      <ReceiptRail cards={cards} saved={record.receipts} onChange={onCardsChange} />
+      <ReceiptRail
+        cards={cards}
+        saved={record.receipts}
+        onChange={onCardsChange}
+      />
       {pending.length > 0 && !formDescription ? (
         <Typography color="error" variant="body2">
           {translate('app.receipt_description_required')}
@@ -475,12 +479,6 @@ export function TransactionReviewEditor({
 
   return (
     <>
-      <SimpleShowLayout spacing={0} sx={bandedShow}>
-        <FunctionField
-          render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
-          source="vendor"
-        />
-      </SimpleShowLayout>
       <SimpleForm
         key={record.documentId}
         record={flatRecord}
@@ -498,9 +496,9 @@ export function TransactionReviewEditor({
         <FinalizeSection blocked={blocked} documentId={record.documentId} />
       </SimpleForm>
       <SimpleShowLayout spacing={0} sx={bandedShow}>
-        <SelectField choices={statusChoices} source="status" translateChoice />
         <TextField emptyText="—" source="entered_by" />
         <DateField source="createdAt" {...dateFieldProps(locale, true)} />
+        <SelectField choices={statusChoices} source="status" translateChoice />
       </SimpleShowLayout>
     </>
   );

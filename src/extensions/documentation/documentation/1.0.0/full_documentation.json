@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-15T12:05:46.523Z"
+    "x-generation-date": "2026-10-15T20:01:21.251Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -11063,6 +11063,7 @@
             "required": [
               "date",
               "amount",
+              "description",
               "debit_account",
               "credit_account",
               "currency_type",
@@ -11242,6 +11243,7 @@
         "required": [
           "date",
           "amount",
+          "description",
           "debit_account",
           "credit_account",
           "currency_type",
