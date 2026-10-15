@@ -24,8 +24,8 @@ A Strapi Admin megmarad fejlesztői felületnek. A szervezeti backoffice a Conte
 ### Cél (v1)
 
 1. Bejelentkezhető backoffice SPA ugyanazon a hoston (`/backoffice`).
-2. Három tranzakció-oldal: új felvitel, draft review, readonly szűrhető lista.
-3. Opcionális bizonylat a felvételi / review flow-ban.
+2. Három tranzakció-oldal: új felvitel, readonly szűrhető lista, readonly megtekintés. Az `editor` Ellenőrzés menüje a listát a draftokra szűri.
+3. Opcionális bizonylat a felvitelen, és az `editor` draft megtekintésén.
 4. Két Content szerep: `dataentry` (csak draft) és `editor` (publish).
 5. Magyar alapértelmezésű i18n, profil (név, email, jelszócsere).
 6. Audit a tranzakción és a bizonylaton: ki rögzítette, ki publikálta, és mikor. A mezőket a szerver írja.
@@ -40,8 +40,8 @@ Csak **Users & Permissions** (Content API). Strapi Admin JWT **nem** része az S
 
 | Role id | Ki | Jogok az SPA-ban | Backend elvárás |
 | --- | --- | --- | --- |
-| `dataentry` | Adatrögzítő | Új tranzakció; readonly lista; profil | `transaction` / `receipt` create & update **csak draft**; nincs publish |
-| `editor` | Szerkesztő | Draft review + publish; readonly lista; profil | Draft olvasás; `status=published` írás engedélyezett |
+| `dataentry` | Adatrögzítő | Új tranzakció; readonly lista; megtekintés; profil | `transaction` / `receipt` create & update **csak draft**; nincs publish |
+| `editor` | Szerkesztő | Readonly lista; Ellenőrzés menü draft szűrővel; megtekintés, drafton bizonylat csatolása és Véglegesít; profil | Draft olvasás; `status=published` írás engedélyezett |
 | Strapi Admin | Fejlesztő / üzemeltető | SPA-n kívül | Content user kézi létrehozás + invite; Google provider config |
 
 ### Felhasználókezelés
@@ -72,8 +72,8 @@ A menü v1-ben **csak a tranzakció-domain**. Nincs külön Organizations / Memb
 | Oldal | Javasolt route | Szerep | Viselkedés |
 | --- | --- | --- | --- |
 | **Új tranzakció felvitele** | `/transactions/create` | `dataentry` | Create űrlap; mentés mindig **draft**; Publish gomb nincs |
-| **Draftok review-ja** | `/transactions/review` | `editor` | Csak `status=draft`; megnyitás, ellenőrzés, **Publish**; receipt megjelenik ha van |
-| **Tranzakciók (readonly lista)** | `/transactions` | `dataentry` és `editor` | Draft **és** published; receipt oszlop/preview; szűrés statusra és mezőkre; **nincs szerkesztés** erről a nézetről |
+| **Tranzakciók (readonly lista)** | `/transactions` | `dataentry` és `editor` | Draft **és** published; receipt oszlop; szűrés statusra és mezőkre; **Szűrők törlése**; nincs sor-kattintás, create, edit, publish. A státusz oszlop után egy gomb: `editor` + draft soron „Ellenőrzés”, egyébként „Megtekintés”. Az `editor` Ellenőrzés menüje ezt a listát `status=draft` szűrővel nyitja; a tranzakciók menü szűrő nélkül. A két menüpont nem hagyja rajta a másik szűrőjét. A `dataentry` az Ellenőrzés menüt nem látja |
+| **Megtekintés** | `/transactions/:id/show` | `dataentry` és `editor` | Readonly, azonosító a `documentId`. Tranzakciómezők, bizonylatlinkek, audit. `editor` + draft: bizonylat csatolható, az adatok után **Véglegesít**. Más esetben nincs csatolás és nincs Véglegesít |
 | Bejelentkezés | `/login` | vendég | Email/jelszó + Google |
 | Profil | `/profile` | mindkét szerep | Név, email, jelszócsere (local usereknél) |
 
@@ -99,13 +99,13 @@ Receipt (ha a felhasználó csatol):
 
 Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
 
-### 5.2 Draft review (`editor`)
+### 5.2 Megtekintés (mindkét szerep)
 
-- Lista alapértelmezett szűrése: `status=draft`.
-- Show / edit nézet: tranzakció mezők + kapcsolódó receipt (ha van), dokumentum megtekintése.
-- **Publish** művelet elérhető.
-- Látszik, ki rögzítette a draftot és mikor (`entered_by`, `createdAt`). Publish után az is, ki publikálta és mikor (`published_by`, `publishedAt`).
-- v1: nincs külön „visszautasítás + kötelező megjegyzés” workflow; a QA javíthat draftot vagy visszavonhatja a publish szándékot (nem publishol). Részletes QA sor, értesítés és a visszautasítás megjegyzése → v2.
+- Route: `/transactions/:id/show`, az azonosító a `documentId`. Külön review lista nincs.
+- Readonly: tranzakció mezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron `published_by` és `publishedAt` is. A mezők nem szerkeszthetők.
+- `editor` + draft: a bizonylat csatolható. Az adatok után ellenőrző űrlap, azon a **Véglegesít** gomb. Sikeres véglegesítés után a tranzakció published, és minden kapcsolt receipt published verziója is megvan. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`.
+- `dataentry`, és published sor `editor`nál: nincs csatolás, nincs Véglegesít.
+- v1: nincs külön „visszautasítás + kötelező megjegyzés” workflow; a QA a draftot nem véglegesíti. Részletes QA sor, értesítés és a visszautasítás megjegyzése → v2.
 
 ### 5.3 Readonly lista (mindkét szerep)
 
@@ -119,7 +119,9 @@ Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
   - `organization`
   - `debit_account` / `credit_account`
   - `description` (szöveg)
-- Erről a page-ről **nincs** create / edit / publish. A `dataentry` a create page-re megy; az `editor` a review page-re.
+- Erről a page-ről **nincs** create, edit, publish és nincs sor-kattintás. A státusz oszlop utáni gomb a megtekintésre visz.
+- **Szűrők törlése** minden szűrőt alapra állít, a menüből hozott draft szűrőt is.
+- Az `editor` Ellenőrzés menüje ezt a listát `status=draft` szűrővel nyitja. A tranzakciók menü szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. A `dataentry` az Ellenőrzés menüt nem látja.
 
 ### 5.4 Profil
 
@@ -225,12 +227,12 @@ A Strapi `createdBy` / `updatedBy` admin usert jelent, a Content API-n nem a bel
 
 A „mikor” a dokumentum saját `createdAt` és `publishedAt` mezője. Külön datetime mező nem kell.
 
-A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly lista mutatja őket. A Document Service middleware, ami a publish őrt adja, ezeket is állítja.
+A create és az update űrlapon ezek a mezők nincsenek. A megtekintés és a readonly lista mutatja őket. A Document Service middleware, ami a publish őrt adja, ezeket is állítja.
 
 ## 10. User story-k és acceptance criteria
 
 1. **Belépés (dataentry)**  
-   Local vagy Google belépés után a menüben látja: Új tranzakció + Tranzakciók lista. A Review page nem jelenik meg / nem elérhető.
+   Local vagy Google belépés után a menüben látja: Új tranzakció + Tranzakciók lista. Az Ellenőrzés menü nem jelenik meg. A lista megtekintését eléri, véglegesíteni nem tud.
 
 2. **Új tranzakció**  
    Org, összeg, dátum, debit (`5000|5100|5400`), credit (`1xxx`), opcionális leírás és receipt. Mentés draft. Publish nincs.
@@ -242,7 +244,7 @@ A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly
    UI és API elutasítja a publish kísérletet.
 
 5. **Editor review**  
-   A Review page csak draftokat listáz; receipt látszik; Publish sikeres → published státusz.
+   Az Ellenőrzés menü a `/transactions` listát `status=draft` szűrővel nyitja. Draft soron az Ellenőrzés gomb a megtekintésre visz: a bizonylat látszik, csatolható, az adatok után Véglegesít. Sikeres véglegesítés → published státusz, a kapcsolt receipt is. A szerver elutasítja, ha a publikáló az `entered_by`.
 
 6. **Readonly lista**  
    dataentry és editor látja draft + published tételeket receipttel; szűrhet statusra és mezőkre; nincs szerkesztés.
@@ -275,11 +277,11 @@ A create és az update űrlapon ezek a mezők nincsenek. A review és a readonly
 
 - [ ] `apps/content-backoffice` Vite+TS app Nx alatt buildel
 - [ ] Login (local + Google) Content JWT-vel
-- [ ] Három oldal a [§5](#5-termékfelület--oldalak-ia) szerint működik szerepkörönként
+- [ ] Három oldal a [§5](#5-termékfelület--oldalak-ia) szerint: új felvitel, readonly lista, readonly megtekintés, szerepkörönként
 - [ ] Receipt opcionális; média feltöltés működik
 - [ ] `receipt.vendor` optional a sémában
 - [ ] Publish csak az `editor`-nak (UI + szerver)
-- [ ] Audit: `entered_by` és `published_by` a tranzakción és a bizonylaton, szerver írja, a lista és a review mutatja
+- [ ] Audit: `entered_by` és `published_by` a tranzakción és a bizonylaton, szerver írja, a lista és a megtekintés mutatja
 - [ ] Profil: név, email, jelszócsere
 - [ ] i18n default `hu`
 - [ ] Manuális deploy a `kor.fejlesztesek.hu/backoffice` pathra dokumentálva

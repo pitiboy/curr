@@ -100,7 +100,7 @@ A korábban kikommentezett őr nem futott, és nem írta az audit mezőket. A RE
 
 ## 6. Új tranzakció, receipt nélkül
 
-A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `docs/transaction-workflow.md` ügylet (több sor, `related_transaction`, `5800`, korona) nem váltja ki: a `workflowForms` regiszter üres marad, a create route `/transactions/create`, a review route `/transactions/review`.
+A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `docs/transaction-workflow.md` ügylet (több sor, `related_transaction`, `5800`, korona) nem váltja ki: a `workflowForms` regiszter üres marad, a create route `/transactions/create`. A 3. lépés külön review listáját a 8. lépés cseréli.
 
 - [x] Create űrlap a `dataentry` route-on: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`
 - [x] Debit választó: `VITE_DEBIT_CODES` regex, alapból `/^5/`. Credit választó: `VITE_CREDIT_CODES` regex, alapból `/^(1|3)/`
@@ -128,19 +128,21 @@ Egy tranzakcióhoz több bizonylat tartozhat. A bizonylattípus közös törzs, 
 - [x] Az `editor` transaction publish a tranzakció minden kapcsolt receiptjét publikálja
 - [x] A create és a review űrlapon kártyasín: típus, eladó, fájlnév, megnyitás, elvetés, a sor végén „Új bizonylat”. Asztalon vízszintesen görgethető, keskeny képernyőn a kártyák egymás alá kerülnek. Nulla kártya vagy fájl nélküli kártya: a tranzakció bizonylat nélkül menthető. Fájlnál az eladó és a típus üresen nem menthető. Sorrend: tranzakció `?status=draft`, majd fájlonként `POST /api/upload` és receipt `?status=draft`. A receipt `transaction` a tranzakció `documentId`-ja, a `document` a feltöltés id-ja, a `receipt_type` a típus `documentId`-ja. A lista oszlopa a darabszám. A review minden fájlt külön linkkel nyit. Publish gomb nincs
 
-- [ ] **Human:** egy tranzakció bizonylat nélkül menthető, és egy fájl nélküli kártya sem hoz létre bizonylatot. Fájllal üres eladó vagy üres típus nem menthető. Fájllal, kitöltött eladóval és típussal a lista a darabszámot mutatja, az `editor` review minden fájlt külön linkkel nyit. Publish gomb nincs. Ha igen, pipáld ki, és indítsd a 8. lépést.
+- [x] **Human:** egy tranzakció bizonylat nélkül menthető, és egy fájl nélküli kártya sem hoz létre bizonylatot. Fájllal üres eladó vagy üres típus nem menthető. Fájllal, kitöltött eladóval és típussal a lista a darabszámot mutatja, az `editor` review minden fájlt külön linkkel nyit. Publish gomb nincs. Ha igen, pipáld ki, és indítsd a 8. lépést.
 
 ## 8. Editor review és publish
 
-Az `editor` a draftot két listából is megnyithatja jóváhagyásra. A 4. lépés „nincs sor-kattintás” szabálya ennyiben változik: a lista továbbra sem szerkeszt és nem publikál, a draft sor viszont a review űrlapra visz.
+A 3. lépés `/transactions/review` listája ebben a lépésben kikerül. Az Ellenőrzés menü a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanezt a listát szűrő nélkül nyitja; a két menüpont nem hagyja rajta a másik szűrőjét. A 4. lépés „nincs sor-kattintás” szabálya megmarad: a lista nem szerkeszt és nem publikál. A státusz oszlop után egy gomb nyitja a megtekintést. A review és a publish nincs kész.
 
-- [ ] Új menüpont, csak az `editor` szerepnek: tranzakciólista, csak `status=draft` rekordokkal. A 3. lépés „Ellenőrzés” pontja ezt a listát nyitja; külön üres review menü nem marad. A `dataentry` a menüt nem látja
-- [ ] Review űrlap: a tranzakció mezői és a receipt, ha van. Az `editor` egy draft sort a `/transactions` oldalról és erről a draft listáról is megnyithat rajta, jóváhagyásra. Published sor nem nyit review űrlapot
-- [ ] Publish gomb csak a review űrlapon, csak az `editor` szerepnek. Sikeres publish után a rekord published, és minden kapcsolt receipt published verziója is megvan
-- [ ] A review űrlap és a listák mutatják az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A mezők nem szerkeszthetők
-- [ ] A `dataentry` a review route-ot továbbra sem éri el, és egyik listáról sem publikál
+- [ ] Az `editor` Ellenőrzés menüpontja a `/transactions` listát nyitja, `status=draft` szűrővel. A `dataentry` a menüt nem látja. Külön review lista nincs. A `/transactions/review` route és a `TransactionReview.tsx` kikerül
+- [ ] A tranzakciók menü a `/transactions` listát szűrő nélkül nyitja. Az Ellenőrzés menü draft szűrője nem marad rajta, és a tranzakciók menü szűrője sem marad rajta az Ellenőrzésen
+- [ ] Új route és fájl: `apps/content-backoffice/src/pages/transactions/TransactionShow.tsx`, `/transactions/:id/show`, az azonosító a `documentId`. Mindkét szerep minden sort megnyithat. A lista sora nem visz sehova. A státusz oszlop után egy gomb van: `editor` + draft soron „Ellenőrzés”, minden más soron „Megtekintés”
+- [ ] A megtekintés readonly: tranzakciómezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron a `published_by` és a `publishedAt` is. A lista ugyanezeket mutatja. A mezők nem szerkeszthetők
+- [ ] `editor` + draft: a megtekintésen a mostani bizonylat-csatolás megmarad. Az adatok után ellenőrző űrlap, azon a „Véglegesít” gomb. Más szerepnél és published soron nincs csatolás és nincs Véglegesít. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`
+- [ ] Sikeres véglegesítés után a rekord published, és minden kapcsolt receipt published verziója is megvan. A `dataentry` a megtekintést eléri, véglegesíteni nem tud
+- [ ] A listán „Szűrők törlése” gomb minden szűrőt alapra állít, a menüből hozott draft szűrőt is
 
-- [ ] **Human:** `editor` a menüben látja a csak-draft listát. Egy draftot a `/transactions` oldalról és a draft listáról is meg tud nyitni a review űrlapon, látja a bizonylatot, ha van, és a rögzítő e-mailjét. A Publish után a lista published státuszt mutat, a publikáló e-mailjével. `dataentry` a draft menüt nem látja, a review route-ot nem éri el, és a listáról nem publikál. Ha igen, pipáld ki, és indítsd a 9. lépést.
+- [ ] **Human:** `editor` az Ellenőrzés menüvel a draftokra szűrt `/transactions` listát látja, a tranzakciók menü szűrő nélkül nyit. Egy draft soron az „Ellenőrzés” gomb a megtekintésre visz: látja a bizonylatot, ha van, csatolhat újat, látja a rögzítő e-mailjét, és az adatok után a „Véglegesít” gombot. Véglegesítés után a lista published státuszt mutat, a publikáló e-mailjével. Published soron a gomb „Megtekintés”, Véglegesít nincs. A „Szűrők törlése” minden szűrőt alapra állít. `dataentry` az Ellenőrzés menüt nem látja, a megtekintést eléri, véglegesíteni nem tud. Ha igen, pipáld ki, és indítsd a 9. lépést.
 
 ## 9. Profil jelszó és Google
 

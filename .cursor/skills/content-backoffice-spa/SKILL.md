@@ -41,23 +41,23 @@ A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél 
 
 ## Oldalak
 
-Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és a review route. Guesser nincs az éles fában.
+Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és megtekintés. Guesser nincs az éles fában. Külön review lista nincs.
 
 | Route | Szerep | Viselkedés |
 | --- | --- | --- |
 | `/transactions/create` | `dataentry`, `editor` | Create. Mentés draft. Publish nincs. |
-| `/transactions/review` | `editor` | Lista `status=draft`. Show/edit. Publish gomb. |
-| `/transactions` | mindkettő | Draft és published. Szűrő. Nincs create, edit, publish. |
+| `/transactions/:id/show` | mindkettő | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít. |
+| `/transactions` | mindkettő | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
 | `/login` | vendég | Email/jelszó és Google. |
 | `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |
 
-A menü mindkét szerepnek mutatja a create elemet. A review elemet csak az `editor` látja. Ismeretlen szerep egyik író oldalt sem kapja meg.
+A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
-A create és a review mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
+A create és a megtekintés mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
 
-Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`.
+Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`. A Szűrők törlése minden szűrőt alapra állít, a menüből hozott draft szűrőt is.
 
-A lista és a review mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A create és az edit űrlapon ezek a mezők nincsenek.
+A lista és a megtekintés mutatja az `entered_by` értéket és a `createdAt` időt. Published soron a `published_by` értéket és a `publishedAt` időt is. A create űrlapon ezek a mezők nincsenek. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`.
 
 ## Számlakód
 
@@ -78,7 +78,7 @@ A külső kulcs a receipten van, ezért a sorrend:
 2. Fájlonként `POST /api/upload` multipart, a Content JWT-vel, a fájl a `files` mezőben.
 3. Receipt create `?status=draft`. A `document` a feltöltés id-ja, a `transaction` a tranzakció `documentId`-ja, a `receipt_type` a típus `documentId`-ja. A `date`, `amount` és `description` a tranzakcióból másolódik.
 
-A `receipt-type` törzset a SPA csak olvassa (`find`, `findOne`). A lista a bizonylatok darabszámát mutatja. A review minden fájlt külön linkkel nyit. A populate a `receipts` tömb `document` url mezőit és a `receipt_type` nevet kéri; `document=*` tilos.
+A `receipt-type` törzset a SPA csak olvassa (`find`, `findOne`). A lista a bizonylatok darabszámát mutatja. A megtekintés minden fájlt külön linkkel nyit. A populate a `receipts` tömb `document` url mezőit és a `receipt_type` nevet kéri; `document=*` tilos.
 
 ## Profil és i18n
 
