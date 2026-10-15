@@ -21,8 +21,8 @@ export function bandColor(mode: PaletteMode, index: number): string {
 
 function childBands(theme: Theme) {
   return {
-    '& > :nth-child(odd)': { backgroundColor: bandColor(theme.palette.mode, 0) },
-    '& > :nth-child(even)': { backgroundColor: bandColor(theme.palette.mode, 1) },
+    '& > :nth-of-type(odd)': { backgroundColor: bandColor(theme.palette.mode, 0) },
+    '& > :nth-of-type(even)': { backgroundColor: bandColor(theme.palette.mode, 1) },
   };
 }
 
