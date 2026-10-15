@@ -11,6 +11,7 @@ import {
 import { attachTransactionReceipt } from '../../data/dataProvider';
 import { receiptCardInvalid, receiptCount } from '../../data/receiptDraft';
 import type { TransactionRow } from '../../data/transactionList';
+import { bandColor } from '../../theme';
 import { EmptyState } from '../EmptyState';
 import {
   ReceiptFileList,
@@ -88,14 +89,16 @@ export function TransactionReview() {
         <span>{translate('resources.transactions.fields.receipt')}</span>
       </Box>
       <Box component="ul" sx={{ listStyle: 'none', m: 0, mb: 3, p: 0 }}>
-        {rows.map((row) => {
+        {rows.map((row, index) => {
           const active = row.id === selected.id;
           return (
             <Box
               component="li"
               key={row.id}
-              sx={{
-                bgcolor: active ? 'action.selected' : 'transparent',
+              sx={(theme) => ({
+                bgcolor: active
+                  ? 'action.selected'
+                  : bandColor(theme.palette.mode, index),
                 borderRadius: 1,
                 cursor: 'pointer',
                 display: 'grid',
@@ -104,7 +107,7 @@ export function TransactionReview() {
                 mb: 0.5,
                 px: 1,
                 py: 0.75,
-              }}
+              })}
               onClick={() => setSelectedId(row.id)}
             >
               <span>{row.date || '—'}</span>

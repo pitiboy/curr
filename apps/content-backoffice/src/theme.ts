@@ -1,4 +1,5 @@
-import type { ThemeOptions } from '@mui/material/styles';
+import type { PaletteMode, SxProps, Theme, ThemeOptions } from '@mui/material/styles';
+import type { SxProps as UntypedSx, SystemStyleObject } from '@mui/system';
 import { deepmerge } from '@mui/utils';
 import { defaultDarkTheme, defaultLightTheme } from 'react-admin';
 
@@ -7,6 +8,54 @@ const brandGreen = '#346C3E';
 
 /** Lifted brand green so text and icons stay readable on the dark surface. */
 const brandGreenOnDark = '#89A98F';
+
+/** Faint sage and sand so consecutive rows stay easy to scan. */
+const band = {
+  light: ['#FAFDFC', '#FFFDFB'],
+  dark: ['rgba(137, 169, 143, 0.18)', 'rgba(212, 190, 150, 0.16)'],
+} as const;
+
+export function bandColor(mode: PaletteMode, index: number): string {
+  return band[mode][Math.abs(index) % 2];
+}
+
+function childBands(theme: Theme) {
+  return {
+    '& > :nth-child(odd)': { backgroundColor: bandColor(theme.palette.mode, 0) },
+    '& > :nth-child(even)': { backgroundColor: bandColor(theme.palette.mode, 1) },
+  };
+}
+
+/** Direct children alternate sage and sand. Spread into the parent's styles. */
+export function withBands(styles: SystemStyleObject<Theme> = {}) {
+  return (theme: Theme) => ({
+    ...styles,
+    ...childBands(theme),
+  });
+}
+
+/** One row, when the parent cannot own the stripe. */
+export function bandedRow(_record: unknown, index: number): UntypedSx {
+  return ((theme: Theme) => ({
+    backgroundColor: bandColor(theme.palette.mode, index),
+  })) as UntypedSx;
+}
+
+/** SimpleForm fields sit in a stack; that stack owns the stripe. */
+export const bandedForm: SxProps<Theme> = (theme) => ({
+  '& > .MuiStack-root': {
+    gap: 1,
+    width: '100%',
+    '& > *': {
+      borderRadius: 1,
+      boxSizing: 'border-box',
+      px: 1.5,
+      py: 1,
+      width: '100%',
+    },
+    ...childBands(theme),
+  },
+});
 
 const readableButtons: ThemeOptions = {
   components: {

@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import {
   AutocompleteInput,
@@ -23,6 +23,7 @@ import {
   type AccountChoice,
 } from '../../data/accountCodes';
 import { receiptCardInvalid } from '../../data/receiptDraft';
+import { bandedForm } from '../../theme';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 
 function currencyOptionText(record: RaRecord): string {
@@ -97,9 +98,10 @@ function AccountCodeInput({
   }));
 
   return (
-    <>
+    <Box>
       <AutocompleteInput
         choices={choices}
+        fullWidth
         isLoading={isPending}
         source={source}
         translateChoice={false}
@@ -110,7 +112,7 @@ function AccountCodeInput({
           {translate('app.accounts_seed_missing')}
         </Typography>
       ) : null}
-    </>
+    </Box>
   );
 }
 
@@ -131,6 +133,7 @@ export function TransactionCreate() {
       })}
     >
       <SimpleForm
+        sx={bandedForm}
         toolbar={<DraftSaveToolbar />}
         validate={(values: { description?: unknown }) => {
           const description =
@@ -148,8 +151,8 @@ export function TransactionCreate() {
           return errors;
         }}
       >
-        <DateInput source="date" validate={required()} />
-        <NumberInput source="amount" validate={required()} />
+        <DateInput fullWidth source="date" validate={required()} />
+        <NumberInput fullWidth source="amount" validate={required()} />
         <ReferenceInput
           perPage={100}
           reference="currency-types"
@@ -158,11 +161,12 @@ export function TransactionCreate() {
         >
           <AutocompleteInput
             filterToQuery={codeOrNameFilterToQuery}
+            fullWidth
             optionText={currencyOptionText}
             validate={required()}
           />
         </ReferenceInput>
-        <TextInput multiline source="description" />
+        <TextInput fullWidth multiline source="description" />
         <ReferenceInput
           perPage={100}
           reference="organizations"
@@ -171,6 +175,7 @@ export function TransactionCreate() {
         >
           <AutocompleteInput
             filterToQuery={nameFilterToQuery}
+            fullWidth
             optionText="name"
             validate={required()}
           />

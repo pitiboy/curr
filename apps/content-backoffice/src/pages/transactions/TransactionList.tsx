@@ -19,6 +19,7 @@ import {
 } from 'react-admin';
 
 import { receiptCount } from '../../data/receiptDraft';
+import { bandedRow } from '../../theme';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -152,6 +153,7 @@ export function TransactionList() {
         empty={<TransactionListEmpty />}
         hover={false}
         rowClick={false}
+        rowSx={bandedRow}
       >
         <DateField source="date" />
         <DateField

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { useDataProvider, useTranslate } from 'react-admin';
 
 import { STRAPI_URL } from '../../config';
+import { withBands } from '../../theme';
 import {
   receiptCardInvalid,
   receiptDocumentUrl,
@@ -81,14 +82,14 @@ export function ReceiptRail({ cards, onChange }: ReceiptRailProps) {
           }}
         >
           <Box
-            sx={{
+            sx={withBands({
               alignItems: 'stretch',
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
               gap: 2,
               pb: 1,
               width: { xs: '100%', sm: 'max-content' },
-            }}
+            })}
           >
             {cards.map((card) => (
               <ReceiptCard
