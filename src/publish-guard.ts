@@ -12,6 +12,36 @@ const DRAFT_ONLY =
 const SAME_PERSON =
   'The person who entered the document cannot publish it';
 
+/** Draft HTTP writes: Strapi skips schema `required`, middleware enforces these four. */
+export const TRANSACTION_DRAFT_REQUIRED_FIELDS = [
+  'date',
+  'amount',
+  'currency_type',
+  'description',
+] as const;
+
+/** Publish reads the stored draft; all seven must be filled. */
+export const TRANSACTION_PUBLISH_REQUIRED_FIELDS = [
+  'date',
+  'amount',
+  'currency_type',
+  'description',
+  'organization',
+  'debit_account',
+  'credit_account',
+] as const;
+
+/** @deprecated Use {@link TRANSACTION_DRAFT_REQUIRED_FIELDS}. */
+export const TRANSACTION_REQUIRED_FIELDS = TRANSACTION_DRAFT_REQUIRED_FIELDS;
+
+export type TransactionDraftRequiredField =
+  (typeof TRANSACTION_DRAFT_REQUIRED_FIELDS)[number];
+
+export type TransactionPublishRequiredField =
+  (typeof TRANSACTION_PUBLISH_REQUIRED_FIELDS)[number];
+
+export type TransactionRequiredField = TransactionDraftRequiredField;
+
 export type PublishPolicy = {
   /** `draft`: create/update cannot publish. `published`: an editor may save as published. */
   defaultStatus: 'draft' | 'published';
@@ -229,6 +259,66 @@ function samePerson(
   return creator.length > 0 && creator === publisher;
 }
 
+/**
+ * Fields missing from a transaction write.
+ * On update, an omitted key keeps the stored value. `connect: []` without
+ * `set` is that same no-op. A create must include every required field.
+ */
+export function missingTransactionFields(
+  data: Record<string, unknown> | undefined,
+  action: 'create' | 'update',
+): TransactionDraftRequiredField[] {
+  const source = data ?? {};
+  return TRANSACTION_DRAFT_REQUIRED_FIELDS.filter((field) => {
+    if (action === 'update' && !(field in source)) return false;
+    return !transactionFieldFilled(field, source[field], action);
+  });
+}
+
+function transactionFieldFilled(
+  field: TransactionDraftRequiredField | TransactionPublishRequiredField,
+  value: unknown,
+  action: 'create' | 'update',
+): boolean {
+  if (field === 'date') return dateFilled(value);
+  if (field === 'amount') return amountFilled(value);
+  if (field === 'description') return descriptionFilled(value);
+  return relationFilled(value, action);
+}
+
+function descriptionFilled(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function dateFilled(value: unknown): boolean {
+  if (value instanceof Date) return !Number.isNaN(value.getTime());
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value.trim());
+}
+
+function amountFilled(value: unknown): boolean {
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value !== 'string' || value.trim() === '') return false;
+  return Number.isFinite(Number(value));
+}
+
+function relationFilled(value: unknown, action: 'create' | 'update'): boolean {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.some((item) => relationFilled(item, action));
+  if (!value || typeof value !== 'object') return false;
+
+  const row = value as Record<string, unknown>;
+  if ('set' in row) return relationFilled(row.set, action);
+  if ('connect' in row) {
+    if (relationFilled(row.connect, action)) return true;
+    return action === 'update';
+  }
+  if ('disconnect' in row) return false;
+  if (typeof row.documentId === 'string') return row.documentId.trim().length > 0;
+  if ('id' in row) return relationFilled(row.id, action);
+  return false;
+}
+
 function asData(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -301,6 +391,80 @@ async function storedEnteredBy(
   return typeof row?.entered_by === 'string' ? row.entered_by : undefined;
 }
 
+async function storedDraftTransaction(
+  strapi: PublishGuardStrapi,
+  documentId: string,
+): Promise<Record<string, unknown> | null> {
+  return strapi.db.query(TRANSACTION_UID).findOne({
+    where: { documentId, publishedAt: { $null: true } },
+    populate: {
+      organization: true,
+      debit_account: true,
+      credit_account: true,
+      currency_type: true,
+    },
+  });
+}
+
+function storedRelationPresent(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  if ('id' in row && row.id != null) return true;
+  if (typeof row.documentId === 'string' && row.documentId.trim().length > 0) {
+    return true;
+  }
+  return false;
+}
+
+export function missingStoredPublishFields(
+  row: Record<string, unknown> | null | undefined,
+): TransactionPublishRequiredField[] {
+  if (!row) {
+    return [...TRANSACTION_PUBLISH_REQUIRED_FIELDS];
+  }
+  return TRANSACTION_PUBLISH_REQUIRED_FIELDS.filter((field) => {
+    if (field === 'organization' || field === 'debit_account' || field === 'credit_account' || field === 'currency_type') {
+      return !storedRelationPresent(row[field]);
+    }
+    return !transactionFieldFilled(field, row[field], 'update');
+  });
+}
+
+async function assertStoredTransactionPublishable(
+  strapi: PublishGuardStrapi,
+  documentId: string | undefined,
+) {
+  if (!documentId) {
+    throw new errors.ValidationError(
+      'Missing required transaction fields: date, amount, currency_type, description, organization, debit_account, credit_account',
+      {
+        errors: TRANSACTION_PUBLISH_REQUIRED_FIELDS.map((path) => ({
+          path: [path],
+          message: `${path} is a required field`,
+          name: 'ValidationError',
+        })),
+      },
+    );
+  }
+  const row = await storedDraftTransaction(strapi, documentId);
+  const missing = missingStoredPublishFields(row);
+  if (missing.length === 0) {
+    return;
+  }
+  throw new errors.ValidationError(
+    `Missing required transaction fields: ${missing.join(', ')}`,
+    {
+      errors: missing.map((path) => ({
+        path: [path],
+        message: `${path} is a required field`,
+        name: 'ValidationError',
+      })),
+    },
+  );
+}
+
 export function registerPublishGuard(
   strapi: PublishGuardStrapi,
   policy: PublishPolicy = readPublishPolicy(),
@@ -328,12 +492,46 @@ export function registerPublishGuard(
       linkedPublish,
     });
 
-    if (effect.type === 'ignore') {
-      return next();
-    }
-
     if (effect.type === 'forbid') {
       throw new errors.ForbiddenError(effect.message);
+    }
+
+    const writingTransaction =
+      context.uid === TRANSACTION_UID &&
+      (context.action === 'create' || context.action === 'update');
+    if (writingTransaction && strapi.requestContext.get()) {
+      const missing = missingTransactionFields(
+        asData(context.params?.data),
+        context.action === 'update' ? 'update' : 'create',
+      );
+      if (missing.length > 0) {
+        throw new errors.ValidationError(
+          `Missing required transaction fields: ${missing.join(', ')}`,
+          {
+            errors: missing.map((path) => ({
+              path: [path],
+              message: `${path} is a required field`,
+              name: 'ValidationError',
+            })),
+          },
+        );
+      }
+    }
+
+    if (
+      context.uid === TRANSACTION_UID &&
+      context.action === 'publish' &&
+      actor != null &&
+      strapi.requestContext.get()
+    ) {
+      await assertStoredTransactionPublishable(
+        strapi,
+        context.params?.documentId,
+      );
+    }
+
+    if (effect.type === 'ignore') {
+      return next();
     }
 
     const params = context.params ?? {};

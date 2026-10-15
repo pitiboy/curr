@@ -9,10 +9,25 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_list: 'Transactions',
     transactions_create: 'New transaction',
     transactions_review: 'Review',
+    transactions_show: 'View',
     transactions_none: 'No transactions.',
-    transactions_review_empty: 'No drafts.',
-    transactions_review_hint:
-      'Open the draft receipts from here. Attaching a new file is optional.',
+    transactions_finalize: 'Finalize',
+    transactions_finalized: 'Transaction finalized.',
+    transactions_finalize_hint:
+      'This transaction is not finalized yet, which means it will not appear in financial statements. Once you have reviewed and found the data and attached receipts to be correct, finalize the transaction and its receipts.',
+    transactions_finalize_no_receipt:
+      'This transaction has no attached receipt. After finalizing, a receipt can no longer be uploaded, so finalize only if you are sure that no expected receipt will arrive.',
+    transactions_finalize_pending:
+      'The attached file is not saved yet. Save the receipt first.',
+    transactions_finalize_same_person:
+      'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
+    transactions_leave_title: 'This transaction is still a draft',
+    transactions_leave_body: 'Finalizing is still pending. Leave this page?',
+    transactions_leave_unsaved_title: 'This transaction is not saved yet',
+    transactions_leave_unsaved_body:
+      'The data you entered will be lost. Leave this page?',
+    transactions_leave_go: 'Leave',
+    transactions_leave_stay: 'Stay',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
     profile: 'Profile',
@@ -28,6 +43,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     },
     filters: {
       status_all: 'All',
+      clear: 'Clear filters',
       date_from: 'Date from',
       date_to: 'Date to',
       created_from: 'Created from',
@@ -63,12 +79,16 @@ export const enMessages = mergeTranslations(englishMessages, {
       fields: {
         date: 'Date',
         createdAt: 'Created',
+        entered_by: 'Entered by',
+        published_by: 'Published by',
+        publishedAt: 'Published at',
         amount: 'Amount',
         description: 'Description',
         organization: 'Organization',
         debit_account: 'Debit',
         credit_account: 'Credit',
         currency_type: 'Currency',
+        vendor: 'Vendor',
         status: 'Status',
         receipt: 'Receipt',
       },

@@ -670,6 +670,7 @@ export interface ApiCurrencyTypeCurrencyType
       'oneToMany',
       'api::currency-rate.currency-rate'
     >;
+    icon: Schema.Attribute.Media<'images'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1016,17 +1017,20 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     credit_account: Schema.Attribute.Relation<
       'manyToOne',
       'api::account.account'
-    >;
+    > &
+      Schema.Attribute.Required;
     currency_type: Schema.Attribute.Relation<
       'manyToOne',
       'api::currency-type.currency-type'
-    >;
+    > &
+      Schema.Attribute.Required;
     date: Schema.Attribute.Date & Schema.Attribute.Required;
     debit_account: Schema.Attribute.Relation<
       'manyToOne',
       'api::account.account'
-    >;
-    description: Schema.Attribute.Text;
+    > &
+      Schema.Attribute.Required;
+    description: Schema.Attribute.Text & Schema.Attribute.Required;
     entered_by: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1037,7 +1041,8 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     organization: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
-    >;
+    > &
+      Schema.Attribute.Required;
     published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;

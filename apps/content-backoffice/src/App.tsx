@@ -12,7 +12,7 @@ import { FeatureFlagsPage } from './pages/feature-flags/FeatureFlagsPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
-import { TransactionReview } from './pages/transactions/TransactionReview';
+import { TransactionShow } from './pages/transactions/TransactionShow';
 import { darkTheme, lightTheme } from './theme';
 import { workflowForms } from './workflows/registry';
 import { WorkflowFormGate } from './workflows/WorkflowFormGate';
@@ -33,6 +33,7 @@ export function App() {
         list={TransactionList}
         name="transactions"
         options={{ label: 'app.transactions_list' }}
+        show={TransactionShow}
       />
       <CustomRoutes>
         <Route
@@ -42,14 +43,6 @@ export function App() {
             </RoleGuard>
           }
           path="/transactions/create"
-        />
-        <Route
-          element={
-            <RoleGuard allow={['editor']}>
-              <TransactionReview />
-            </RoleGuard>
-          }
-          path="/transactions/review"
         />
         <Route element={<ProfilePage />} path="/profile" />
         <Route

@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { errors } from '@strapi/utils';
 
 import {
   contentApiActor,
   guardEffect,
+  missingStoredPublishFields,
+  missingTransactionFields,
   readPublishPolicy,
   registerPublishGuard,
   relationDocumentId,
@@ -164,10 +167,25 @@ describe('relationDocumentId', () => {
   });
 });
 
+const completeDraft = {
+  date: '2026-10-15',
+  amount: 10,
+  currency_type: 'cur-1',
+  description: 'leírás',
+};
+
+const completeTransaction = {
+  ...completeDraft,
+  organization: 'org-1',
+  debit_account: 'deb-1',
+  credit_account: 'cre-1',
+};
+
 function fakeStrapi(options: {
   strategy?: string;
   userId?: number;
   user?: Record<string, unknown> | null;
+  request?: boolean;
   onUpdate?: (uid: string, data: Record<string, unknown>) => void;
   documentsApi?: PublishGuardStrapi['documents'];
 }): PublishGuardStrapi {
@@ -176,12 +194,15 @@ function fakeStrapi(options: {
       throw new Error('documents() was not expected');
     }) as unknown as PublishGuardStrapi['documents']),
     requestContext: {
-      get: () => ({
-        state: {
-          auth: { strategy: { name: options.strategy ?? 'users-permissions' } },
-          user: options.userId == null ? undefined : { id: options.userId },
-        },
-      }),
+      get: () =>
+        options.request === false
+          ? undefined
+          : {
+              state: {
+                auth: { strategy: { name: options.strategy ?? 'users-permissions' } },
+                user: options.userId == null ? undefined : { id: options.userId },
+              },
+            },
     },
     db: {
       query: (uid: string) => ({
@@ -271,7 +292,11 @@ describe('registerPublishGuard', () => {
 
     const params = {
       status: 'draft' as const,
-      data: { amount: 10, entered_by: 'forged@example.com', published_by: 'forged@example.com' },
+      data: {
+        ...completeTransaction,
+        entered_by: 'forged@example.com',
+        published_by: 'forged@example.com',
+      },
     };
     const result = await middleware(
       { uid: transaction, action: 'create', params },
@@ -306,6 +331,31 @@ describe('registerPublishGuard', () => {
       onUpdate: (uid, data) => updates.push({ uid, data }),
       documentsApi: documents,
     });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async (params: Record<string, unknown>) => {
+          if (uid === 'plugin::users-permissions.user') {
+            return { email: editor.email, role: { type: 'editor' } };
+          }
+          if (uid === transaction && params?.populate) {
+            return {
+              id: 9,
+              documentId: 'tx_1',
+              entered_by: dataentry.email,
+              ...completeTransaction,
+              currency_type: { id: 1, documentId: 'cur-1' },
+              organization: { id: 2, documentId: 'org-1' },
+              debit_account: { id: 3, documentId: 'deb-1' },
+              credit_account: { id: 4, documentId: 'cre-1' },
+            };
+          }
+          return { id: 9, documentId: 'tx_1', entered_by: dataentry.email };
+        },
+      };
+    };
     let middleware: (
       context: { uid: string; action: string; params?: { documentId?: string } },
       next: () => Promise<unknown>,
@@ -368,5 +418,208 @@ describe('registerPublishGuard', () => {
       },
     );
     assert.equal(nextCalled, false);
+  });
+
+  it('rejects a draft create that omits required fields', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 1,
+      user: { email: dataentry.email, role: { type: 'dataentry' } },
+    });
+    let middleware: (
+      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          {
+            uid: transaction,
+            action: 'create',
+            params: { status: 'draft', data: { description: 'csak leírás' } },
+          },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'doc_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof errors.ValidationError);
+        assert.match(error.message, /date, amount, currency_type/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('lets an admin draft update clear an optional relation', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({ strategy: 'admin', userId: 1 });
+    let middleware: (
+      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      {
+        uid: transaction,
+        action: 'update',
+        params: { data: { organization: null } },
+      },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+
+  it('rejects publish when the stored draft is missing publish fields', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 2,
+      user: { email: editor.email, role: { type: 'editor' } },
+    });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async (params: Record<string, unknown>) => {
+          if (uid === 'plugin::users-permissions.user') {
+            return { email: editor.email, role: { type: 'editor' } };
+          }
+          if (uid === transaction && params?.populate) {
+            return {
+              id: 9,
+              documentId: 'tx_1',
+              date: '2026-10-15',
+              amount: 10,
+              description: 'leírás',
+              currency_type: { id: 1, documentId: 'cur-1' },
+              entered_by: dataentry.email,
+            };
+          }
+          return { id: 9, documentId: 'tx_1', entered_by: dataentry.email };
+        },
+      };
+    };
+    let middleware: (
+      context: { uid: string; action: string; params?: { documentId?: string } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await assert.rejects(
+      () =>
+        middleware(
+          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+          async () => {
+            nextCalled = true;
+            return { documentId: 'tx_1' };
+          },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof errors.ValidationError);
+        assert.match(error.message, /organization, debit_account, credit_account/);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false);
+  });
+
+  it('lets a request-less seed write an incomplete transaction', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({ request: false });
+    let middleware: (
+      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      { uid: transaction, action: 'create', params: { data: { description: 'seed' } } },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+});
+
+describe('missingTransactionFields', () => {
+  it('requires the draft quartet on create and only sent keys on update', () => {
+    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'create'), [
+      'date',
+      'amount',
+      'currency_type',
+    ]);
+    assert.deepEqual(missingTransactionFields(completeDraft, 'create'), []);
+    assert.deepEqual(
+      missingTransactionFields(
+        { ...completeDraft, organization: 'org-1' },
+        'create',
+      ),
+      [],
+    );
+    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ amount: 0 }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ organization: { set: [] } }, 'update'), []);
+    assert.deepEqual(
+      missingTransactionFields(
+        { currency_type: { set: [{ documentId: 'cur-1' }] } },
+        'update',
+      ),
+      [],
+    );
+  });
+});
+
+describe('missingStoredPublishFields', () => {
+  it('requires all seven fields on the stored draft row', () => {
+    assert.deepEqual(missingStoredPublishFields(null), [
+      'date',
+      'amount',
+      'currency_type',
+      'description',
+      'organization',
+      'debit_account',
+      'credit_account',
+    ]);
+    assert.deepEqual(
+      missingStoredPublishFields({
+        date: '2026-10-15',
+        amount: 10,
+        description: 'x',
+        currency_type: { id: 1 },
+        organization: { id: 2 },
+        debit_account: { id: 3 },
+        credit_account: { id: 4 },
+      }),
+      [],
+    );
+    assert.deepEqual(
+      missingStoredPublishFields({
+        ...completeDraft,
+        currency_type: { id: 1 },
+      }),
+      ['organization', 'debit_account', 'credit_account'],
+    );
   });
 });

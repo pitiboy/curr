@@ -1,7 +1,9 @@
 import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFormState } from 'react-hook-form';
 import {
   AutocompleteInput,
+  Confirm,
   Create,
   DateInput,
   NumberInput,
@@ -11,7 +13,10 @@ import {
   SimpleForm,
   TextInput,
   Toolbar,
+  useBlocker,
+  useCanBlock,
   useDataProvider,
+  useFormIsDirty,
   useTranslate,
   type RaRecord,
 } from 'react-admin';
@@ -22,9 +27,11 @@ import {
   loadAllAccounts,
   type AccountChoice,
 } from '../../data/accountCodes';
-import { receiptCardInvalid } from '../../data/receiptDraft';
-import { bandedForm } from '../../theme';
+import { bandedForm, bandedSpanClass } from '../../theme';
+import { AccountFieldLabel } from './accountField';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
+import { transactionFormErrors } from './transactionForm';
+import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
 
 function currencyOptionText(record: RaRecord): string {
   const currency = record as { code?: string | null; name?: string | null };
@@ -52,6 +59,75 @@ function DraftSaveToolbar() {
   );
 }
 
+function CreateLeaveGuard({ receiptCardCount }: { receiptCardCount: number }) {
+  const formDirty = useFormIsDirty();
+  const { isSubmitSuccessful } = useFormState();
+  const dirtyRef = useRef(false);
+  const submittedRef = useRef(false);
+  dirtyRef.current = formDirty || receiptCardCount > 0;
+  submittedRef.current = isSubmitSuccessful;
+  const unsaved = dirtyRef.current && !submittedRef.current;
+
+  useEffect(() => {
+    if (!unsaved) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [unsaved]);
+
+  const canBlock = useCanBlock();
+  if (!canBlock) return null;
+  return <CreateLeaveBlocker dirtyRef={dirtyRef} submittedRef={submittedRef} />;
+}
+
+function CreateLeaveBlocker({
+  dirtyRef,
+  submittedRef,
+}: {
+  dirtyRef: { current: boolean };
+  submittedRef: { current: boolean };
+}) {
+  const shouldBlock = useCallback(
+    ({
+      currentLocation,
+      nextLocation,
+    }: {
+      currentLocation: { pathname: string };
+      nextLocation: { pathname: string };
+    }) =>
+      shouldConfirmDirtyCreateLeave({
+        dirty: dirtyRef.current,
+        submitted: submittedRef.current,
+        currentPathname: currentLocation.pathname,
+        nextPathname: nextLocation.pathname,
+      }),
+    [dirtyRef, submittedRef],
+  );
+  const blocker = useBlocker(shouldBlock);
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    if (dirtyRef.current && !submittedRef.current) return;
+    blocker.proceed?.();
+  }, [blocker, dirtyRef, submittedRef]);
+
+  return (
+    <Confirm
+      cancel="app.transactions_leave_stay"
+      confirm="app.transactions_leave_go"
+      confirmColor="warning"
+      content="app.transactions_leave_unsaved_body"
+      isOpen={blocker.state === 'blocked'}
+      title="app.transactions_leave_unsaved_title"
+      onClose={() => blocker.reset?.()}
+      onConfirm={() => blocker.proceed?.()}
+    />
+  );
+}
+
 function useAccountCatalog() {
   const dataProvider = useDataProvider();
   const [accounts, setAccounts] = useState<AccountChoice[]>([]);
@@ -60,7 +136,9 @@ function useAccountCatalog() {
 
   useEffect(() => {
     let cancelled = false;
-    loadAllAccounts((resource, params) => dataProvider.getList(resource, params))
+    loadAllAccounts((resource, params) =>
+      dataProvider.getList(resource, params),
+    )
       .then((rows) => {
         if (!cancelled) setAccounts(rows);
       })
@@ -83,12 +161,14 @@ function AccountCodeInput({
   failed,
   isPending,
   kind,
+  required = false,
   source,
 }: {
   accounts: AccountChoice[];
   failed: boolean;
   isPending: boolean;
   kind: 'debit' | 'credit';
+  required?: boolean;
   source: string;
 }) {
   const translate = useTranslate();
@@ -103,9 +183,9 @@ function AccountCodeInput({
         choices={choices}
         fullWidth
         isLoading={isPending}
+        label={<AccountFieldLabel kind={kind} required={required} />}
         source={source}
         translateChoice={false}
-        validate={required()}
       />
       {!isPending && !failed && choices.length === 0 ? (
         <Typography color="warning.main" variant="body2">
@@ -135,23 +215,30 @@ export function TransactionCreate() {
       <SimpleForm
         sx={bandedForm}
         toolbar={<DraftSaveToolbar />}
-        validate={(values: { description?: unknown }) => {
-          const description =
-            typeof values.description === 'string' ? values.description.trim() : '';
-          const hasFile = receiptCards.some(
-            (card) => card.file && card.file.size > 0,
-          );
-          const errors: Record<string, string> = {};
-          if (hasFile && !description) {
-            errors.description = translate('app.receipt_description_required');
-          }
-          if (receiptCards.some(receiptCardInvalid)) {
-            errors.receipt_cards = translate('app.receipt_card_required');
-          }
-          return errors;
-        }}
+        validate={(values) =>
+          transactionFormErrors(
+            values as Record<string, unknown>,
+            receiptCards,
+            translate,
+          )
+        }
       >
+        <CreateLeaveGuard receiptCardCount={receiptCards.length} />
+
         <DateInput fullWidth source="date" validate={required()} />
+        <ReferenceInput
+          perPage={100}
+          reference="organizations"
+          sort={{ field: 'name', order: 'ASC' }}
+          source="organization"
+        >
+          <AutocompleteInput
+            filterToQuery={nameFilterToQuery}
+            fullWidth
+            optionText="name"
+          />
+        </ReferenceInput>
+
         <NumberInput fullWidth source="amount" validate={required()} />
         <ReferenceInput
           perPage={100}
@@ -166,27 +253,15 @@ export function TransactionCreate() {
             validate={required()}
           />
         </ReferenceInput>
-        <TextInput fullWidth multiline source="description" />
-        <ReferenceInput
-          perPage={100}
-          reference="organizations"
-          sort={{ field: 'name', order: 'ASC' }}
-          source="organization"
-        >
-          <AutocompleteInput
-            filterToQuery={nameFilterToQuery}
-            fullWidth
-            optionText="name"
-            validate={required()}
-          />
-        </ReferenceInput>
-        <AccountCodeInput
-          accounts={catalog.accounts}
-          failed={catalog.failed}
-          isPending={catalog.isPending}
-          kind="debit"
-          source="debit_account"
+
+        <TextInput
+          className={bandedSpanClass}
+          fullWidth
+          multiline
+          source="description"
+          validate={required()}
         />
+
         <AccountCodeInput
           accounts={catalog.accounts}
           failed={catalog.failed}
@@ -194,6 +269,14 @@ export function TransactionCreate() {
           kind="credit"
           source="credit_account"
         />
+        <AccountCodeInput
+          accounts={catalog.accounts}
+          failed={catalog.failed}
+          isPending={catalog.isPending}
+          kind="debit"
+          source="debit_account"
+        />
+
         <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
       </SimpleForm>
     </Create>
