@@ -46,14 +46,14 @@ Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create é
 | Route | Szerep | Viselkedés |
 | --- | --- | --- |
 | `/transactions/create` | `dataentry`, `editor` | Create. Mentés draft. Publish nincs. |
-| `/transactions/:id/show` | mindkettő | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít. |
+| `/transactions/:id/show` | mindkettő | `documentId`. `dataentry` és published: readonly, nincs csatolás, nincs Véglegesít. `editor` + draft: a hét mező szerkeszthető, bizonylat csatolható, az adatok után Véglegesít. |
 | `/transactions` | mindkettő | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
 | `/login` | vendég | Email/jelszó és Google. |
 | `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |
 
 A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
-A create és a megtekintés mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon.
+A create és a megtekintés mezői: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`, opcionális bizonylatok. A `transaction_type` és a `related_transaction` nincs a v1 űrlapon. A create-en a négyes kötelező (`date`, `amount`, `currency_type`, `description`), a három reláció opcionális; üres szervezettel és üres számlákkal a draft menthető. Az ellenőrzésen a hetes a publish feltétele: a Véglegesít üres mezővel nem indul, kitöltve előbb draft update (`?status=draft`, csak ez a hét mező), utána a publish.
 
 Szűrők a listán: `status`, `date` tartomány, `amount`, `organization`, `debit_account`, `credit_account`, `description`. A Szűrők törlése minden szűrőt alapra állít, a menüből hozott draft szűrőt is.
 

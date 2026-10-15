@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createTransactionDraft,
   transactionDraftBody,
+  transactionDraftUpdateUrl,
   transactionDraftUrl,
+  updateTransactionDraft,
 } from './transactionDraft';
 
 describe('transactionDraftBody', () => {
@@ -51,6 +53,26 @@ describe('transactionDraftBody', () => {
       organization: 'org-1',
       debit_account: 'debit-1',
       credit_account: 'credit-1',
+    });
+  });
+
+  it('omits empty organization and account relations from a draft create', () => {
+    expect(
+      transactionDraftBody({
+        date: '2026-10-14',
+        amount: 10,
+        description: 'papír',
+        currency_type: 'currency-1',
+        organization: '',
+        debit_account: null,
+        credit_account: { documentId: '' },
+        entered_by: 'ignored@example.com',
+      }),
+    ).toEqual({
+      date: '2026-10-14',
+      amount: 10,
+      description: 'papír',
+      currency_type: 'currency-1',
     });
   });
 });
@@ -190,5 +212,47 @@ describe('createTransactionDraft', () => {
       }),
     ).rejects.toThrow(/vendor/i);
     expect(httpClient).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateTransactionDraft', () => {
+  it('puts only the seven fields as a draft and drops audit fields', async () => {
+    const httpClient = vi.fn(async () => ({ json: { data: { documentId: 'doc-1' } } }));
+
+    await updateTransactionDraft(httpClient, 'http://localhost:1337', 'doc-1', {
+      date: '2026-10-15',
+      amount: 20,
+      description: 'papír',
+      currency_type: { documentId: 'cur-1' },
+      organization: 'org-1',
+      debit_account: 'deb-1',
+      credit_account: 'cre-1',
+      entered_by: 'forged@example.com',
+      published_by: 'forged@example.com',
+    });
+
+    expect(httpClient).toHaveBeenCalledWith(
+      transactionDraftUpdateUrl('http://localhost:1337', 'doc-1'),
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          data: {
+            date: '2026-10-15',
+            amount: 20,
+            description: 'papír',
+            organization: 'org-1',
+            debit_account: 'deb-1',
+            credit_account: 'cre-1',
+            currency_type: 'cur-1',
+          },
+        }),
+      },
+    );
+    expect(transactionDraftUpdateUrl('http://localhost:1337', 'doc-1')).toBe(
+      'http://localhost:1337/api/transactions/doc-1?status=draft',
+    );
+    const body = String(httpClient.mock.calls[0]?.[1]?.body);
+    expect(body).not.toContain('entered_by');
+    expect(body).not.toContain('published_by');
   });
 });

@@ -1,55 +1,22 @@
-import { Box, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormState } from 'react-hook-form';
 import {
-  AutocompleteInput,
   Confirm,
   Create,
-  DateInput,
-  NumberInput,
-  ReferenceInput,
-  required,
   SaveButton,
   SimpleForm,
-  TextInput,
   Toolbar,
   useBlocker,
   useCanBlock,
-  useDataProvider,
   useFormIsDirty,
   useTranslate,
-  type RaRecord,
 } from 'react-admin';
 
-import {
-  accountChoiceLabel,
-  filterAccountChoices,
-  loadAllAccounts,
-  type AccountChoice,
-} from '../../data/accountCodes';
-import { bandedForm, bandedSpanClass } from '../../theme';
-import { AccountFieldLabel } from './accountField';
+import { bandedForm } from '../../theme';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
+import { transactionFormFields, useAccountCatalog } from './transactionFields';
 import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
-
-function currencyOptionText(record: RaRecord): string {
-  const currency = record as { code?: string | null; name?: string | null };
-  return [currency.code, currency.name].filter(Boolean).join(' ');
-}
-
-function nameFilterToQuery(searchText: string) {
-  const query = searchText.trim();
-  return query ? { name: { $containsi: query } } : {};
-}
-
-function codeOrNameFilterToQuery(searchText: string) {
-  const query = searchText.trim();
-  if (!query) return {};
-  return {
-    $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
-  };
-}
 
 function DraftSaveToolbar() {
   return (
@@ -128,73 +95,6 @@ function CreateLeaveBlocker({
   );
 }
 
-function useAccountCatalog() {
-  const dataProvider = useDataProvider();
-  const [accounts, setAccounts] = useState<AccountChoice[]>([]);
-  const [isPending, setPending] = useState(true);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadAllAccounts((resource, params) =>
-      dataProvider.getList(resource, params),
-    )
-      .then((rows) => {
-        if (!cancelled) setAccounts(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setPending(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dataProvider]);
-
-  return { accounts, isPending, failed };
-}
-
-function AccountCodeInput({
-  accounts,
-  failed,
-  isPending,
-  kind,
-  source,
-}: {
-  accounts: AccountChoice[];
-  failed: boolean;
-  isPending: boolean;
-  kind: 'debit' | 'credit';
-  source: string;
-}) {
-  const translate = useTranslate();
-  const choices = filterAccountChoices(accounts, kind).map((account) => ({
-    id: account.id,
-    name: accountChoiceLabel(account),
-  }));
-
-  return (
-    <Box>
-      <AutocompleteInput
-        choices={choices}
-        fullWidth
-        isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} required />}
-        source={source}
-        translateChoice={false}
-        validate={required()}
-      />
-      {!isPending && !failed && choices.length === 0 ? (
-        <Typography color="warning.main" variant="body2">
-          {translate('app.accounts_seed_missing')}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-}
-
 /** Dataentry create. Save always goes out as a draft; there is no publish action. */
 export function TransactionCreate() {
   const catalog = useAccountCatalog();
@@ -224,57 +124,7 @@ export function TransactionCreate() {
       >
         <CreateLeaveGuard receiptCardCount={receiptCards.length} />
 
-        <DateInput fullWidth source="date" validate={required()} />
-        <ReferenceInput
-          perPage={100}
-          reference="organizations"
-          sort={{ field: 'name', order: 'ASC' }}
-          source="organization"
-        >
-          <AutocompleteInput
-            filterToQuery={nameFilterToQuery}
-            fullWidth
-            optionText="name"
-            validate={required()}
-          />
-        </ReferenceInput>
-
-        <NumberInput fullWidth source="amount" validate={required()} />
-        <ReferenceInput
-          perPage={100}
-          reference="currency-types"
-          sort={{ field: 'code', order: 'ASC' }}
-          source="currency_type"
-        >
-          <AutocompleteInput
-            filterToQuery={codeOrNameFilterToQuery}
-            fullWidth
-            optionText={currencyOptionText}
-            validate={required()}
-          />
-        </ReferenceInput>
-
-        <TextInput
-          className={bandedSpanClass}
-          fullWidth
-          multiline
-          source="description"
-        />
-
-        <AccountCodeInput
-          accounts={catalog.accounts}
-          failed={catalog.failed}
-          isPending={catalog.isPending}
-          kind="credit"
-          source="credit_account"
-        />
-        <AccountCodeInput
-          accounts={catalog.accounts}
-          failed={catalog.failed}
-          isPending={catalog.isPending}
-          kind="debit"
-          source="debit_account"
-        />
+        {transactionFormFields({ catalog, relationRequired: false })}
 
         <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
       </SimpleForm>

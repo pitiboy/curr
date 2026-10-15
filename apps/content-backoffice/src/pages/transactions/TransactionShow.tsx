@@ -1,10 +1,12 @@
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useWatch } from 'react-hook-form';
 import {
   Confirm,
   DateField,
+  Form,
   FunctionField,
   ListButton,
   SelectField,
@@ -26,6 +28,7 @@ import {
 import {
   attachTransactionReceipt,
   publishTransaction,
+  saveTransactionDraft,
 } from '../../data/dataProvider';
 import { receiptCardInvalid, receiptIsPresent } from '../../data/receiptDraft';
 import {
@@ -36,16 +39,18 @@ import {
   firstReceiptVendor,
   type TransactionRow,
 } from '../../data/transactionList';
-import { bandedShow, bandedSpanClass } from '../../theme';
+import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
-import { shouldConfirmDraftLeave } from './transactionLeave';
+import { ReceiptRail, SavedReceiptSection, type ReceiptCardValue } from './ReceiptFields';
+import { transactionFormFields, useAccountCatalog } from './transactionFields';
 import {
-  ReceiptRail,
-  SavedReceiptSection,
-  type ReceiptCardValue,
-} from './ReceiptFields';
+  TRANSACTION_PUBLISH_REQUIRED,
+  transactionFormErrors,
+  transactionReviewValues,
+} from './transactionForm';
+import { shouldConfirmDraftLeave } from './transactionLeave';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -110,19 +115,115 @@ function TransactionShowContent({
   const pending = cards.some((card) => card.file && card.file.size > 0);
   const finalize = useFinalizeTransaction(record.documentId, pending);
   const saved = hasSavedReceipts(record.receipts);
+  const formRecord = {
+    ...record,
+    ...transactionReviewValues(record),
+  };
 
   return (
     <Box>
       {canReview ? <DraftLeaveGuard /> : null}
       {canReview ? (
-        <Box sx={{ px: 1, pt: 1 }}>
-          <FinalizeForm
+        <Form
+          defaultValues={transactionReviewValues(record)}
+          noValidate
+          onSubmit={finalize.onSubmit}
+          record={formRecord}
+          validate={(values) =>
+            transactionFormErrors(
+              values as Record<string, unknown>,
+              [],
+              translate,
+              TRANSACTION_PUBLISH_REQUIRED,
+            )
+          }
+        >
+          <ReviewFormBody
             blocked={pending}
+            cards={cards}
+            locale={locale}
+            record={record}
             saving={finalize.saving}
-            onSubmit={finalize.onSubmit}
+            onCardsChange={setCards}
           />
+        </Form>
+      ) : (
+        <ReadonlyBody
+          locale={locale}
+          locales={locales}
+          record={record}
+          saved={saved}
+        />
+      )}
+    </Box>
+  );
+}
+
+function ReviewFormBody({
+  blocked,
+  cards,
+  locale,
+  onCardsChange,
+  record,
+  saving,
+}: {
+  blocked: boolean;
+  cards: ReceiptCardValue[];
+  locale: string;
+  onCardsChange: (cards: ReceiptCardValue[]) => void;
+  record: TransactionRow;
+  saving: boolean;
+}) {
+  const catalog = useAccountCatalog();
+
+  return (
+    <Box>
+      <Box sx={{ px: 1, pt: 1 }}>
+        <FinalizePanel blocked={blocked} saving={saving} />
+      </Box>
+      <Box sx={bandedForm}>
+        <Stack>
+          <FunctionField
+            render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
+            source="vendor"
+          />
+          {transactionFormFields({ catalog, relationRequired: true })}
+          <SelectField choices={statusChoices} source="status" translateChoice />
+        </Stack>
+      </Box>
+      <Box
+        sx={{ px: 1 }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.preventDefault();
+        }}
+      >
+        <ReceiptAttach cards={cards} record={record} onChange={onCardsChange} />
+      </Box>
+      <AuditFields locale={locale} record={record} />
+      <Box sx={{ px: 1, pb: 1 }}>
+        <Box sx={{ mt: 1 }}>
+          <FinalizePanel blocked={blocked} saving={saving} />
         </Box>
-      ) : null}
+      </Box>
+    </Box>
+  );
+}
+
+function ReadonlyBody({
+  locale,
+  locales,
+  record,
+  saved,
+}: {
+  locale: string;
+  locales: string;
+  record: TransactionRow;
+  saved: boolean;
+}) {
+  const translate = useTranslate();
+
+  return (
+    <Box>
       <SimpleShowLayout spacing={0} sx={bandedShow}>
         <FunctionField
           render={(row: RaRecord) => firstReceiptVendor(row.receipts) || '—'}
@@ -171,7 +272,7 @@ function TransactionShowContent({
           )}
           source="debit_account"
         />
-        {!saved && !canReview ? (
+        {!saved ? (
           <FunctionField
             className={bandedSpanClass}
             label="resources.transactions.fields.receipt"
@@ -180,41 +281,38 @@ function TransactionShowContent({
           />
         ) : null}
       </SimpleShowLayout>
-      {canReview ? (
-        <Box sx={{ px: 1 }}>
-          <ReceiptAttach cards={cards} record={record} onChange={setCards} />
-        </Box>
-      ) : saved ? (
+      {saved ? (
         <Box sx={{ px: 1 }}>
           <SavedReceiptSection receipts={record.receipts} />
         </Box>
       ) : null}
-      <SimpleShowLayout spacing={0} sx={bandedShow}>
-        <TextField emptyText="—" source="entered_by" />
-        <DateField source="createdAt" {...dateFieldProps(locale, true)} />
-        {record.status === 'published' ? (
-          <TextField emptyText="—" source="published_by" />
-        ) : null}
-        {record.status === 'published' ? (
-          <DateField
-            emptyText="—"
-            source="publishedAt"
-            {...dateFieldProps(locale, true)}
-          />
-        ) : null}
-      </SimpleShowLayout>
-      {canReview ? (
-        <Box sx={{ px: 1, pb: 1 }}>
-          <Box sx={{ mt: 1 }}>
-            <FinalizeForm
-              blocked={pending}
-              saving={finalize.saving}
-              onSubmit={finalize.onSubmit}
-            />
-          </Box>
-        </Box>
-      ) : null}
+      <AuditFields locale={locale} record={record} />
     </Box>
+  );
+}
+
+function AuditFields({
+  locale,
+  record,
+}: {
+  locale: string;
+  record: TransactionRow;
+}) {
+  return (
+    <SimpleShowLayout spacing={0} sx={bandedShow}>
+      <TextField emptyText="—" source="entered_by" />
+      <DateField source="createdAt" {...dateFieldProps(locale, true)} />
+      {record.status === 'published' ? (
+        <TextField emptyText="—" source="published_by" />
+      ) : null}
+      {record.status === 'published' ? (
+        <DateField
+          emptyText="—"
+          source="publishedAt"
+          {...dateFieldProps(locale, true)}
+        />
+      ) : null}
+    </SimpleShowLayout>
   );
 }
 
@@ -278,49 +376,28 @@ function ReceiptAttach({
   const notify = useNotify();
   const refresh = useRefresh();
   const [saving, setSaving] = useState(false);
+  const watchedDate = useWatch({ name: 'date' });
+  const watchedAmount = useWatch({ name: 'amount' });
+  const watchedDescription = useWatch({ name: 'description' });
+  const date = watchedDate ?? record.date;
+  const amount = watchedAmount ?? record.amount;
   const description =
-    typeof record.description === 'string' ? record.description.trim() : '';
+    typeof watchedDescription === 'string'
+      ? watchedDescription.trim()
+      : typeof record.description === 'string'
+        ? record.description.trim()
+        : '';
   const pending = cards.filter((card) => card.file && card.file.size > 0);
   const canSave = Boolean(
     pending.length > 0 &&
       !pending.some((card) => receiptCardInvalid(card)) &&
       description &&
-      record.date &&
-      isFilled(record.amount),
+      date &&
+      isFilled(amount),
   );
 
   return (
-    <Box
-      component="form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!canSave || saving) return;
-        setSaving(true);
-        Promise.all(
-          pending.map((card) =>
-            attachTransactionReceipt(record.documentId, {
-              file: card.file as File,
-              vendor: card.vendor,
-              receiptTypeId: card.receiptTypeId,
-              date: record.date,
-              amount: record.amount,
-              description,
-            }),
-          ),
-        )
-          .then(() => {
-            onChange([]);
-            notify('app.receipt_saved', { type: 'success' });
-            refresh();
-          })
-          .catch((error: unknown) => {
-            notify(errorText(error, translate('ra.notification.http_error')), {
-              type: 'error',
-            });
-          })
-          .finally(() => setSaving(false));
-      }}
-    >
+    <Box>
       <ReceiptRail cards={cards} saved={record.receipts} onChange={onChange} />
       {pending.length > 0 && !description ? (
         <Typography color="error" variant="body2">
@@ -330,8 +407,35 @@ function ReceiptAttach({
       {pending.length > 0 ? (
         <Button
           disabled={!canSave || saving}
+          onClick={() => {
+            if (!canSave || saving) return;
+            setSaving(true);
+            Promise.all(
+              pending.map((card) =>
+                attachTransactionReceipt(record.documentId, {
+                  file: card.file as File,
+                  vendor: card.vendor,
+                  receiptTypeId: card.receiptTypeId,
+                  date,
+                  amount,
+                  description,
+                }),
+              ),
+            )
+              .then(() => {
+                onChange([]);
+                notify('app.receipt_saved', { type: 'success' });
+                refresh();
+              })
+              .catch((error: unknown) => {
+                notify(errorText(error, translate('ra.notification.http_error')), {
+                  type: 'error',
+                });
+              })
+              .finally(() => setSaving(false));
+          }}
           sx={{ mt: 1 }}
-          type="submit"
+          type="button"
           variant="contained"
         >
           {translate('app.receipt_save')}
@@ -347,12 +451,16 @@ function useFinalizeTransaction(documentId: string, blocked: boolean) {
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = (values: Record<string, unknown>) => {
     if (blocked || savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
-    publishTransaction(documentId)
+    let updated = false;
+    saveTransactionDraft(documentId, values)
+      .then(() => {
+        updated = true;
+        return publishTransaction(documentId);
+      })
       .then(() => {
         notify('app.transactions_finalized', { type: 'success' });
         refresh();
@@ -365,6 +473,7 @@ function useFinalizeTransaction(documentId: string, blocked: boolean) {
             : message || 'ra.notification.http_error',
           { type: 'error' },
         );
+        if (updated) refresh();
       })
       .finally(() => {
         savingRef.current = false;
@@ -375,42 +484,38 @@ function useFinalizeTransaction(documentId: string, blocked: boolean) {
   return { saving, onSubmit };
 }
 
-function FinalizeForm({
+function FinalizePanel({
   blocked,
-  onSubmit,
   saving,
 }: {
   blocked: boolean;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   saving: boolean;
 }) {
   const translate = useTranslate();
 
   return (
-    <Box component="form" onSubmit={onSubmit}>
-      <Box component="fieldset" sx={reviewFieldset}>
-        <Box component="legend" sx={reviewLegend}>
-          <WarningAmberIcon aria-hidden sx={reviewIcon} />
-          <Typography
-            component="span"
-            sx={{ fontWeight: 700 }}
-            variant="subtitle1"
-          >
-            {translate('app.transactions_review')}
-          </Typography>
-        </Box>
-        <Typography sx={{ mb: 1 }} variant="body2">
-          {translate('app.transactions_finalize_hint')}
+    <Box component="fieldset" sx={reviewFieldset}>
+      <Box component="legend" sx={reviewLegend}>
+        <WarningAmberIcon aria-hidden sx={reviewIcon} />
+        <Typography
+          component="span"
+          sx={{ fontWeight: 700 }}
+          variant="subtitle1"
+        >
+          {translate('app.transactions_review')}
         </Typography>
-        {blocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_pending')}
-          </Typography>
-        ) : null}
-        <Button disabled={blocked || saving} type="submit" variant="contained">
-          {translate('app.transactions_finalize')}
-        </Button>
       </Box>
+      <Typography sx={{ mb: 1 }} variant="body2">
+        {translate('app.transactions_finalize_hint')}
+      </Typography>
+      {blocked ? (
+        <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
+          {translate('app.transactions_finalize_pending')}
+        </Typography>
+      ) : null}
+      <Button disabled={blocked || saving} type="submit" variant="contained">
+        {translate('app.transactions_finalize')}
+      </Button>
     </Box>
   );
 }

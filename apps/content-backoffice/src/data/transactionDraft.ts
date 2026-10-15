@@ -10,6 +10,14 @@ export function transactionDraftUrl(strapiUrl: string): string {
   return `${strapiUrl}/api/transactions?status=draft`;
 }
 
+/** REST update without this query publishes. */
+export function transactionDraftUpdateUrl(
+  strapiUrl: string,
+  documentId: string,
+): string {
+  return `${strapiUrl}/api/transactions/${encodeURIComponent(documentId)}?status=draft`;
+}
+
 /**
  * Whitelist of the create form. Audit fields and the workflow relations
  * stay off the payload even if they arrive in the form data.
@@ -104,8 +112,25 @@ function isAmount(value: unknown): boolean {
   return false;
 }
 
+export async function updateTransactionDraft(
+  httpClient: ContentHttpClient,
+  strapiUrl: string,
+  documentId: string,
+  data: Record<string, unknown>,
+) {
+  const body = transactionDraftBody(data);
+  await httpClient(transactionDraftUpdateUrl(strapiUrl, documentId), {
+    method: 'PUT',
+    body: JSON.stringify({ data: body }),
+  });
+}
+
 function relationId(value: unknown): string | undefined {
   if (typeof value === 'string' && value.trim()) return value.trim();
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  return undefined;
+  if (!value || typeof value !== 'object') return undefined;
+  const documentId = (value as { documentId?: unknown }).documentId;
+  return typeof documentId === 'string' && documentId.trim()
+    ? documentId.trim()
+    : undefined;
 }

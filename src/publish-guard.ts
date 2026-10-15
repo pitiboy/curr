@@ -12,17 +12,34 @@ const DRAFT_ONLY =
 const SAME_PERSON =
   'The person who entered the document cannot publish it';
 
-/** Draft saves skip Strapi `required`. These are still mandatory on every HTTP write. */
-export const TRANSACTION_REQUIRED_FIELDS = [
+/**
+ * Draft saves skip Strapi `required`. HTTP create/update still needs these four.
+ * Organization, debit and credit may be empty on a draft.
+ */
+export const TRANSACTION_DRAFT_REQUIRED_FIELDS = [
   'date',
   'amount',
   'currency_type',
+  'description',
+] as const;
+
+/** Publish reads the stored draft; all seven must be filled. */
+export const TRANSACTION_PUBLISH_REQUIRED_FIELDS = [
+  'date',
+  'amount',
+  'currency_type',
+  'description',
   'organization',
   'debit_account',
   'credit_account',
 ] as const;
 
-export type TransactionRequiredField = (typeof TRANSACTION_REQUIRED_FIELDS)[number];
+export const TRANSACTION_REQUIRED_FIELDS = TRANSACTION_DRAFT_REQUIRED_FIELDS;
+
+export type TransactionDraftField = (typeof TRANSACTION_DRAFT_REQUIRED_FIELDS)[number];
+export type TransactionPublishField =
+  (typeof TRANSACTION_PUBLISH_REQUIRED_FIELDS)[number];
+export type TransactionRequiredField = TransactionDraftField;
 
 export type PublishPolicy = {
   /** `draft`: create/update cannot publish. `published`: an editor may save as published. */
@@ -242,29 +259,57 @@ function samePerson(
 }
 
 /**
- * Fields missing from a transaction write.
+ * Fields missing from a transaction draft write.
  * On update, an omitted key keeps the stored value. `connect: []` without
- * `set` is that same no-op. A create must include every required field.
+ * `set` is that same no-op. A create must include every draft-required field.
  */
 export function missingTransactionFields(
   data: Record<string, unknown> | undefined,
   action: 'create' | 'update',
-): TransactionRequiredField[] {
+): TransactionDraftField[] {
   const source = data ?? {};
-  return TRANSACTION_REQUIRED_FIELDS.filter((field) => {
+  return TRANSACTION_DRAFT_REQUIRED_FIELDS.filter((field) => {
     if (action === 'update' && !(field in source)) return false;
     return !transactionFieldFilled(field, source[field], action);
   });
 }
 
+/**
+ * Publish has no body. Missing fields come from the stored draft row,
+ * with relations populated through `db.query` (not `documents().findOne`).
+ */
+export function missingStoredPublishFields(
+  row: Record<string, unknown> | null | undefined,
+): TransactionPublishField[] {
+  const source = row ?? {};
+  return TRANSACTION_PUBLISH_REQUIRED_FIELDS.filter(
+    (field) => !storedPublishFieldFilled(field, source[field]),
+  );
+}
+
 function transactionFieldFilled(
-  field: TransactionRequiredField,
+  field: TransactionDraftField,
   value: unknown,
   action: 'create' | 'update',
 ): boolean {
   if (field === 'date') return dateFilled(value);
   if (field === 'amount') return amountFilled(value);
+  if (field === 'description') return descriptionFilled(value);
   return relationFilled(value, action);
+}
+
+function storedPublishFieldFilled(
+  field: TransactionPublishField,
+  value: unknown,
+): boolean {
+  if (field === 'date') return dateFilled(value);
+  if (field === 'amount') return amountFilled(value);
+  if (field === 'description') return descriptionFilled(value);
+  return storedRelationFilled(value);
+}
+
+function descriptionFilled(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function dateFilled(value: unknown): boolean {
@@ -276,6 +321,17 @@ function amountFilled(value: unknown): boolean {
   if (typeof value === 'number') return Number.isFinite(value);
   if (typeof value !== 'string' || value.trim() === '') return false;
   return Number.isFinite(Number(value));
+}
+
+function storedRelationFilled(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.some((item) => storedRelationFilled(item));
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  if (typeof row.documentId === 'string') return row.documentId.trim().length > 0;
+  if ('id' in row) return storedRelationFilled(row.id);
+  return false;
 }
 
 function relationFilled(value: unknown, action: 'create' | 'update'): boolean {
@@ -368,6 +424,37 @@ async function storedEnteredBy(
   return typeof row?.entered_by === 'string' ? row.entered_by : undefined;
 }
 
+const PUBLISH_RELATION_POPULATE = {
+  organization: true,
+  debit_account: true,
+  credit_account: true,
+  currency_type: true,
+};
+
+async function storedDraftForPublish(
+  strapi: PublishGuardStrapi,
+  documentId: string | undefined,
+): Promise<Record<string, unknown> | null> {
+  if (!documentId) return null;
+  return strapi.db.query(TRANSACTION_UID).findOne({
+    where: { documentId, publishedAt: { $null: true } },
+    populate: PUBLISH_RELATION_POPULATE,
+  });
+}
+
+function throwMissingFields(missing: string[]) {
+  throw new errors.ValidationError(
+    `Missing required transaction fields: ${missing.join(', ')}`,
+    {
+      errors: missing.map((path) => ({
+        path: [path],
+        message: `${path} is a required field`,
+        name: 'ValidationError',
+      })),
+    },
+  );
+}
+
 export function registerPublishGuard(
   strapi: PublishGuardStrapi,
   policy: PublishPolicy = readPublishPolicy(),
@@ -408,16 +495,22 @@ export function registerPublishGuard(
         context.action === 'update' ? 'update' : 'create',
       );
       if (missing.length > 0) {
-        throw new errors.ValidationError(
-          `Missing required transaction fields: ${missing.join(', ')}`,
-          {
-            errors: missing.map((path) => ({
-              path: [path],
-              message: `${path} is a required field`,
-              name: 'ValidationError',
-            })),
-          },
-        );
+        throwMissingFields(missing);
+      }
+    }
+
+    if (
+      context.uid === TRANSACTION_UID &&
+      context.action === 'publish' &&
+      strapi.requestContext.get()
+    ) {
+      const stored = await storedDraftForPublish(
+        strapi,
+        context.params?.documentId,
+      );
+      const missing = missingStoredPublishFields(stored);
+      if (missing.length > 0) {
+        throwMissingFields(missing);
       }
     }
 

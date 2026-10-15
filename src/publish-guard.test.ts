@@ -5,6 +5,7 @@ import { errors } from '@strapi/utils';
 import {
   contentApiActor,
   guardEffect,
+  missingStoredPublishFields,
   missingTransactionFields,
   readPublishPolicy,
   registerPublishGuard,
@@ -170,9 +171,19 @@ const completeTransaction = {
   date: '2026-10-15',
   amount: 10,
   currency_type: 'cur-1',
-  organization: 'org-1',
-  debit_account: 'deb-1',
-  credit_account: 'cre-1',
+  description: 'papír',
+};
+
+const completeStoredTransaction = {
+  id: 9,
+  documentId: 'doc_1',
+  date: '2026-10-15',
+  amount: 10,
+  description: 'papír',
+  currency_type: { documentId: 'cur-1' },
+  organization: { documentId: 'org-1' },
+  debit_account: { documentId: 'deb-1' },
+  credit_account: { documentId: 'cre-1' },
 };
 
 function fakeStrapi(options: {
@@ -204,7 +215,7 @@ function fakeStrapi(options: {
           if (uid === 'plugin::users-permissions.user') {
             return options.user ?? null;
           }
-          return { id: 9, documentId: 'doc_1' };
+          return { ...completeStoredTransaction };
         },
         update: async ({ data }) => {
           options.onUpdate?.(uid, data);
@@ -389,7 +400,7 @@ describe('registerPublishGuard', () => {
     assert.equal(nextCalled, false);
   });
 
-  it('rejects a draft create that omits required fields', async () => {
+  it('rejects a draft create that omits the four required fields', async () => {
     let nextCalled = false;
     const strapi = fakeStrapi({
       userId: 1,
@@ -410,7 +421,7 @@ describe('registerPublishGuard', () => {
           {
             uid: transaction,
             action: 'create',
-            params: { status: 'draft', data: { description: 'csak leírás' } },
+            params: { status: 'draft', data: { organization: 'org-1' } },
           },
           async () => {
             nextCalled = true;
@@ -419,14 +430,44 @@ describe('registerPublishGuard', () => {
         ),
       (error: unknown) => {
         assert.ok(error instanceof errors.ValidationError);
-        assert.match(error.message, /date, amount, currency_type, organization, debit_account, credit_account/);
+        assert.match(error.message, /date, amount, currency_type, description/);
+        assert.doesNotMatch(error.message, /organization|debit_account|credit_account/);
         return true;
       },
     );
     assert.equal(nextCalled, false);
   });
 
-  it('rejects an admin draft that clears a required relation', async () => {
+  it('lets a draft create omit organization and accounts', async () => {
+    let nextCalled = false;
+    const strapi = fakeStrapi({
+      userId: 1,
+      user: { email: dataentry.email, role: { type: 'dataentry' } },
+    });
+    let middleware: (
+      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
+    await middleware(
+      {
+        uid: transaction,
+        action: 'create',
+        params: { status: 'draft', data: { ...completeTransaction } },
+      },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+
+  it('lets a draft update clear organization', async () => {
     let nextCalled = false;
     const strapi = fakeStrapi({ strategy: 'admin', userId: 1 });
     let middleware: (
@@ -438,22 +479,76 @@ describe('registerPublishGuard', () => {
     };
     registerPublishGuard(strapi);
 
+    await middleware(
+      {
+        uid: transaction,
+        action: 'update',
+        params: { data: { organization: null } },
+      },
+      async () => {
+        nextCalled = true;
+        return { documentId: 'doc_1' };
+      },
+    );
+    assert.equal(nextCalled, true);
+  });
+
+  it('rejects publish when the stored draft is missing a relation', async () => {
+    let nextCalled = false;
+    let populate: unknown;
+    const strapi = fakeStrapi({
+      userId: 2,
+      user: { email: editor.email, role: { type: 'editor' } },
+    });
+    const query = strapi.db.query.bind(strapi.db);
+    strapi.db.query = (uid: string) => {
+      const api = query(uid);
+      return {
+        ...api,
+        findOne: async (params: Record<string, unknown> = {}) => {
+          if (uid === 'plugin::users-permissions.user') {
+            return { email: editor.email, role: { type: 'editor' } };
+          }
+          if (params.populate) populate = params.populate;
+          return {
+            ...completeStoredTransaction,
+            organization: null,
+            entered_by: dataentry.email,
+          };
+        },
+      };
+    };
+    let middleware: (
+      context: { uid: string; action: string; params?: { documentId?: string } },
+      next: () => Promise<unknown>,
+    ) => Promise<unknown> = async (_context, next) => next();
+    strapi.documents.use = (fn) => {
+      middleware = fn;
+    };
+    registerPublishGuard(strapi);
+
     await assert.rejects(
       () =>
         middleware(
-          {
-            uid: transaction,
-            action: 'update',
-            params: { data: { organization: null } },
-          },
+          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
           async () => {
             nextCalled = true;
-            return { documentId: 'doc_1' };
+            return { documentId: 'tx_1' };
           },
         ),
-      (error: unknown) => error instanceof errors.ValidationError,
+      (error: unknown) => {
+        assert.ok(error instanceof errors.ValidationError);
+        assert.match(error.message, /organization/);
+        return true;
+      },
     );
     assert.equal(nextCalled, false);
+    assert.deepEqual(populate, {
+      organization: true,
+      debit_account: true,
+      credit_account: true,
+      currency_type: true,
+    });
   });
 
   it('lets a request-less seed write an incomplete transaction', async () => {
@@ -480,24 +575,23 @@ describe('registerPublishGuard', () => {
 });
 
 describe('missingTransactionFields', () => {
-  it('requires every field on create and only the sent fields on update', () => {
-    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'create'), [
+  it('requires the four draft fields on create and only the sent fields on update', () => {
+    assert.deepEqual(missingTransactionFields({ organization: 'org-1' }, 'create'), [
       'date',
       'amount',
       'currency_type',
-      'organization',
-      'debit_account',
-      'credit_account',
+      'description',
     ]);
     assert.deepEqual(missingTransactionFields(completeTransaction, 'create'), []);
     assert.deepEqual(missingTransactionFields({ description: 'x' }, 'update'), []);
     assert.deepEqual(missingTransactionFields({ amount: 0, organization: { connect: [] } }, 'update'), []);
-    assert.deepEqual(missingTransactionFields({ organization: { set: [] } }, 'update'), [
-      'organization',
+    assert.deepEqual(missingTransactionFields({ organization: { set: [] } }, 'update'), []);
+    assert.deepEqual(missingTransactionFields({ description: '   ' }, 'update'), [
+      'description',
     ]);
     assert.deepEqual(
       missingTransactionFields({ organization: { connect: [] } }, 'create'),
-      ['date', 'amount', 'currency_type', 'organization', 'debit_account', 'credit_account'],
+      ['date', 'amount', 'currency_type', 'description'],
     );
     assert.deepEqual(
       missingTransactionFields(
@@ -505,6 +599,21 @@ describe('missingTransactionFields', () => {
         'update',
       ),
       [],
+    );
+  });
+});
+
+describe('missingStoredPublishFields', () => {
+  it('requires all seven fields on the stored draft', () => {
+    assert.deepEqual(missingStoredPublishFields(completeStoredTransaction), []);
+    assert.deepEqual(
+      missingStoredPublishFields({
+        ...completeStoredTransaction,
+        organization: null,
+        debit_account: {},
+        description: '  ',
+      }),
+      ['description', 'organization', 'debit_account'],
     );
   });
 });
