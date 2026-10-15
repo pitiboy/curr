@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import { fetchProfileFields } from '../../auth/authProvider';
+import { ProfilePasswordForm } from './ProfilePasswordForm';
 
 export function ProfilePage() {
   const translate = useTranslate();
   const [name, setName] = useState('…');
   const [email, setEmail] = useState('…');
+  const [provider, setProvider] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -16,6 +18,7 @@ export function ProfilePage() {
         if (active) {
           setName(fields.name);
           setEmail(fields.email);
+          setProvider(fields.provider);
         }
       })
       .catch(() => {
@@ -46,6 +49,7 @@ export function ProfilePage() {
           <Typography variant="body1">{email}</Typography>
         </CardContent>
       </Card>
+      {provider === 'local' ? <ProfilePasswordForm /> : null}
     </Box>
   );
 }

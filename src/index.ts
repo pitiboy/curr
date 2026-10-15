@@ -7,6 +7,11 @@ function allow(actions: string[]) {
   return Object.fromEntries(actions.map((action) => [action, enabled]));
 }
 
+/** Auth actions not returned by getActions() but required for Content users. */
+const CONTENT_ROLE_AUTH_ACTIONS = [
+  'plugin::users-permissions.auth.changePassword',
+] as const;
+
 /** Content API actions for dataentry and editor (no delete). */
 const CONTENT_ROLE_ACTIONS = [
   'api::transaction.transaction.find',
@@ -209,8 +214,16 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       throw new Error(`Failed to ensure role "${roleDef.type}"`);
     }
 
-    for (const action of CONTENT_ROLE_ACTIONS) {
-      if (!isActionInCatalog(actionCatalog, action)) {
+    for (const action of [
+      ...CONTENT_ROLE_ACTIONS,
+      ...CONTENT_ROLE_AUTH_ACTIONS,
+    ]) {
+      if (
+        !CONTENT_ROLE_AUTH_ACTIONS.includes(
+          action as (typeof CONTENT_ROLE_AUTH_ACTIONS)[number],
+        ) &&
+        !isActionInCatalog(actionCatalog, action)
+      ) {
         strapi.log.warn(
           `Content role bootstrap: action "${action}" not in getActions(), skipped`,
         );
@@ -219,6 +232,53 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       await ensurePermission(strapi, role.id, action);
     }
   }
+}
+
+type GrantStore = Record<string, Record<string, unknown>>;
+
+async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
+  config: { get: (key: string) => unknown };
+  store: (params: { type: string; name: string }) => {
+    get: (params: { key: string }) => Promise<unknown>;
+    set: (params: { key: string; value: unknown }) => Promise<void>;
+  };
+}) {
+  const pluginConfig = strapi.config.get('plugin::users-permissions') as {
+    grant?: { google?: Record<string, unknown> };
+  };
+  const googleFromConfig = pluginConfig?.grant?.google;
+  if (!googleFromConfig) {
+    return;
+  }
+
+  const pluginStore = strapi.store({
+    type: 'plugin',
+    name: 'users-permissions',
+  });
+  const grant =
+    ((await pluginStore.get({ key: 'grant' })) as GrantStore | null) ?? {};
+  const prev = grant.google ?? {};
+  const next = {
+    ...prev,
+    enabled: googleFromConfig.enabled ?? prev.enabled,
+    icon: prev.icon ?? 'google',
+    key: googleFromConfig.key ?? prev.key,
+    secret: googleFromConfig.secret ?? prev.secret,
+    callback: googleFromConfig.callback ?? prev.callback,
+  };
+
+  if (
+    prev.enabled === next.enabled &&
+    prev.key === next.key &&
+    prev.secret === next.secret &&
+    prev.callback === next.callback
+  ) {
+    return;
+  }
+
+  grant.google = next;
+  await pluginStore.set({ key: 'grant', value: grant });
+  strapi.log.info('Synced users-permissions Google grant from config');
 }
 
 export default {
@@ -250,5 +310,6 @@ export default {
   async bootstrap({ strapi }) {
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
+    await ensureGoogleOAuthGrant(strapi);
   },
 };
