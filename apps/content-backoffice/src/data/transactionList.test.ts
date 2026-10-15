@@ -70,6 +70,25 @@ describe('assembleTransactionList', () => {
     expect(data.map((row) => row.id)).toEqual(['both']);
   });
 
+  it('sorts by createdAt independently of the booking date', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'later',
+        date: '2026-01-01',
+        createdAt: '2026-03-01T10:00:00.000Z',
+      },
+      {
+        documentId: 'earlier',
+        date: '2026-06-01',
+        createdAt: '2026-01-02T08:00:00.000Z',
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      sort: { field: 'createdAt', order: 'ASC' },
+    });
+    expect(data.map((row) => row.id)).toEqual(['earlier', 'later']);
+  });
+
   it('sorts amounts numerically and paginates after the merge', () => {
     const rows: StrapiTransaction[] = [
       { documentId: 'a', date: '2026-01-01', amount: '9' },
@@ -118,6 +137,23 @@ describe('buildTransactionFilters', () => {
         debit_account: { documentId: { $eq: 'acc-debit' } },
         credit_account: { documentId: { $eq: 'acc-credit' } },
         description: { $containsi: 'kávé' },
+      },
+    });
+  });
+
+  it('maps a createdAt day range onto a full UTC datetime window', () => {
+    expect(
+      buildTransactionFilters({
+        createdAt_gte: '2026-02-01T00:00:00.000Z',
+        createdAt_lte: '2026-02-15',
+      }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        createdAt: {
+          $gte: '2026-02-01T00:00:00.000Z',
+          $lte: '2026-02-15T23:59:59.999Z',
+        },
       },
     });
   });

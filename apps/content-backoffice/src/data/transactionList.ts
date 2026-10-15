@@ -4,6 +4,7 @@ export type StrapiTransaction = {
   id?: number;
   documentId?: string;
   date?: string | null;
+  createdAt?: string | null;
   amount?: string | number | null;
   description?: string | null;
   organization?: { documentId?: string; name?: string | null } | null;
@@ -92,6 +93,13 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   if (dateFrom) date.$gte = dateFrom;
   if (dateTo) date.$lte = dateTo;
   if (Object.keys(date).length > 0) strapiFilters.date = date;
+
+  const createdAt: Record<string, string> = {};
+  const createdFrom = asDateTimeBound(filter.createdAt_gte, 'start');
+  const createdTo = asDateTimeBound(filter.createdAt_lte, 'end');
+  if (createdFrom) createdAt.$gte = createdFrom;
+  if (createdTo) createdAt.$lte = createdTo;
+  if (Object.keys(createdAt).length > 0) strapiFilters.createdAt = createdAt;
 
   const amount: Record<string, unknown> = {};
   if (isPresent(filter.amount_gte)) amount.$gte = filter.amount_gte;
@@ -200,6 +208,8 @@ function sortValue(row: TransactionRow, field: string): string | number {
       return row.description ?? '';
     case 'date':
       return row.date ?? '';
+    case 'createdAt':
+      return row.createdAt ?? '';
     default: {
       const value = (row as Record<string, unknown>)[field];
       if (typeof value === 'number' || typeof value === 'string') return value;
@@ -230,6 +240,18 @@ function asDate(value: unknown): string | undefined {
   const text = String(value);
   const match = /^(\d{4}-\d{2}-\d{2})/.exec(text);
   return match ? match[1] : text;
+}
+
+/** createdAt is a datetime, so a picked calendar day covers that whole UTC day. */
+function asDateTimeBound(
+  value: unknown,
+  edge: 'start' | 'end',
+): string | undefined {
+  const date = asDate(value);
+  if (!date) return undefined;
+  return edge === 'start'
+    ? `${date}T00:00:00.000Z`
+    : `${date}T23:59:59.999Z`;
 }
 
 function appendQuery(

@@ -56,6 +56,16 @@ const transactionFilters = [
   />,
   <DateInput key="date_gte" label="app.filters.date_from" source="date_gte" />,
   <DateInput key="date_lte" label="app.filters.date_to" source="date_lte" />,
+  <DateInput
+    key="createdAt_gte"
+    label="app.filters.created_from"
+    source="createdAt_gte"
+  />,
+  <DateInput
+    key="createdAt_lte"
+    label="app.filters.created_to"
+    source="createdAt_lte"
+  />,
   <NumberInput
     key="amount_gte"
     label="app.filters.amount_from"
@@ -144,6 +154,10 @@ export function TransactionList() {
         rowClick={false}
       >
         <DateField source="date" />
+        <DateField
+          locales={locale === 'en' ? 'en' : 'hu-HU'}
+          source="createdAt"
+        />
         <NumberField
           locales={locale === 'en' ? 'en' : 'hu-HU'}
           source="amount"
