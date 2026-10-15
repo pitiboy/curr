@@ -10,6 +10,13 @@ export function transactionDraftUrl(strapiUrl: string): string {
   return `${strapiUrl}/api/transactions?status=draft`;
 }
 
+export function transactionUpdateDraftUrl(
+  strapiUrl: string,
+  documentId: string,
+): string {
+  return `${strapiUrl}/api/transactions/${encodeURIComponent(documentId)}?status=draft`;
+}
+
 /**
  * Whitelist of the create form. Audit fields and the workflow relations
  * stay off the payload even if they arrive in the form data.
@@ -79,6 +86,19 @@ export async function createTransactionDraft(
       documentId,
     },
   };
+}
+
+export async function updateTransactionDraft(
+  httpClient: ContentHttpClient,
+  strapiUrl: string,
+  documentId: string,
+  data: Record<string, unknown>,
+): Promise<void> {
+  const body = transactionDraftBody(data);
+  await httpClient(transactionUpdateDraftUrl(strapiUrl, documentId), {
+    method: 'PUT',
+    body: JSON.stringify({ data: body }),
+  });
 }
 
 function recordData(json: unknown): Record<string, unknown> {
