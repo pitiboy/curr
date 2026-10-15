@@ -1,7 +1,7 @@
 # PRD 0002: Content Backoffice v2 (roadmap)
 
 **Status:** draft  
-**Date:** 2026-10-12, kiegészítve 2026-10-14  
+**Date:** 2026-10-12, kiegészítve 2026-10-15  
 **Product:** `content-backoffice`  
 **Depends on:** [0001-content-backoffice-v1](./0001-content-backoffice-v1.md)  
 **Related ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
@@ -131,11 +131,34 @@ jobs:
 Megjegyzések:
 
 - A pontos `nx build` target neve az app `project.json` szerint állítandó.
+- A build előtt lefut a [§4.3](#43-minőségkapu-pre-commit-és-main-branch-protection) minőségkapu: Prettier check, lint, typecheck.
 - A pipeline a build mellett a publish őrt is teszteli, mielőtt a `/backoffice` kikerül.
 - Deploy job legyen `environment: production` + manuális approval, amíg a cPanel feltöltés stabil.
 - Ne commitoljunk FTP jelszót; GitHub Secrets.
 
-### 4.3 Üzemeltetési alap
+### 4.3 Minőségkapu: pre-commit és main branch protection
+
+A commit előtti hook és a CI ugyanazt a kaput futtatja. A hook a fejlesztő gépén, a CI minden pull requesten. A hook kihagyása nem helyettesíti a CI-t.
+
+A kapu, a [§4.2](#42-github-actions-skeleton-javaslat) buildje előtt:
+
+- Prettier, a gyökér [`.prettierrc`](../../.prettierrc) szerint. A hook formáz, a CI `--check` módban fut, és nem írja át a fát.
+- Lint. Az SPA-n a meglévő `oxlint` (`apps/content-backoffice` `lint` script). A Strapi oldalra ugyanilyen lint lépés kerül, amint a parancs megvan.
+- TypeScript. Gyökér: `npm run typecheck`. Az SPA buildje a `tsc -b` lépést továbbra is lefuttatja.
+- Az érintett unit tesztek. Az SPA-n a `vitest` fut, ha a változás az appot érinti.
+
+A pre-commit csak a staged fájlokon dolgozik, ahol a parancs ezt bírja. A teljes fa ellenőrzése a CI dolga.
+
+A `main` branch protection GitHub-beállítás, nem kódbeli kapcsoló:
+
+- Közvetlen push a `main`-re tiltott. Változás csak pull requesten keresztül megy.
+- Kötelező státuszellenőrzés a minőségkapu CI jobja: Prettier check, lint, typecheck, build, és a publish őr tesztje.
+- Merge előtt a branch legyen naprakész a `main`-nel.
+- Force-push és a `main` törlése tiltott.
+
+Ma a [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) `npm ci`, Strapi build és `typecheck`. Pre-commit hook és branch protection nincs.
+
+### 4.4 Üzemeltetési alap
 
 - Strukturált log kérésazonosítóval, és hibagyűjtő a Strapi és az SPA oldalán is, hogy egy mentés utólag köthető legyen egy Neon- vagy cPanel-hibához.
 - Health endpoint, és egy rövid üzemeltetési jegyzet: Neon backup, Cloudinary, env, seedelt számlakódok, smoke login `dataentry` és `editor` szereppel.
@@ -163,7 +186,7 @@ Ezek a könyvelési kör és az üzemeltetési alap után jönnek.
 
 1. Org–user ACL + szerveroldali szűrés
 2. Strukturált log, hibagyűjtő, health endpoint, üzemeltetési jegyzet
-3. CI: build és a publish őr tesztje; a deploy kézi jóváhagyásos marad
+3. Minőségkapu: pre-commit (Prettier, lint, typecheck, érintett tesztek) és ugyanaz a CI-n; `main` branch protection. A build és a publish őr tesztje a deploy előtt; a deploy kézi jóváhagyásos marad
 4. Allowlist configba, hogy számlatükör-változáskor ne kelljen új frontendet szállítani
 5. Séma és jog csak kódból, bootstrapból
 6. Lapozott lista, szűk mezők, indexek, bizonylat bélyegkép, resource-onkénti bundle
