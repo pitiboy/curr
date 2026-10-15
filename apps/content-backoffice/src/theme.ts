@@ -45,27 +45,43 @@ export function bandedRow(_record: unknown, index: number): UntypedSx {
 function bandedStack(theme: Theme) {
   return {
     '& > .MuiStack-root': {
-      gap: 1,
+      gap: 0.5,
       width: '100%',
       '& > *': {
         borderRadius: 1,
         boxSizing: 'border-box',
-        px: 1.5,
-        py: 1,
+        m: 0,
+        px: 1,
+        py: 0.5,
         width: '100%',
+      },
+      '& .MuiFormControl-root': {
+        m: 0,
+      },
+      // Empty helper text still reserves a line under every input.
+      '& .MuiFormHelperText-root:not(.Mui-error)': {
+        display: 'none',
       },
       ...childBands(theme),
     },
   };
 }
 
-export const bandedForm: SxProps<Theme> = (theme) => bandedStack(theme);
+export const bandedForm: SxProps<Theme> = (theme) => ({
+  ...bandedStack(theme),
+  padding: theme.spacing(1),
+  '&:last-child': {
+    paddingBottom: theme.spacing(1),
+  },
+});
 
 /**
  * SimpleShowLayout rows are inline, so the shared stripe also stretches them.
+ * Pass spacing={0}: the layout's own stack spacing would add a second gap.
  */
 export const bandedShow: SxProps<Theme> = (theme) => ({
   ...bandedStack(theme),
+  padding: theme.spacing(0.5, 1),
   '& > .MuiStack-root > .RaSimpleShowLayout-row': {
     display: 'flex',
     flexDirection: 'column',

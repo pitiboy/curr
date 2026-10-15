@@ -14,11 +14,15 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalize: 'Finalize',
     transactions_finalized: 'Transaction finalized.',
     transactions_finalize_hint:
-      'Finalizing publishes the transaction and its receipts.',
+      'This transaction is not finalized yet, which means it will not appear in financial statements. Once you have reviewed and found the data and attached receipts to be correct, finalize the transaction and its receipts.',
     transactions_finalize_pending:
       'The attached file is not saved yet. Save the receipt first.',
     transactions_finalize_same_person:
       'The person who entered the transaction cannot finalize it.',
+    transactions_leave_title: 'This transaction is still a draft',
+    transactions_leave_body: 'Finalizing is still pending. Leave this page?',
+    transactions_leave_go: 'Leave',
+    transactions_leave_stay: 'Stay',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
     profile: 'Profile',

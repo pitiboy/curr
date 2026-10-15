@@ -14,11 +14,15 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_finalize: 'Véglegesít',
     transactions_finalized: 'A tranzakció véglegesítve.',
     transactions_finalize_hint:
-      'A véglegesítés közzéteszi a tranzakciót és a kapcsolt bizonylatokat.',
+      'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg a kimutatásokban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
     transactions_finalize_pending:
       'A csatolt fájl még nincs mentve. Előbb mentsd a bizonylatot.',
     transactions_finalize_same_person:
       'A rögzítő nem véglegesítheti a saját tranzakcióját.',
+    transactions_leave_title: 'A tranzakció még piszkozat',
+    transactions_leave_body: 'A véglegesítés még hátravan. Elhagyod az oldalt?',
+    transactions_leave_go: 'Elhagyom',
+    transactions_leave_stay: 'Maradok',
     accounts_seed_missing: 'A számlalista üres, mert a seed hiányzik.',
     profile: 'Profil',
     profile_name: 'Név',
