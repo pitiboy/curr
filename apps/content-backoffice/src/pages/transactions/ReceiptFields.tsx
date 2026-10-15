@@ -49,52 +49,83 @@ export function ReceiptRail({ cards, onChange }: ReceiptRailProps) {
   }
 
   return (
-    <Box component="fieldset" sx={{ border: 0, m: 0, mt: 2, p: 0, width: '100%' }}>
-      <Typography component="legend" variant="subtitle1">
-        {translate('app.receipt_block')}
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 1 }} variant="body2">
-        {translate('app.receipt_optional')} {translate('app.receipt_prefill')}
-      </Typography>
+    <Box sx={{ maxWidth: '100%', minInlineSize: 0, minWidth: 0, mt: 2, width: '100%' }}>
       <Box
+        component="fieldset"
         sx={{
-          alignItems: 'stretch',
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2,
-          overflowX: { xs: 'visible', sm: 'auto' },
-          pb: 1,
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1,
+          boxSizing: 'border-box',
+          contain: 'inline-size',
+          m: 0,
+          maxWidth: '100%',
+          minInlineSize: 0,
+          minWidth: 0,
+          p: 2,
+          width: '100%',
         }}
       >
-        {cards.map((card) => (
-          <ReceiptCard
-            card={card}
-            key={card.key}
-            types={types}
-            onChange={(patch) => update(card.key, patch)}
-            onRemove={() => onChange(cards.filter((item) => item.key !== card.key))}
-          />
-        ))}
+        <Typography component="legend" sx={{ px: 0.5 }} variant="subtitle1">
+          {translate('app.receipt_block')}
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: 1 }} variant="body2">
+          {translate('app.receipt_optional')} {translate('app.receipt_prefill')}
+        </Typography>
         <Box
           sx={{
-            alignItems: 'center',
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            display: 'flex',
-            flex: { xs: '1 1 auto', sm: '0 0 16rem' },
-            justifyContent: 'center',
-            minHeight: '8rem',
-            p: 2,
+            maxWidth: '100%',
+            minWidth: 0,
+            overflowX: { xs: 'visible', sm: 'auto' },
+            overflowY: 'hidden',
           }}
         >
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={() => onChange([...cards, emptyReceiptCard()])}
+          <Box
+            sx={{
+              alignItems: 'stretch',
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2,
+              pb: 1,
+              width: { xs: '100%', sm: 'max-content' },
+            }}
           >
-            {translate('app.receipt_add')}
-          </Button>
+            {cards.map((card) => (
+              <ReceiptCard
+                card={card}
+                key={card.key}
+                types={types}
+                onChange={(patch) => update(card.key, patch)}
+                onRemove={() =>
+                  onChange(cards.filter((item) => item.key !== card.key))
+                }
+              />
+            ))}
+            <Box
+              sx={{
+                alignItems: 'center',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                boxSizing: 'border-box',
+                display: 'flex',
+                flex: { xs: '1 1 auto', sm: '0 0 16rem' },
+                justifyContent: 'center',
+                minHeight: '8rem',
+                minWidth: 0,
+                p: 2,
+                width: { xs: '100%', sm: '16rem' },
+              }}
+            >
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => onChange([...cards, emptyReceiptCard()])}
+              >
+                {translate('app.receipt_add')}
+              </Button>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -121,15 +152,20 @@ function ReceiptCard({
         border: 1,
         borderColor: invalid ? 'error.main' : 'divider',
         borderRadius: 1,
+        boxSizing: 'border-box',
         display: 'flex',
         flex: { xs: '1 1 auto', sm: '0 0 18rem' },
         flexDirection: 'column',
         gap: 1,
+        minWidth: 0,
+        overflow: 'hidden',
         p: 2,
+        width: { xs: '100%', sm: '18rem' },
       }}
     >
       <TextField
         error={Boolean(card.file && !card.receiptTypeId)}
+        fullWidth
         label={translate('app.receipt_type')}
         select
         size="small"
@@ -144,6 +180,7 @@ function ReceiptCard({
       </TextField>
       <TextField
         error={Boolean(card.file && !card.vendor.trim())}
+        fullWidth
         label={translate('app.receipt_vendor')}
         size="small"
         value={card.vendor}

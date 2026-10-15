@@ -30,12 +30,14 @@ export const enMessages = mergeTranslations(englishMessages, {
       status_all: 'All',
       date_from: 'Date from',
       date_to: 'Date to',
+      created_from: 'Created from',
+      created_to: 'Created to',
       amount_from: 'Amount from',
       amount_to: 'Amount to',
     },
     receipt_yes: 'Yes',
     receipt_no: 'No',
-    receipt_block: 'Receipt',
+    receipt_block: 'Receipts',
     receipt_optional:
       'The receipt can be skipped. Without a file, no receipt is created.',
     receipt_file: 'File',
@@ -61,6 +63,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       name: 'Transaction |||| Transactions',
       fields: {
         date: 'Date',
+        createdAt: 'Created',
         amount: 'Amount',
         description: 'Description',
         organization: 'Organization',
