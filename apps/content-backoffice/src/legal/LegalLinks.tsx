@@ -2,7 +2,7 @@ import { Box, Link, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import { useLocaleState, useTranslate } from 'react-admin';
 
-import { LEGAL_PAGES, legalLocaleFor, legalPageUrl } from './legalLinks';
+import { LEGAL_PAGES, legalLocaleFor, legalPageUrl } from './legalUrls';
 
 type LegalLinksProps = {
   sx?: SxProps<Theme>;

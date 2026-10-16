@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LEGAL_PAGES, legalLocaleFor, legalPageUrl } from './legalLinks';
+import { LEGAL_PAGES, legalLocaleFor, legalPageUrl } from './legalUrls';
 
 describe('legalPageUrl', () => {
   it('builds the hu URL without a locale query and without a double slash', () => {
