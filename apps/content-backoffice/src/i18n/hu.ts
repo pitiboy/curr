@@ -44,6 +44,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     feature_flags_empty: 'Nincs kapcsolható ügylet.',
     feature_flags_reset: 'Szerver szerinti lista',
     login_google: 'Bejelentkezés Google-lel',
+    legal_nav: 'Jogi dokumentumok',
+    legal_privacy: 'Adatkezelési tájékoztató',
+    legal_terms: 'Felhasználási feltételek',
     status: {
       draft: 'Piszkozat',
       published: 'Közzétéve',

@@ -1,0 +1,74 @@
+{
+  "kind": "collectionType",
+  "collectionName": "legal_pages",
+  "info": {
+    "singularName": "legal-page",
+    "pluralName": "legal-pages",
+    "displayName": "Legal Page",
+    "description": "Public legal documents (privacy policy, terms of service, about). Rendered without login at /legal/{slug}?locale={hu|en}."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true,
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Cím",
+        "description": "Az oldal címe (pl. Adatkezelési tájékoztató)"
+      }
+    },
+    "slug": {
+      "type": "uid",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "targetField": "title",
+      "required": true,
+      "metadatas": {
+        "label": "URL azonosító",
+        "description": "A nyilvános cím vége: /legal/{slug} (pl. privacy-policy, terms-of-service, about). Minden nyelven ugyanaz. Ne változtasd, ha a Google konzolban már szerepel."
+      }
+    },
+    "body": {
+      "type": "richtext",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true,
+      "metadatas": {
+        "label": "Tartalom",
+        "description": "Markdown (Strapi rich text). A címet ne ismételd # fejlécként, ## fejlécekkel kezdd."
+      }
+    },
+    "footer_order": {
+      "type": "integer",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "default": 0,
+      "metadatas": {
+        "label": "Sorrend",
+        "description": "Sorrend a /legal listában (kisebb előbb)"
+      }
+    }
+  }
+}

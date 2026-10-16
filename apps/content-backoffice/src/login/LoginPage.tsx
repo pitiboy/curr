@@ -2,6 +2,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import { Alert, Box, Button, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 import {
+  LocalesMenuButton,
   Login,
   LoginForm,
   PasswordInput,
@@ -17,6 +18,7 @@ import {
   startGoogleLogin,
 } from '../auth/googleLogin';
 import { DocumentTitle } from '../layout/AppTitle';
+import { LegalLinks } from '../legal/LegalLinks';
 
 export function LoginPage() {
   const translate = useTranslate();
@@ -105,6 +107,21 @@ export function LoginPage() {
         >
           {translate('app.login_google')}
         </Button>
+      </Box>
+      <Box
+        sx={{
+          alignItems: 'center',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+          pb: 2,
+          px: 2,
+          width: 300,
+        }}
+      >
+        <LegalLinks sx={{ color: 'text.secondary' }} />
+        <LocalesMenuButton />
       </Box>
     </Login>
   );

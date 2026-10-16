@@ -45,6 +45,9 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
     login_google: 'Sign in with Google',
+    legal_nav: 'Legal documents',
+    legal_privacy: 'Privacy Policy',
+    legal_terms: 'Terms of Service',
     status: {
       draft: 'Draft',
       published: 'Published',

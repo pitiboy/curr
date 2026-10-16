@@ -141,6 +141,7 @@ sequenceDiagram
 | Admin felvesz e-mail + role + jelszó — mehet utána Google? | **Stock Strapi: nem** ugyanazzal az e-maillel (local vs google provider). Local login **igen**. |
 | Kell-e Adminban Google provider kapcsoló? | **Nem** kötelező; env + bootstrap beállítja. Ellenőrzésre használható. |
 | Hol a deploy URL lista? | [deploy/backoffice-google-oauth.md](./deploy/backoffice-google-oauth.md) |
+| Hol vannak az adatkezelési tájékoztató és a felhasználási feltételek? | Strapi `legal-page` gyűjtemény (hu/en), nyilvánosan: `/legal/privacy-policy`, `/legal/terms-of-service`, `/legal/about`, angolul `?locale=en`. Forrás: [legal/README.md](./legal/README.md) |
 
 ---
 
