@@ -11,7 +11,9 @@ import {
   type PublicationStatus,
   type StrapiTransaction,
 } from './transactionList';
-import { createTransactionDraft } from './transactionDraft';
+import { loadTransactionRecord } from './transactionRecord';
+import { publishTransactionDraft } from './transactionPublish';
+import { createTransactionDraft, updateTransactionDraft } from './transactionDraft';
 import { withDocumentId } from './withDocumentId';
 
 const httpClient = strapiHttpClient();
@@ -72,6 +74,22 @@ export const dataProvider = withDocumentId({
     resource === 'transactions'
       ? getTransactionList(params)
       : strapiProvider.getList(resource, params),
+  getOne: async (resource, params) => {
+    if (resource !== 'transactions') {
+      return strapiProvider.getOne(resource, params);
+    }
+    const row = await loadTransactionRecord(
+      httpClient,
+      STRAPI_URL,
+      String(params.id),
+    );
+    if (!row) {
+      const missing = new Error('Not found') as Error & { status: number };
+      missing.status = 404;
+      throw missing;
+    }
+    return { data: row };
+  },
   create: (resource, params) =>
     resource === 'transactions'
       ? createTransactionDraft(
@@ -81,6 +99,17 @@ export const dataProvider = withDocumentId({
         )
       : strapiProvider.create(resource, params),
 } as DataProvider);
+
+export function publishTransaction(documentId: string) {
+  return publishTransactionDraft(httpClient, STRAPI_URL, documentId);
+}
+
+export function saveTransactionDraft(
+  documentId: string,
+  data: Record<string, unknown>,
+) {
+  return updateTransactionDraft(httpClient, STRAPI_URL, documentId, data);
+}
 
 export function attachTransactionReceipt(
   documentId: string,

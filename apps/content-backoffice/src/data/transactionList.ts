@@ -5,8 +5,17 @@ export type StrapiTransaction = {
   documentId?: string;
   date?: string | null;
   createdAt?: string | null;
+  publishedAt?: string | null;
+  entered_by?: string | null;
+  published_by?: string | null;
   amount?: string | number | null;
   description?: string | null;
+  currency_type?: {
+    documentId?: string;
+    code?: string | null;
+    name?: string | null;
+    icon?: { url?: string | null } | { url?: string | null }[] | null;
+  } | null;
   organization?: { documentId?: string; name?: string | null } | null;
   debit_account?: {
     documentId?: string;
@@ -20,13 +29,23 @@ export type StrapiTransaction = {
   } | null;
   receipts?: Array<{
     documentId?: string;
+    vendor?: string | null;
     document?: { url?: string | null } | { url?: string | null }[] | null;
     receipt_type?: { documentId?: string; name?: string | null } | null;
   }> | null;
 };
 
+/** Vendor of the first receipt, or an empty string when there is none. */
+export function firstReceiptVendor(receipts: unknown): string {
+  if (!Array.isArray(receipts) || receipts.length === 0) return '';
+  const first = receipts[0];
+  if (!first || typeof first !== 'object') return '';
+  const vendor = (first as { vendor?: unknown }).vendor;
+  return typeof vendor === 'string' ? vendor.trim() : '';
+}
+
 /**
- * One-level relations, plus each receipt file url and type name.
+ * One-level relations, plus the currency icon and each receipt file url.
  * A star on these relations is rejected: organization.parent and the file
  * `related` morph are not valid populate keys.
  */
@@ -34,6 +53,11 @@ export const transactionPopulate = {
   organization: true,
   debit_account: true,
   credit_account: true,
+  currency_type: {
+    populate: {
+      icon: { fields: ['url', 'name', 'mime'] },
+    },
+  },
   receipts: {
     populate: {
       document: { fields: ['url', 'name', 'mime'] },
@@ -65,7 +89,9 @@ export function assembleTransactionList(
   params: ListParams,
 ): { data: TransactionRow[]; total: number } {
   const { status } = buildTransactionFilters(params.filter ?? {});
-  const merged = mergeByStatus(drafts, published, status);
+  const merged = mergeByStatus(drafts, published, status).filter((row) =>
+    matchesFirstReceiptVendor(row.receipts, params.filter?.vendor),
+  );
   const sorted = sortTransactionRows(
     merged,
     params.sort?.field || 'date',
@@ -121,6 +147,9 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   if (typeof filter.description === 'string' && filter.description.trim()) {
     strapiFilters.description = { $containsi: filter.description.trim() };
   }
+  if (typeof filter.vendor === 'string' && filter.vendor.trim()) {
+    strapiFilters.receipts = { vendor: { $containsi: filter.vendor.trim() } };
+  }
 
   return { status, strapiFilters };
 }
@@ -160,6 +189,16 @@ function toListRecord(
     documentId: documentId as string,
     status,
   };
+}
+
+/** A published version wins over the draft with the same documentId. */
+export function preferTransaction(
+  draft: StrapiTransaction | null,
+  published: StrapiTransaction | null,
+): TransactionRow | null {
+  if (published?.documentId) return toListRecord(published, 'published');
+  if (draft?.documentId) return toListRecord(draft, 'draft');
+  return null;
 }
 
 function uniqueByDocumentId(rows: StrapiTransaction[]): StrapiTransaction[] {
@@ -210,6 +249,16 @@ function sortValue(row: TransactionRow, field: string): string | number {
       return row.date ?? '';
     case 'createdAt':
       return row.createdAt ?? '';
+    case 'publishedAt':
+      return row.publishedAt ?? '';
+    case 'entered_by':
+      return row.entered_by ?? '';
+    case 'published_by':
+      return row.published_by ?? '';
+    case 'currency_type':
+      return currencySortKey(row.currency_type);
+    case 'vendor':
+      return firstReceiptVendor(row.receipts);
     default: {
       const value = (row as Record<string, unknown>)[field];
       if (typeof value === 'number' || typeof value === 'string') return value;
@@ -225,10 +274,23 @@ function accountSortKey(
   return [account.code, account.name].filter(Boolean).join(' ');
 }
 
+function currencySortKey(
+  currency: TransactionRow['currency_type'],
+): string {
+  if (!currency) return '';
+  return [currency.code, currency.name].filter(Boolean).join(' ');
+}
+
 function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const parsed = parseFloat(String(value ?? ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function matchesFirstReceiptVendor(receipts: unknown, query: unknown): boolean {
+  if (typeof query !== 'string' || !query.trim()) return true;
+  const vendor = firstReceiptVendor(receipts).toLocaleLowerCase('hu');
+  return vendor.includes(query.trim().toLocaleLowerCase('hu'));
 }
 
 function isPresent(value: unknown): boolean {

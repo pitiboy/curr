@@ -134,15 +134,50 @@ Egy tranzakcióhoz több bizonylat tartozhat. A bizonylattípus közös törzs, 
 
 A 3. lépés `/transactions/review` listája ebben a lépésben kikerül. Az Ellenőrzés menü a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanezt a listát szűrő nélkül nyitja; a két menüpont nem hagyja rajta a másik szűrőjét. A 4. lépés „nincs sor-kattintás” szabálya megmarad: a lista nem szerkeszt és nem publikál. A státusz oszlop után egy gomb nyitja a megtekintést. A review és a publish nincs kész.
 
-- [ ] Az `editor` Ellenőrzés menüpontja a `/transactions` listát nyitja, `status=draft` szűrővel. A `dataentry` a menüt nem látja. Külön review lista nincs. A `/transactions/review` route és a `TransactionReview.tsx` kikerül
-- [ ] A tranzakciók menü a `/transactions` listát szűrő nélkül nyitja. Az Ellenőrzés menü draft szűrője nem marad rajta, és a tranzakciók menü szűrője sem marad rajta az Ellenőrzésen
-- [ ] Új route és fájl: `apps/content-backoffice/src/pages/transactions/TransactionShow.tsx`, `/transactions/:id/show`, az azonosító a `documentId`. Mindkét szerep minden sort megnyithat. A lista sora nem visz sehova. A státusz oszlop után egy gomb van: `editor` + draft soron „Ellenőrzés”, minden más soron „Megtekintés”
-- [ ] A megtekintés readonly: tranzakciómezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron a `published_by` és a `publishedAt` is. A lista ugyanezeket mutatja. A mezők nem szerkeszthetők
-- [ ] `editor` + draft: a megtekintésen a mostani bizonylat-csatolás megmarad. Az adatok után ellenőrző űrlap, azon a „Véglegesít” gomb. Más szerepnél és published soron nincs csatolás és nincs Véglegesít. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`
-- [ ] Sikeres véglegesítés után a rekord published, és minden kapcsolt receipt published verziója is megvan. A `dataentry` a megtekintést eléri, véglegesíteni nem tud
-- [ ] A listán „Szűrők törlése” gomb minden szűrőt alapra állít, a menüből hozott draft szűrőt is
+- [x] Az `editor` Ellenőrzés menüpontja a `/transactions` listát nyitja, `status=draft` szűrővel. A `dataentry` a menüt nem látja. Külön review lista nincs. A `/transactions/review` route és a `TransactionReview.tsx` kikerül
+- [x] A tranzakciók menü a `/transactions` listát szűrő nélkül nyitja. Az Ellenőrzés menü draft szűrője nem marad rajta, és a tranzakciók menü szűrője sem marad rajta az Ellenőrzésen
+- [x] Új route és fájl: `apps/content-backoffice/src/pages/transactions/TransactionShow.tsx`, `/transactions/:id/show`, az azonosító a `documentId`. Mindkét szerep minden sort megnyithat. A lista sora nem visz sehova. A státusz oszlop után egy gomb van: `editor` + draft soron „Ellenőrzés”, minden más soron „Megtekintés”
+- [x] A megtekintés readonly: tranzakciómezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron a `published_by` és a `publishedAt` is. A lista ugyanezeket mutatja. A mezők nem szerkeszthetők
+- [x] `editor` + draft: a megtekintésen a mostani bizonylat-csatolás megmarad. Az adatok után ellenőrző űrlap, azon a „Véglegesít” gomb. Más szerepnél és published soron nincs csatolás és nincs Véglegesít. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`
+- [x] Sikeres véglegesítés után a rekord published, és minden kapcsolt receipt published verziója is megvan. A `dataentry` a megtekintést eléri, véglegesíteni nem tud
+- [x] A listán „Szűrők törlése” gomb minden szűrőt alapra állít, a menüből hozott draft szűrőt is
 
 - [ ] **Human:** `editor` az Ellenőrzés menüvel a draftokra szűrt `/transactions` listát látja, a tranzakciók menü szűrő nélkül nyit. Egy draft soron az „Ellenőrzés” gomb a megtekintésre visz: látja a bizonylatot, ha van, csatolhat újat, látja a rögzítő e-mailjét, és az adatok után a „Véglegesít” gombot. Véglegesítés után a lista published státuszt mutat, a publikáló e-mailjével. Published soron a gomb „Megtekintés”, Véglegesít nincs. A „Szűrők törlése” minden szűrőt alapra állít. `dataentry` az Ellenőrzés menüt nem látja, a megtekintést eléri, véglegesíteni nem tud. Ha igen, pipáld ki, és indítsd a 9. lépést.
+
+## 8.2 Kötelező mezők: create laza, publish szigorú
+
+Ezt a lépést csak külön utasításra kezdd. A 8. Human négyzetét nem pipálod, a 9. lépést nem kezded el. A PRD §5.1 tábláját ne írd át: ennél a lépésnél ez a szakasz a szerződés. A bizonylat kártya, a feltöltés sorrendje, a `vendor` és a `receipt_type` szabálya nem változik.
+
+A create űrlap ma mind a hat mezőt kötelezőnek jelöli, a leírást csak fájl csatolásakor. Az `editor` megtekintése readonly. A `src/publish-guard.ts` minden HTTP create/update írásnál megköveteli a `date`, `amount`, `currency_type`, `organization`, `debit_account` és `credit_account` mezőt, mert a Strapi a piszkozat mentésnél a séma `required` kényszerét kihagyja (`isDraft` esetén a validátor `required: false`-ra állítja). A reláció publish-ellenőrzése a `config/api.ts` `documents.strictRelations: true` mellett fut, piszkozatnál akkor sem.
+
+### Create (`dataentry` űrlap)
+
+A `TransactionCreate` továbbra is mind a hét mezőt mutatja, és a mentés `?status=draft`. Kötelező, csillaggal és validálva: `date`, `amount`, `currency_type`, `description`. Opcionális, csillag nélkül, validáció nélkül: `organization`, `debit_account`, `credit_account`. Üresen hagyva a draft menthető. A számlaválasztó regexei maradnak (`/^5/` és `/^(1|3)/`).
+
+A `SimpleForm` `validate` a react-hook-form resolver. A mezőnkénti `validate={required()}` ettől nem fut, csak a csillagot rajzolja. A kötelező négyes a `transactionForm.ts` listájában legyen. Az opcionális három onnan kikerül, és az `AccountFieldLabel` `required` propja create-nél hamis. A leírás fájl nélkül is kötelező. A fájlos kártya továbbra is elutasítja az üres eladót és az üres bizonylattípust; fájl nélküli kártya nem hoz létre bizonylatot.
+
+### Ellenőrzés (`editor` + draft)
+
+A `/transactions/:id/show` marad a route. `editor` + draft: a hét mező szerkeszthető. Ami a rekordon ki van töltve, az az értéke; ami üres, az üres marad, nem kerül bele hamis id. `dataentry`, és published sor minden szerepnél: a mezők readonly-k maradnak, Véglegesít nincs.
+
+A Véglegesít csak akkor mehet ki, ha mind a hét ki van töltve: `date`, `amount`, `currency_type`, `description`, `organization`, `debit_account`, `credit_account`. Üres mezőn „Kötelező”, és nincs update, nincs publish. A kitöltött űrlap először draft update (`?status=draft`, csak ez a hét mező; `entered_by` és `published_by` nem megy a body-ban), utána a meglévő publish hívás. A publish 403-a, ha a publikáló az `entered_by`, megmarad; ilyenkor a draft update már megvan, a rekord published nem lesz. A függőben lévő, még nem mentett bizonylatkártya továbbra is blokkolja a Véglegesítet.
+
+### Szerver
+
+Piszkozat create és update, HTTP kérésből: kötelező a `date`, `amount`, `currency_type` és a `description`. Az `organization`, a `debit_account` és a `credit_account` hiánya vagy ürítése nem 400. A mostani hatos lista ezt a három relációt draft írásnál ne követelje.
+
+Publish, a tárolt draft alapján: a hét mező mindegyike ki van töltve, különben 400, és a dokumentum nem lesz published. A publish action nem hoz mezőket, ezért a middleware a tárolt sort olvassa. A relációk Strapi 5-ben link táblában vannak; a olvasás `db.query` populate, ne `documents().findOne`, mert az újra belépne a middleware-be.
+
+A sémában a `description` legyen `required: true`. A `date`, az `amount`, a `currency_type` és a három reláció `required: true` marad, a `strictRelations` is marad: a Strapi így publikáláskor maga is ellenőrzi őket. Piszkozatnál a séma ettől még nem ad validation hibát, ezért a draft négyes a middleware-ben marad. Request nélküli seed továbbra sem esik az ellenőrzés alá.
+
+A `transactionForm` teszt, a `publish-guard` teszt, a `strapi-publish-guard` skill és a hozzá tartozó cursor rule ezt a kettős szabályt írja. A content-backoffice skill create mondata is: a create-en a négyes kötelező, a három reláció opcionális; az ellenőrzésen a hetes a publish feltétele.
+
+- [x] Create: a négyes kötelező és csillagos, a három reláció sem csillagos, sem validált. Üres szervezettel és üres számlákkal a draft menthető, ha a dátum, az összeg, a pénznem és a leírás megvan
+- [x] `editor` + draft megtekintés: a hét mező szerkeszthető, a tárolt értékkel vagy üresen. Véglegesít üres mezővel nem indul. Kitöltve draft update, majd a meglévő publish
+- [x] A szerver a draft írásnál csak a négyest kéri, publish-nál a tárolt draft mind a hét mezőjét. A bizonylat útvonal és a különböző-ember szabály változatlan
+- [x] A create, a publish-guard és a skill tesztjei ezt rögzítik
+
+- [x] **Human:** `dataentry` csak leírással nem ment. Dátum, összeg, pénznem és leírás mellett üres szervezettel és üres számlákkal a draft létrejön; a három reláción nincs csillag. `editor` az Ellenőrzésen ezeket szerkeszti: az üres mező üres, a kitöltött az értékét mutatja. Üres mezővel a Véglegesít nem publikál. Mind a héttel a sor published lesz. A bizonylat fájl nélkül kihagyható, fájllal üres eladó vagy üres típus továbbra sem menthető. Ha igen, pipáld ki. A 9. lépést ez a szakasz nem indítja.
 
 ## 9. Profil jelszó és Google
 
@@ -158,8 +193,8 @@ A Google kliens azonosító és titok a Humané. Az agent env kulcsot olvas, ér
 
 ## 10. Deploy jegyzet és átvétel
 
-- [ ] `docs/deploy/` alá rövid jegyzet: `vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` pathra, `VITE_STRAPI_URL` ugyanaz az origin. CI pipeline nincs
-- [ ] A `backoffice-acceptance` subagent a §10 storykra és a §12 DoD-ra pass/fail listát ad
+- [x] `docs/deploy/` alá rövid jegyzet: `vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` pathra, `VITE_STRAPI_URL` ugyanaz az origin. CI pipeline nincs
+- [x] A `backoffice-acceptance` subagent a §10 storykra és a §12 DoD-ra pass/fail listát ad
 - [ ] A PRD §12 négyzeteit csak a Human pipálja, az agent nem
 
-- [ ] **Human:** a deploy jegyzet alapján a build kimegy a `kor.fejlesztesek.hu/backoffice` pathra, az oldal a hoston betölt, az API ugyanaz az origin. Az acceptance lista storynként pass, vagy a nyitott fail nevén van. Utána a PRD §12 sorai kipipálhatók. A fejlesztés alatti helyi adat és a helyi userök nem kerülnek az éles adatbázisba.
+- [ ] **Human:** `npm run deploy:f` kiteszi a buildet a `kor.fejlesztesek.hu/backoffice` pathra, az oldal a hoston betölt, az API ugyanaz az origin. Az acceptance lista storynként pass, vagy a nyitott fail nevén van. Utána a PRD §12 sorai kipipálhatók. A fejlesztés alatti helyi adat és a helyi userök nem kerülnek az éles adatbázisba.

@@ -3,21 +3,14 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
-import {
-  Box,
-  Button,
-  Link,
-  MenuItem,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { alpha, type SxProps, type Theme } from '@mui/material/styles';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useDataProvider, useTranslate } from 'react-admin';
 
 import { STRAPI_URL } from '../../config';
-import { withBands } from '../../theme';
+import { bandedSpanClass, withBands } from '../../theme';
 import {
   receiptCardInvalid,
   receiptDocumentUrl,
@@ -45,12 +38,63 @@ function emptyReceiptCard(): ReceiptCardValue {
 type ReceiptRailProps = {
   cards: ReceiptCardValue[];
   onChange: (cards: ReceiptCardValue[]) => void;
+  /** Already saved receipts. Shown above the add control, in the same block. */
+  saved?: unknown;
 };
 
+const receiptFrameSx = {
+  border: 1,
+  borderColor: 'divider',
+  borderRadius: 1,
+  boxSizing: 'border-box',
+  contain: 'inline-size',
+  m: 0,
+  maxWidth: '100%',
+  minInlineSize: 0,
+  minWidth: 0,
+  p: 1.5,
+  width: '100%',
+} as const;
+
+function ReceiptFrame({ children }: { children: ReactNode }) {
+  const translate = useTranslate();
+  return (
+    <Box
+      className={bandedSpanClass}
+      sx={{
+        maxWidth: '100%',
+        minInlineSize: 0,
+        minWidth: 0,
+        mt: 1,
+        width: '100%',
+      }}
+    >
+      <Box component="fieldset" sx={receiptFrameSx}>
+        <Typography component="legend" sx={{ px: 0.5 }} variant="subtitle1">
+          {translate('app.receipt_block')}
+        </Typography>
+        {children}
+      </Box>
+    </Box>
+  );
+}
+
+function ReceiptHint({ sx }: { sx?: SxProps<Theme> }) {
+  const translate = useTranslate();
+  return (
+    <Typography color="text.secondary" sx={sx} variant="body2">
+      {translate('app.receipt_optional')}
+      <br />
+      {translate('app.receipt_prefill')}
+    </Typography>
+  );
+}
+
 /** Horizontal card rail. Narrow screens stack the cards. */
-export function ReceiptRail({ cards, onChange }: ReceiptRailProps) {
+export function ReceiptRail({ cards, onChange, saved }: ReceiptRailProps) {
   const translate = useTranslate();
   const types = useReceiptTypes();
+  const savedItems = presentReceipts(saved);
 
   function update(key: string, patch: Partial<ReceiptCardValue>) {
     onChange(
@@ -59,94 +103,71 @@ export function ReceiptRail({ cards, onChange }: ReceiptRailProps) {
   }
 
   return (
-    <Box
-      sx={{
-        maxWidth: '100%',
-        minInlineSize: 0,
-        minWidth: 0,
-        mt: 2,
-        width: '100%',
-      }}
-    >
+    <ReceiptFrame>
+      {savedItems.length > 0 ? (
+        <Box sx={{ mb: 2 }}>
+          <SavedReceiptCards receipts={savedItems} />
+        </Box>
+      ) : (
+        <ReceiptHint sx={{ mb: 1 }} />
+      )}
       <Box
-        component="fieldset"
         sx={{
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 1,
-          boxSizing: 'border-box',
-          contain: 'inline-size',
-          m: 0,
           maxWidth: '100%',
-          minInlineSize: 0,
           minWidth: 0,
-          p: 2,
-          width: '100%',
+          overflowX: { xs: 'visible', sm: 'auto' },
+          overflowY: 'hidden',
         }}
       >
-        <Typography component="legend" sx={{ px: 0.5 }} variant="subtitle1">
-          {translate('app.receipt_block')}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 1 }} variant="body2">
-          {translate('app.receipt_optional')} {translate('app.receipt_prefill')}
-        </Typography>
         <Box
-          sx={{
-            maxWidth: '100%',
-            minWidth: 0,
-            overflowX: { xs: 'visible', sm: 'auto' },
-            overflowY: 'hidden',
-          }}
+          sx={withBands({
+            alignItems: 'stretch',
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 2,
+            pb: 1,
+            width: { xs: '100%', sm: 'max-content' },
+          })}
         >
+          {cards.map((card) => (
+            <ReceiptCard
+              card={card}
+              key={card.key}
+              types={types}
+              onChange={(patch) => update(card.key, patch)}
+              onRemove={() =>
+                onChange(cards.filter((item) => item.key !== card.key))
+              }
+            />
+          ))}
           <Box
-            sx={withBands({
-              alignItems: 'stretch',
+            sx={{
+              alignItems: 'center',
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              boxSizing: 'border-box',
               display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 2,
-              pb: 1,
-              width: { xs: '100%', sm: 'max-content' },
-            })}
+              flex: { xs: '1 1 auto', sm: '0 0 16rem' },
+              justifyContent: 'center',
+              minHeight: '8rem',
+              minWidth: 0,
+              p: 2,
+              width: { xs: '100%', sm: '16rem' },
+            }}
           >
-            {cards.map((card) => (
-              <ReceiptCard
-                card={card}
-                key={card.key}
-                types={types}
-                onChange={(patch) => update(card.key, patch)}
-                onRemove={() =>
-                  onChange(cards.filter((item) => item.key !== card.key))
-                }
-              />
-            ))}
-            <Box
-              sx={{
-                alignItems: 'center',
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                boxSizing: 'border-box',
-                display: 'flex',
-                flex: { xs: '1 1 auto', sm: '0 0 16rem' },
-                justifyContent: 'center',
-                minHeight: '8rem',
-                minWidth: 0,
-                p: 2,
-                width: { xs: '100%', sm: '16rem' },
-              }}
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => onChange([...cards, emptyReceiptCard()])}
             >
-              <Button
-                type="button"
-                variant="outlined"
-                onClick={() => onChange([...cards, emptyReceiptCard()])}
-              >
-                {translate('app.receipt_add')}
-              </Button>
-            </Box>
+              {translate('app.receipt_add')}
+            </Button>
           </Box>
         </Box>
       </Box>
-    </Box>
+      {savedItems.length > 0 ? <ReceiptHint sx={{ mt: 1 }} /> : null}
+    </ReceiptFrame>
   );
 }
 
@@ -220,7 +241,11 @@ function ReceiptCard({
 const HATCH_PERIOD = 8;
 
 /** Empty dropzone: the hatch opacity breathes. One full pulse is 2s. */
-function receiptDropCue(playing: boolean, drag: boolean, filled: boolean): SxProps<Theme> {
+function receiptDropCue(
+  playing: boolean,
+  drag: boolean,
+  filled: boolean,
+): SxProps<Theme> {
   return (theme) => {
     const line = alpha(
       theme.palette.primary.main,
@@ -272,14 +297,28 @@ function receiptDropCue(playing: boolean, drag: boolean, filled: boolean): SxPro
   };
 }
 
-function ReceiptFileMark({ file }: { file: File }) {
+function ReceiptFileMark({
+  file,
+  prominent = false,
+}: {
+  file: { name: string; type: string };
+  prominent?: boolean;
+}) {
   const type = file.type.toLowerCase();
   const name = file.name.toLowerCase();
-  const sx = { color: 'text.secondary', fontSize: 40, position: 'relative' } as const;
+  const sx = {
+    color: prominent ? 'primary.main' : 'text.secondary',
+    flexShrink: 0,
+    fontSize: prominent ? 44 : 40,
+    position: 'relative',
+  } as const;
   if (type === 'application/pdf' || name.endsWith('.pdf')) {
     return <PictureAsPdfOutlinedIcon sx={sx} />;
   }
-  if (type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/.test(name)) {
+  if (
+    type.startsWith('image/') ||
+    /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/.test(name)
+  ) {
     return <ImageOutlinedIcon sx={sx} />;
   }
   if (
@@ -290,7 +329,11 @@ function ReceiptFileMark({ file }: { file: File }) {
   ) {
     return <TableChartOutlinedIcon sx={sx} />;
   }
-  if (type.includes('word') || type.startsWith('text/') || /\.(docx?|odt|rtf|txt)$/.test(name)) {
+  if (
+    type.includes('word') ||
+    type.startsWith('text/') ||
+    /\.(docx?|odt|rtf|txt)$/.test(name)
+  ) {
     return <DescriptionOutlinedIcon sx={sx} />;
   }
   return <InsertDriveFileOutlinedIcon sx={sx} />;
@@ -371,47 +414,142 @@ function useReceiptTypes(): ReceiptTypeChoice[] {
   return types;
 }
 
-export function ReceiptFileList({ receipts }: { receipts: unknown }) {
-  const translate = useTranslate();
-  const items = Array.isArray(receipts) ? receipts : [];
-  if (items.length === 0) {
-    return (
-      <Typography color="text.secondary" variant="body2">
-        {translate('app.receipt_no')}
-      </Typography>
-    );
-  }
+/** Saved receipt files, as their own cards. Read-only show, no add control. */
+export function SavedReceiptSection({ receipts }: { receipts: unknown }) {
+  const items = presentReceipts(receipts);
+  if (items.length === 0) return null;
   return (
-    <Box component="ul" sx={{ m: 0, mb: 1, pl: 2 }}>
-      {items.map((receipt, index) => (
-        <Box component="li" key={receiptKey(receipt, index)} sx={{ mb: 0.5 }}>
-          {receiptTypeName(receipt) ? `${receiptTypeName(receipt)} · ` : null}
-          <ReceiptLink receipt={receipt} />
-        </Box>
+    <ReceiptFrame>
+      <SavedReceiptCards receipts={items} />
+    </ReceiptFrame>
+  );
+}
+
+function SavedReceiptCards({ receipts }: { receipts: unknown[] }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 2,
+        width: '100%',
+      }}
+    >
+      {receipts.map((receipt, index) => (
+        <SavedReceiptCard key={receiptKey(receipt, index)} receipt={receipt} />
       ))}
     </Box>
   );
 }
 
-export function ReceiptLink({ receipt }: { receipt: unknown }) {
+function SavedReceiptCard({ receipt }: { receipt: unknown }) {
   const translate = useTranslate();
+  const file = receiptFileMeta(receipt);
+  const typeName = receiptTypeName(receipt);
+  const vendor = receiptVendor(receipt);
+  const title =
+    file.name || typeName || translate('resources.transactions.fields.receipt');
   const url = receiptDocumentUrl(receipt, STRAPI_URL);
-  if (!receiptIsPresent(receipt)) {
-    return <>{translate('app.receipt_no')}</>;
-  }
-  if (!url) {
-    return <>{translate('app.receipt_yes')}</>;
-  }
+
   return (
-    <Link
-      href={url}
-      rel="noopener noreferrer"
-      target="_blank"
-      onClick={(event) => event.stopPropagation()}
+    <Box
+      sx={(theme) => ({
+        bgcolor: alpha(
+          theme.palette.primary.main,
+          theme.palette.mode === 'dark' ? 0.16 : 0.08,
+        ),
+        border: 1,
+        borderColor: 'primary.main',
+        borderRadius: 1,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flex: { xs: '1 1 auto', sm: '1 1 18rem' },
+        flexDirection: 'column',
+        gap: 1.5,
+        maxWidth: { sm: '22rem' },
+        minHeight: '8rem',
+        minWidth: 0,
+        p: 2,
+        width: { xs: '100%', sm: '18rem' },
+      })}
     >
-      {translate('app.receipt_open')}
-    </Link>
+      <Box
+        sx={{
+          alignItems: 'flex-start',
+          display: 'flex',
+          gap: 1.5,
+          minWidth: 0,
+        }}
+      >
+        <ReceiptFileMark
+          file={{ name: file.name, type: file.mime }}
+          prominent
+        />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+            variant="subtitle1"
+          >
+            {title}
+          </Typography>
+          {typeName && typeName !== title ? (
+            <Typography color="text.secondary" variant="body2">
+              {typeName}
+            </Typography>
+          ) : null}
+          {vendor ? (
+            <Typography color="text.secondary" variant="body2">
+              {vendor}
+            </Typography>
+          ) : null}
+        </Box>
+      </Box>
+      {url ? (
+        <Button
+          component="a"
+          href={url}
+          rel="noopener noreferrer"
+          size="small"
+          sx={{ alignSelf: 'flex-start', mt: 'auto' }}
+          target="_blank"
+          variant="contained"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {translate('app.receipt_open')}
+        </Button>
+      ) : (
+        <Typography color="text.secondary" sx={{ mt: 'auto' }} variant="body2">
+          {translate(
+            receiptIsPresent(receipt) ? 'app.receipt_yes' : 'app.receipt_no',
+          )}
+        </Typography>
+      )}
+    </Box>
   );
+}
+
+function presentReceipts(receipts: unknown): unknown[] {
+  if (!Array.isArray(receipts)) return [];
+  return receipts.filter((item) => receiptIsPresent(item));
+}
+
+function receiptFileMeta(receipt: unknown): { name: string; mime: string } {
+  if (!receipt || typeof receipt !== 'object') return { name: '', mime: '' };
+  const document = (receipt as { document?: unknown }).document;
+  const file = Array.isArray(document) ? document[0] : document;
+  if (!file || typeof file !== 'object') return { name: '', mime: '' };
+  const name = (file as { name?: unknown }).name;
+  const mime = (file as { mime?: unknown }).mime;
+  return {
+    name: typeof name === 'string' ? name.trim() : '',
+    mime: typeof mime === 'string' ? mime : '',
+  };
+}
+
+function receiptVendor(receipt: unknown): string {
+  if (!receipt || typeof receipt !== 'object') return '';
+  const vendor = (receipt as { vendor?: unknown }).vendor;
+  return typeof vendor === 'string' ? vendor.trim() : '';
 }
 
 function receiptTypeName(receipt: unknown): string {

@@ -1,9 +1,12 @@
-import { Box, Typography } from '@mui/material';
+import GradingIcon from '@mui/icons-material/Grading';
+import QuizIcon from '@mui/icons-material/Quiz';
+import { Box, Button, Typography } from '@mui/material';
 import {
   AutocompleteInput,
   Datagrid,
   DateField,
   DateInput,
+  FilterButton,
   FunctionField,
   List,
   NumberField,
@@ -13,13 +16,22 @@ import {
   SelectInput,
   TextField,
   TextInput,
+  TopToolbar,
+  useListContext,
   useLocaleState,
+  usePermissions,
+  useRecordContext,
   useTranslate,
+  Link,
   type RaRecord,
 } from 'react-admin';
 
 import { receiptCount } from '../../data/receiptDraft';
+import { firstReceiptVendor } from '../../data/transactionList';
 import { bandedRow } from '../../theme';
+import { AccountFieldLabel, AccountValue } from './accountField';
+import { CurrencyValue } from './currencyField';
+import { dateFieldProps } from './dateField';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -88,6 +100,7 @@ const transactionFilters = [
   </ReferenceInput>,
   <ReferenceInput
     key="debit_account"
+    label={<AccountFieldLabel kind="debit" />}
     perPage={100}
     reference="accounts"
     sort={{ field: 'code', order: 'ASC' }}
@@ -95,11 +108,13 @@ const transactionFilters = [
   >
     <AutocompleteInput
       filterToQuery={accountFilterToQuery}
+      label={<AccountFieldLabel kind="debit" />}
       optionText={accountOptionText}
     />
   </ReferenceInput>,
   <ReferenceInput
     key="credit_account"
+    label={<AccountFieldLabel kind="credit" />}
     perPage={100}
     reference="accounts"
     sort={{ field: 'code', order: 'ASC' }}
@@ -107,10 +122,12 @@ const transactionFilters = [
   >
     <AutocompleteInput
       filterToQuery={accountFilterToQuery}
+      label={<AccountFieldLabel kind="credit" />}
       optionText={accountOptionText}
     />
   </ReferenceInput>,
   <TextInput key="description" source="description" />,
+  <TextInput key="vendor" source="vendor" />,
 ];
 
 function relationName(value: unknown): string {
@@ -119,11 +136,57 @@ function relationName(value: unknown): string {
   return name || '—';
 }
 
-function accountLabel(value: unknown): string {
-  if (!value || typeof value !== 'object') return '—';
-  const account = value as { code?: string | null; name?: string | null };
-  const label = [account.code, account.name].filter(Boolean).join(' ');
-  return label || '—';
+function ClearFiltersButton() {
+  const translate = useTranslate();
+  const { setFilters } = useListContext();
+  return (
+    <Button size="small" variant="outlined" onClick={() => setFilters({}, {})}>
+      {translate('app.filters.clear')}
+    </Button>
+  );
+}
+
+function TransactionListActions() {
+  return (
+    <TopToolbar>
+      <ClearFiltersButton />
+      <FilterButton />
+    </TopToolbar>
+  );
+}
+
+function TransactionOpenField(_props: {
+  label?: false;
+  sortable?: false;
+  source?: string;
+}) {
+  const record = useRecordContext<RaRecord & { status?: string }>();
+  const { permissions, isPending } = usePermissions();
+  const translate = useTranslate();
+  if (!record || isPending) return null;
+  const review = permissions === 'editor' && record.status === 'draft';
+  return (
+    <Button
+      component={Link}
+      size="small"
+      startIcon={review ? <QuizIcon color="warning" /> : <GradingIcon />}
+      sx={
+        review
+          ? {
+              bgcolor: '#FFF4C2',
+              '&:hover': { bgcolor: '#FFE99A' },
+            }
+          : undefined
+      }
+      to={`/transactions/${encodeURIComponent(String(record.id))}/show`}
+      variant="outlined"
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+        event.stopPropagation()
+      }
+    >
+      {translate(review ? 'app.transactions_review' : 'app.transactions_show')}
+    </Button>
+  );
 }
 
 function TransactionListEmpty() {
@@ -142,6 +205,7 @@ export function TransactionList() {
 
   return (
     <List
+      actions={<TransactionListActions />}
       empty={false}
       exporter={false}
       filters={transactionFilters}
@@ -155,27 +219,41 @@ export function TransactionList() {
         rowClick={false}
         rowSx={bandedRow}
       >
-        <DateField source="date" />
-        <DateField
-          locales={locale === 'en' ? 'en' : 'hu-HU'}
-          source="createdAt"
+        <DateField source="date" {...dateFieldProps(locale)} />
+        <FunctionField
+          render={(record: RaRecord) => firstReceiptVendor(record.receipts)}
+          source="vendor"
         />
         <NumberField
           locales={locale === 'en' ? 'en' : 'hu-HU'}
           source="amount"
         />
+        <FunctionField
+          render={(record: RaRecord) => (
+            <CurrencyValue value={record.currency_type} />
+          )}
+          source="currency_type"
+        />
         <TextField emptyText="—" source="description" />
+        <SelectField choices={statusChoices} source="status" translateChoice />
+        <TransactionOpenField label={false} sortable={false} source="open" />
         <FunctionField
           render={(record: RaRecord) => relationName(record.organization)}
           source="organization"
         />
         <FunctionField
-          render={(record: RaRecord) => accountLabel(record.debit_account)}
-          source="debit_account"
+          label={<AccountFieldLabel kind="credit" />}
+          render={(record: RaRecord) => (
+            <AccountValue kind="credit" value={record.credit_account} />
+          )}
+          source="credit_account"
         />
         <FunctionField
-          render={(record: RaRecord) => accountLabel(record.credit_account)}
-          source="credit_account"
+          label={<AccountFieldLabel kind="debit" />}
+          render={(record: RaRecord) => (
+            <AccountValue kind="debit" value={record.debit_account} />
+          )}
+          source="debit_account"
         />
         <FunctionField
           label="resources.transactions.fields.receipt"
@@ -183,7 +261,14 @@ export function TransactionList() {
           sortBy="receipts"
           source="receipts"
         />
-        <SelectField choices={statusChoices} source="status" translateChoice />
+        <DateField source="createdAt" {...dateFieldProps(locale, true)} />
+        <TextField emptyText="—" source="entered_by" />
+        <TextField emptyText="—" source="published_by" />
+        <DateField
+          emptyText="—"
+          source="publishedAt"
+          {...dateFieldProps(locale, true)}
+        />
       </Datagrid>
     </List>
   );

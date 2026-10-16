@@ -1,7 +1,7 @@
 # PRD 0002: Content Backoffice v2 (roadmap)
 
 **Status:** draft  
-**Date:** 2026-10-12, kiegészítve 2026-10-14  
+**Date:** 2026-10-12, kiegészítve 2026-10-15  
 **Product:** `content-backoffice`  
 **Depends on:** [0001-content-backoffice-v1](./0001-content-backoffice-v1.md)  
 **Related ADR:** [0001-react-admin-content-ui](../adr/0001-react-admin-content-ui.md)  
@@ -72,6 +72,14 @@ A [domain use case-ek](../readme.md#use-cases) magja. A lista önmagában nem he
 - Kivonat- és számlatükör-import előnézettel és az elutasított sorok naplójával.
 - A pénznem és az árfolyam a rögzítéskor rögzített érték a tranzakción. A későbbi törzsadat-változás a régi egyenleget nem írja át. A részletes adatmodell-megjegyzés a [readme](../readme.md#accounting-loop-before-new-domains) alatt van.
 
+### 3.7 AJAX loading spinner
+
+A v1 a jogosultság betöltése alatt üresen hagyja a felületet. v2-ben az AJAX kérés, ami a képernyőt vagy egy vezérlőt várakoztat, loading spinnert mutat a válasz megérkezéséig.
+
+- Lista, megtekintés, create mentés, bizonylatfeltöltés, véglegesítés, bejelentkezés, jogosultság és a backoffice config. Ahol a react-admin spinnerje már fedi a kérést, az marad.
+- A spinner a válaszra leáll. Üres találatnál az üres állapot, hibánál az üzenet látszik.
+- Több blokkoló kérésnél a spinner az utolsó lezárásáig marad. A kész képernyőn futó háttérkérés nem rak ki új, teljes oldalas spinnert.
+
 ## 4. Hosting és CI/CD
 
 ### 4.1 Subdomain (opcionális)
@@ -131,13 +139,39 @@ jobs:
 Megjegyzések:
 
 - A pontos `nx build` target neve az app `project.json` szerint állítandó.
+- A build előtt lefut a [§4.3](#43-minőségkapu-pre-commit-és-main-branch-protection) minőségkapu: Prettier check, lint, typecheck.
 - A pipeline a build mellett a publish őrt is teszteli, mielőtt a `/backoffice` kikerül.
 - Deploy job legyen `environment: production` + manuális approval, amíg a cPanel feltöltés stabil.
 - Ne commitoljunk FTP jelszót; GitHub Secrets.
 
-### 4.3 Üzemeltetési alap
+### 4.3 Minőségkapu: pre-commit és main branch protection
 
-- Strukturált log kérésazonosítóval, és hibagyűjtő a Strapi és az SPA oldalán is, hogy egy mentés utólag köthető legyen egy Neon- vagy cPanel-hibához.
+A commit előtti hook és a CI ugyanazt a kaput futtatja. A hook a fejlesztő gépén, a CI minden pull requesten. A hook kihagyása nem helyettesíti a CI-t.
+
+A kapu, a [§4.2](#42-github-actions-skeleton-javaslat) buildje előtt:
+
+- Prettier, a gyökér [`.prettierrc`](../../.prettierrc) szerint. A hook formáz, a CI `--check` módban fut, és nem írja át a fát.
+- Lint. Az SPA-n a meglévő `oxlint` (`apps/content-backoffice` `lint` script). A Strapi oldalra ugyanilyen lint lépés kerül, amint a parancs megvan.
+- TypeScript. Gyökér: `npm run typecheck`. Az SPA buildje a `tsc -b` lépést továbbra is lefuttatja.
+- Az érintett unit tesztek. Az SPA-n a `vitest` fut, ha a változás az appot érinti.
+
+A pre-commit csak a staged fájlokon dolgozik, ahol a parancs ezt bírja. A teljes fa ellenőrzése a CI dolga.
+
+A `main` branch protection GitHub-beállítás, nem kódbeli kapcsoló:
+
+- Közvetlen push a `main`-re tiltott. Változás csak pull requesten keresztül megy.
+- Kötelező státuszellenőrzés a minőségkapu CI jobja: Prettier check, lint, typecheck, build, és a publish őr tesztje.
+- Merge előtt a branch legyen naprakész a `main`-nel.
+- Force-push és a `main` törlése tiltott.
+
+Ma a [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) `npm ci`, Strapi build és `typecheck`. Pre-commit hook és branch protection nincs.
+
+### 4.4 Üzemeltetési alap
+
+- Strukturált log kérésazonosítóval. A loggyűjtés, a hibagyűjtő és a remote hibakeresés a Sentry, a Strapi és az SPA oldalán is, hogy egy mentés utólag köthető legyen egy Neon- vagy cPanel-hibához.
+- A Strapi az `@sentry/node` SDK-t használja, az SPA az `@sentry/react` SDK-t. `SENTRY_DSN`, illetve a buildbe égetett `VITE_SENTRY_DSN` nélkül a bekötés nem küld semmit. A DSN nincs a repóban.
+- Loggyűjtés: a Sentry Logs. A kérésazonosító a mentésen és a hibás válaszon rajta van. A kérés törzse, a jelszó, a token és a süti kimarad.
+- Remote hibakeresés: issue, a böngészős mentést a Strapi kéréssel összekötő trace, és az SPA-n hibakor session replay. A replay a beviteli mezőket maszkolja, a bizonylat képét nem küldi. Source map csak `SENTRY_AUTH_TOKEN` mellett töltődik fel, a böngészőnek nem megy ki.
 - Health endpoint, és egy rövid üzemeltetési jegyzet: Neon backup, Cloudinary, env, seedelt számlakódok, smoke login `dataentry` és `editor` szereppel.
 - Séma- és jogosultságváltozás csak kódból, a bootstrapból. Az Admin UI-n kattintott eltérés később nem reprodukálható.
 
@@ -162,15 +196,16 @@ Ezek a könyvelési kör és az üzemeltetési alap után jönnek.
 ## 7. Priorizálási javaslat (nem kötelező sorrend)
 
 1. Org–user ACL + szerveroldali szűrés
-2. Strukturált log, hibagyűjtő, health endpoint, üzemeltetési jegyzet
-3. CI: build és a publish őr tesztje; a deploy kézi jóváhagyásos marad
+2. Sentry: strukturált log kérésazonosítóval, hibagyűjtő és remote hibakeresés a Strapi és az SPA oldalán; health endpoint, üzemeltetési jegyzet
+3. Minőségkapu: pre-commit (Prettier, lint, typecheck, érintett tesztek) és ugyanaz a CI-n; `main` branch protection. A build és a publish őr tesztje a deploy előtt; a deploy kézi jóváhagyásos marad
 4. Allowlist configba, hogy számlatükör-változáskor ne kelljen új frontendet szállítani
 5. Séma és jog csak kódból, bootstrapból
-6. Lapozott lista, szűk mezők, indexek, bizonylat bélyegkép, resource-onkénti bundle
-7. Előre számolt egyenleg, rögzítéskori árfolyam, cache-elt rate lookup
-8. Tag- és projektegyenleg, ismétlődő tagdíj, import előnézettel
-9. Receipt N:1 UI, majd a QA sor (értesítés, hozzárendelés, visszautasítás megjegyzéssel)
-10. Csak utána: menükatalógus, user–member összerendelés, avatar, további OAuth, jelszó-reset, meghívó, subdomain
+6. AJAX loading spinner minden várakozó képernyőn és vezérlőn
+7. Lapozott lista, szűk mezők, indexek, bizonylat bélyegkép, resource-onkénti bundle
+8. Előre számolt egyenleg, rögzítéskori árfolyam, cache-elt rate lookup
+9. Tag- és projektegyenleg, ismétlődő tagdíj, import előnézettel
+10. Receipt N:1 UI, majd a QA sor (értesítés, hozzárendelés, visszautasítás megjegyzéssel)
+11. Csak utána: menükatalógus, user–member összerendelés, avatar, további OAuth, jelszó-reset, meghívó, subdomain
 
 ## 8. Kapcsolat a v1 DoD-hoz
 
