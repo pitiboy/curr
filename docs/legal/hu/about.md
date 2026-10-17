@@ -1,5 +1,3 @@
-> **Kitöltendő a közzététel előtt:** cseréld ki a `[KITÖLTENDŐ: …]` jelöléseket, majd töröld ezt a bekezdést.
-
 ## Mi a KÖR?
 
 A **KÖR – Közösségi Önjegyző Rendszer** (angolul CURR – Community Unified Resource Registry) közösségek és szervezetek közös nyilvántartása. A pénz mellett más erőforrások – például munkaóra vagy termény – mozgását is rögzíti, kettős könyvelési logikával és bizonylatokkal.
@@ -31,4 +29,4 @@ Google-belépésnél **csak az e-mail címedet** kérjük el a Google-től, kiz�
 
 ## Kapcsolat
 
-Üzemeltető: [KITÖLTENDŐ: az üzemeltető neve], e-mail: [KITÖLTENDŐ: kapcsolattartási e-mail cím]
+Üzemeltető: Zöldforrások Szövetkezet, e-mail: szupatak@zoldeletprogram.hu

@@ -1,5 +1,3 @@
-> **To fill in before publishing:** replace every `[TO BE FILLED: …]` marker, then delete this paragraph.
-
 ## What is KÖR?
 
 **KÖR – Community Unified Resource Registry** (Hungarian: Közösségi Önjegyző Rendszer, CURR) is a shared ledger for communities and organisations. Besides money, it records the flow of other resources – such as working hours or produce – using double-entry bookkeeping, together with the supporting documents.
@@ -31,4 +29,4 @@ When you sign in with Google, we request **only your email address** from Google
 
 ## Contact
 
-Operator: [TO BE FILLED: operator name], email: [TO BE FILLED: contact email address]
+Operator: Zöldforrások Szövetkezet, email: szupatak@zoldeletprogram.hu

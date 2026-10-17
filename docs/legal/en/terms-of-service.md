@@ -1,8 +1,6 @@
-> **To fill in before publishing:** replace every `[TO BE FILLED: …]` marker with the real details, then delete this paragraph. This text is a template, not legal advice.
-
 ## 1. The provider
 
-**KÖR – Community Unified Resource Registry** (hereinafter: the **System**) is operated by [TO BE FILLED: full name of the operator], registered office: [TO BE FILLED: registered office], registration / tax number: [TO BE FILLED], email: [TO BE FILLED: contact email address] (hereinafter: the **Operator**).
+**KÖR – Community Unified Resource Registry** (hereinafter: the **System**) is operated by Zöldforrások Szövetkezet, registered office: 1078 Budapest, Hernád utca 56. A. lház. alagsor 2. ajtó, tax number: 32714269-1-42, email: szupatak@zoldeletprogram.hu (hereinafter: the **Operator**).
 
 The System is available at [https://kor.fejlesztesek.hu](https://kor.fejlesztesek.hu).
 
@@ -13,13 +11,13 @@ The System is a restricted-access ledger for the financial and other resource fl
 - In the **backoffice** ([/backoffice](https://kor.fejlesztesek.hu/backoffice/)) users record transactions and attach documents, and editors review and finalise the entries.
 - The **administration panel** ([/admin](https://kor.fejlesztesek.hu/admin)) is for the Operator's administrators.
 
-Use of the System is [TO BE FILLED: free of charge / included in the membership fee / other].
+Use of the System is free of charge but only available to members.
 
 ## 3. Access and accounts
 
 1. There is no public sign-up. Accounts are created by the Operator's administrator, who also assigns the role (**data entry** or **editor**).
 2. You can sign in with your email address and password or – if the administrator has set it up – with your Google account.
-3. You must keep your sign-in details confidential and must not share them with anyone. If you believe someone has gained unauthorised access to your account, notify us immediately at [TO BE FILLED: contact email address].
+3. You must keep your sign-in details confidential and must not share them with anyone. If you believe someone has gained unauthorised access to your account, notify us immediately at szupatak@zoldeletprogram.hu.
 4. You are responsible for the actions taken with your account (entering, finalising); the System records who entered and who finalised each entry.
 
 ## 4. User obligations
@@ -41,7 +39,7 @@ The Operator may suspend or close an account that breaches these terms.
 
 ## 6. Availability
 
-The Operator aims to keep the System running continuously, but does not guarantee uninterrupted or error-free operation. The System may be temporarily unavailable due to maintenance, updates or causes beyond the Operator's control. The Operator may discontinue the System after prior notice; in that case it will allow the data to be exported for [TO BE FILLED: period, e.g. 30 days].
+The Operator aims to keep the System running continuously, but does not guarantee uninterrupted or error-free operation. The System may be temporarily unavailable due to maintenance, updates or causes beyond the Operator's control. The Operator may discontinue the System after prior notice; in that case it will allow the data to be exported for 30 days.
 
 ## 7. Liability
 
@@ -49,7 +47,7 @@ To the maximum extent permitted by law, the Operator excludes liability for indi
 
 ## 8. Intellectual property
 
-The software of the System is [TO BE FILLED: owner and licence of the software, e.g. "owned by the Operator" or the name of the open-source licence]. The content recorded by users belongs to the organisation described in section 5.
+The software of the System is owned by the Fejlesztesek.hu. The content recorded by users belongs to the organisation described in section 5.
 
 ## 9. Data protection
 
@@ -57,7 +55,7 @@ The processing of personal data is governed by the [Privacy Policy](https://kor.
 
 ## 10. Closing an account
 
-An account is closed when the administrator deletes or blocks it, or when the user requests it at [TO BE FILLED: contact email address]. Closing an account does not affect recorded data that must be retained by law.
+An account is closed when the administrator deletes or blocks it, or when the user requests it at szupatak@zoldeletprogram.hu. Closing an account does not affect recorded data that must be retained by law.
 
 ## 11. Changes to these terms
 
@@ -65,6 +63,6 @@ The Operator may amend these terms. Users are notified of changes in the System 
 
 ## 12. Governing law and contact
 
-These terms are governed by Hungarian law. For questions, contact the Operator at [TO BE FILLED: contact email address].
+These terms are governed by Hungarian law. For questions, contact the Operator at szupatak@zoldeletprogram.hu.
 
-**Effective from:** [TO BE FILLED: effective date, e.g. 20 October 2026]
+**Effective from:** 6 October 2026

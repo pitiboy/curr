@@ -1,8 +1,6 @@
-> **Kitöltendő a közzététel előtt:** minden `[KITÖLTENDŐ: …]` jelölést cserélj ki a valós adatra, majd töröld ezt a bekezdést. A szöveg sablon, nem jogi tanácsadás.
-
 ## 1. A szolgáltató
 
-A **KÖR – Közösségi Önjegyző Rendszer** (a továbbiakban: **Rendszer**) üzemeltetője: [KITÖLTENDŐ: az üzemeltető teljes neve], székhely: [KITÖLTENDŐ: székhely], nyilvántartási szám / adószám: [KITÖLTENDŐ], e-mail: [KITÖLTENDŐ: kapcsolattartási e-mail cím] (a továbbiakban: **Üzemeltető**).
+A **KÖR – Közösségi Önjegyző Rendszer** (a továbbiakban: **Rendszer**) üzemeltetője: Zöldforrások Szövetkezet, székhely: 1078 Budapest, Hernád utca 56. A. lház. alagsor 2. ajtó, adószám: 32714269-1-42, e-mail: szupatak@zoldeletprogram.hu (a továbbiakban: **Üzemeltető**).
 
 A Rendszer címe: [https://kor.fejlesztesek.hu](https://kor.fejlesztesek.hu).
 
@@ -13,13 +11,13 @@ A Rendszer közösségek és szervezetek pénzügyi és egyéb erőforrás-mozg�
 - A **kezelő felületen** ([/backoffice](https://kor.fejlesztesek.hu/backoffice/)) a felhasználók tranzakciókat rögzítenek, bizonylatot csatolnak, a szerkesztők ellenőrzik és véglegesítik a tételeket.
 - Az **adminisztrációs felület** ([/admin](https://kor.fejlesztesek.hu/admin)) az Üzemeltető adminisztrátorainak szól.
 
-A Rendszer használata a felhasználók számára [KITÖLTENDŐ: ingyenes / a tagsági díj része / egyéb].
+A Rendszer használata a felhasználók számára ingyenes de tagsági feltételhez kötött.
 
 ## 3. Hozzáférés és fiók
 
 1. A Rendszerbe nincs nyilvános regisztráció. Fiókot az Üzemeltető adminisztrátora hoz létre, és ő rendeli hozzá a szerepkört (**adatrögzítő** vagy **szerkesztő**).
 2. Belépni e-mail címmel és jelszóval, vagy – ha az adminisztrátor ezt beállította – Google-fiókkal lehet.
-3. A belépési adataidat titokban kell tartanod, és nem adhatod át másnak. Ha úgy gondolod, hogy illetéktelen fért hozzá a fiókodhoz, haladéktalanul jelezd a(z) [KITÖLTENDŐ: kapcsolattartási e-mail cím] címen.
+3. A belépési adataidat titokban kell tartanod, és nem adhatod át másnak. Ha úgy gondolod, hogy illetéktelen fért hozzá a fiókodhoz, haladéktalanul jelezd a(z) szupatak@zoldeletprogram.hu címen.
 4. A fiókodban végzett műveletekért (rögzítés, véglegesítés) te felelsz; a Rendszer naplózza, ki rögzítette és ki véglegesítette az egyes tételeket.
 
 ## 4. A felhasználó kötelezettségei
@@ -41,7 +39,7 @@ Az Üzemeltető a feltételeket megszegő fiókot felfüggesztheti vagy megszün
 
 ## 6. Rendelkezésre állás
 
-Az Üzemeltető törekszik a Rendszer folyamatos működésére, de nem vállal garanciát a megszakítás nélküli vagy hibamentes működésre. Karbantartás, frissítés vagy rajta kívül álló ok miatt a Rendszer átmenetileg elérhetetlen lehet. Az Üzemeltető a Rendszert előzetes értesítés után megszüntetheti; ilyenkor [KITÖLTENDŐ: határidő, pl. 30 napig] lehetőséget ad az adatok kimentésére.
+Az Üzemeltető törekszik a Rendszer folyamatos működésére, de nem vállal garanciát a megszakítás nélküli vagy hibamentes működésre. Karbantartás, frissítés vagy rajta kívül álló ok miatt a Rendszer átmenetileg elérhetetlen lehet. Az Üzemeltető a Rendszert előzetes értesítés után megszüntetheti; ilyenkor 30 napig lehetőséget ad az adatok kimentésére.
 
 ## 7. Felelősség
 
@@ -49,7 +47,7 @@ Az Üzemeltető a jogszabályok által megengedett legnagyobb mértékben kizár
 
 ## 8. Szellemi tulajdon
 
-A Rendszer szoftvere [KITÖLTENDŐ: a szoftver jogosultja és licence, pl. „az Üzemeltető tulajdona” vagy a nyílt forráskódú licenc neve]. A felhasználók által rögzített tartalmak az 5. pont szerinti szervezetet illetik.
+A Rendszer szoftvere licensze Fejlesztesek.hu tulajdona. A felhasználók által rögzített tartalmak az 5. pont szerinti szervezetet illetik.
 
 ## 9. Adatvédelem
 
@@ -57,7 +55,7 @@ A személyes adatok kezeléséről az [Adatkezelési tájékoztató](https://kor
 
 ## 10. A fiók megszűnése
 
-A fiók megszűnik, ha az adminisztrátor törli vagy letiltja, illetve ha a felhasználó ezt kéri a(z) [KITÖLTENDŐ: kapcsolattartási e-mail cím] címen. A megszűnés nem érinti azokat a rögzített adatokat, amelyek megőrzését jogszabály írja elő.
+A fiók megszűnik, ha az adminisztrátor törli vagy letiltja, illetve ha a felhasználó ezt kéri a(z) szupatak@zoldeletprogram.hu címen. A megszűnés nem érinti azokat a rögzített adatokat, amelyek megőrzését jogszabály írja elő.
 
 ## 11. A feltételek módosítása
 
@@ -65,6 +63,6 @@ Az Üzemeltető a feltételeket módosíthatja. A módosításról a felhasznál
 
 ## 12. Irányadó jog, kapcsolat
 
-A feltételekre a magyar jog irányadó. Kérdéseiddel a(z) [KITÖLTENDŐ: kapcsolattartási e-mail cím] címen fordulhatsz az Üzemeltetőhöz.
+A feltételekre a magyar jog irányadó. Kérdéseiddel a(z) szupatak@zoldeletprogram.hu címen fordulhatsz az Üzemeltetőhöz.
 
-**Hatályos:** [KITÖLTENDŐ: hatálybalépés dátuma, pl. 2026. 10. 20.]
+**Hatályos:** 2026. 10. 06.

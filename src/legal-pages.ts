@@ -1,3 +1,4 @@
+import { errors } from '@strapi/utils';
 import MarkdownIt from 'markdown-it';
 
 export const LEGAL_PAGE_UID = 'api::legal-page.legal-page';
@@ -499,4 +500,55 @@ export async function ensureLegalLocales(strapi: LegalLocalesStrapi) {
       strapi.log.info(`Set default i18n locale to "${code}"`);
     }
   }
+}
+
+type SlugGuardContext = {
+  uid: string;
+  action: string;
+  params?: { documentId?: string; locale?: string; data?: { slug?: unknown } };
+};
+
+type SlugGuardStrapi = {
+  documents: ((uid: string) => LegalDocuments) & {
+    use: (
+      middleware: (context: SlugGuardContext, next: () => Promise<unknown>) => Promise<unknown>,
+    ) => unknown;
+  };
+};
+
+/**
+ * The slug is shared by every locale of one page, so it can't be a Strapi `uid`
+ * (Strapi 5 checks uid uniqueness across locales and blocks the second locale).
+ * Instead: a plain string, and this guard rejects the same slug twice in one locale.
+ */
+export function registerLegalSlugGuard(strapi: SlugGuardStrapi) {
+  strapi.documents.use(async (context, next) => {
+    if (
+      context.uid === LEGAL_PAGE_UID &&
+      (context.action === 'create' || context.action === 'update')
+    ) {
+      const slug = context.params?.data?.slug;
+      if (typeof slug === 'string' && slug.length > 0) {
+        if (!isValidLegalSlug(slug)) {
+          throw new errors.ValidationError(
+            'Slug: only lowercase letters, digits and single hyphens (e.g. privacy-policy)',
+          );
+        }
+        const existing = (await (strapi.documents(LEGAL_PAGE_UID) as unknown as {
+          findMany: (params: unknown) => Promise<Array<{ documentId?: string }>>;
+        }).findMany({
+          filters: { slug: { $eq: slug } },
+          fields: ['slug'],
+          // Same slug in another locale is the same page (or its translation);
+          // only a second page with this slug in the same locale is a conflict.
+          locale: context.params?.locale ?? DEFAULT_LEGAL_LOCALE,
+        })) ?? [];
+        const ownId = context.params?.documentId;
+        if (existing.some((row) => row.documentId && row.documentId !== ownId)) {
+          throw new errors.ValidationError(`Slug "${slug}" is already used by another legal page in this language`);
+        }
+      }
+    }
+    return next();
+  });
 }

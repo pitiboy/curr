@@ -1,15 +1,13 @@
-> **Kitöltendő a közzététel előtt:** minden `[KITÖLTENDŐ: …]` jelölést cserélj ki a valós adatra, majd töröld ezt a bekezdést. A szöveg sablon, nem jogi tanácsadás; élesítés előtt érdemes adatvédelmi szakemberrel átnézetni.
-
 ## 1. Az adatkezelő
 
-| Adat | Érték |
-| --- | --- |
-| Név | [KITÖLTENDŐ: az üzemeltető szervezet vagy személy teljes neve] |
-| Székhely / cím | [KITÖLTENDŐ: székhely vagy levelezési cím] |
-| Nyilvántartási szám / adószám | [KITÖLTENDŐ: cégjegyzékszám, nyilvántartási szám vagy adószám] |
-| Képviselő | [KITÖLTENDŐ: képviselő neve] |
-| Kapcsolattartási e-mail | [KITÖLTENDŐ: adatvédelmi kérdésekre használt e-mail cím] |
-| Adatvédelmi tisztviselő | [KITÖLTENDŐ: név és elérhetőség, vagy „nincs kijelölve”] |
+| Adat                    | Érték                                                   |
+| ----------------------- | ------------------------------------------------------- |
+| Név                     | Zöldforrások Szövetkezet                                |
+| Székhely                | 1078 Budapest, Hernád utca 56. A. lház. alagsor 2. ajtó |
+| Adószám                 | 32714269-1-42                                           |
+| Képviselő               | Valenczi Pál                                            |
+| Kapcsolattartási e-mail | szupatak@zoldeletprogram.hu                             |
+| Adatvédelmi tisztviselő | Horváth Péter                                           |
 
 A továbbiakban: **Üzemeltető** vagy **mi**.
 
@@ -61,13 +59,13 @@ A tárhely szerverei technikai naplót vezetnek a kérésekről (IP-cím, időpo
 
 ## 4. Az adatkezelés céljai és jogalapjai
 
-| Cél | Adatok | Jogalap (GDPR 6. cikk (1)) |
-| --- | --- | --- |
-| Belépés és jogosultságkezelés | 3.1, 3.2, 3.3 | f) jogos érdek: a rendszert csak az arra jogosultak használhassák [KITÖLTENDŐ: ha a használat tagsági vagy munkaviszonyon alapul, b) pont is lehet] |
-| Pénzügyi nyilvántartás és bizonylatok megőrzése | 3.4 tranzakciók és bizonylatok | c) jogi kötelezettség a számvitelről szóló 2000. évi C. törvény alapján [KITÖLTENDŐ: ellenőrizd, hogy a szervezetre vonatkozik-e], egyébként f) jogos érdek |
-| Ki mit rögzített és véglegesített (felelősség, ellenőrizhetőség) | rögzítő és véglegesítő felhasználó, időpontok | f) jogos érdek: a nyilvántartás hitelessége |
-| Tagnyilvántartás | 3.4 tagnyilvántartás | b) a tagsági jogviszony teljesítése [KITÖLTENDŐ: az alapszabály vagy a tagsági megállapodás hivatkozása] |
-| Üzembiztonság, visszaélések kivédése | 3.5 | f) jogos érdek |
+| Cél                                                              | Adatok                                        | Jogalap (GDPR 6. cikk (1))                                        |
+| ---------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------- |
+| Belépés és jogosultságkezelés                                    | 3.1, 3.2, 3.3                                 | f) jogos érdek: a rendszert csak az arra jogosultak használhassák |
+| Pénzügyi nyilvántartás és bizonylatok megőrzése                  | 3.4 tranzakciók és bizonylatok                | c) jogi kötelezettség és f) jogos érdek                           |
+| Ki mit rögzített és véglegesített (felelősség, ellenőrizhetőség) | rögzítő és véglegesítő felhasználó, időpontok | f) jogos érdek: a nyilvántartás hitelessége                       |
+| Tagnyilvántartás                                                 | 3.4 tagnyilvántartás                          | b) a tagsági jogviszony teljesítése                               |
+| Üzembiztonság, visszaélések kivédése                             | 3.5                                           | f) jogos érdek                                                    |
 
 A jogos érdeken alapuló adatkezelés ellen bármikor tiltakozhatsz (lásd 9. pont).
 
@@ -83,11 +81,11 @@ The use and transfer of information received from Google APIs to any other app w
 - **A rendszer felhasználói** – a szerepkörüknek megfelelően látják a tranzakciókat, bizonylatokat és a rögzítő/véglegesítő felhasználó nevét.
 - **Adatfeldolgozók:**
 
-| Adatfeldolgozó | Feladat | Hely |
-| --- | --- | --- |
-| [KITÖLTENDŐ: tárhelyszolgáltató neve, székhelye] | a szerver és a webhely üzemeltetése, szervernaplók | [KITÖLTENDŐ: ország] |
-| [KITÖLTENDŐ: adatbázis-szolgáltató neve, ha nem azonos a tárhellyel] | adatbázis tárolása | [KITÖLTENDŐ: ország] |
-| Cloudinary ([cloudinary.com](https://cloudinary.com)) | a feltöltött bizonylatfájlok tárolása | [KITÖLTENDŐ: adattárolási régió; EGT-n kívül esetén az átadás jogalapja, pl. általános szerződési feltételek] |
+| Adatfeldolgozó                                        | Feladat                                            | Hely             |
+| ----------------------------------------------------- | -------------------------------------------------- | ---------------- |
+| DotRoll Kft, 1148 Budapest, Fogarasi ut 3-5           | a szerver és a webhely üzemeltetése, szervernaplók | Magyarország     |
+| Neon Inc. (USA)                                       | adatbázis tárolása                                 | Németország (EU) |
+| Cloudinary ([cloudinary.com](https://cloudinary.com)) | a feltöltött bizonylatfájlok tárolása              | USA              |
 
 - **Google** a Google-belépés során önálló adatkezelőként jár el; erről a [Google adatvédelmi irányelvei](https://policies.google.com/privacy) szólnak.
 
@@ -95,13 +93,13 @@ Személyes adatot nem adunk el, és reklámcélra nem adunk át.
 
 ## 7. Meddig őrizzük az adatokat
 
-| Adat | Megőrzési idő |
-| --- | --- |
-| Felhasználói fiók | a hozzáférés megszűnéséig, utána [KITÖLTENDŐ: pl. 30 nap] |
-| Tranzakciók, bizonylatok, a rögzítő és véglegesítő adatai | a számviteli bizonylatokra irányadó **legalább 8 év** (2000. évi C. törvény 169. §), egyébként [KITÖLTENDŐ] |
-| Tagnyilvántartás | a tagság megszűnése után [KITÖLTENDŐ: időtartam] |
-| Szervernaplók | [KITÖLTENDŐ: pl. 30 nap, a tárhelyszolgáltató beállítása szerint] |
-| Böngészőben tárolt adatok | kijelentkezésig, illetve amíg a böngészőből nem törlöd |
+| Adat                                                      | Megőrzési idő                                                                       |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Felhasználói fiók                                         | a hozzáférés megszűnéséig                                                           |
+| Tranzakciók, bizonylatok, a rögzítő és véglegesítő adatai | a számviteli bizonylatokra irányadó **legalább 8 év** (2000. évi C. törvény 169. §) |
+| Tagnyilvántartás                                          | a tagság megszűnése után                                                            |
+| Szervernaplók                                             | 30 nap                                                                              |
+| Böngészőben tárolt adatok                                 | kijelentkezésig, illetve amíg a böngészőből nem törlöd                              |
 
 ## 8. Adatbiztonság
 
@@ -121,7 +119,7 @@ Az adatkezeléssel kapcsolatban jogosult vagy:
 - élni az **adathordozhatóság** jogával,
 - **tiltakozni** a jogos érdeken alapuló adatkezelés ellen.
 
-Kérésedet a(z) [KITÖLTENDŐ: kapcsolattartási e-mail cím] címre küldd. Legkésőbb egy hónapon belül válaszolunk.
+Kérésedet a(z) szupatak@fejlesztesek.hu címre küldd. Legkésőbb egy hónapon belül válaszolunk.
 
 A Google-belépéshez adott hozzáférést bármikor visszavonhatod a Google-fiókodban: [https://myaccount.google.com/permissions](https://myaccount.google.com/permissions).
 
@@ -140,4 +138,4 @@ Bírósághoz is fordulhatsz; a pert a lakóhelyed vagy tartózkodási helyed sz
 
 A tájékoztatót a szolgáltatás változásakor frissítjük. Az aktuális változat mindig ezen a címen érhető el: [https://kor.fejlesztesek.hu/legal/privacy-policy](https://kor.fejlesztesek.hu/legal/privacy-policy) ([angol nyelvű változat](https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en)). Eltérés esetén a magyar változat az irányadó.
 
-**Hatályos:** [KITÖLTENDŐ: hatálybalépés dátuma, pl. 2026. 10. 20.]
+**Hatályos:** 2026. 10. 06.
