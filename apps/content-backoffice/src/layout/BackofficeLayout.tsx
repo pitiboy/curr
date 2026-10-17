@@ -1,6 +1,7 @@
 import type { LayoutProps } from 'react-admin';
 import { Layout } from 'react-admin';
 
+import { LegalFooter } from '../legal/LegalLinks';
 import { BackofficeConfigProvider } from '../workflows/BackofficeConfigProvider';
 import { DocumentTitle } from './AppTitle';
 import { BackofficeMenu } from './BackofficeMenu';
@@ -16,7 +17,10 @@ export function BackofficeLayout(props: LayoutProps) {
         appBar={BackofficeAppBar}
         menu={BackofficeMenu}
         sidebar={FrameSidebar}
-      />
+      >
+        {props.children}
+        <LegalFooter />
+      </Layout>
     </BackofficeConfigProvider>
   );
 }

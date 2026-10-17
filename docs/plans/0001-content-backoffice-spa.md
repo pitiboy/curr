@@ -183,11 +183,11 @@ A `transactionForm` teszt, a `publish-guard` teszt, a `strapi-publish-guard` ski
 
 A Google kliens azonosító és titok a Humané. Az agent env kulcsot olvas, értéket nem ír a repóba.
 
-- [ ] Local usernél jelszócsere: `POST /api/auth/change-password`
-- [ ] `provider !== 'local'` esetén a jelszó űrlap nincs a képernyőn
-- [ ] `config/plugins.ts` users-permissions `grant.google`, `GOOGLE_CLIENT_ID` és `GOOGLE_CLIENT_SECRET`
-- [ ] A login Google gombja a Strapi `/api/connect/google` flow-ját indítja, a JWT ugyanoda kerül, ahová a local login tokenje
-- [ ] A deploy jegyzetben a callback: a Strapi host `/api/connect/google/callback`, és a `https://kor.fejlesztesek.hu/backoffice` redirect
+- [x] Local usernél jelszócsere: `POST /api/auth/change-password`
+- [x] `provider !== 'local'` esetén a jelszó űrlap nincs a képernyőn
+- [x] `config/plugins.ts` users-permissions `grant.google`, `GOOGLE_CLIENT_ID` és `GOOGLE_CLIENT_SECRET`
+- [x] A login Google gombja a Strapi `/api/connect/google` flow-ját indítja, a JWT ugyanoda kerül, ahová a local login tokenje
+- [x] A deploy jegyzetben a callback: a Strapi host `/api/connect/google/callback`, és a `https://kor.fejlesztesek.hu/backoffice` redirect
 
 - [ ] **Human:** local userrel a jelszócsere után az új jelszóval be lehet lépni. A Google gomb a konzolon beállított klienssel Content userként beléptet; ha a kliens még nincs meg, a gomb és a jegyzet elég, a local jelszócsere viszont kötelezően működjön. Ha igen, pipáld ki, és indítsd a 10. lépést.
 

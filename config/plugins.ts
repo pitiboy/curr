@@ -1,4 +1,61 @@
+const backofficeCallbackPath = '/backoffice/';
+
 export default ({ env }) => ({
+  'users-permissions': {
+    config: {
+      grant: {
+        google: {
+          enabled: true,
+          key: env('GOOGLE_CLIENT_ID', ''),
+          secret: env('GOOGLE_CLIENT_SECRET', ''),
+          callback: env(
+            'BACKOFFICE_OAUTH_CALLBACK',
+            'http://localhost:5173/backoffice/',
+          ),
+        },
+      },
+      callback: {
+        validate(callback: string, provider: { callback?: string }) {
+          let callbackUrl: URL;
+          try {
+            callbackUrl = new URL(callback);
+          } catch {
+            throw new Error('The callback is not a valid URL');
+          }
+
+          const allowedOrigins = new Set<string>();
+          const configuredCallback = env(
+            'BACKOFFICE_OAUTH_CALLBACK',
+            'http://localhost:5173/backoffice/',
+          );
+          allowedOrigins.add(new URL(configuredCallback).origin);
+          allowedOrigins.add('http://localhost:5173');
+          allowedOrigins.add('https://kor.fejlesztesek.hu');
+
+          if (provider?.callback) {
+            allowedOrigins.add(new URL(provider.callback).origin);
+          }
+
+          if (!allowedOrigins.has(callbackUrl.origin)) {
+            throw new Error(
+              'Forbidden callback provided: origins do not match. Please verify your config.',
+            );
+          }
+
+          const normalizedPath =
+            callbackUrl.pathname.endsWith('/') && callbackUrl.pathname.length > 1
+              ? callbackUrl.pathname
+              : `${callbackUrl.pathname}/`;
+
+          if (normalizedPath !== backofficeCallbackPath) {
+            throw new Error(
+              'Forbidden callback provided: pathname does not match. Please verify your config.',
+            );
+          }
+        },
+      },
+    },
+  },
   upload: {
     config: {
       provider: 'cloudinary',
