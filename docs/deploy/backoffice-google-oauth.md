@@ -6,6 +6,21 @@ A backoffice SPA Google belépése a Strapi Users & Permissions `google` provide
 
 ## Google Cloud Console
 
+### OAuth kliens (Client ID és secret)
+
+Helye: [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients) (régen: APIs & Services → Credentials). Fent a projektválasztóban ugyanaz a projekt legyen, amelyikben a Branding is van.
+
+1. **Create client** (vagy a meglévő megnyitása), típus: **Web application**. A Google-lel a Strapi szerver beszél (ő kapja a callbacket és ő használja a secretet), ezért webes kliens kell. Az SPA-nak nem kell külön kliens.
+2. **Authorised JavaScript origins**: nem kell, a böngésző nem hívja közvetlenül a Google-t.
+3. **Authorised redirect URIs**: lásd lent (Strapi `/api/connect/google/callback`).
+4. Mentés után a **Client ID** és a **Client secret** a kor környezeti változóiba megy: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. A secretet a Google csak létrehozáskor mutatja teljesen, ott másold ki; ha elveszett, a kliens oldalán generálható új.
+
+### Audience (publikálás)
+
+[Google Auth Platform → Audience](https://console.cloud.google.com/auth/audience): ha a Publishing status **Testing**, csak a *Test users* listán szereplő fiókok tudnak belépni. Vagy vedd fel őket, vagy **Publish app**. Csak `email` scope mellett nincs hosszú ellenőrzés, legfeljebb a branding (logó) miatt.
+
+### Redirect URI
+
 Authorized redirect URI (Strapi host):
 
 - Éles: `https://kor.fejlesztesek.hu/api/connect/google/callback`
@@ -58,4 +73,4 @@ A `config/plugins.ts` és a bootstrap a grant tárolót tölti: `enabled`, `key`
 2. Google vissza a Strapi `/api/connect/google/callback` címére.
 3. Strapi átirányít a megadott SPA callbackre; a login oldal `GET /api/auth/google/callback` hívással (session cookie) JWT-t kap, és ugyanabba a `localStorage` kulcsba menti, mint a local login.
 
-Éles redirect a Google konzolban és a grant `callback` mezőben: `https://kor.fejlesztesek.hu/backoffice`.
+Éles értékek: a Google konzol redirect URI-ja a Strapi callback (`https://kor.fejlesztesek.hu/api/connect/google/callback`), a grant `callback` mezője (`BACKOFFICE_OAUTH_CALLBACK`) pedig az SPA címe (`https://kor.fejlesztesek.hu/backoffice/`). A kettő nem ugyanaz.

@@ -37,7 +37,7 @@ A local belépés továbbra is: `POST /api/auth/local` (identifier + password).
 
 ### 1.3 Hogyan dönt a Strapi, ki léphet be Google-lel
 
-A `plugin::users-permissions` provider szolgáltatás (gyári logika, nincs custom override a repóban):
+A `plugin::users-permissions` provider szolgáltatás gyári logikája (a repó ezt Google-nél kiegészíti, lásd lent és az 1.4 részt):
 
 1. Google profilból **e-mail** (kötelező, verified).
 2. Megkeresi a usereket **e-mail** szerint.
@@ -52,6 +52,7 @@ A `plugin::users-permissions` provider szolgáltatás (gyári logika, nincs cust
 
 - Admin: e-mail + jelszó + `dataentry` / `editor` → **local** belépés működik.
 - Ugyanaz az e-mail **Google-lel** stock Strapi mellett **nem** kötődik automatikusan a meglévő local userhez — külön `google` provider sor kellene, amit az Admin normál űrlapja nem hoz létre.
+- Ezért a repó felülírja a Google-belépést (`src/extensions/users-permissions/strapi-server.ts`, döntési logika: `src/oauth-link.ts`): ha nincs `google` provider sor, de pontosan **egy** user van ugyanazzal az e-maillel, akkor **őt** jelentkezteti be. Részletek: 1.4.
 
 ### 1.4 Advanced settings — ajánlott üzemeltetés (csak tagok)
 
@@ -67,11 +68,22 @@ Cél: **ne regisztrálhasson bárki** Google-lel; hozzáférést **admin adjon**
 **Ma működő modell regisztráció OFF mellett:**
 
 1. Admin létrehozza a usert (e-mail, role, jelszó) → tag **local** loginnal megy a backoffice-ba.
-2. Google gomb **nem** ad belépést ugyanarra az e-mailre, amíg nincs külön `google` provider user vagy nincs egyedi összekötő kód.
+2. Ugyanez a tag a **Google** gombbal is beléphet, ha a Google-fiókja e-mail címe megegyezik az Adminban felvett e-maillel. Ugyanabba a user rekordba lép be, a **role változatlan** (`dataentry` / `editor`).
+3. Ismeretlen e-mail Google-lel továbbra is: *Register action is actually not available* — új user **nem** jön létre.
+
+**Hogyan működik az összekötés** (`src/oauth-link.ts`, `src/extensions/users-permissions/strapi-server.ts`):
+
+- Csak a `google` providerre vonatkozik; a Google csak **ellenőrzött** (verified) e-mailt ad vissza, mást a Strapi elutasít.
+- Az e-mail egyezés **kis- és nagybetűtől független**.
+- Ha már van `provider: google` user ezzel az e-maillel, az nyer (gyári viselkedés).
+- Ha nincs ilyen, és **pontosan egy** user van ezzel az e-maillel: belép ez a user, ha **nincs tiltva** (*blocked*), és — ha az *Enable email confirmation* be van kapcsolva — **megerősített**. Tiltott usernél: *Your account has been blocked by an administrator*; meg nem erősítettnél: *Your account email is not confirmed*.
+- Ha **több** user is ugyanazzal az e-maillel szerepel (csak `unique_email` OFF mellett lehet), nincs belépés: *Register action is actually not available* (a szerver logban `warn` sor jelzi az okát).
+- Ha **egyik** user sem egyezik, a gyári logika fut: regisztráció OFF → elutasítás, ON → új user a default role-lal.
+- A user rekordot **nem** módosítja: a `provider` marad `local`, így a jelszavas belépés (`POST /api/auth/local`, ami `provider: local` szerint keres) és a profilon a jelszócsere is megmarad. Sikeres összekötéskor a logban: `OAuth google login linked to existing user id=…`.
 
 **Ha sign-ups ON marad:** bárki Google-lel új usert kaphat (default role), ez **ellentmond** a „csak admin ad hozzáférést” célnek.
 
-**Későbbi fejlesztés (nincs a v1-ben):** regisztráció OFF + admin által felvett e-mail → első Google login **ugyanahhoz a userhez** kötése, role változatlan.
+**Megvalósítva:** regisztráció OFF + admin által felvett e-mail → a Google login **ugyanahhoz a userhez** jut, role változatlan (lásd fent).
 
 ### 1.5 Role és JWT a backoffice számára
 
@@ -138,7 +150,7 @@ sequenceDiagram
 | --- | --- |
 | Ki ad role-t? | **Admin** (User létrehozás / szerkesztés), nem a Google flow. |
 | Tiltom a „bárki regisztrál Google-lel”? | Advanced: **Enable sign-ups OFF**. |
-| Admin felvesz e-mail + role + jelszó — mehet utána Google? | **Stock Strapi: nem** ugyanazzal az e-maillel (local vs google provider). Local login **igen**. |
+| Admin felvesz e-mail + role + jelszó — mehet utána Google? | **Igen**, ha a Google-fiók e-mailje megegyezik, és a user nincs tiltva: ugyanaz a user lép be, ugyanazzal a role-lal (repó override; stock Strapi ezt nem engedné). Local login is **marad**. |
 | Kell-e Adminban Google provider kapcsoló? | **Nem** kötelező; env + bootstrap beállítja. Ellenőrzésre használható. |
 | Hol a deploy URL lista? | [deploy/backoffice-google-oauth.md](./deploy/backoffice-google-oauth.md) |
 | Hol vannak az adatkezelési tájékoztató és a felhasználási feltételek? | Strapi `legal-page` gyűjtemény (hu/en), nyilvánosan: `/legal/privacy-policy`, `/legal/terms-of-service`, `/legal/about`, angolul `?locale=en`. Forrás: [legal/README.md](./legal/README.md) |

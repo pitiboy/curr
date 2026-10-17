@@ -17,6 +17,7 @@ import {
   isGoogleOAuthReturn,
   startGoogleLogin,
 } from '../auth/googleLogin';
+import { translateOAuthError } from '../auth/oauthErrors';
 import { DocumentTitle } from '../layout/AppTitle';
 import { LegalLinks } from '../legal/LegalLinks';
 
@@ -78,7 +79,7 @@ export function LoginPage() {
       {oauthError ? (
         <Box sx={{ boxSizing: 'border-box', px: 2, width: 300 }}>
           <Alert severity="error" sx={{ mb: 1 }}>
-            {oauthError}
+            {translateOAuthError(oauthError, translate)}
           </Alert>
         </Box>
       ) : null}

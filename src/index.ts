@@ -3,6 +3,7 @@ import {
   LEGAL_PAGE_PUBLIC_ACTIONS,
   registerHomeRedirect,
   registerLegalPageRoutes,
+  registerLegalSlugGuard,
 } from './legal-pages';
 import { registerPublishGuard } from './publish-guard';
 import { ensureReceiptTypes } from './receipt-types';
@@ -321,6 +322,7 @@ export default {
   register({ strapi }) {
     registerPublishGuard(strapi);
     registerLegalPageRoutes(strapi);
+    registerLegalSlugGuard(strapi);
     registerHomeRedirect(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node

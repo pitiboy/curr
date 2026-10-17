@@ -2,6 +2,7 @@ import { strapiAuthProvider, strapiHttpClient } from 'ra-strapi';
 import type { AuthProvider, UserIdentity } from 'react-admin';
 
 import { STRAPI_URL } from '../config';
+import { isGoogleOAuthReturn } from './googleLogin';
 import { persistStrapiAuthSession } from './strapiAuthStorage';
 
 type StrapiMeResponse = {
@@ -30,6 +31,15 @@ async function fetchCurrentUser(): Promise<StrapiMeResponse> {
 
 export const authProvider: AuthProvider = {
   ...innerAuthProvider,
+  checkAuth: async (params) => {
+    // Google OAuth visszatéréskor a token még nincs elmentve: a LoginPage
+    // fejezi be a belépést. Ilyenkor csendben irányítunk a login oldalra,
+    // a "Jelentkezzen be" figyelmeztetés felvillanása nélkül.
+    if (isGoogleOAuthReturn()) {
+      throw { message: false };
+    }
+    return innerAuthProvider.checkAuth(params);
+  },
   getIdentity: async (): Promise<UserIdentity> => {
     const user = await fetchCurrentUser();
     return {
