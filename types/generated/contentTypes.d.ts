@@ -744,6 +744,9 @@ export interface ApiLegalPageLegalPage extends Struct.CollectionTypeSchema {
         i18n: {
           localized: false;
         };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128;
       }>;
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
