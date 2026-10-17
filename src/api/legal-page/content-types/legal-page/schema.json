@@ -31,18 +31,19 @@
       }
     },
     "slug": {
-      "type": "uid",
+      "type": "string",
       "pluginOptions": {
         "i18n": {
           "localized": false
         }
       },
-      "targetField": "title",
       "required": true,
       "metadatas": {
         "label": "URL azonosító",
         "description": "A nyilvános cím vége: /legal/{slug} (pl. privacy-policy, terms-of-service, about). Minden nyelven ugyanaz. Ne változtasd, ha a Google konzolban már szerepel."
-      }
+      },
+      "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 128
     },
     "body": {
       "type": "richtext",

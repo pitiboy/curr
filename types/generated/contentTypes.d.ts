@@ -738,7 +738,7 @@ export interface ApiLegalPageLegalPage extends Struct.CollectionTypeSchema {
       'api::legal-page.legal-page'
     >;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'title'> &
+    slug: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
