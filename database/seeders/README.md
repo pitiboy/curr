@@ -94,3 +94,21 @@ Edit the `initial-data.js` file to:
 - All enums match the schema definitions
 - Relations are properly established between entities
 - The seeder is idempotent (safe to run multiple times)
+
+## Transaction import (kor)
+
+`http/common/transactions.http` loads the rows of the "Pénzmozgások" Excel sheet
+from `http/kor/data/transactions.json` as draft transactions. It is not part of
+the `0*.http` run; start it on its own after the 01-08 seeders:
+
+```bash
+npm run seed:http:kor:transactions -- local
+npm run seed:http:kor:transactions -- prod
+```
+
+Each row keeps its Excel columns. The mapping tables at the top of the JSON
+(`partyAccounts`, `operationCreditAccounts`, `expenseDebitAccounts`,
+`placeTransactionTypes`, `projectOrganizations`) turn them into accounts, type
+and organization; anything that does not map stays empty for review before
+publishing. `entered_by` holds `excel:Pénzmozgások#<row>`, so a second run skips
+rows that already exist.

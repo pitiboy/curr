@@ -24,6 +24,8 @@
     "seed:http:edizone:local": "httpyac send database/seeders/http/common/0*.http --all --var dataDir=database/seeders/http/edizone/data --env local",
     "seed:http:kor": "httpyac send database/seeders/http/common/0*.http --all --var dataDir=database/seeders/http/kor/data --env",
     "seed:http:kor:local": "httpyac send database/seeders/http/common/0*.http --all --var dataDir=database/seeders/http/kor/data --env local",
+    "seed:http:kor:transactions": "httpyac send database/seeders/http/common/transactions.http --all --var dataDir=database/seeders/http/kor/data --env",
+    "seed:http:kor:transactions:local": "httpyac send database/seeders/http/common/transactions.http --all --var dataDir=database/seeders/http/kor/data --env local",
     "seed:http:reset": "httpyac send database/seeders/http/common/reset.http --all --env",
     "seed:http:reset:all": "httpyac send database/seeders/http/common/reset.http --all --var wipeAll=true --env",
     "###BUILD & DEPLOY###": "echo 'This is a placeholder for a real command.'",

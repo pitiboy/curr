@@ -1,0 +1,289 @@
+# Tranzakciók az Excel pénzmozgás-táblából (Pénzmozgások munkalap)
+# A rekordok a dataDir/transactions.json fájlban vannak, soronként az Excel oszlopaival:
+#   row = Excel sorszám, date = Dátum, payer = Forrás (fizet), payee = Jogosult (kap),
+#   ledger = Cél hely, project = Projekt, purpose = Rendeltetés, operation = Művelet,
+#   amount = Összeg (előjelesen, 2 tizedesre kerekítve), place = Hely, description = Leírás.
+# Az Év és Hó oszlop a dátumból jön, ezért nincs külön mezője.
+#
+# Leképezés (a JSON tetején lévő táblákban szerkeszthető):
+#   credit_account  = operationCreditAccounts[operation] vagy partyAccounts[payer]
+#   debit_account   = expenseDebitAccounts[purpose], ha operation = Költség,
+#                     különben partyAccounts[payee]
+#                     Ha a két oldal ugyanaz a számla, a debit üres marad.
+#   transaction_type = placeTransactionTypes[place]
+#   organization    = projectOrganizations[project], ha nincs: mainOrganization
+#   currency_type   = currencyCode
+#   description     = Leírás, alatta egy [Excel] sor az összes eredeti oszloppal
+#   entered_by      = keyPrefix + row, ez a természetes kulcs
+# Ami nem képezhető le, üres marad. A tranzakció piszkozatként jön létre
+# (status=draft), a hiányzó számlát vagy szervezetet a backoffice-ban kell
+# kitölteni publikálás előtt.
+#
+#   npm run seed:http:kor:transactions -- local
+#   npm run seed:http:kor:transactions -- prod
+#
+# Nincs a 0*.http körben, külön kell futtatni.
+# Előfeltétel: a 01-08 seederek már lefutottak (számlák, típusok, szervezetek, HUF).
+# Ha a dataDir-ben nincs transactions.json, nem csinál semmit.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha az entered_by kulcs már létezik, a POST nem fut le.
+
+{{
+  if (typeof trxRows === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    const file = path.resolve(process.cwd(), dataDir, "transactions.json");
+    const source = fs.existsSync(file)
+      ? JSON.parse(fs.readFileSync(file, "utf8"))
+      : { transactions: [] };
+    if (!fs.existsSync(file)) {
+      console.info("no transactions.json in " + dataDir + ", skipping");
+    }
+
+    const pick = (table, key) =>
+      (table && key != null && Object.prototype.hasOwnProperty.call(table, key) && table[key]) || null;
+
+    const excelLine = (item) =>
+      "[Excel #" + item.row + "] " +
+      [
+        "Forrás: " + (item.payer || "-") + " → Jogosult: " + (item.payee || "-"),
+        "Cél hely: " + (item.ledger || "-"),
+        "Projekt: " + (item.project || "-"),
+        "Rendeltetés: " + (item.purpose || "-"),
+        "Művelet: " + (item.operation || "-"),
+        "Hely: " + (item.place || "-"),
+      ].join(" · ");
+
+    const rows = (source.transactions || []).map((item) => {
+      const credit =
+        pick(source.operationCreditAccounts, item.operation) ||
+        pick(source.partyAccounts, item.payer);
+      let debit =
+        (item.operation === "Költség" && pick(source.expenseDebitAccounts, item.purpose)) ||
+        pick(source.partyAccounts, item.payee);
+      if (debit && debit === credit) debit = null;
+      return {
+        key: source.keyPrefix + item.row,
+        date: item.date,
+        amount: item.amount,
+        description: [item.description, excelLine(item)].filter(Boolean).join("\n"),
+        creditAccount: credit,
+        debitAccount: debit,
+        transactionType: pick(source.placeTransactionTypes, item.place),
+        organization:
+          pick(source.projectOrganizations, item.project) || source.mainOrganization || null,
+      };
+    });
+
+    const unique = (values) => [...new Set(values.filter(Boolean))];
+    exports.trxRows = rows;
+    exports.trxCurrencyCodes = rows.length && source.currencyCode ? [source.currencyCode] : [];
+    exports.trxCurrencyCode = source.currencyCode;
+    exports.trxAccountNames = unique(rows.flatMap((row) => [row.creditAccount, row.debitAccount]));
+    exports.trxTypeNames = unique(rows.map((row) => row.transactionType));
+    exports.trxOrganizationNames = unique(rows.map((row) => row.organization));
+    exports.trxCurrencyIds = {};
+    exports.trxAccountIds = {};
+    exports.trxTypeIds = {};
+    exports.trxOrganizationIds = {};
+    exports.trxIds = {};
+    exports.trxFailed = {};
+  }
+}}
+
+###
+# @name require-currency-type
+# @loop for code of trxCurrencyCodes
+{{
+  exports.encoded = encodeURIComponent(code);
+}}
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + code, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      trxCurrencyIds[code] = found;
+      exports.trxCurrencyIds = trxCurrencyIds;
+    } else {
+      console.error("not found: " + code);
+    }
+  }
+}}
+
+###
+# @name require-account
+# @loop for accountName of trxAccountNames
+{{
+  exports.encoded = encodeURIComponent(accountName);
+}}
+GET {{baseUrl}}/api/accounts?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + accountName, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      trxAccountIds[accountName] = found;
+      exports.trxAccountIds = trxAccountIds;
+    } else {
+      console.error("not found: " + accountName);
+    }
+  }
+}}
+
+###
+# @name require-transaction-type
+# @loop for typeName of trxTypeNames
+{{
+  exports.encoded = encodeURIComponent(typeName);
+}}
+GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + typeName, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      trxTypeIds[typeName] = found;
+      exports.trxTypeIds = trxTypeIds;
+    } else {
+      console.error("not found: " + typeName);
+    }
+  }
+}}
+
+###
+# @name require-organization
+# @loop for organizationName of trxOrganizationNames
+{{
+  exports.encoded = encodeURIComponent(organizationName);
+}}
+GET {{baseUrl}}/api/organizations?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("lookup failed: " + organizationName, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      trxOrganizationIds[organizationName] = found;
+      exports.trxOrganizationIds = trxOrganizationIds;
+    } else {
+      console.error("not found: " + organizationName);
+    }
+  }
+}}
+
+###
+# @name lookup-transaction
+# @loop for item of trxRows
+{{
+  exports.encoded = encodeURIComponent(item.key);
+}}
+GET {{baseUrl}}/api/transactions?status=draft&filters[entered_by][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    trxFailed[item.key] = true;
+    exports.trxFailed = trxFailed;
+    console.error("lookup failed: " + item.key, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      trxIds[item.key] = found;
+      exports.trxIds = trxIds;
+    }
+  }
+}}
+
+###
+# @name create-transaction
+# @loop for item of trxRows
+{{
+  const currencyId = trxCurrencyIds[trxCurrencyCode];
+  if (trxIds[item.key] || trxFailed[item.key]) {
+    exports.$cancel = true;
+  } else if (!currencyId) {
+    console.error("missing currency for " + item.key);
+    exports.$cancel = true;
+  } else {
+    const data = {
+      date: item.date,
+      amount: item.amount,
+      description: item.description,
+      currency_type: currencyId,
+      entered_by: item.key,
+    };
+    const relations = {
+      credit_account: item.creditAccount && trxAccountIds[item.creditAccount],
+      debit_account: item.debitAccount && trxAccountIds[item.debitAccount],
+      transaction_type: item.transactionType && trxTypeIds[item.transactionType],
+      organization: item.organization && trxOrganizationIds[item.organization],
+    };
+    Object.keys(relations).forEach((field) => {
+      if (relations[field]) data[field] = relations[field];
+    });
+    exports.trxPayload = JSON.stringify({ data });
+  }
+}}
+POST {{baseUrl}}/api/transactions?status=draft
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{trxPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.key, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      trxIds[item.key] = created;
+      exports.trxIds = trxIds;
+    }
+  }
+}}
