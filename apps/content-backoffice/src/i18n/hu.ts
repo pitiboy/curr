@@ -49,7 +49,23 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     feature_flags: 'Feature flagek',
     feature_flags_empty: 'Nincs kapcsolható ügylet.',
     feature_flags_reset: 'Szerver szerinti lista',
-    login_google: 'Bejelentkezés Google-lel (hamarosan)',
+    login_google: 'Bejelentkezés Google-lel',
+    oauth_errors: {
+      register_not_available:
+        'Ehhez a Google-fiókhoz nincs felhasználó. Kérd meg az adminisztrátort, hogy vegyen fel ezzel az e-mail-címmel.',
+      ambiguous_email:
+        'Ezzel az e-mail-címmel több felhasználó is létezik. Kérd meg az adminisztrátort, hogy rendezze.',
+      account_blocked: 'A fiókodat az adminisztrátor letiltotta.',
+      email_not_confirmed: 'A fiókod e-mail-címe még nincs megerősítve.',
+      email_not_available:
+        'A Google nem adta át az e-mail-címedet, így nem tudunk beléptetni.',
+      email_taken: 'Ez az e-mail-cím már egy másik fiókhoz tartozik.',
+      session_missing: 'A Google-belépés megszakadt. Próbáld újra.',
+      provider_disabled: 'A Google-belépés jelenleg ki van kapcsolva.',
+    },
+    legal_nav: 'Jogi dokumentumok',
+    legal_privacy: 'Adatkezelési tájékoztató',
+    legal_terms: 'Felhasználási feltételek',
     status: {
       draft: 'Piszkozat',
       published: 'Közzétéve',

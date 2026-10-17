@@ -48,9 +48,20 @@ load_deploy_env "$env_file"
 
 FTP_PORT="${FTP_PORT:-21}"
 FTP_OVERRIDE_POLICY="${FTP_OVERRIDE_POLICY:-only-newer}"
+# A Strapi build minden fájlt újraír (friss mtime), ezért az --only-newer magában
+# mindent feltöltene. A dist/build (admin) fájlnevei tartalom-hash-t hordoznak,
+# így ott elég a hiányzókat feltölteni (--only-missing) és a régieket törölni
+# (--delete). Kivétel az index.html: nincs hash a nevében, ezért azt külön,
+# minden alkalommal feltöltjük (put).
 case "$FTP_OVERRIDE_POLICY" in
-  only-newer) mirror_policy="--only-newer" ;;
-  transfer-all) mirror_policy="--transfer-all" ;;
+  only-newer)
+    mirror_policy="--only-newer"
+    build_policy="--only-missing"
+    ;;
+  transfer-all)
+    mirror_policy="--transfer-all"
+    build_policy="--transfer-all"
+    ;;
   *)
     echo "Ismeretlen FTP_OVERRIDE_POLICY: ${FTP_OVERRIDE_POLICY} (only-newer vagy transfer-all)" >&2
     exit 1
@@ -85,6 +96,13 @@ fi
 
 export LFTP_PASSWORD="$FTP_PASS"
 
+# Az admin index.html nem hash-elt nevű: mindig felmegy (dry-runnál csak kiírjuk).
+if [[ -n "$dry" ]]; then
+  index_put="echo [dry-run] put dist/build/index.html"
+else
+  index_put="put dist/build/index.html -o \"$FTP_REMOTE_DIR/dist/build/index.html\""
+fi
+
 echo "Feltöltés: user=${FTP_USER} host=${FTP_HOST} port=${FTP_PORT} mappa=${FTP_REMOTE_DIR} policy=${FTP_OVERRIDE_POLICY}"
 set +e
 lftp --norc <<EOF
@@ -96,7 +114,9 @@ set ssl:verify-certificate no
 set net:timeout 30
 set net:max-retries 2
 open --env-password -u "$FTP_USER" -p "$FTP_PORT" "$FTP_HOST"
-mirror -R -p -v $mirror_policy --overwrite --no-empty-dirs $dry -i '^(dist(\$|/)|public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' -x '(^|/)public/uploads(/|\$)' -x '(^|/)\\.' . "$FTP_REMOTE_DIR"
+mirror -R -p -v $build_policy --overwrite --delete --no-empty-dirs $dry -x '^index\.html\$' dist/build "$FTP_REMOTE_DIR/dist/build"
+mirror -R -p -v $mirror_policy --overwrite --no-empty-dirs $dry -i '^(dist(\$|/)|public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' -x '^dist/build/' -x '(^|/)public/uploads(/|\$)' -x '(^|/)\\.' . "$FTP_REMOTE_DIR"
+$index_put
 bye
 EOF
 status=$?
