@@ -8,6 +8,8 @@ export function ProfilePage() {
   const translate = useTranslate();
   const [name, setName] = useState('…');
   const [email, setEmail] = useState('…');
+  const [role, setRole] = useState('…');
+  const [provider, setProvider] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -16,18 +18,27 @@ export function ProfilePage() {
         if (active) {
           setName(fields.name);
           setEmail(fields.email);
+          setProvider(fields.provider);
+          setRole(
+            fields.roleType
+              ? translate(`app.roles.${fields.roleType}`, {
+                  _: fields.roleName,
+                })
+              : fields.roleName,
+          );
         }
       })
       .catch(() => {
         if (active) {
           setName('—');
           setEmail('—');
+          setRole('—');
         }
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [translate]);
 
   return (
     <Box sx={{ p: 2, maxWidth: 480 }}>
@@ -43,7 +54,13 @@ export function ProfilePage() {
           <Typography gutterBottom sx={{ mt: 2 }} variant="subtitle2">
             {translate('app.profile_email')}
           </Typography>
-          <Typography variant="body1">{email}</Typography>
+          <Typography gutterBottom variant="body1">
+            {email}
+          </Typography>
+          <Typography gutterBottom sx={{ mt: 2 }} variant="subtitle2">
+            {translate('app.profile_role')}
+          </Typography>
+          <Typography variant="body1">{role}</Typography>
         </CardContent>
       </Card>
     </Box>

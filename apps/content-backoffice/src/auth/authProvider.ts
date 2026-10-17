@@ -7,7 +7,8 @@ type StrapiMeResponse = {
   id: number;
   username?: string;
   email?: string;
-  role?: { type?: string };
+  provider?: string;
+  role?: { type?: string; name?: string };
 };
 
 const storage = localStorage;
@@ -20,9 +21,7 @@ const innerAuthProvider = strapiAuthProvider({
 const httpClient = strapiHttpClient({ storage });
 
 async function fetchCurrentUser(): Promise<StrapiMeResponse> {
-  const { json } = await httpClient(
-    `${STRAPI_URL}/api/users/me?populate=role`,
-  );
+  const { json } = await httpClient(`${STRAPI_URL}/api/users/me?populate=role`);
   return json as StrapiMeResponse;
 }
 
@@ -44,10 +43,16 @@ export const authProvider: AuthProvider = {
 export async function fetchProfileFields(): Promise<{
   name: string;
   email: string;
+  provider: string;
+  roleType: string;
+  roleName: string;
 }> {
   const user = await fetchCurrentUser();
   return {
     name: user.username || '—',
     email: user.email || '—',
+    provider: user.provider ?? 'local',
+    roleType: user.role?.type ?? '',
+    roleName: user.role?.name || user.role?.type || '—',
   };
 }
