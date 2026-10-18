@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-17T20:13:26.762Z"
+    "x-generation-date": "2026-10-18T02:47:19.883Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -9556,7 +9556,6 @@
         "properties": {
           "data": {
             "required": [
-              "identifier",
               "name",
               "email"
             ],
@@ -9573,10 +9572,10 @@
                 ],
                 "example": "string or id"
               },
-              "identifier": {
+              "name": {
                 "type": "string"
               },
-              "name": {
+              "identifier": {
                 "type": "string"
               },
               "email": {
@@ -9656,7 +9655,6 @@
       "Member": {
         "type": "object",
         "required": [
-          "identifier",
           "name",
           "email"
         ],
@@ -9677,10 +9675,10 @@
           "account": {
             "$ref": "#/components/schemas/Account"
           },
-          "identifier": {
+          "name": {
             "type": "string"
           },
-          "name": {
+          "identifier": {
             "type": "string"
           },
           "email": {
@@ -11182,6 +11180,9 @@
               "published_by": {
                 "type": "string"
               },
+              "import_key": {
+                "type": "string"
+              },
               "locale": {
                 "type": "string"
               },
@@ -11308,6 +11309,9 @@
             "type": "string"
           },
           "published_by": {
+            "type": "string"
+          },
+          "import_key": {
             "type": "string"
           },
           "createdAt": {

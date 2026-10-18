@@ -1,5 +1,10 @@
 import { Data } from '@strapi/strapi';
 
+import {
+  memberIdentifierBase,
+  uniqueMemberIdentifier,
+} from '../../../../member-identifier';
+
 type MemberData = Data.ContentType<'api::member.member'>;
 
 interface LifecycleEvent {
@@ -42,7 +47,7 @@ async function createAccountForMember({
         {
           sort: { createdAt: 'asc' },
           limit: 1,
-        }
+        },
       )) as Data.ContentType<'api::organization.organization'>[];
 
       if (organizations.length > 0) {
@@ -53,11 +58,11 @@ async function createAccountForMember({
           'api::account.account',
           {
             data: {
-              name: `${identifier} - Tagi számla`,
+              name: `${identifier} - tagi számla`,
               code: '1001',
               organization: mainOrg.id,
             },
-          }
+          },
         )) as Data.ContentType<'api::account.account'>;
 
         strapi.log.info(
@@ -65,7 +70,7 @@ async function createAccountForMember({
             accountName: account.name,
             accountId: account.id,
             accountCode: account.code,
-          })}`
+          })}`,
         );
 
         return account.id;
@@ -76,7 +81,7 @@ async function createAccountForMember({
       strapi.log.info(
         `ℹ️ Account already provided (${
           typeof account === 'object' && 'id' in account ? account.id : account
-        }), skipping creation`
+        }), skipping creation`,
       );
     }
   } catch (error) {
@@ -87,6 +92,35 @@ async function createAccountForMember({
   return undefined;
 }
 
+/**
+ * The admin only pre-fills a uid field when it is required, and then from an
+ * empty form, which gives the bare "member". The field is optional instead;
+ * an empty identifier is generated from the name here (src/member-identifier.ts,
+ * e.g. "kovács.erika"), before the member account named after it is created.
+ */
+async function ensureIdentifier(data: Partial<MemberData>): Promise<void> {
+  const current =
+    typeof data.identifier === 'string' ? data.identifier.trim() : '';
+  if (current) {
+    return;
+  }
+  if (typeof data.name !== 'string' || !data.name.trim()) {
+    throw new Error('Member name is required to generate the identifier');
+  }
+  const base = memberIdentifierBase(data.name);
+  if (!base) {
+    throw new Error('Member name gives an empty identifier');
+  }
+  const existing = (await strapi.db.query('api::member.member').findMany({
+    select: ['identifier'],
+    where: { identifier: { $startsWith: base } },
+  })) as Array<{ identifier: string }>;
+  data.identifier = uniqueMemberIdentifier(
+    base,
+    existing.map((row) => row.identifier),
+  ) as MemberData['identifier'];
+}
+
 export default {
   async beforeCreate(event: LifecycleEvent) {
     strapi.log.info('🔄 Member beforeCreate hook triggered');
@@ -94,6 +128,8 @@ export default {
       params: { data: member },
     } = event;
     strapi.log.info(`📊 Created member: ${member.name}`);
+
+    await ensureIdentifier(member);
 
     try {
       const accountId = await createAccountForMember(member);
@@ -112,6 +148,14 @@ export default {
 
     strapi.log.info('🔄 Member afterUpdate hook triggered');
     strapi.log.info(`📊 Updated member: ${member.name} (id: ${where.id})`);
+
+    if ('identifier' in member && !String(member.identifier ?? '').trim()) {
+      if (typeof member.name !== 'string' || !member.name.trim()) {
+        delete member.identifier;
+      } else {
+        await ensureIdentifier(member);
+      }
+    }
 
     try {
       const accountId = await createAccountForMember(member);

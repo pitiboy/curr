@@ -22,16 +22,6 @@
         "description": "A taghoz tartozó számla (automatikusan létrejön)"
       }
     },
-    "identifier": {
-      "type": "uid",
-      "targetField": "name",
-      "required": true,
-      "regex": "[a-z0-9\\-\\.]+",
-      "metadatas": {
-        "label": "Azonosító",
-        "description": "A tag egyedi azonosítója"
-      }
-    },
     "name": {
       "type": "string",
       "maxLength": 255,
@@ -39,6 +29,16 @@
       "metadatas": {
         "label": "Név",
         "description": "A tag neve"
+      }
+    },
+    "identifier": {
+      "type": "uid",
+      "targetField": "name",
+      "required": false,
+      "regex": "[áéíóőúüűöüűa-z0-9\\-\\.]+",
+      "metadatas": {
+        "label": "Azonosító",
+        "description": "A tag egyedi azonosítója. Üresen hagyva mentéskor a névből készül."
       }
     },
     "email": {
