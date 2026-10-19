@@ -79,6 +79,13 @@
       "organizationName": "I/4. Termelési Igazgatóság"
     },
     {
+      "name": "KOR Kincstár",
+      "code": "1900",
+      "description": "Korona váltás és kibocsátás",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
       "name": "Szállítói tartozások",
       "code": "2000",
       "description": "Szállítói tartozások számla",
@@ -121,9 +128,9 @@
       "organizationName": "I/3. Pénzügyi Igazgatóság"
     },
     {
-      "name": "Alaptőke",
+      "name": "Részjegytőke",
       "code": "3000",
-      "description": "Alaptőke számla",
+      "description": "Jegyzett tőke számla",
       "categoryType": "equity",
       "organizationName": "I/3. Pénzügyi Igazgatóság"
     },

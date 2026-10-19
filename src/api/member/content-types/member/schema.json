@@ -19,7 +19,7 @@
       "configurable": false,
       "metadatas": {
         "label": "Tagi számla",
-        "description": "A tag tagi számlája, 1001 (automatikusan létrejön)"
+        "description": "A tag tagi számlája, 1101 (automatikusan létrejön)"
       }
     },
     "private_account": {
@@ -29,7 +29,7 @@
       "configurable": false,
       "metadatas": {
         "label": "Saját számla",
-        "description": "A tag saját (homály) számlája, 1002 (automatikusan létrejön)"
+        "description": "A tag saját (homály) számlája, 1001 (automatikusan létrejön)"
       }
     },
     "name": {

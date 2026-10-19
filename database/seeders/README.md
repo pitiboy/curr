@@ -117,13 +117,13 @@ publishing.
 Every member has two accounts, created automatically by the member lifecycle
 (and backfilled on boot for existing members):
 
-- `account`: code 1001, `<identifier> - tagi számla` (member account)
-- `private_account`: code 1002, `<identifier> - saját számla` (the member's own,
+- `account`: code 1101, `<identifier> - tagi számla` (member account)
+- `private_account`: code 1001, `<identifier> - saját számla` (the member's own,
   informal "homály" pocket)
 
 Wherever the seeder expects an account name (the mapping tables, or a row's own
 `credit_account` / `debit_account`, which takes precedence), a member account
-can be given as `tag:<identifier>` (1001) or `saját:<identifier>` (1002), e.g.
+can be given as `tag:<identifier>` (1101) or `saját:<identifier>` (1001), e.g.
 `tag:kovács.erika`. The seeder looks the member up by identifier and uses the
 linked account. An unknown member or a missing account leaves the relation
 empty, with one log line per reference and the number of rows it affects.
@@ -157,7 +157,7 @@ therefore creates nothing.
   again (the change does not reach Strapi either; fix it in the backoffice).
 - **Changing a key field creates a new key.** If you change currency, date,
   amount, payer, payee or project and regenerate the keys, the row imports as a
-  *new* transaction and the old one stays in Strapi. Fix such rows in the
+  _new_ transaction and the old one stays in Strapi. Fix such rows in the
   backoffice instead, or delete the old draft before re-running.
 - **Do not change `import_key_fields` once rows are imported** on an
   environment. It changes every key, so the next run would import all rows

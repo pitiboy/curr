@@ -11,8 +11,8 @@
 #                     különben partyAccounts[payee]
 #                     Ha a két oldal ugyanaz a számla, a debit üres marad.
 #   A sor saját credit_account / debit_account mezője (ha van) felülírja ezeket.
-#   Számla helyett tagi számla is megadható: tag:<azonosító> = a tag 1001-es
-#   tagi számlája, saját:<azonosító> = a tag 1002-es saját (homály) számlája,
+#   Számla helyett tagi számla is megadható: tag:<azonosító> = a tag 1101-es
+#   tagi számlája, saját:<azonosító> = a tag 1001-es saját (homály) számlája,
 #   pl. tag:kovács.erika. A tagot az azonosítója alapján keresi meg; ha nincs
 #   ilyen tag vagy számlája, a mező üres marad, és a futás kiírja, hány sort érint.
 #   transaction_type = placeTransactionTypes[place]
@@ -87,7 +87,7 @@
       seenKeys.add(item.import_key);
     });
 
-    // tag:<identifier> -> member.account (1001), saját:<identifier> -> member.private_account (1002)
+    // tag:<identifier> -> member.account (1101), saját:<identifier> -> member.private_account (1001)
     const memberRef = (value) => {
       if (typeof value !== "string") return null;
       const match = /^(tag|saját):\s*(.+)$/.exec(value.normalize("NFC").trim());

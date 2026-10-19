@@ -1,7 +1,7 @@
 /**
  * Every member has two one-to-one accounts, created automatically:
- * - `account`: code 1001, "<identifier> - tagi számla" (member account)
- * - `private_account`: code 1002, "<identifier> - saját számla" (the member's
+ * - `account`: code 1101, "<identifier> - tagi számla" (member account)
+ * - `private_account`: code 1001, "<identifier> - saját számla" (the member's
  *   own, informal "homály" pocket)
  *
  * The member lifecycle (beforeCreate/beforeUpdate) fills in whichever is
@@ -22,11 +22,14 @@ export type MemberAccountKind = {
 };
 
 export const MEMBER_ACCOUNT_KINDS: readonly MemberAccountKind[] = [
-  { field: 'account', code: '1001', suffix: 'tagi számla' },
-  { field: 'private_account', code: '1002', suffix: 'saját számla' },
+  { field: 'account', code: '1101', suffix: 'tagi számla' },
+  { field: 'private_account', code: '1001', suffix: 'saját számla' },
 ];
 
-export function memberAccountName(identifier: string, kind: MemberAccountKind): string {
+export function memberAccountName(
+  identifier: string,
+  kind: MemberAccountKind,
+): string {
   return `${identifier} - ${kind.suffix}`;
 }
 
@@ -46,7 +49,9 @@ export function payloadHasRelationTarget(value: unknown): boolean {
     if (obj.documentId !== undefined && obj.documentId !== null) return true;
     for (const key of ['connect', 'set']) {
       const list = obj[key];
-      if (Array.isArray(list) ? list.length > 0 : payloadHasRelationTarget(list)) {
+      if (
+        Array.isArray(list) ? list.length > 0 : payloadHasRelationTarget(list)
+      ) {
         return true;
       }
     }
@@ -80,7 +85,10 @@ type DbQuery = {
   findOne: (params: Record<string, unknown>) => Promise<any>;
   findMany: (params: Record<string, unknown>) => Promise<any[]>;
   create: (params: { data: Record<string, unknown> }) => Promise<any>;
-  update: (params: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<any>;
+  update: (params: {
+    where: Record<string, unknown>;
+    data: Record<string, unknown>;
+  }) => Promise<any>;
 };
 
 export type StrapiForMemberAccounts = {
@@ -92,7 +100,9 @@ export type StrapiForMemberAccounts = {
 };
 
 /** documentId of the oldest organization (the main one, as before). */
-async function mainOrganizationId(strapi: StrapiForMemberAccounts): Promise<string | undefined> {
+async function mainOrganizationId(
+  strapi: StrapiForMemberAccounts,
+): Promise<string | undefined> {
   const org = await strapi.db.query(ORGANIZATION_UID).findOne({
     select: ['id', 'documentId'],
     orderBy: { createdAt: 'asc' },
@@ -149,7 +159,10 @@ export async function findMemberWithAccounts(
   return strapi.db.query(MEMBER_UID).findOne({
     where,
     select: ['id', 'identifier'],
-    populate: { account: { select: ['id'] }, private_account: { select: ['id'] } },
+    populate: {
+      account: { select: ['id'] },
+      private_account: { select: ['id'] },
+    },
   });
 }
 
@@ -158,10 +171,15 @@ export async function findMemberWithAccounts(
  * The update goes through the member lifecycle, which sees the relations in
  * the payload and does not create anything twice.
  */
-export async function backfillMemberAccounts(strapi: StrapiForMemberAccounts): Promise<number> {
+export async function backfillMemberAccounts(
+  strapi: StrapiForMemberAccounts,
+): Promise<number> {
   const members = await strapi.db.query(MEMBER_UID).findMany({
     select: ['id', 'identifier'],
-    populate: { account: { select: ['id'] }, private_account: { select: ['id'] } },
+    populate: {
+      account: { select: ['id'] },
+      private_account: { select: ['id'] },
+    },
   });
   let fixed = 0;
   for (const member of members) {
@@ -173,10 +191,15 @@ export async function backfillMemberAccounts(strapi: StrapiForMemberAccounts): P
         existing: member,
       });
       if (!created.length) continue;
-      await strapi.db.query(MEMBER_UID).update({ where: { id: member.id }, data });
+      await strapi.db
+        .query(MEMBER_UID)
+        .update({ where: { id: member.id }, data });
       fixed += 1;
     } catch (error) {
-      strapi.log.error(`Member account backfill failed for member ${member.id}`, error);
+      strapi.log.error(
+        `Member account backfill failed for member ${member.id}`,
+        error,
+      );
     }
   }
   strapi.log.info(

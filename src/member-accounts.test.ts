@@ -14,7 +14,7 @@ describe('memberAccountName', () => {
   it('names both accounts after the identifier', () => {
     assert.equal(memberAccountName('kovács.erika', MEMBER_ACCOUNT_KINDS[0]), 'kovács.erika - tagi számla');
     assert.equal(memberAccountName('kovács.erika', MEMBER_ACCOUNT_KINDS[1]), 'kovács.erika - saját számla');
-    assert.deepEqual(MEMBER_ACCOUNT_KINDS.map((kind) => kind.code), ['1001', '1002']);
+    assert.deepEqual(MEMBER_ACCOUNT_KINDS.map((kind) => kind.code), ['1101', '1001']);
   });
 });
 

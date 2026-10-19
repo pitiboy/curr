@@ -97,8 +97,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         amount: 'Összeg',
         description: 'Leírás',
         organization: 'Szervezet',
-        debit_account: 'Költség számla',
-        credit_account: 'Kifizető számla',
+        debit_account: 'Költség számla', // Tartozik
+        credit_account: 'Kifizető számla', // Követel
         currency_type: 'Pénznem',
         vendor: 'Eladó',
         status: 'Státusz',

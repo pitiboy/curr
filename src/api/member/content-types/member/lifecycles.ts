@@ -71,7 +71,7 @@ export default {
     await ensureIdentifier(member);
 
     try {
-      // Member account (1001) and private account (1002), unless given.
+      // Member account (1101) and private account (1001), unless given.
       await createMissingMemberAccounts(accountsStrapi(), member as Record<string, unknown>, {
         identifier: member.identifier,
       });
