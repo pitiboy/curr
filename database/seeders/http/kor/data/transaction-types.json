@@ -20,6 +20,11 @@
     "description": "Belső átvezetés számlák között"
   },
   {
+    "name": "Bányászás",
+    "category": "internal",
+    "description": "Készpénz átvezetése a hivatalos bankszámláról a tag saját számlájára"
+  },
+  {
     "name": "Jutalék",
     "category": "actual",
     "description": "Jutalék vagy bónusz kifizetés"

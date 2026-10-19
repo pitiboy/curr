@@ -10,11 +10,23 @@
 #   debit_account   = expenseDebitAccounts[purpose], ha operation = Költség,
 #                     különben partyAccounts[payee]
 #                     Ha a két oldal ugyanaz a számla, a debit üres marad.
+#   A sor saját credit_account / debit_account mezője (ha van) felülírja ezeket.
+#   Számla helyett tagi számla is megadható: tag:<azonosító> = a tag 1001-es
+#   tagi számlája, saját:<azonosító> = a tag 1002-es saját (homály) számlája,
+#   pl. tag:kovács.erika. A tagot az azonosítója alapján keresi meg; ha nincs
+#   ilyen tag vagy számlája, a mező üres marad, és a futás kiírja, hány sort érint.
 #   transaction_type = placeTransactionTypes[place]
 #   organization    = projectOrganizations[project], ha nincs: mainOrganization
 #   currency_type   = currencyCode
 #   description     = Leírás, alatta egy [Excel] sor az összes eredeti oszloppal
-#   entered_by      = keyPrefix + row, ez a természetes kulcs
+#   import_key      = a sor import_key mezője, ez a természetes kulcs (egyedi)
+#   entered_by      = keyPrefix + row, csak olvasható jelölés
+#
+# import_key: excel:<sha256 20 hex> a JSON import_key_fields listájában lévő
+# mezőkből (most: pénznem, dátum, összeg, forrás, jogosult, projekt), azonos
+# kulcsnál #2, #3. A sorszám nincs benne, így az Excel sorrendje szabadon
+# változhat; ha a hat mező valamelyike változik, új kulcsot kap, és új
+# tranzakcióként jön be. Újragenerálás: npm run seed:kor:transactions:keys
 # Ami nem képezhető le, üres marad. A tranzakció piszkozatként jön létre
 # (status=draft), a hiányzó számlát vagy szervezetet a backoffice-ban kell
 # kitölteni publikálás előtt.
@@ -27,7 +39,12 @@
 # Ha a dataDir-ben nincs transactions.json, nem csinál semmit.
 # Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
-# Ha az entered_by kulcs már létezik, a POST nem fut le.
+# Ha az import_key már létezik, a POST nem fut le. Az import_key előtti
+# futásból maradt sorokat (entered_by = keyPrefix + row, import_key üres)
+# a seeder megtalálja, és PUT-tal beírja a kulcsukat, nem duplikál.
+# Az adatbázisban részleges unique index véd (src/transaction-import-key.ts),
+# így párhuzamos futásnál a második POST elbukik, és ezt a seeder
+# "already imported" esetként kezeli.
 
 {{
   if (typeof trxRows === "undefined") {
@@ -58,16 +75,48 @@
         "Hely: " + (item.place || "-"),
       ].join(" · ");
 
-    const rows = (source.transactions || []).map((item) => {
-      const credit =
+    const items = source.transactions || [];
+    const seenKeys = new Set();
+    items.forEach((item) => {
+      if (!item.import_key) {
+        throw new Error("row " + item.row + " has no import_key, run: npm run seed:kor:transactions:keys");
+      }
+      if (seenKeys.has(item.import_key)) {
+        throw new Error("duplicate import_key " + item.import_key + " (row " + item.row + ")");
+      }
+      seenKeys.add(item.import_key);
+    });
+
+    // tag:<identifier> -> member.account (1001), saját:<identifier> -> member.private_account (1002)
+    const memberRef = (value) => {
+      if (typeof value !== "string") return null;
+      const match = /^(tag|saját):\s*(.+)$/.exec(value.normalize("NFC").trim());
+      if (!match) return null;
+      return {
+        ref: match[1] + ":" + match[2].trim(),
+        field: match[1] === "tag" ? "account" : "private_account",
+        identifier: match[2].trim(),
+      };
+    };
+    const accountRef = (value) => {
+      if (typeof value !== "string" || !value.trim()) return null;
+      const member = memberRef(value);
+      return member ? member.ref : value.normalize("NFC").trim();
+    };
+
+    const rows = items.map((item) => {
+      const credit = accountRef(
+        item.credit_account ||
         pick(source.operationCreditAccounts, item.operation) ||
-        pick(source.partyAccounts, item.payer);
-      let debit =
+        pick(source.partyAccounts, item.payer));
+      let debit = accountRef(
+        item.debit_account ||
         (item.operation === "Költség" && pick(source.expenseDebitAccounts, item.purpose)) ||
-        pick(source.partyAccounts, item.payee);
+        pick(source.partyAccounts, item.payee));
       if (debit && debit === credit) debit = null;
       return {
-        key: source.keyPrefix + item.row,
+        key: item.import_key,
+        legacyKey: source.keyPrefix + item.row,
         date: item.date,
         amount: item.amount,
         description: [item.description, excelLine(item)].filter(Boolean).join("\n"),
@@ -83,7 +132,12 @@
     exports.trxRows = rows;
     exports.trxCurrencyCodes = rows.length && source.currencyCode ? [source.currencyCode] : [];
     exports.trxCurrencyCode = source.currencyCode;
-    exports.trxAccountNames = unique(rows.flatMap((row) => [row.creditAccount, row.debitAccount]));
+    const accountRefs = rows.flatMap((row) => [row.creditAccount, row.debitAccount]).filter(Boolean);
+    const refRows = {};
+    accountRefs.forEach((ref) => { refRows[ref] = (refRows[ref] || 0) + 1; });
+    exports.trxRefRows = refRows;
+    exports.trxAccountNames = unique(accountRefs.filter((ref) => !memberRef(ref)));
+    exports.trxMemberIdentifiers = unique(accountRefs.map((ref) => memberRef(ref)).filter(Boolean).map((m) => m.identifier));
     exports.trxTypeNames = unique(rows.map((row) => row.transactionType));
     exports.trxOrganizationNames = unique(rows.map((row) => row.organization));
     exports.trxCurrencyIds = {};
@@ -92,6 +146,9 @@
     exports.trxOrganizationIds = {};
     exports.trxIds = {};
     exports.trxFailed = {};
+    exports.trxBackfill = {};
+    exports.trxRecheck = {};
+    exports.trxCreateErrors = {};
   }
 }}
 
@@ -146,8 +203,42 @@ Accept: application/json
       trxAccountIds[accountName] = found;
       exports.trxAccountIds = trxAccountIds;
     } else {
-      console.error("not found: " + accountName);
+      console.error("account not found: " + accountName + " (" + (trxRefRows[accountName] || 0) + " row refs, left empty)");
     }
+  }
+}}
+
+###
+# @name require-member-account
+# @loop for memberIdentifier of trxMemberIdentifiers
+{{
+  exports.encoded = encodeURIComponent(memberIdentifier);
+}}
+GET {{baseUrl}}/api/members?filters[identifier][$eq]={{encoded}}&fields[0]=identifier&populate[account][fields][0]=name&populate[private_account][fields][0]=name&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  const refs = { account: "tag:" + memberIdentifier, private_account: "saját:" + memberIdentifier };
+  const used = Object.keys(refs).filter((field) => trxRefRows[refs[field]]);
+  if (response.statusCode !== 200) {
+    console.error("member lookup failed: " + memberIdentifier, response.statusCode, response.body);
+  } else {
+    const member = parsed && parsed.data && parsed.data[0];
+    used.forEach((field) => {
+      const account = member && member[field];
+      if (account && account.documentId) {
+        trxAccountIds[refs[field]] = account.documentId;
+        exports.trxAccountIds = trxAccountIds;
+      } else {
+        console.error((member ? "member has no " + field + ": " : "member not found: ") +
+          refs[field] + " (" + trxRefRows[refs[field]] + " row refs, left empty)");
+      }
+    });
   }
 }}
 
@@ -210,10 +301,13 @@ Accept: application/json
 ###
 # @name lookup-transaction
 # @loop for item of trxRows
+# Matches by import_key. A row imported before import_key existed is found by
+# its legacy entered_by marker (no import_key yet) and gets backfilled below.
 {{
-  exports.encoded = encodeURIComponent(item.key);
+  exports.encodedKey = encodeURIComponent(item.key);
+  exports.encodedLegacy = encodeURIComponent(item.legacyKey);
 }}
-GET {{baseUrl}}/api/transactions?status=draft&filters[entered_by][$eq]={{encoded}}&pagination[pageSize]=1
+GET {{baseUrl}}/api/transactions?status=draft&filters[$or][0][import_key][$eq]={{encodedKey}}&filters[$or][1][entered_by][$eq]={{encodedLegacy}}&fields[0]=import_key&fields[1]=entered_by&pagination[pageSize]=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -227,11 +321,53 @@ Accept: application/json
     exports.trxFailed = trxFailed;
     console.error("lookup failed: " + item.key, response.statusCode, response.body);
   } else {
-    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-    if (found) {
-      trxIds[item.key] = found;
+    const found = (parsed && parsed.data) || [];
+    const same = found.find((entry) => entry.import_key === item.key);
+    const legacy = found.filter((entry) => !entry.import_key && entry.entered_by === item.legacyKey);
+    if (same) {
+      trxIds[item.key] = same.documentId;
       exports.trxIds = trxIds;
+    } else if (legacy.length === 1) {
+      trxBackfill[item.key] = legacy[0].documentId;
+      exports.trxBackfill = trxBackfill;
+    } else if (legacy.length > 1) {
+      trxFailed[item.key] = true;
+      exports.trxFailed = trxFailed;
+      console.error("several legacy rows for " + item.legacyKey + ", fix by hand: " +
+        legacy.map((entry) => entry.documentId).join(", "));
     }
+  }
+}}
+
+###
+# @name backfill-import-key
+# @loop for item of trxRows
+# Sets import_key on rows the previous seeder created. status=draft keeps the
+# draft validation (incomplete relations are allowed, nothing is published).
+{{
+  if (!trxBackfill[item.key] || trxIds[item.key] || trxFailed[item.key]) {
+    exports.$cancel = true;
+  } else {
+    exports.backfillId = trxBackfill[item.key];
+    exports.trxPayload = JSON.stringify({ data: { import_key: item.key } });
+  }
+}}
+PUT {{baseUrl}}/api/transactions/{{backfillId}}?status=draft
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{trxPayload}}
+
+{{
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    trxFailed[item.key] = true;
+    exports.trxFailed = trxFailed;
+    console.error("backfill failed: " + item.legacyKey + " -> " + item.key, response.statusCode, response.body);
+  } else {
+    trxIds[item.key] = trxBackfill[item.key];
+    exports.trxIds = trxIds;
+    console.info("backfilled import_key: " + item.legacyKey + " -> " + item.key);
   }
 }}
 
@@ -251,7 +387,8 @@ Accept: application/json
       amount: item.amount,
       description: item.description,
       currency_type: currencyId,
-      entered_by: item.key,
+      entered_by: item.legacyKey,
+      import_key: item.key,
     };
     const relations = {
       credit_account: item.creditAccount && trxAccountIds[item.creditAccount],
@@ -278,12 +415,46 @@ Content-Type: application/json
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200 && response.statusCode !== 201) {
-    console.error("create failed: " + item.key, response.statusCode, response.body);
+    // Possibly the unique index: another run created it meanwhile. Checked below.
+    trxRecheck[item.key] = true;
+    exports.trxRecheck = trxRecheck;
+    trxCreateErrors[item.key] = response.statusCode + " " + response.body;
+    exports.trxCreateErrors = trxCreateErrors;
   } else {
     const created = parsed && parsed.data && parsed.data.documentId;
     if (created) {
       trxIds[item.key] = created;
       exports.trxIds = trxIds;
     }
+  }
+}}
+
+###
+# @name recheck-transaction
+# @loop for item of trxRows
+# A failed create counts as imported when the key exists by now (concurrent run).
+{{
+  if (!trxRecheck[item.key]) {
+    exports.$cancel = true;
+  } else {
+    exports.encodedKey = encodeURIComponent(item.key);
+  }
+}}
+GET {{baseUrl}}/api/transactions?status=draft&filters[import_key][$eq]={{encodedKey}}&fields[0]=import_key&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  const found = response.statusCode === 200 && parsed && parsed.data && parsed.data[0];
+  if (found) {
+    trxIds[item.key] = found.documentId;
+    exports.trxIds = trxIds;
+    console.info("already imported (concurrent run): " + item.key);
+  } else {
+    console.error("create failed: " + item.key, trxCreateErrors[item.key]);
   }
 }}

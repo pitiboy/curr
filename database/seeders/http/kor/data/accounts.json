@@ -44,6 +44,27 @@
       "organizationName": "I/4. Termelési Igazgatóság"
     },
     {
+      "name": "Mezőgazdasági földterületek",
+      "code": "1510",
+      "description": "Mezőgazdasági földterületek számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Belterületi földterületek",
+      "code": "1520",
+      "description": "Belterületi földterületek számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Lakóépületek",
+      "code": "1530",
+      "description": "1520 Lakóépületek számla",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
       "name": "Immateriális javak",
       "code": "1600",
       "description": "Immateriális javak számla",
@@ -157,7 +178,7 @@
     },
     {
       "name": "Előfizetések és tagsági díjak",
-      "code": "4300",
+      "code": "4400",
       "description": "Előfizetések és tagsági díjak számla",
       "categoryType": "equity",
       "organizationName": "I/3.7 Bevételi központ"
@@ -198,9 +219,58 @@
       "organizationName": "I/1. Kommunikációs Igazgatóság"
     },
     {
+      "name": "Utazás és üzemanyag",
+      "code": "5410",
+      "description": "Utazás és üzemanyag számla",
+      "categoryType": "expense",
+      "organizationName": "I/0. Vezetés"
+    },
+    {
+      "name": "Oktatás és képzés",
+      "code": "5420",
+      "description": "Oktatás és képzés számla",
+      "categoryType": "expense",
+      "organizationName": "I/1.1 Irányítás és személyzeti központ"
+    },
+    {
+      "name": "Mezőgazdasági szolgáltatások",
+      "code": "5430",
+      "description": "Mezőgazdasági szolgáltatások számla",
+      "categoryType": "expense",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Könyvelési és szakértői díjak",
+      "code": "5440",
+      "description": "Könyvelési és szakértői díjak számla",
+      "categoryType": "expense",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
+      "name": "Bérleti díjak",
+      "code": "5450",
+      "description": "Bérleti díjak számla",
+      "categoryType": "expense",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
+      "name": "Javítás és karbantartás",
+      "code": "5460",
+      "description": "Javítás és karbantartás számla",
+      "categoryType": "expense",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
       "name": "Általános költségek",
       "code": "5500",
       "description": "Általános költségek számla",
+      "categoryType": "expense",
+      "organizationName": "I/0. Vezetés"
+    },
+    {
+      "name": "Reprezentáció",
+      "code": "5510",
+      "description": "Reprezentáció számla",
       "categoryType": "expense",
       "organizationName": "I/0. Vezetés"
     },
