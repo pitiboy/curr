@@ -1,5 +1,7 @@
 import { registerPublishGuard } from './publish-guard';
+import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
+import { ensureTransactionImportKeyIndex } from './transaction-import-key';
 
 const enabled = { enabled: true, policy: '' };
 
@@ -250,5 +252,7 @@ export default {
   async bootstrap({ strapi }) {
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
+    await ensureTransactionImportKeyIndex(strapi);
+    await backfillMemberAccounts(strapi);
   },
 };

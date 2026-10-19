@@ -717,7 +717,7 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
     email: Schema.Attribute.Email &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
-    identifier: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    identifier: Schema.Attribute.UID<'name'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -733,6 +733,10 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    private_account: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::account.account'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1032,6 +1036,11 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required;
     description: Schema.Attribute.Text & Schema.Attribute.Required;
     entered_by: Schema.Attribute.String;
+    import_key: Schema.Attribute.String &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 64;
+      }>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

@@ -18,8 +18,18 @@
       "target": "api::account.account",
       "configurable": false,
       "metadatas": {
-        "label": "Számla",
-        "description": "A taghoz tartozó számla (automatikusan létrejön)"
+        "label": "Tagi számla",
+        "description": "A tag tagi számlája, 1001 (automatikusan létrejön)"
+      }
+    },
+    "private_account": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::account.account",
+      "configurable": false,
+      "metadatas": {
+        "label": "Saját számla",
+        "description": "A tag saját (homály) számlája, 1002 (automatikusan létrejön)"
       }
     },
     "name": {
