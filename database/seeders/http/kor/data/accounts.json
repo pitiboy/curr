@@ -79,6 +79,13 @@
       "organizationName": "I/4. Termelési Igazgatóság"
     },
     {
+      "name": "Kölcsönök",
+      "code": "1720",
+      "description": "Földvásárlásra adott kölcsönök",
+      "categoryType": "asset",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
       "name": "KOR Kincstár",
       "code": "1900",
       "description": "Korona váltás és kibocsátás",
