@@ -26,7 +26,24 @@
 #   organization    = a sor organization mezője, különben
 #                     projectOrganizations[project], ha nincs: mainOrganization
 #   currency_type   = currencyCode
-#   description     = Leírás, alatta egy [Excel] sor az összes eredeti oszloppal
+#   description     = Leírás, alatta az eredeti oszlopok markdown HTML-kommentben.
+#                     Minden ilyen sor önálló komment, ezért a markdown
+#                     megjelenítés nem írja ki. A backoffice listája és a
+#                     readonly megtekintés is eldobja a teljes komment-sorokat;
+#                     a véglegesítő űrlap leírásmezője a nyers szöveget mutatja.
+#                     Üres leírásnál csak a kommentblokk kerül be.
+#                       <!-- excel -->
+#                       <!-- Excel: #<sorszám> -->
+#                       <!-- Forrás: … -->
+#                       <!-- Kinek: … -->
+#                       <!-- Követel: … -->
+#                       <!-- Tartozik: … -->
+#                       <!-- Cél hely: … -->
+#                       <!-- Projekt: … -->
+#                       <!-- Rendeltetés: … -->
+#                       <!-- Művelet: … -->
+#                       <!-- Hely: … -->
+#                       <!-- /excel -->
 #   import_key      = a sor import_key mezője, ez a természetes kulcs (egyedi)
 #   entered_by      = keyPrefix + row, csak olvasható jelölés
 #
@@ -73,18 +90,27 @@
     const pick = (table, key) =>
       (table && key != null && Object.prototype.hasOwnProperty.call(table, key) && table[key]) || null;
 
-    const excelLine = (item) =>
-      "[Excel #" + item.row + "] " +
+    const commentValue = (value) => {
+      if (value == null) return "-";
+      const text = String(value).replace(/-->/g, "-- >").replace(/\s+/g, " ").trim();
+      return text || "-";
+    };
+    const commentLine = (text) => "<!-- " + text + " -->";
+    const excelBlock = (item) =>
       [
-        "Forrás: " + (item.payer || "-") + " → Kinek: " + (item.payee || "-"),
-        "Követel: " + (item.credit_label || item.credit_account || "-") +
-          " → Tartozik: " + (item.debit_label || item.debit_account || "-"),
-        "Cél hely: " + (item.ledger || "-"),
-        "Projekt: " + (item.project || "-"),
-        "Rendeltetés: " + (item.purpose || "-"),
-        "Művelet: " + (item.operation || "-"),
-        "Hely: " + (item.place || "-"),
-      ].join(" · ");
+        "excel",
+        "Excel: #" + item.row,
+        "Forrás: " + commentValue(item.payer),
+        "Kinek: " + commentValue(item.payee),
+        "Követel: " + commentValue(item.credit_label || item.credit_account),
+        "Tartozik: " + commentValue(item.debit_label || item.debit_account),
+        "Cél hely: " + commentValue(item.ledger),
+        "Projekt: " + commentValue(item.project),
+        "Rendeltetés: " + commentValue(item.purpose),
+        "Művelet: " + commentValue(item.operation),
+        "Hely: " + commentValue(item.place),
+        "/excel",
+      ].map(commentLine).join("\n");
 
     const items = source.transactions || [];
     const seenKeys = new Set();
@@ -130,7 +156,7 @@
         legacyKey: source.keyPrefix + item.row,
         date: item.date,
         amount: item.amount,
-        description: [item.description, excelLine(item)].filter(Boolean).join("\n"),
+        description: [item.description, excelBlock(item)].filter(Boolean).join("\n\n"),
         creditAccount: credit,
         debitAccount: debit,
         transactionType:

@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-19T09:41:51.856Z"
+    "x-generation-date": "2026-10-20T09:50:45.821Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -11188,13 +11188,13 @@
                   "example": "string or id"
                 }
               },
+              "import_key": {
+                "type": "string"
+              },
               "entered_by": {
                 "type": "string"
               },
               "published_by": {
-                "type": "string"
-              },
-              "import_key": {
                 "type": "string"
               },
               "locale": {
@@ -11319,13 +11319,13 @@
               "$ref": "#/components/schemas/Receipt"
             }
           },
+          "import_key": {
+            "type": "string"
+          },
           "entered_by": {
             "type": "string"
           },
           "published_by": {
-            "type": "string"
-          },
-          "import_key": {
             "type": "string"
           },
           "createdAt": {

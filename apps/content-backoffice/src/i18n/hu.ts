@@ -12,6 +12,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_show: 'Megtekintés',
     transactions_none: 'Nincs tranzakció.',
     transactions_finalize: 'Véglegesít',
+    description_clear_comments: 'Megjegyzések kitakarítása',
     transactions_finalized: 'A tranzakció véglegesítve.',
     transactions_finalize_hint:
       'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg minden kimutatásban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',

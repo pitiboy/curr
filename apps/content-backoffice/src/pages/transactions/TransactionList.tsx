@@ -32,6 +32,7 @@ import { bandedRow } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
+import { DescriptionText } from './DescriptionText';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -234,7 +235,12 @@ export function TransactionList() {
           )}
           source="currency_type"
         />
-        <TextField emptyText="—" source="description" />
+        <FunctionField
+          render={(record: RaRecord) => (
+            <DescriptionText value={record.description} />
+          )}
+          source="description"
+        />
         <SelectField choices={statusChoices} source="status" translateChoice />
         <TransactionOpenField label={false} sortable={false} source="open" />
         <FunctionField
