@@ -8,7 +8,7 @@ import {
 /**
  * Runs late in the global middleware stack (config/middlewares.ts), before the
  * Koa router. Strapi's strapi::public middleware registers GET `/` → admin;
- * this handler intercepts the same path first and sends users to the SPA.
+ * this handler intercepts `/` only when PUBLIC_HOME_REDIRECT is set (e.g. cPanel).
  */
 export default (_config: unknown, { strapi }: { strapi: Core.Strapi }) => {
   const target = resolveSiteHomeRedirectTarget();

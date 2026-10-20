@@ -4,16 +4,16 @@ A statikus SPA a Strapi `public/backoffice` mappájában van. A `strapi::public`
 
 ## Gyökér (`/`) → backoffice
 
-Alapból a Strapi a `/` címet az `/admin`-ra irányítja (`strapi::public` route). A `global::home-redirect` middleware ( `src/middlewares/home-redirect.ts` ) ezt felülírja: `https://kor.fejlesztesek.hu/` → `/backoffice/`.
+Alapból a Strapi a `/` címet az `/admin`-ra irányítja (`strapi::public` route). Élesen a kor alkalmazás cPanel env-jében add meg: **`PUBLIC_HOME_REDIRECT=/backoffice/`**, majd Strapi deploy + Passenger újraindítás. A `global::home-redirect` middleware csak explicit env mellett kapcsol (lokálisan nincs redirect).
 
-**Élesen:** Strapi deploy + Passenger újraindítás kell (csak a backoffice FTP nem elég). Ellenőrzés:
+Ellenőrzés:
 
 ```bash
 curl -sI https://kor.fejlesztesek.hu/ | grep -i '^location:'
 # location: https://kor.fejlesztesek.hu/backoffice/
 ```
 
-Ha még mindig `/admin` jön, a régi `dist` fut, vagy a cPanel env-ben `PUBLIC_HOME_REDIRECT=` (üres) van — töröld, vagy állítsd `/backoffice/`-ra. Bemutató oldal gyökérhez: `PUBLIC_HOME_REDIRECT=/legal/about`.
+Bemutató oldal gyökérhez: `PUBLIC_HOME_REDIRECT=/legal/about`. Env nélkül vagy üres értéknél marad az `/admin`.
 
 A gyökérből:
 

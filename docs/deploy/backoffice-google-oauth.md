@@ -53,7 +53,7 @@ A szövegek forrása és a feltöltés lépései: [docs/legal/README.md](../lega
 
 ### Kezdőlap
 
-A `legal-page` `about` bejegyzése a KÖR nyilvános bemutató oldala (mit csinál az alkalmazás, miért kéri az e-mail címet, linkek a tájékoztatóra). A gyökér alapból a kezelő felületre (`/backoffice/`) irányít.
+A `legal-page` `about` bejegyzése a KÖR nyilvános bemutató oldala (mit csinál az alkalmazás, miért kéri az e-mail címet, linkek a tájékoztatóra). Élesen a gyökér csak `PUBLIC_HOME_REDIRECT=/backoffice/` (cPanel) mellett irányít a kezelő felületre.
 
 - **Ajánlott (Google konzol):** Application home page = `https://kor.fejlesztesek.hu/legal/about`. Nincs szerveroldali teendő.
 - **Opcionális:** a kor alkalmazás cPanel env-jében `PUBLIC_HOME_REDIRECT=/legal/about`, újraindítás. Ekkor `https://kor.fejlesztesek.hu/` → 302 → `/legal/about`, és a home page mezőbe a gyökér is mehet. Csak relatív, `/`-rel kezdődő utat fogad el. Ne a közös `.env`-be tedd, mert az aliasok örökölnék.

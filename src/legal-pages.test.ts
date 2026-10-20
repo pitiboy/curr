@@ -13,6 +13,7 @@ import {
   registerLegalPageRoutes,
   renderLegalPageHtml,
   resolveHomeRedirect,
+  resolveSiteHomeRedirectTarget,
   resolveLegalLocale,
   type LegalPageRecord,
   type LegalPagesStrapi,
@@ -203,19 +204,21 @@ describe('legal pages', () => {
     assert.equal(resolveHomeRedirect('https://evil.example'), null);
   });
 
+  it('activates home redirect only when PUBLIC_HOME_REDIRECT is set', () => {
+    assert.equal(resolveSiteHomeRedirectTarget(undefined), null);
+    assert.equal(resolveSiteHomeRedirectTarget('/backoffice/'), '/backoffice/');
+  });
+
   it('redirects only GET / and keeps the query', async () => {
     const used: unknown[] = [];
-    assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, undefined), true);
+    assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, undefined), false);
+    assert.equal(used.length, 0);
+    assert.equal(
+      registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, '/backoffice/'),
+      true,
+    );
     assert.equal(used.length, 1);
     assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, ''), false);
-
-    const defaultMw = createHomeRedirectMiddleware('/backoffice/');
-    let defaultRedirect = '';
-    await defaultMw(
-      { method: 'GET', path: '/', redirect: (u) => (defaultRedirect = u) },
-      async () => {},
-    );
-    assert.equal(defaultRedirect, '/backoffice/');
 
     const mw = createHomeRedirectMiddleware('/legal/about');
     let redirected = '';
