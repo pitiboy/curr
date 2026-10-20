@@ -51,7 +51,23 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags: 'Feature flags',
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
-    login_google: 'Sign in with Google (coming soon)',
+    login_google: 'Sign in with Google',
+    oauth_errors: {
+      register_not_available:
+        'There is no user for this Google account. Ask an administrator to add you with this email address.',
+      ambiguous_email:
+        'Several users share this email address. Ask an administrator to sort it out.',
+      account_blocked: 'Your account has been blocked by an administrator.',
+      email_not_confirmed: 'Your account email is not confirmed yet.',
+      email_not_available:
+        'Google did not share your email address, so you cannot be signed in.',
+      email_taken: 'This email address already belongs to another account.',
+      session_missing: 'The Google sign-in was interrupted. Please try again.',
+      provider_disabled: 'Google sign-in is currently turned off.',
+    },
+    legal_nav: 'Legal documents',
+    legal_privacy: 'Privacy Policy',
+    legal_terms: 'Terms of Service',
     status: {
       draft: 'Draft',
       published: 'Published',

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import { fetchProfileFields } from '../../auth/authProvider';
+import { ProfilePasswordForm } from './ProfilePasswordForm';
 
 export function ProfilePage() {
   const translate = useTranslate();
@@ -61,6 +62,7 @@ export function ProfilePage() {
           <Typography variant="body1">{role}</Typography>
         </CardContent>
       </Card>
+      {provider === 'local' ? <ProfilePasswordForm /> : null}
     </Box>
   );
 }

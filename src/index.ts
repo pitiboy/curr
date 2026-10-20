@@ -1,3 +1,10 @@
+import {
+  ensureLegalLocales,
+  LEGAL_PAGE_PUBLIC_ACTIONS,
+  registerHomeRedirect,
+  registerLegalPageRoutes,
+  registerLegalSlugGuard,
+} from './legal-pages';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
@@ -8,6 +15,11 @@ const enabled = { enabled: true, policy: '' };
 function allow(actions: string[]) {
   return Object.fromEntries(actions.map((action) => [action, enabled]));
 }
+
+/** Auth actions not returned by getActions() but required for Content users. */
+const CONTENT_ROLE_AUTH_ACTIONS = [
+  'plugin::users-permissions.auth.changePassword',
+] as const;
 
 /** Content API actions for dataentry and editor (no delete). */
 const CONTENT_ROLE_ACTIONS = [
@@ -211,8 +223,16 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       throw new Error(`Failed to ensure role "${roleDef.type}"`);
     }
 
-    for (const action of CONTENT_ROLE_ACTIONS) {
-      if (!isActionInCatalog(actionCatalog, action)) {
+    for (const action of [
+      ...CONTENT_ROLE_ACTIONS,
+      ...CONTENT_ROLE_AUTH_ACTIONS,
+    ]) {
+      if (
+        !CONTENT_ROLE_AUTH_ACTIONS.includes(
+          action as (typeof CONTENT_ROLE_AUTH_ACTIONS)[number],
+        ) &&
+        !isActionInCatalog(actionCatalog, action)
+      ) {
         strapi.log.warn(
           `Content role bootstrap: action "${action}" not in getActions(), skipped`,
         );
@@ -223,9 +243,89 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
   }
 }
 
+/**
+ * Legal pages (privacy policy, terms of service) are readable without login:
+ * the Google OAuth consent screen links to them. Same additive pattern as the
+ * content roles: missing permissions are created, existing ones are kept.
+ */
+async function ensurePublicLegalPagePermissions(strapi: StrapiLike) {
+  const role = await strapi.db
+    .query('plugin::users-permissions.role')
+    .findOne({ where: { type: 'public' } });
+  if (!role) {
+    strapi.log.warn('Legal pages bootstrap: public role not found, skipped');
+    return;
+  }
+
+  const actionCatalog = strapi
+    .plugin('users-permissions')
+    .service('users-permissions')
+    .getActions();
+
+  for (const action of LEGAL_PAGE_PUBLIC_ACTIONS) {
+    if (!isActionInCatalog(actionCatalog, action)) {
+      strapi.log.warn(
+        `Legal pages bootstrap: action "${action}" not in getActions(), skipped`,
+      );
+      continue;
+    }
+    await ensurePermission(strapi, role.id, action);
+  }
+}
+
+type GrantStore = Record<string, Record<string, unknown>>;
+
+async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
+  config: { get: (key: string) => unknown };
+  store: (params: { type: string; name: string }) => {
+    get: (params: { key: string }) => Promise<unknown>;
+    set: (params: { key: string; value: unknown }) => Promise<void>;
+  };
+}) {
+  const pluginConfig = strapi.config.get('plugin::users-permissions') as {
+    grant?: { google?: Record<string, unknown> };
+  };
+  const googleFromConfig = pluginConfig?.grant?.google;
+  if (!googleFromConfig) {
+    return;
+  }
+
+  const pluginStore = strapi.store({
+    type: 'plugin',
+    name: 'users-permissions',
+  });
+  const grant =
+    ((await pluginStore.get({ key: 'grant' })) as GrantStore | null) ?? {};
+  const prev = grant.google ?? {};
+  const next = {
+    ...prev,
+    enabled: googleFromConfig.enabled ?? prev.enabled,
+    icon: prev.icon ?? 'google',
+    key: googleFromConfig.key ?? prev.key,
+    secret: googleFromConfig.secret ?? prev.secret,
+    callback: googleFromConfig.callback ?? prev.callback,
+  };
+
+  if (
+    prev.enabled === next.enabled &&
+    prev.key === next.key &&
+    prev.secret === next.secret &&
+    prev.callback === next.callback
+  ) {
+    return;
+  }
+
+  grant.google = next;
+  await pluginStore.set({ key: 'grant', value: grant });
+  strapi.log.info('Synced users-permissions Google grant from config');
+}
+
 export default {
   register({ strapi }) {
     registerPublishGuard(strapi);
+    registerLegalPageRoutes(strapi);
+    registerLegalSlugGuard(strapi);
+    registerHomeRedirect(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
     // socket is plain HTTP. The `cookies` package checks socket.encrypted and
@@ -254,5 +354,8 @@ export default {
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);
     await backfillMemberAccounts(strapi);
+    await ensureGoogleOAuthGrant(strapi);
+    await ensureLegalLocales(strapi);
+    await ensurePublicLegalPagePermissions(strapi);
   },
 };
