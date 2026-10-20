@@ -1,8 +1,17 @@
+import CheckIcon from '@mui/icons-material/Check';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, Button, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
+import { useFormContext, useWatch } from 'react-hook-form';
 import {
   AutocompleteInput,
   Confirm,
@@ -51,6 +60,10 @@ import { AccountFieldLabel } from './accountField';
 import { dateFieldProps } from './dateField';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { shouldConfirmDraftLeave } from './transactionLeave';
+import {
+  hasDescriptionComment,
+  visibleDescription,
+} from './descriptionComment';
 import {
   reviewFormRecord,
   transactionPublishFormErrors,
@@ -148,6 +161,69 @@ function ReviewAccountInput({
   );
 }
 
+function DescriptionInput() {
+  const translate = useTranslate();
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [inputRoot, setInputRoot] = useState<HTMLElement | null>(null);
+  const { getValues, setValue } = useFormContext();
+  const description = useWatch({ name: 'description' });
+  const hasComments = hasDescriptionComment(description);
+
+  useLayoutEffect(() => {
+    const root = boxRef.current?.querySelector('.MuiInputBase-root');
+    setInputRoot(root instanceof HTMLElement ? root : null);
+  }, []);
+
+  const clearComments = () => {
+    const current = getValues('description');
+    const next = visibleDescription(current);
+    if (next === current) return;
+    setValue('description', next, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
+
+  return (
+    <Box className={bandedSpanClass} ref={boxRef}>
+      <TextInput
+        fullWidth
+        multiline
+        source="description"
+        sx={{
+          '& .MuiInputBase-root': { position: 'relative' },
+          '& textarea': hasComments ? { paddingBottom: '48px' } : undefined,
+        }}
+        validate={requiredMark}
+      />
+      {hasComments && inputRoot
+        ? createPortal(
+            <Button
+              size="small"
+              startIcon={<CheckIcon />}
+              sx={{
+                bgcolor: 'background.paper',
+                bottom: 8,
+                maxWidth: 'calc(100% - 16px)',
+                position: 'absolute',
+                right: 8,
+                zIndex: 1,
+              }}
+              type="button"
+              variant="outlined"
+              onClick={clearComments}
+              onMouseDown={(event) => event.preventDefault()}
+            >
+              {translate('app.description_clear_comments')}
+            </Button>,
+            inputRoot,
+          )
+        : null}
+    </Box>
+  );
+}
+
 function ReviewEditableFields({
   catalog,
 }: {
@@ -183,13 +259,7 @@ function ReviewEditableFields({
           validate={requiredMark}
         />
       </ReferenceInput>
-      <TextInput
-        className={bandedSpanClass}
-        fullWidth
-        multiline
-        source="description"
-        validate={requiredMark}
-      />
+      <DescriptionInput />
       <ReviewAccountInput
         accounts={catalog.accounts}
         failed={catalog.failed}

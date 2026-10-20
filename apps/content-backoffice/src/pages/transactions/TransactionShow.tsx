@@ -25,6 +25,7 @@ import { bandedShow, bandedSpanClass } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
+import { DescriptionText } from './DescriptionText';
 import { SavedReceiptSection, type ReceiptCardValue } from './ReceiptFields';
 import { TransactionReviewEditor } from './TransactionReviewEditor';
 
@@ -133,7 +134,13 @@ function TransactionShowContent({
           )}
           source="amount"
         />
-        <TextField emptyText="—" source="description" />
+        <FunctionField
+          render={(row: RaRecord) => (
+            <DescriptionText value={row.description} />
+          )}
+          source="description"
+        />
+        
 
         <SelectField choices={statusChoices} source="status" translateChoice />
 

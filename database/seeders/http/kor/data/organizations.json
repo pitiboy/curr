@@ -131,6 +131,24 @@
     "parentName": "I/4. Termelési Igazgatóság"
   },
   {
+    "name": "I/4.11.1 Birtokkezelés",
+    "description": "Birtokkezelés",
+    "address": "",
+    "parentName": "I/4.11 Terület kialakítás"
+  },
+  {
+    "name": "I/4.11.1.1 Lakóterületek",
+    "description": "Lakóterületek",
+    "address": "",
+    "parentName": "I/4.11.1 Birtokkezelés"
+  },
+  {
+    "name": "I/4.11.1.2 Termőterületek",
+    "description": "Termőterületek",
+    "address": "",
+    "parentName": "I/4.11.1 Birtokkezelés"
+  },
+  {
     "name": "I/4.12 Termelés irányítása",
     "description": "Termelésirányítás",
     "address": "",

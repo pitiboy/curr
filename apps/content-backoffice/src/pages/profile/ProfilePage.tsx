@@ -10,7 +10,7 @@ export function ProfilePage() {
   const [name, setName] = useState('…');
   const [email, setEmail] = useState('…');
   const [role, setRole] = useState('…');
-  const [provider, setProvider] = useState<string | null>(null);
+  const [provider, setProvider] = useState('local');
 
   useEffect(() => {
     let active = true;

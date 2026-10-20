@@ -1,0 +1,143 @@
+# Az Excel pénzmozgás-import tranzakcióinak törlése.
+# Csak azokat a dokumentumokat törli (piszkozat és publikált), amelyeket a
+# transactions.http hozott létre:
+#   import_key excel: előtaggal (a fájlban lévő és a korábbi kulcsú sorok is),
+#   vagy entered_by = a transactions.json keyPrefix mezője + sorszám
+#     (excel:Pénzmozgások#…), ha még nincs import_key.
+# A kézi tranzakció (üres import_key, e-mail entered_by), a nyugta, a törzsadat
+# és a felhasználó megmarad. A nyugta, ami ilyen tranzakcióra mutat, törléskor
+# a mezője kiürül; a nyugta maga megmarad.
+#
+#   npm run seed:http:kor:transactions:reset:local
+#   npm run seed:http:kor:transactions:reset -- prod
+#
+# dataDir: a kor/data mappa, benne a transactions.json.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+
+{{
+  const fs = require("fs");
+  const path = require("path");
+  if (typeof dataDir === "undefined" || !dataDir) {
+    throw new Error("dataDir is missing");
+  }
+  const file = path.resolve(process.cwd(), dataDir, "transactions.json");
+  if (!fs.existsSync(file)) {
+    throw new Error("no transactions.json in " + dataDir);
+  }
+  const source = JSON.parse(fs.readFileSync(file, "utf8"));
+  const keyPrefix = source.keyPrefix;
+  if (typeof keyPrefix !== "string" || !keyPrefix) {
+    throw new Error("keyPrefix is missing in " + file);
+  }
+  const importPrefix = "excel:";
+
+  function isImported(row) {
+    const key = typeof row.import_key === "string" ? row.import_key : "";
+    const entered = typeof row.entered_by === "string" ? row.entered_by : "";
+    return key.indexOf(importPrefix) === 0 || entered.indexOf(keyPrefix) === 0;
+  }
+
+  function rowsFrom(parsed) {
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && Array.isArray(parsed.data)) return parsed.data;
+    return [];
+  }
+
+  async function readJson(response) {
+    const text = await response.text();
+    let parsed = null;
+    try { parsed = JSON.parse(text); } catch (error) { parsed = null; }
+    return { status: response.status, text: text, parsed: parsed };
+  }
+
+  function listUrl(status, page) {
+    return baseUrl + "/api/transactions?status=" + encodeURIComponent(status) +
+      "&filters[$or][0][import_key][$startsWith]=" + encodeURIComponent(importPrefix) +
+      "&filters[$or][1][entered_by][$startsWith]=" + encodeURIComponent(keyPrefix) +
+      "&fields[0]=import_key&fields[1]=entered_by" +
+      "&pagination[page]=" + page + "&pagination[pageSize]=100";
+  }
+
+  async function listImported() {
+    const seen = {};
+    const rows = [];
+    const statuses = ["draft", "published"];
+    for (let s = 0; s < statuses.length; s += 1) {
+      let page = 1;
+      while (page < 100) {
+        const response = await fetch(listUrl(statuses[s], page), {
+          headers: { Authorization: "Bearer " + token, Accept: "application/json" },
+        });
+        const body = await readJson(response);
+        if (body.status !== 200) {
+          throw new Error("transactions list " + body.status + " " + body.text);
+        }
+        const batch = rowsFrom(body.parsed);
+        for (let i = 0; i < batch.length; i += 1) {
+          const row = batch[i];
+          if (!row.documentId || seen[row.documentId] || !isImported(row)) continue;
+          seen[row.documentId] = true;
+          rows.push(row);
+        }
+        if (batch.length < 100) break;
+        page += 1;
+      }
+    }
+    return rows;
+  }
+
+  async function remove(documentId) {
+    const response = await fetch(baseUrl + "/api/transactions/" + documentId, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token, Accept: "application/json" },
+    });
+    if (response.status === 200 || response.status === 204) return true;
+    const body = await readJson(response);
+    console.error(documentId, body.status, body.text);
+    return false;
+  }
+
+  async function resetImported() {
+    let pass = 0;
+    let deletedTotal = 0;
+    while (pass < 30) {
+      pass += 1;
+      const rows = await listImported();
+      if (!rows.length) {
+        console.info(deletedTotal
+          ? "imported transactions deleted " + deletedTotal
+          : "no imported transactions");
+        return "ok";
+      }
+      let deleted = 0;
+      for (let i = 0; i < rows.length; i += 1) {
+        if (await remove(rows[i].documentId)) deleted += 1;
+      }
+      deletedTotal += deleted;
+      console.info("imported transactions deleted " + deleted + ", remaining " + (rows.length - deleted));
+      if (!deleted) {
+        throw new Error("imported transaction delete stuck, " + rows.length + " remaining");
+      }
+    }
+    throw new Error("imported transaction delete did not finish");
+  }
+
+  exports.reset = resetImported();
+}}
+GET {{baseUrl}}/api/transactions?status=draft&filters[import_key][$startsWith]=excel:&fields[0]=import_key&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+X-Reset: {{reset}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  const left = parsed && parsed.data ? parsed.data.length : -1;
+  if (response.statusCode !== 200 || left !== 0) {
+    throw new Error("imported transactions still present after reset");
+  }
+  console.info("imported transaction reset finished");
+}}

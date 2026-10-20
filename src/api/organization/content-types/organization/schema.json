@@ -31,8 +31,8 @@
     "address": {
       "type": "text",
       "metadatas": {
-        "label": "Cím",
-        "description": "A szervezet címe"
+        "label": "Fizikai Cím",
+        "description": "A szervezet posta címe"
       }
     },
     "memberships": {

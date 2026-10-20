@@ -12,6 +12,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_show: 'View',
     transactions_none: 'No transactions.',
     transactions_finalize: 'Finalize',
+    description_clear_comments: 'Remove comments',
     transactions_finalized: 'Transaction finalized.',
     transactions_finalize_hint:
       'This transaction is not finalized yet, which means it will not appear in financial statements. Once you have reviewed and found the data and attached receipts to be correct, finalize the transaction and its receipts.',

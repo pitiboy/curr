@@ -24,17 +24,6 @@
       "type": "text",
       "required": true
     },
-    "debit_account": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::account.account",
-      "required": true,
-      "metadatas": {
-        "label": "Költség számlaszám",
-        "description": "mire ment a pénz (anyag, bér, a megvett dolog) = `Tartozik`"
-      },
-      "inversedBy": "debit_transactions"
-    },
     "credit_account": {
       "type": "relation",
       "relation": "manyToOne",
@@ -45,6 +34,17 @@
         "description": "Honnan fizetted ki (pl készpénz vagy bank) = `Követel`"
       },
       "inversedBy": "credit_transactions"
+    },
+    "debit_account": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::account.account",
+      "required": true,
+      "metadatas": {
+        "label": "Költség számlaszám",
+        "description": "mire ment a pénz (anyag, bér, a megvett dolog) = `Tartozik`"
+      },
+      "inversedBy": "debit_transactions"
     },
     "transaction_type": {
       "type": "relation",
@@ -107,6 +107,12 @@
         "label": "Bizonylatok",
         "description": "A tranzakcióhoz tartozó bizonylatok"
       }
+    },
+    "import_key": {
+      "type": "string",
+      "unique": true,
+      "required": false,
+      "maxLength": 64
     },
     "entered_by": {
       "type": "string",
