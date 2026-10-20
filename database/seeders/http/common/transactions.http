@@ -1,22 +1,30 @@
 # Tranzakciók az Excel pénzmozgás-táblából (Pénzmozgások munkalap)
 # A rekordok a dataDir/transactions.json fájlban vannak, soronként az Excel oszlopaival:
-#   row = Excel sorszám, date = Dátum, payer = Forrás (fizet), payee = Jogosult (kap),
-#   ledger = Cél hely, project = Projekt, purpose = Rendeltetés, operation = Művelet,
-#   amount = Összeg (előjelesen, 2 tizedesre kerekítve), place = Hely, description = Leírás.
+#   row = Excel sorszám, date = Dátum, payer = Forrás (fizet), payee = Kinek fizettük,
+#   ledger = Cél hely, project = Organization/Projekt, purpose = Rendeltetés,
+#   operation = Művelet, amount = Összeg (előjelesen, 2 tizedesre kerekítve),
+#   place = Hely, description = Leírás,
+#   credit_label / debit_label = a tábla credit_Account / Debit_account cellája.
 # Az Év és Hó oszlop a dátumból jön, ezért nincs külön mezője.
 #
-# Leképezés (a JSON tetején lévő táblákban szerkeszthető):
+# A tartozik és a követel a tábla saját oszlopa. A transaction-import-keys.mjs
+# feloldja őket a számlatükörre, és a sor credit_account / debit_account /
+# organization / transaction_type mezőjébe írja. Ezek az irányadók.
+# Ha a soron nincs credit_account vagy debit_account, a JSON tetején lévő
+# táblák maradnak a tartalék (régi sorokhoz):
 #   credit_account  = operationCreditAccounts[operation] vagy partyAccounts[payer]
 #   debit_account   = expenseDebitAccounts[purpose], ha operation = Költség,
 #                     különben partyAccounts[payee]
 #                     Ha a két oldal ugyanaz a számla, a debit üres marad.
-#   A sor saját credit_account / debit_account mezője (ha van) felülírja ezeket.
 #   Számla helyett tagi számla is megadható: tag:<azonosító> = a tag 1101-es
 #   tagi számlája, saját:<azonosító> = a tag 1001-es saját (homály) számlája,
-#   pl. tag:kovács.erika. A tagot az azonosítója alapján keresi meg; ha nincs
-#   ilyen tag vagy számlája, a mező üres marad, és a futás kiírja, hány sort érint.
-#   transaction_type = placeTransactionTypes[place]
-#   organization    = projectOrganizations[project], ha nincs: mainOrganization
+#   pl. tag:pál. A tagot az azonosítója alapján keresi meg; ha nincs ilyen
+#   tag vagy számlája, a mező üres marad, és a futás kiírja, hány sort érint.
+#   transaction_type = a sor transaction_type mezője, különben
+#                      operationTransactionTypes[operation], különben
+#                      placeTransactionTypes[place]
+#   organization    = a sor organization mezője, különben
+#                     projectOrganizations[project], ha nincs: mainOrganization
 #   currency_type   = currencyCode
 #   description     = Leírás, alatta egy [Excel] sor az összes eredeti oszloppal
 #   import_key      = a sor import_key mezője, ez a természetes kulcs (egyedi)
@@ -67,7 +75,9 @@
     const excelLine = (item) =>
       "[Excel #" + item.row + "] " +
       [
-        "Forrás: " + (item.payer || "-") + " → Jogosult: " + (item.payee || "-"),
+        "Forrás: " + (item.payer || "-") + " → Kinek: " + (item.payee || "-"),
+        "Követel: " + (item.credit_label || item.credit_account || "-") +
+          " → Tartozik: " + (item.debit_label || item.debit_account || "-"),
         "Cél hely: " + (item.ledger || "-"),
         "Projekt: " + (item.project || "-"),
         "Rendeltetés: " + (item.purpose || "-"),
@@ -122,9 +132,15 @@
         description: [item.description, excelLine(item)].filter(Boolean).join("\n"),
         creditAccount: credit,
         debitAccount: debit,
-        transactionType: pick(source.placeTransactionTypes, item.place),
+        transactionType:
+          item.transaction_type ||
+          pick(source.operationTransactionTypes, item.operation) ||
+          pick(source.placeTransactionTypes, item.place),
         organization:
-          pick(source.projectOrganizations, item.project) || source.mainOrganization || null,
+          item.organization ||
+          pick(source.projectOrganizations, item.project) ||
+          source.mainOrganization ||
+          null,
       };
     });
 

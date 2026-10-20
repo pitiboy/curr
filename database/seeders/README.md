@@ -106,11 +106,26 @@ npm run seed:http:kor:transactions -- local
 npm run seed:http:kor:transactions -- prod
 ```
 
-Each row keeps its Excel columns. The mapping tables at the top of the JSON
-(`partyAccounts`, `operationCreditAccounts`, `expenseDebitAccounts`,
-`placeTransactionTypes`, `projectOrganizations`) turn them into accounts, type
-and organization; anything that does not map stays empty for review before
-publishing.
+Each row keeps its Excel columns. `credit_Account` and `Debit_account` are the
+booking: `transaction-import-keys.mjs` resolves them onto `accounts.json`
+(or `tag:<identifier>` / `saját:<identifier>` for a member) and writes
+`credit_account`, `debit_account`, `organization` and, when it maps,
+`transaction_type`. Sheet labels that are not chart names are listed in
+`ACCOUNT_ALIASES` in that script (`Lakó földterületek` → Belterületi
+földterületek, `Földterületek` and `Gazdasági földterületek` → Mezőgazdasági
+földterületek, `Pénztár - Saját számla` → Készpénz). `Organization/Projekt` is
+used when it is an organization; `Zöld Élet Program` still goes to the main
+organization. `Bányászás` is the transaction type even when the place is `K&H`.
+
+The tables at the top of the JSON (`partyAccounts`, `operationCreditAccounts`,
+`expenseDebitAccounts`, `placeTransactionTypes`, `operationTransactionTypes`,
+`projectOrganizations`) are only the fallback for a row that has no resolved
+account. Their targets have to be names in the final chart. Refresh the rows
+from the workbook with:
+
+```bash
+node database/seeders/transaction-import-keys.mjs --xlsx "/path/to/Pénzmozgások.xlsx"
+```
 
 ### Member accounts in account columns
 
@@ -123,10 +138,13 @@ Every member has two accounts, created automatically by the member lifecycle
 
 Wherever the seeder expects an account name (the mapping tables, or a row's own
 `credit_account` / `debit_account`, which takes precedence), a member account
-can be given as `tag:<identifier>` (1101) or `saját:<identifier>` (1001), e.g.
-`tag:kovács.erika`. The seeder looks the member up by identifier and uses the
-linked account. An unknown member or a missing account leaves the relation
-empty, with one log line per reference and the number of rows it affects.
+can be given as `tag:<identifier>` (1101) or `saját:<identifier>` (1001). The
+workbook's member labels are first names, so the resolved refs are `tag:pál`,
+`saját:pál`, `tag:erika`, `saját:erika`, `tag:ildikó`, `tag:dani`, `tag:péter`,
+`saját:péter` and `saját:laci`. The seeder looks the member up by that
+identifier and uses the linked account. An unknown member or a missing account
+leaves the relation empty, with one log line per reference and the number of
+rows it affects.
 
 ### Duplicate protection: `import_key`
 
@@ -141,19 +159,25 @@ in the top-level `import_key_fields` array of `transactions.json`:
 excel:<first 20 hex of sha256(the values of import_key_fields, in that order)>
 ```
 
+`payee` is the sheet column Kinek fizettük, `project` is Organization/Projekt.
+Rebuilding the file from the current workbook therefore changed the key of every
+row whose payee or project text changed (155 of 185). If those old keys are
+already in a database, delete those drafts before seeding again, otherwise they
+are inserted a second time.
+
 `currency` is the file's `currencyCode` (or a row's own `currency`); every other
 name must be a column that every row has, otherwise the key script stops with an
 error. Strings are trimmed and whitespace-collapsed, the amount is formatted
 with two decimals. The Excel row number is never part of the key. Rows with the
-same key get `#2`, `#3`... in file order, so both still import (currently three
-such pairs: rows 81/84, 127/128, 151/152). The seeder looks up each row by
+same key get `#2`, `#3`... in file order, so both still import (three pairs: rows 81/84, 127/128, 151/152). The seeder looks up each row by
 `import_key`, skips it when it exists, and stores it on create. A second run
 therefore creates nothing.
 
 - **Reordering is safe.** Inserting, deleting or sorting rows does not
   re-import anything.
 - **Only the six key fields count.** Editing `description`, `purpose`,
-  `ledger`, `operation` or `place` keeps the key, so the row is not imported
+  `ledger`, `operation`, `place`, or the resolved `credit_account` /
+  `debit_account` / `organization` keeps the key, so the row is not imported
   again (the change does not reach Strapi either; fix it in the backoffice).
 - **Changing a key field creates a new key.** If you change currency, date,
   amount, payer, payee or project and regenerate the keys, the row imports as a
