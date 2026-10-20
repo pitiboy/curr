@@ -108,6 +108,12 @@
         "description": "A tranzakcióhoz tartozó bizonylatok"
       }
     },
+    "import_key": {
+      "type": "string",
+      "unique": true,
+      "required": false,
+      "maxLength": 64
+    },
     "entered_by": {
       "type": "string",
       "required": false
@@ -115,12 +121,6 @@
     "published_by": {
       "type": "string",
       "required": false
-    },
-    "import_key": {
-      "type": "string",
-      "unique": true,
-      "required": false,
-      "maxLength": 64
     }
   }
 }
