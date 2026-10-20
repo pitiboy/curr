@@ -7,8 +7,11 @@ import { DocumentTitle } from './AppTitle';
 import { BackofficeMenu } from './BackofficeMenu';
 import { BackofficeAppBar } from './BackofficeUserMenu';
 import { FrameSidebar } from './FrameSidebar';
+import { useScrollToTopOnNavigate } from './useScrollToTopOnNavigate';
 
 export function BackofficeLayout(props: LayoutProps) {
+  useScrollToTopOnNavigate();
+
   return (
     <BackofficeConfigProvider>
       <DocumentTitle />
