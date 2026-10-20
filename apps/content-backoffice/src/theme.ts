@@ -138,6 +138,72 @@ export const bandedShow: SxProps<Theme> = (theme) => ({
   },
 });
 
+/** iPhone-sized viewports: keep chrome on-screen; only the datagrid scrolls sideways. */
+const mobileChrome: ThemeOptions = {
+  components: {
+    RaLayout: {
+      styleOverrides: {
+        root: {
+          minWidth: 0,
+          [`& .RaLayout-content`]: {
+            maxWidth: '100%',
+            minWidth: 0,
+            overflow: 'hidden',
+          },
+        },
+      },
+    },
+    RaList: {
+      styleOverrides: {
+        root: {
+          maxWidth: '100%',
+          minWidth: 0,
+          [`& .RaList-main`]: {
+            maxWidth: '100%',
+            minWidth: 0,
+          },
+          [`& .RaList-content`]: {
+            maxWidth: '100%',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+          },
+          [`& .MuiTablePagination-root`]: {
+            boxSizing: 'border-box',
+            maxWidth: '100%',
+            width: '100%',
+          },
+        },
+      },
+    },
+    RaListToolbar: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          boxSizing: 'border-box',
+          maxWidth: '100%',
+          [theme.breakpoints.down('sm')]: {
+            alignItems: 'stretch',
+            flexDirection: 'column',
+          },
+        }),
+      },
+    },
+    RaAppBar: {
+      styleOverrides: {
+        toolbar: ({ theme }) => ({
+          flexWrap: 'nowrap',
+          gap: theme.spacing(0.25),
+          [theme.breakpoints.down('sm')]: {
+            '& .MuiButton-root': {
+              minWidth: 0,
+              px: 0.75,
+            },
+          },
+        }),
+      },
+    },
+  },
+};
+
 const readableButtons: ThemeOptions = {
   components: {
     MuiAppBar: {
@@ -176,20 +242,20 @@ const brandSecondary = {
 
 export const lightTheme = deepmerge(
   defaultLightTheme,
-  deepmerge(readableButtons, {
+  deepmerge(mobileChrome, deepmerge(readableButtons, {
     palette: {
       primary: { main: brandGreen },
       secondary: brandSecondary,
     },
-  }),
+  })),
 );
 
 export const darkTheme = deepmerge(
   defaultDarkTheme,
-  deepmerge(readableButtons, {
+  deepmerge(mobileChrome, deepmerge(readableButtons, {
     palette: {
       primary: { main: brandGreenOnDark },
       secondary: brandSecondary,
     },
-  }),
+  })),
 );
