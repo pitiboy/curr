@@ -8,6 +8,7 @@ import {
   excelAmount,
   excelDate,
   memberIdentifierBase,
+  normalizeSignedRow,
   resolveAccountLabel,
   resolveOrganization,
   resolveTransactionType,
@@ -80,6 +81,24 @@ describe('resolveTransactionType', () => {
   });
 });
 
+describe('normalizeSignedRow', () => {
+  it('swaps követel and tartozik when the Excel amount is negative', () => {
+    const flipped = normalizeSignedRow({
+      row: 145,
+      amount: -25370,
+      credit_label: 'Bankszámlák',
+      debit_label: 'Péter - Saját számla',
+      credit_account: 'Bankszámlák',
+      debit_account: 'saját:péter',
+    });
+    assert.equal(flipped.amount, 25370);
+    assert.equal(flipped.credit_label, 'Péter - Saját számla');
+    assert.equal(flipped.debit_label, 'Bankszámlák');
+    assert.equal(flipped.credit_account, undefined);
+    assert.equal(flipped.debit_account, undefined);
+  });
+});
+
 describe('buildTransactions', () => {
   it('books the row and keeps a stable key', () => {
     const row = {
@@ -110,6 +129,26 @@ describe('buildTransactions', () => {
       { accountNames: accounts, orgNames: orgs, typeNames: types },
     );
     assert.deepEqual(again.transactions, built.transactions);
+  });
+
+  it('books a negative Excel row with swapped accounts and a positive amount', () => {
+    const row = {
+      row: 145,
+      date: '2025-12-29',
+      payer: 'Bank',
+      payee: 'Péter',
+      project: 'Zöld Élet Program',
+      operation: 'Bányászás',
+      amount: -25370,
+      place: 'K&H',
+      description: 'Online Mentor',
+      credit_label: 'Bankszámlák',
+      debit_label: 'Péter - Saját számla',
+    };
+    const built = buildTransactions(source, { accountNames: accounts, orgNames: orgs, typeNames: types }, [row]);
+    assert.equal(built.transactions[0].amount, 25370);
+    assert.equal(built.transactions[0].credit_account, 'saját:péter');
+    assert.equal(built.transactions[0].debit_account, 'Bankszámlák');
   });
 
   it('books a row through bookRow', () => {

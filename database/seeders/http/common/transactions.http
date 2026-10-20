@@ -2,7 +2,8 @@
 # A rekordok a dataDir/transactions.json fájlban vannak, soronként az Excel oszlopaival:
 #   row = Excel sorszám, date = Dátum, payer = Forrás (fizet), payee = Kinek fizettük,
 #   ledger = Cél hely, project = Organization/Projekt, purpose = Rendeltetés,
-#   operation = Művelet, amount = Összeg (előjelesen, 2 tizedesre kerekítve),
+#   operation = Művelet, amount = Összeg (Excelben előjelesen; importnál |amount|,
+#   negatívnál felcserélt követel/tartozik címkék),
 #   place = Hely, description = Leírás,
 #   credit_label / debit_label = a tábla credit_Account / Debit_account cellája.
 # Az Év és Hó oszlop a dátumból jön, ezért nincs külön mezője.
