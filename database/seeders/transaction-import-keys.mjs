@@ -24,8 +24,8 @@
 // import_key_fields is a top-level array in the JSON. `currency` means the
 // row's currency, or the file's currencyCode. Identical keys get #2, #3… in
 // file order. The Excel row number is not part of the key.
-// Negative Excel amounts reverse the flow: swap követel/tartozik labels, store |amount|.
-// Rows that were only abs()'d keep a stale import_key; repairAbsWithoutSwap fixes them.
+// Negative Excel amounts are stored as |amount|; követel/tartozik labels stay as in the sheet.
+// import_key uses the stored (positive) amount; regen when amount or other key fields change.
 // --check recomputes keys and booking and exits 1 if the file is stale.
 // --xlsx reads the workbook and replaces the rows; with --check it only compares.
 import { createHash } from 'node:crypto';
@@ -225,41 +225,14 @@ export function resolveOrganization(project, source, orgNames) {
   return org;
 }
 
-function swapCreditDebit(row) {
-  const out = { ...row };
-  for (const [left, right] of [
-    ['credit_label', 'debit_label'],
-    ['credit_account', 'debit_account'],
-  ]) {
-    const a = row[left];
-    const b = row[right];
-    if (a !== undefined) out[left] = b ?? '';
-    if (b !== undefined) out[right] = a ?? '';
-  }
-  return out;
-}
-
-/** Signed Excel amount → positive amount and swapped követel/tartozik when amount < 0. */
-export function normalizeSignedRow(row) {
+/** Excel előjel → mindig pozitív amount a JSON-ban; a számlacímkék változatlanok. */
+export function absAmountRow(row) {
   if (row.amount === undefined || row.amount === null || row.amount === '') return row;
   const amount = Number(row.amount);
   if (!Number.isFinite(amount)) throw new Error(`row ${row.row}: not an amount: ${row.amount}`);
   const absAmount = Math.round(Math.abs(amount) * 100) / 100;
-  if (amount >= 0) return { ...row, amount: absAmount };
-  const flipped = swapCreditDebit({ ...row, amount: absAmount });
-  delete flipped.credit_account;
-  delete flipped.debit_account;
-  return flipped;
-}
-
-/** Fixes rows whose import_key still matches the pre-abs() negative amount. */
-export function repairAbsWithoutSwap(row, source) {
-  const amount = Number(row.amount);
-  if (!Number.isFinite(amount) || amount <= 0) return row;
-  const neg = { ...row, amount: -Math.abs(amount) };
-  const keyNeg = importKeys({ ...source, transactions: [neg] })[0];
-  if (keyNeg !== row.import_key) return row;
-  return normalizeSignedRow(neg);
+  if (amount === absAmount) return row;
+  return { ...row, amount: absAmount };
 }
 
 export function resolveTransactionType(row, source, typeNames) {
@@ -301,24 +274,24 @@ export function assertLookupTables(source, ctx) {
 }
 
 export function bookRow(row, source, ctx) {
-  const normalized = normalizeSignedRow(row);
+  const withAmount = absAmountRow(row);
   let credit;
   let debit;
   try {
-    credit = resolveAccountLabel(normalized.credit_label, ctx.accountNames);
-    debit = resolveAccountLabel(normalized.debit_label, ctx.accountNames);
+    credit = resolveAccountLabel(withAmount.credit_label, ctx.accountNames);
+    debit = resolveAccountLabel(withAmount.debit_label, ctx.accountNames);
   } catch (error) {
     throw new Error(`row ${row.row}: ${error.message}`);
   }
   let organization;
   try {
-    organization = resolveOrganization(normalized.project, source, ctx.orgNames);
+    organization = resolveOrganization(withAmount.project, source, ctx.orgNames);
   } catch (error) {
-    throw new Error(`row ${normalized.row}: ${error.message}`);
+    throw new Error(`row ${withAmount.row}: ${error.message}`);
   }
-  const transactionType = resolveTransactionType(normalized, source, ctx.typeNames);
+  const transactionType = resolveTransactionType(withAmount, source, ctx.typeNames);
   const booked = {
-    ...normalized,
+    ...withAmount,
     credit_account: credit,
     debit_account: debit,
     organization,
@@ -341,12 +314,9 @@ function ordered(row) {
 export function buildTransactions(source, ctx, sheetRows) {
   assertLookupTables(source, ctx);
   const rawRows = sheetRows || source.transactions || [];
-  const prepared = sheetRows
-    ? rawRows
-    : rawRows.map((row) => repairAbsWithoutSwap(row, source));
   const next = {
     ...source,
-    transactions: prepared.map((row) => bookRow(row, source, ctx)),
+    transactions: rawRows.map((row) => bookRow(row, source, ctx)),
   };
   const keys = importKeys(next);
   next.transactions = next.transactions.map((row, index) => ordered({ ...row, import_key: keys[index] }));
@@ -615,9 +585,19 @@ function main(argv) {
     }
   }
   const aliasText = [...aliases.entries()].map(([key, count]) => `${key} ×${count}`).join('; ') || 'none';
+  let amountUpdates = 0;
+  let keyUpdates = 0;
+  for (let index = 0; index < next.transactions.length; index += 1) {
+    const cur = current[index];
+    const nxt = next.transactions[index];
+    if (!cur) continue;
+    if (Number(cur.amount) !== Number(nxt.amount)) amountUpdates += 1;
+    if (cur.import_key !== nxt.import_key) keyUpdates += 1;
+  }
   console.log(
-    `${next.transactions.length} rows, ${stale.length} updated (fields: ${fields}) in ${file}`,
+    `${next.transactions.length} rows, ${stale.length} booking drift (fields: ${fields}) in ${file}`,
   );
+  console.log(`${amountUpdates} amounts, ${keyUpdates} import_keys updated`);
   console.log(`aliases: ${aliasText}`);
 }
 

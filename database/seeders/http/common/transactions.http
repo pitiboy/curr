@@ -3,7 +3,7 @@
 #   row = Excel sorszám, date = Dátum, payer = Forrás (fizet), payee = Kinek fizettük,
 #   ledger = Cél hely, project = Organization/Projekt, purpose = Rendeltetés,
 #   operation = Művelet, amount = Összeg (Excelben előjelesen; importnál |amount|,
-#   negatívnál felcserélt követel/tartozik címkék),
+#   a követel/tartozik címkék változatlanok),
 #   place = Hely, description = Leírás,
 #   credit_label / debit_label = a tábla credit_Account / Debit_account cellája.
 # Az Év és Hó oszlop a dátumból jön, ezért nincs külön mezője.

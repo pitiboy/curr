@@ -3,12 +3,12 @@ import { describe, it } from 'node:test';
 
 import {
   ACCOUNT_ALIASES,
+  absAmountRow,
   bookRow,
   buildTransactions,
   excelAmount,
   excelDate,
   memberIdentifierBase,
-  normalizeSignedRow,
   resolveAccountLabel,
   resolveOrganization,
   resolveTransactionType,
@@ -81,21 +81,17 @@ describe('resolveTransactionType', () => {
   });
 });
 
-describe('normalizeSignedRow', () => {
-  it('swaps követel and tartozik when the Excel amount is negative', () => {
-    const flipped = normalizeSignedRow({
+describe('absAmountRow', () => {
+  it('keeps követel/tartozik labels and stores |amount|', () => {
+    const absed = absAmountRow({
       row: 145,
       amount: -25370,
       credit_label: 'Bankszámlák',
       debit_label: 'Péter - Saját számla',
-      credit_account: 'Bankszámlák',
-      debit_account: 'saját:péter',
     });
-    assert.equal(flipped.amount, 25370);
-    assert.equal(flipped.credit_label, 'Péter - Saját számla');
-    assert.equal(flipped.debit_label, 'Bankszámlák');
-    assert.equal(flipped.credit_account, undefined);
-    assert.equal(flipped.debit_account, undefined);
+    assert.equal(absed.amount, 25370);
+    assert.equal(absed.credit_label, 'Bankszámlák');
+    assert.equal(absed.debit_label, 'Péter - Saját számla');
   });
 });
 
@@ -131,7 +127,7 @@ describe('buildTransactions', () => {
     assert.deepEqual(again.transactions, built.transactions);
   });
 
-  it('books a negative Excel row with swapped accounts and a positive amount', () => {
+  it('books a negative Excel row with original accounts and a positive amount', () => {
     const row = {
       row: 145,
       date: '2025-12-29',
@@ -147,8 +143,9 @@ describe('buildTransactions', () => {
     };
     const built = buildTransactions(source, { accountNames: accounts, orgNames: orgs, typeNames: types }, [row]);
     assert.equal(built.transactions[0].amount, 25370);
-    assert.equal(built.transactions[0].credit_account, 'saját:péter');
-    assert.equal(built.transactions[0].debit_account, 'Bankszámlák');
+    assert.equal(built.transactions[0].credit_account, 'Bankszámlák');
+    assert.equal(built.transactions[0].debit_account, 'saját:péter');
+    assert.match(built.transactions[0].import_key, /^excel:e3f5095a5a0c95f8f0cf$/);
   });
 
   it('books a row through bookRow', () => {
