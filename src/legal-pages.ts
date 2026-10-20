@@ -418,9 +418,10 @@ export function registerLegalPageRoutes(strapi: LegalPagesStrapi) {
 }
 
 /**
- * `PUBLIC_HOME_REDIRECT=/legal/about` turns the site root into the public
- * presentation page (Google OAuth "Application home page"). Unset: Strapi's
- * own `/` → `/admin` redirect stays. Only same-site paths are accepted.
+ * `PUBLIC_HOME_REDIRECT` sets the site root target when explicitly configured
+ * (e.g. cPanel env). Unset: no redirect (Strapi `/` → `/admin`). Example:
+ * `/backoffice/` or `/legal/about`. Empty or invalid: same as unset. Only
+ * same-site paths are accepted.
  */
 export function resolveHomeRedirect(value: unknown) {
   if (typeof value !== 'string') {
@@ -451,11 +452,20 @@ export function createHomeRedirectMiddleware(target: string) {
   };
 }
 
+export function resolveSiteHomeRedirectTarget(
+  value: unknown = process.env.PUBLIC_HOME_REDIRECT,
+) {
+  if (value === undefined) {
+    return null;
+  }
+  return resolveHomeRedirect(value);
+}
+
 export function registerHomeRedirect(
   strapi: { server: { use: (fn: unknown) => unknown }; log?: { info: (m: string) => void } },
   value: unknown = process.env.PUBLIC_HOME_REDIRECT,
 ) {
-  const target = resolveHomeRedirect(value);
+  const target = resolveSiteHomeRedirectTarget(value);
   if (!target) {
     return false;
   }

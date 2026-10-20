@@ -60,5 +60,9 @@ export default ({ env }) => {
       },
     },
     'strapi::public',
+    {
+      name: 'global::home-redirect',
+      resolve: './src/middlewares/home-redirect',
+    },
   ];
 };

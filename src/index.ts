@@ -1,7 +1,6 @@
 import {
   ensureLegalLocales,
   LEGAL_PAGE_PUBLIC_ACTIONS,
-  registerHomeRedirect,
   registerLegalPageRoutes,
   registerLegalSlugGuard,
 } from './legal-pages';
@@ -325,7 +324,6 @@ export default {
     registerPublishGuard(strapi);
     registerLegalPageRoutes(strapi);
     registerLegalSlugGuard(strapi);
-    registerHomeRedirect(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
     // socket is plain HTTP. The `cookies` package checks socket.encrypted and

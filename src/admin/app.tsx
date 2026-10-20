@@ -17,6 +17,12 @@ const LEGAL_LINKS = {
 } as const;
 
 const LEGAL_FOOTER_ID = 'kor-legal-footer';
+const BACKOFFICE_ENTRY_ID = 'kor-backoffice-entry';
+
+const BACKOFFICE_ENTRY_LABELS = {
+  hu: 'Kezelő felület',
+  en: 'Backoffice',
+} as const;
 
 /**
  * The admin keeps its UI language on `<html lang>` (login dropdown and
@@ -56,6 +62,93 @@ function renderLegalFooter(footer: HTMLElement) {
  * routes, so it shows on the login screen and after login alike, and follows
  * the admin language.
  */
+function isAdminLoginRoute() {
+  return /\/auth\/login\/?$/.test(window.location.pathname);
+}
+
+/**
+ * Strapi has no login-page slot; a fixed entry on the auth screen sends editors
+ * and dataentry users to the content backoffice SPA at /backoffice/.
+ */
+function mountBackofficeEntry() {
+  if (document.getElementById(BACKOFFICE_ENTRY_ID)) {
+    return;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.id = BACKOFFICE_ENTRY_ID;
+  Object.assign(wrap.style, {
+    position: 'fixed',
+    top: '16px',
+    right: '16px',
+    zIndex: '10000',
+    display: 'none',
+  });
+
+  const link = document.createElement('a');
+  link.href = '/backoffice/';
+  link.setAttribute('aria-label', BACKOFFICE_ENTRY_LABELS.hu);
+  Object.assign(link.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    borderRadius: '999px',
+    fontSize: '14px',
+    fontWeight: '600',
+    fontFamily: 'inherit',
+    color: '#fff',
+    background: '#8A62B0',
+    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+    textDecoration: 'none',
+  });
+
+  const plus = document.createElement('span');
+  plus.textContent = '+';
+  plus.setAttribute('aria-hidden', 'true');
+  Object.assign(plus.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '22px',
+    height: '22px',
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.22)',
+    fontSize: '18px',
+    lineHeight: '1',
+  });
+
+  const label = document.createElement('span');
+  label.className = 'kor-backoffice-entry-label';
+
+  link.append(plus, label);
+  wrap.append(link);
+  document.body.append(wrap);
+
+  const sync = () => {
+    const locale = adminLegalLocale();
+    const text = BACKOFFICE_ENTRY_LABELS[locale];
+    label.textContent = text;
+    link.setAttribute('aria-label', text);
+    wrap.style.display = isAdminLoginRoute() ? 'block' : 'none';
+  };
+
+  sync();
+  window.addEventListener('popstate', sync);
+  for (const method of ['pushState', 'replaceState'] as const) {
+    const original = history[method].bind(history);
+    history[method] = (...args: Parameters<History['pushState']>) => {
+      const result = original(...args);
+      sync();
+      return result;
+    };
+  }
+  new MutationObserver(sync).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['lang'],
+  });
+}
+
 function mountLegalFooter() {
   if (document.getElementById(LEGAL_FOOTER_ID)) {
     return;
@@ -172,6 +265,7 @@ export default {
     },
   },
   bootstrap(_app: StrapiApp) {
+    mountBackofficeEntry();
     mountLegalFooter();
 
     const titlePrefix = 'KÖR | ';
