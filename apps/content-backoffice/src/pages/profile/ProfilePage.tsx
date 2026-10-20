@@ -9,7 +9,6 @@ export function ProfilePage() {
   const [name, setName] = useState('…');
   const [email, setEmail] = useState('…');
   const [role, setRole] = useState('…');
-  const [provider, setProvider] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -18,7 +17,6 @@ export function ProfilePage() {
         if (active) {
           setName(fields.name);
           setEmail(fields.email);
-          setProvider(fields.provider);
           setRole(
             fields.roleType
               ? translate(`app.roles.${fields.roleType}`, {
