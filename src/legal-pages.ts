@@ -452,13 +452,19 @@ export function createHomeRedirectMiddleware(target: string) {
   };
 }
 
-const DEFAULT_HOME_REDIRECT = '/backoffice/';
+export const DEFAULT_HOME_REDIRECT = '/backoffice/';
+
+export function resolveSiteHomeRedirectTarget(
+  value: unknown = process.env.PUBLIC_HOME_REDIRECT ?? DEFAULT_HOME_REDIRECT,
+) {
+  return resolveHomeRedirect(value);
+}
 
 export function registerHomeRedirect(
   strapi: { server: { use: (fn: unknown) => unknown }; log?: { info: (m: string) => void } },
   value: unknown = process.env.PUBLIC_HOME_REDIRECT ?? DEFAULT_HOME_REDIRECT,
 ) {
-  const target = resolveHomeRedirect(value);
+  const target = resolveSiteHomeRedirectTarget(value);
   if (!target) {
     return false;
   }
