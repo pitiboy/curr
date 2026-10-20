@@ -41,6 +41,7 @@
 #
 #   npm run seed:http:kor:transactions -- local
 #   npm run seed:http:kor:transactions -- prod
+#   npm run seed:http:kor:transactions:reset:local
 #
 # Nincs a 0*.http körben, külön kell futtatni.
 # Előfeltétel: a 01-08 seederek már lefutottak (számlák, típusok, szervezetek, HUF).

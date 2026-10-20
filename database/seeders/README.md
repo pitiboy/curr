@@ -106,6 +106,18 @@ npm run seed:http:kor:transactions -- local
 npm run seed:http:kor:transactions -- prod
 ```
 
+`transactions-reset.http` deletes only those imported documents, draft and
+published. A row matches when `import_key` starts with `excel:` (including a
+stale key from an earlier field list) or `entered_by` still has the file's
+`keyPrefix` (`excel:Pénzmozgások#`). Manual transactions stay. Receipts stay;
+a receipt that pointed at a deleted transaction keeps the receipt and loses
+the link.
+
+```bash
+npm run seed:http:kor:transactions:reset:local
+npm run seed:http:kor:transactions:reset -- prod
+```
+
 Each row keeps its Excel columns. `credit_Account` and `Debit_account` are the
 booking: `transaction-import-keys.mjs` resolves them onto `accounts.json`
 (or `tag:<identifier>` / `saját:<identifier>` for a member) and writes
@@ -162,8 +174,8 @@ excel:<first 20 hex of sha256(the values of import_key_fields, in that order)>
 `payee` is the sheet column Kinek fizettük, `project` is Organization/Projekt.
 Rebuilding the file from the current workbook therefore changed the key of every
 row whose payee or project text changed (155 of 185). If those old keys are
-already in a database, delete those drafts before seeding again, otherwise they
-are inserted a second time.
+already in a database, run `npm run seed:http:kor:transactions:reset:local`
+(or `-- prod`) before seeding again, otherwise they are inserted a second time.
 
 `currency` is the file's `currencyCode` (or a row's own `currency`); every other
 name must be a column that every row has, otherwise the key script stops with an
@@ -182,7 +194,7 @@ therefore creates nothing.
 - **Changing a key field creates a new key.** If you change currency, date,
   amount, payer, payee or project and regenerate the keys, the row imports as a
   _new_ transaction and the old one stays in Strapi. Fix such rows in the
-  backoffice instead, or delete the old draft before re-running.
+  backoffice instead, or reset the imported drafts before re-running.
 - **Do not change `import_key_fields` once rows are imported** on an
   environment. It changes every key, so the next run would import all rows
   again. If it must change, the existing `import_key` values in that database
