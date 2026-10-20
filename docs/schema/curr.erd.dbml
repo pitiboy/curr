@@ -140,8 +140,7 @@ Table currency_types [headercolor: #F59E0B] {
 Table currency_rates [headercolor: #F59E0B] {
   id int [pk, increment]
   rate decimal(10,6) [not null, note: 'Árfolyam — units of target per 1 unit of source']
-  valid_from timestamp [not null, note: 'Érvényesség kezdete']
-  valid_to timestamp [note: 'Érvényesség vége']
+  valid_from timestamp [not null, note: 'Érvényesség kezdete — a következő azonos páros árfolyamig']
   from_currency_type_id int [note: 'Forrás pénznem']
   to_currency_type_id int [note: 'Cél pénznem']
   created_at timestamp
