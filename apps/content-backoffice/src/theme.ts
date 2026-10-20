@@ -145,10 +145,13 @@ const mobileChrome: ThemeOptions = {
       styleOverrides: {
         root: {
           minWidth: 0,
+          // Late-loading page content must not drag the viewport downward.
+          overflowAnchor: 'none',
           [`& .RaLayout-content`]: {
             maxWidth: '100%',
             minWidth: 0,
             overflow: 'hidden',
+            overflowAnchor: 'none',
           },
         },
       },

@@ -181,6 +181,7 @@ function TransactionOpenField(_props: {
             }
           : undefined
       }
+      state={{ _scrollToTop: true }}
       to={`/transactions/${encodeURIComponent(String(record.id))}/show`}
       variant="outlined"
       onClick={(event: React.MouseEvent<HTMLButtonElement>) =>

@@ -1,4 +1,5 @@
 import LanguageIcon from '@mui/icons-material/Language';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -64,12 +65,20 @@ export function BackofficeAppBarToolbar() {
   const locales = useLocales();
 
   return (
-    <>
+    <Box
+      sx={{
+        alignItems: 'center',
+        display: 'flex',
+        flexShrink: 0,
+        // Titles (and their flex spacer) leave the bar on small screens.
+        marginLeft: isMobile ? 'auto' : undefined,
+      }}
+    >
       {locales && locales.length > 1 ? (
         isMobile ? <CompactLocalesMenuButton /> : <LocalesMenuButton icon={<LanguageIcon />} />
       ) : null}
       <ToggleThemeButton />
       <LoadingIndicator />
-    </>
+    </Box>
   );
 }
