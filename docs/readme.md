@@ -104,7 +104,6 @@ erDiagram
         relation to_currency_type FK
         decimal rate
         datetime valid_from
-        datetime valid_to
     }
 
     TRANSACTION_TYPE {
@@ -157,7 +156,7 @@ erDiagram
 | **Account**          | Financial account within an organization (hierarchical structure).                 | Cash Account, Revenue Account, Expense Account, Asset Account                              |
 | **CurrencyCategory** | Organizes currency types into logical groups.                                      | Cash 💰, Labor ⏰, Resources 🌾, Assets 🏠                                                 |
 | **CurrencyType**     | Defines currencies or other measurable resource units (cash, labor, goods).        | HUF, EUR, HOUR, WHEAT, TRACTOR, CHICKEN                                                    |
-| **CurrencyRate**     | Defines conversion rates between resource types over time (with validity periods). | HUF→EUR: 0.0026, HOUR→HUF: 3000                                                            |
+| **CurrencyRate**     | Conversion rate between resource types. Applies from `valid_from` until the next rate of the same pair. | HUF→EUR: 0.0026, HOUR→HUF: 3000                                                            |
 | **TransactionType**  | Categorizes transactions (income, expense, transfer).                              | Elrendelt, Utalás, Készpénz, Átvezetés, Jutalék, Barter                                    |
 | **Transaction**      | Double-entry bookkeeping record with debit and credit entries.                     | Debit: Cash Account 5000 HUF, Credit: Revenue Account 5000 HUF                             |
 
@@ -185,8 +184,8 @@ erDiagram
 
 ### Enhanced Currency Rate Management
 
-- **Validity Periods**: Added `valid_to` field for currency rate expiration
-- **Historical Tracking**: Better support for rate changes over time
+- **Start date**: a rate applies from `valid_from` until the next rate of the same pair
+- **Historical Tracking**: Rate changes stay as separate rows ordered by `valid_from`
 
 ### Media Support
 
