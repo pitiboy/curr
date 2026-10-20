@@ -53,8 +53,8 @@ describe('visibleDescription', () => {
   });
 
   it('drops a comment line written between two paragraphs', () => {
-    expect(
-      visibleDescription('első\n\n<!-- Excel: #9 -->\n\nmásodik'),
-    ).toBe('első\n\nmásodik');
+    expect(visibleDescription('első\n\n<!-- Excel: #9 -->\n\nmásodik')).toBe(
+      'első\n\nmásodik',
+    );
   });
 });

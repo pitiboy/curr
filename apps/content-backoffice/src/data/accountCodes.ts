@@ -42,7 +42,10 @@ export function filterAccountChoices(
         'hu',
       );
       if (byCode !== 0) return byCode;
-      return String(left.name ?? '').localeCompare(String(right.name ?? ''), 'hu');
+      return String(left.name ?? '').localeCompare(
+        String(right.name ?? ''),
+        'hu',
+      );
     });
 }
 
@@ -82,7 +85,10 @@ export async function loadAllAccounts(
  * Env value is a JavaScript regex, either `/^5/` or `^5`.
  * An empty value keeps the fallback. `g` and `y` are dropped so `.test()` stays stable.
  */
-export function parseCodeRegex(value: string | undefined, fallback: RegExp): RegExp {
+export function parseCodeRegex(
+  value: string | undefined,
+  fallback: RegExp,
+): RegExp {
   const source = value?.trim();
   if (!source) return fallback;
   const literal = /^\/([\s\S]+)\/([a-z]*)$/.exec(source);

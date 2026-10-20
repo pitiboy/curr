@@ -49,7 +49,9 @@ describe('effectiveWorkflows', () => {
   const available = ['member-fee', 'egg'];
 
   it('follows the server list when there is no override', () => {
-    expect(effectiveWorkflows(enabled, available, null)).toEqual(['member-fee']);
+    expect(effectiveWorkflows(enabled, available, null)).toEqual([
+      'member-fee',
+    ]);
   });
 
   it('uses the stored list when an override is present', () => {

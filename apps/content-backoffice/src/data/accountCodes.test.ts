@@ -47,26 +47,18 @@ describe('parseCodeRegex', () => {
 describe('account code filters', () => {
   it('uses /^5/ for debit when VITE_DEBIT_CODES is unset', () => {
     expect(DEBIT_CODES.source).toBe('^5');
-    expect(filterAccountChoices(accounts, 'debit').map((row) => row.code)).toEqual([
-      '5000',
-      '5100',
-      '5200',
-      '5400',
-      '5800',
-    ]);
+    expect(
+      filterAccountChoices(accounts, 'debit').map((row) => row.code),
+    ).toEqual(['5000', '5100', '5200', '5400', '5800']);
     expect(isDebitCode('4000')).toBe(false);
     expect(isDebitCode('1000')).toBe(false);
   });
 
   it('uses /^(1|3)/ for credit when VITE_CREDIT_CODES is unset', () => {
     expect(CREDIT_CODES.source).toBe('^(1|3)');
-    expect(filterAccountChoices(accounts, 'credit').map((row) => row.code)).toEqual([
-      '1000',
-      '1100',
-      '1200',
-      '1300',
-      '3000',
-    ]);
+    expect(
+      filterAccountChoices(accounts, 'credit').map((row) => row.code),
+    ).toEqual(['1000', '1100', '1200', '1300', '3000']);
     expect(isCreditCode('2000')).toBe(false);
     expect(isCreditCode('4000')).toBe(false);
     expect(isCreditCode('5000')).toBe(false);
@@ -75,10 +67,7 @@ describe('account code filters', () => {
 
 describe('loadAllAccounts', () => {
   it('follows pages so later expense codes are not dropped', async () => {
-    const pages = [
-      accounts.slice(0, 4),
-      accounts.slice(4),
-    ];
+    const pages = [accounts.slice(0, 4), accounts.slice(4)];
     const getList: DataProvider['getList'] = async (_resource, params) => {
       const page = params.pagination?.page ?? 1;
       return {
@@ -89,12 +78,8 @@ describe('loadAllAccounts', () => {
 
     const loaded = await loadAllAccounts(getList);
     expect(loaded).toHaveLength(accounts.length);
-    expect(filterAccountChoices(loaded, 'debit').map((row) => row.code)).toEqual([
-      '5000',
-      '5100',
-      '5200',
-      '5400',
-      '5800',
-    ]);
+    expect(
+      filterAccountChoices(loaded, 'debit').map((row) => row.code),
+    ).toEqual(['5000', '5100', '5200', '5400', '5800']);
   });
 });

@@ -9,7 +9,9 @@ export function normalizeRecord<T extends RecordWithDocumentId>(record: T): T {
   return record;
 }
 
-export function recordUsesDocumentIdAsId(record: RecordWithDocumentId): boolean {
+export function recordUsesDocumentIdAsId(
+  record: RecordWithDocumentId,
+): boolean {
   return (
     typeof record.documentId === 'string' && record.id === record.documentId
   );

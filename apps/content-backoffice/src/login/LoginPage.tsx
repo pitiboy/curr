@@ -42,9 +42,7 @@ export function LoginPage() {
       })
       .catch((error: unknown) => {
         if (active) {
-          setOauthError(
-            error instanceof Error ? error.message : String(error),
-          );
+          setOauthError(error instanceof Error ? error.message : String(error));
         }
       })
       .finally(() => {

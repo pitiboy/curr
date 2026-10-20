@@ -1,4 +1,11 @@
-import { Box, Button, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Typography,
+} from '@mui/material';
 import { Title, useTranslate } from 'react-admin';
 
 import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';

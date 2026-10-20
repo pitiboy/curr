@@ -4,18 +4,18 @@ import { LEGAL_PAGES, legalLocaleFor, legalPageUrl } from './legalUrls';
 
 describe('legalPageUrl', () => {
   it('builds the hu URL without a locale query and without a double slash', () => {
-    expect(legalPageUrl('privacy-policy', 'hu', 'https://kor.fejlesztesek.hu')).toBe(
-      'https://kor.fejlesztesek.hu/legal/privacy-policy',
-    );
-    expect(legalPageUrl('terms-of-service', undefined, 'http://localhost:1337/')).toBe(
-      'http://localhost:1337/legal/terms-of-service',
-    );
+    expect(
+      legalPageUrl('privacy-policy', 'hu', 'https://kor.fejlesztesek.hu'),
+    ).toBe('https://kor.fejlesztesek.hu/legal/privacy-policy');
+    expect(
+      legalPageUrl('terms-of-service', undefined, 'http://localhost:1337/'),
+    ).toBe('http://localhost:1337/legal/terms-of-service');
   });
 
   it('adds ?locale=en when the UI is English', () => {
-    expect(legalPageUrl('privacy-policy', 'en', 'https://kor.fejlesztesek.hu')).toBe(
-      'https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en',
-    );
+    expect(
+      legalPageUrl('privacy-policy', 'en', 'https://kor.fejlesztesek.hu'),
+    ).toBe('https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en');
   });
 
   it('maps UI locales to page locales', () => {

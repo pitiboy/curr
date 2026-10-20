@@ -86,7 +86,13 @@ describe('createReceiptDraft', () => {
     const httpClient = vi
       .fn()
       .mockResolvedValueOnce({
-        json: [{ id: 7, documentId: 'file-1', url: 'https://cdn.example/szamla.pdf' }],
+        json: [
+          {
+            id: 7,
+            documentId: 'file-1',
+            url: 'https://cdn.example/szamla.pdf',
+          },
+        ],
       })
       .mockResolvedValueOnce({
         json: { data: { documentId: 'receipt-9' } },
@@ -199,9 +205,9 @@ describe('receiptDocumentUrl', () => {
         'http://localhost:1337/',
       ),
     ).toBe('http://localhost:1337/uploads/a.pdf');
-    expect(receiptDocumentUrl({ documentId: 'r1' }, 'http://localhost:1337')).toBe(
-      null,
-    );
+    expect(
+      receiptDocumentUrl({ documentId: 'r1' }, 'http://localhost:1337'),
+    ).toBe(null);
     expect(receiptIsPresent({ documentId: 'r1' })).toBe(true);
     expect(receiptIsPresent(null)).toBe(false);
   });
