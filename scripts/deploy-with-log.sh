@@ -20,6 +20,8 @@ record_and_commit() {
   local ftp_status="$3"
   bash "$log_script" append "$command" "$build_status" "$ftp_status"
   bash "$log_script" commit
+  echo
+  tail -n 6 build-deploy.log
 }
 
 case "$target" in
