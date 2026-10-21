@@ -12,6 +12,9 @@ if [[ -n "${DEPLOY_LOG_COMMAND:-}" ]]; then
     fi
     bash "$_ftp_deploy_log_script" append "$DEPLOY_LOG_COMMAND" "success" "$ftp_label" || true
     bash "$_ftp_deploy_log_script" commit || true
+    if [[ "$DEPLOY_LOG_COMMAND" == *deploy* && "$DEPLOY_LOG_COMMAND" != *backoffice* ]]; then
+      DEPLOY_DEPS_BASELINE=previous bash "$_ftp_deploy_log_root/scripts/deploy-strapi-deps.sh" warn-if-changed || true
+    fi
     trap - EXIT
     exit "$st"
   }
