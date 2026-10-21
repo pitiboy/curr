@@ -6,3 +6,9 @@ command: npm run deploy (test)
 build: success
 ftp: dry-run
 
+--- deploy event ---
+date: 2026-10-21T09:24:57Z
+command: npm run deploy:backoffice
+build: success
+ftp: success
+
