@@ -5,6 +5,8 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
+# shellcheck source=ftp-deploy-log-hook.sh
+source "$root/scripts/ftp-deploy-log-hook.sh"
 
 env_file="${1:-}"
 if [[ -z "$env_file" || "$env_file" == --* ]]; then

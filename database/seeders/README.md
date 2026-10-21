@@ -182,19 +182,25 @@ name must be a column that every row has, otherwise the key script stops with an
 error. Strings are trimmed and whitespace-collapsed, the amount is formatted
 with two decimals. The Excel row number is never part of the key. Rows with the
 same key get `#2`, `#3`... in file order, so both still import (three pairs: rows 81/84, 127/128, 151/152). The seeder looks up each row by
-`import_key`, skips it when it exists, and stores it on create. A second run
-therefore creates nothing.
+`import_key`. When that draft exists, it PUTs the current JSON onto it: date,
+amount, description, currency, accounts, transaction type, organization,
+`entered_by`, and `import_key`. A relation the JSON no longer resolves is
+cleared. Receipts and related transactions are not sent. A second run therefore
+updates every matching draft and creates only keys that are not in the database
+yet. The published copy stays as it was; publish the draft again after the
+update.
 
-- **Reordering is safe.** Inserting, deleting or sorting rows does not
-  re-import anything.
-- **Only the six key fields count.** Editing `description`, `purpose`,
-  `ledger`, `operation`, `place`, or the resolved `credit_account` /
-  `debit_account` / `organization` keeps the key, so the row is not imported
-  again (the change does not reach Strapi either; fix it in the backoffice).
+- **Reordering is safe.** Inserting, deleting or sorting rows updates the same
+  drafts. The `entered_by` marker follows the new Excel row number.
+- **Only the six key fields identify the row.** Editing `description`,
+  `purpose`, `ledger`, `operation`, `place`, or the resolved `credit_account` /
+  `debit_account` / `organization` keeps the key, so the next
+  `transactions.http` run writes those changes onto the existing draft.
+  Backoffice edits of those fields are replaced by the JSON on the next run.
 - **Changing a key field creates a new key.** If you change currency, date,
   amount, payer, payee or project and regenerate the keys, the row imports as a
-  _new_ transaction and the old one stays in Strapi. Fix such rows in the
-  backoffice instead, or reset the imported drafts before re-running.
+  _new_ transaction and the old one stays in Strapi. Reset the imported drafts
+  before re-running when that old row should go.
 - **Do not change `import_key_fields` once rows are imported** on an
   environment. It changes every key, so the next run would import all rows
   again. If it must change, the existing `import_key` values in that database
@@ -209,14 +215,15 @@ therefore creates nothing.
 
 `entered_by` still holds `excel:Pénzmozgások#<row>`, but only as a readable
 marker. Rows created by the earlier seeder (before `import_key` existed) have
-that marker and an empty `import_key`; the seeder finds them by the marker and
-backfills their `import_key` with a PUT instead of creating a duplicate. Run it
-once after deploying the schema change, before the Excel rows are reordered.
+that marker and an empty `import_key`; the seeder finds them by the marker,
+writes the key, then updates the rest of the draft from the JSON instead of
+creating a duplicate. Run it once after deploying the schema change, before the
+Excel rows are reordered.
 
 In the database, `src/transaction-import-key.ts` creates a partial unique index
 on the draft rows (`transactions_import_key_draft_uq`, Postgres and SQLite) on
 every boot. Strapi's own `unique: true` is not checked for drafts, and a plain
 unique index would clash with the published copy of the same document. With the
-index, a concurrent second run cannot insert the same key; the seeder treats
-that failed create as "already imported". Manual transactions leave
+index, a concurrent second run cannot insert the same key; the seeder finds
+that draft and updates it from the JSON. Manual transactions leave
 `import_key` empty and are not affected.
