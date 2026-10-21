@@ -52,7 +52,8 @@
 # mezőkből (most: pénznem, dátum, összeg, forrás, jogosult, projekt), azonos
 # kulcsnál #2, #3. A sorszám nincs benne, így az Excel sorrendje szabadon
 # változhat; ha a hat mező valamelyike változik, új kulcsot kap, és új
-# tranzakcióként jön be. Újragenerálás: npm run seed:kor:transactions:keys
+# tranzakcióként jön be, a régi kulcsú sor bent marad.
+# Újragenerálás: npm run seed:kor:transactions:keys
 # Ami nem képezhető le, üres marad. A tranzakció piszkozatként jön létre
 # (status=draft), a hiányzó számlát vagy szervezetet a backoffice-ban kell
 # kitölteni publikálás előtt.
@@ -66,12 +67,17 @@
 # Ha a dataDir-ben nincs transactions.json, nem csinál semmit.
 # Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
-# Ha az import_key már létezik, a POST nem fut le. Az import_key előtti
-# futásból maradt sorokat (entered_by = keyPrefix + row, import_key üres)
-# a seeder megtalálja, és PUT-tal beírja a kulcsukat, nem duplikál.
+# Ha az import_key már létezik, a seeder PUT-tal felülírja a piszkozatot a
+# JSON aktuális mezőivel (dátum, összeg, leírás, pénznem, számlák, típus,
+# szervezet, entered_by, import_key). A fel nem oldott reláció nullára áll,
+# a régi kapcsolat törlődik. A bizonylat és a kapcsolódó tranzakció kimarad.
+# A publikált példány nem változik; a javított piszkozatot újra kell publikálni.
+# Az import_key előtti futásból maradt sorokat (entered_by = keyPrefix + row,
+# import_key üres) a seeder megtalálja, beírja a kulcsukat, majd ugyanígy
+# frissíti, nem duplikál.
 # Az adatbázisban részleges unique index véd (src/transaction-import-key.ts),
-# így párhuzamos futásnál a második POST elbukik, és ezt a seeder
-# "already imported" esetként kezeli.
+# így párhuzamos futásnál a második POST elbukik; a seeder megkeresi a sort
+# és ugyanazzal a PUT-tal felülírja.
 
 {{
   if (typeof trxRows === "undefined") {
@@ -193,6 +199,31 @@
     exports.trxBackfill = {};
     exports.trxRecheck = {};
     exports.trxCreateErrors = {};
+    exports.trxRaced = {};
+
+    // mode "update" writes null for a relation the JSON does not resolve, so a
+    // re-run clears a stale account. Create omits those keys.
+    exports.trxBody = (item, maps, mode) => {
+      const data = {
+        date: item.date,
+        amount: item.amount,
+        description: item.description,
+        currency_type: maps.currencyId,
+        entered_by: item.legacyKey,
+        import_key: item.key,
+      };
+      const relations = {
+        credit_account: (item.creditAccount && maps.accountIds[item.creditAccount]) || null,
+        debit_account: (item.debitAccount && maps.accountIds[item.debitAccount]) || null,
+        transaction_type: (item.transactionType && maps.typeIds[item.transactionType]) || null,
+        organization: (item.organization && maps.organizationIds[item.organization]) || null,
+      };
+      Object.keys(relations).forEach((field) => {
+        if (relations[field]) data[field] = relations[field];
+        else if (mode === "update") data[field] = null;
+      });
+      return data;
+    };
   }
 }}
 
@@ -416,6 +447,46 @@ Content-Type: application/json
 }}
 
 ###
+# @name update-transaction
+# @loop for item of trxRows
+# Rewrites the draft that already has this import_key. Receipts stay.
+{{
+  const currencyId = trxCurrencyIds[trxCurrencyCode];
+  if (!trxIds[item.key] || trxFailed[item.key]) {
+    exports.$cancel = true;
+  } else if (!currencyId) {
+    console.error("missing currency for " + item.key);
+    exports.$cancel = true;
+  } else {
+    exports.updateId = trxIds[item.key];
+    exports.trxPayload = JSON.stringify({
+      data: trxBody(item, {
+        currencyId: currencyId,
+        accountIds: trxAccountIds,
+        typeIds: trxTypeIds,
+        organizationIds: trxOrganizationIds,
+      }, "update"),
+    });
+  }
+}}
+PUT {{baseUrl}}/api/transactions/{{updateId}}?status=draft
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{trxPayload}}
+
+{{
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    trxFailed[item.key] = true;
+    exports.trxFailed = trxFailed;
+    console.error("update failed: " + item.key, response.statusCode, response.body);
+  } else {
+    console.info("updated: " + item.key);
+  }
+}}
+
+###
 # @name create-transaction
 # @loop for item of trxRows
 {{
@@ -426,24 +497,14 @@ Content-Type: application/json
     console.error("missing currency for " + item.key);
     exports.$cancel = true;
   } else {
-    const data = {
-      date: item.date,
-      amount: item.amount,
-      description: item.description,
-      currency_type: currencyId,
-      entered_by: item.legacyKey,
-      import_key: item.key,
-    };
-    const relations = {
-      credit_account: item.creditAccount && trxAccountIds[item.creditAccount],
-      debit_account: item.debitAccount && trxAccountIds[item.debitAccount],
-      transaction_type: item.transactionType && trxTypeIds[item.transactionType],
-      organization: item.organization && trxOrganizationIds[item.organization],
-    };
-    Object.keys(relations).forEach((field) => {
-      if (relations[field]) data[field] = relations[field];
+    exports.trxPayload = JSON.stringify({
+      data: trxBody(item, {
+        currencyId: currencyId,
+        accountIds: trxAccountIds,
+        typeIds: trxTypeIds,
+        organizationIds: trxOrganizationIds,
+      }, "create"),
     });
-    exports.trxPayload = JSON.stringify({ data });
   }
 }}
 POST {{baseUrl}}/api/transactions?status=draft
@@ -476,7 +537,7 @@ Content-Type: application/json
 ###
 # @name recheck-transaction
 # @loop for item of trxRows
-# A failed create counts as imported when the key exists by now (concurrent run).
+# A failed create is updated when the key exists by now (concurrent run).
 {{
   if (!trxRecheck[item.key]) {
     exports.$cancel = true;
@@ -497,8 +558,48 @@ Accept: application/json
   if (found) {
     trxIds[item.key] = found.documentId;
     exports.trxIds = trxIds;
-    console.info("already imported (concurrent run): " + item.key);
+    trxRaced[item.key] = true;
+    exports.trxRaced = trxRaced;
+    console.info("found after concurrent create, updating: " + item.key);
   } else {
     console.error("create failed: " + item.key, trxCreateErrors[item.key]);
+  }
+}}
+
+###
+# @name update-raced-transaction
+# @loop for item of trxRows
+# The other run inserted the key. Write this JSON onto that draft too.
+{{
+  const currencyId = trxCurrencyIds[trxCurrencyCode];
+  if (!trxRaced[item.key] || !trxIds[item.key] || trxFailed[item.key]) {
+    exports.$cancel = true;
+  } else if (!currencyId) {
+    console.error("missing currency for " + item.key);
+    exports.$cancel = true;
+  } else {
+    exports.updateId = trxIds[item.key];
+    exports.trxPayload = JSON.stringify({
+      data: trxBody(item, {
+        currencyId: currencyId,
+        accountIds: trxAccountIds,
+        typeIds: trxTypeIds,
+        organizationIds: trxOrganizationIds,
+      }, "update"),
+    });
+  }
+}}
+PUT {{baseUrl}}/api/transactions/{{updateId}}?status=draft
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{trxPayload}}
+
+{{
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("update failed: " + item.key, response.statusCode, response.body);
+  } else {
+    console.info("updated: " + item.key);
   }
 }}
