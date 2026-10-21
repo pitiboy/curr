@@ -51,7 +51,7 @@ A Rendszer szoftvere licensze Fejlesztesek.hu tulajdona. A felhasználók által
 
 ## 9. Adatvédelem
 
-A személyes adatok kezeléséről az [Adatkezelési tájékoztató](https://kor.fejlesztesek.hu/legal/privacy-policy) rendelkezik.
+A személyes adatok kezeléséről az [Adatkezelési tájékoztató](https://kor.fejlesztesek.hu/static/privacy-policy) rendelkezik.
 
 ## 10. A fiók megszűnése
 
@@ -59,7 +59,7 @@ A fiók megszűnik, ha az adminisztrátor törli vagy letiltja, illetve ha a fel
 
 ## 11. A feltételek módosítása
 
-Az Üzemeltető a feltételeket módosíthatja. A módosításról a felhasználókat a Rendszerben vagy e-mailben értesíti; a módosítás hatálybalépése utáni használat a módosított feltételek elfogadásának minősül. Az aktuális változat mindig ezen a címen érhető el: [https://kor.fejlesztesek.hu/legal/terms-of-service](https://kor.fejlesztesek.hu/legal/terms-of-service) ([angol nyelvű változat](https://kor.fejlesztesek.hu/legal/terms-of-service?locale=en)). Eltérés esetén a magyar változat az irányadó.
+Az Üzemeltető a feltételeket módosíthatja. A módosításról a felhasználókat a Rendszerben vagy e-mailben értesíti; a módosítás hatálybalépése utáni használat a módosított feltételek elfogadásának minősül. Az aktuális változat mindig ezen a címen érhető el: [https://kor.fejlesztesek.hu/static/terms-of-service](https://kor.fejlesztesek.hu/static/terms-of-service) ([angol nyelvű változat](https://kor.fejlesztesek.hu/static/terms-of-service?locale=en)). Eltérés esetén a magyar változat az irányadó.
 
 ## 12. Irányadó jog, kapcsolat
 

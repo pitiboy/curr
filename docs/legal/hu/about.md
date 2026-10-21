@@ -20,12 +20,12 @@ A rendszer zárt körű: a felhasználói fiókokat az üzemeltető adminisztrá
 
 A kezelő felület címe: [https://kor.fejlesztesek.hu/backoffice/](https://kor.fejlesztesek.hu/backoffice/). Belépni e-mail címmel és jelszóval, vagy Google-fiókkal lehet.
 
-Google-belépésnél **csak az e-mail címedet** kérjük el a Google-től, kizárólag azért, hogy a meglévő fiókodat azonosítsuk. Más Google-adathoz (Gmail, névjegyek, naptár, Drive) nem kérünk hozzáférést. Részletek az [Adatkezelési tájékoztatóban](https://kor.fejlesztesek.hu/legal/privacy-policy).
+Google-belépésnél **csak az e-mail címedet** kérjük el a Google-től, kizárólag azért, hogy a meglévő fiókodat azonosítsuk. Más Google-adathoz (Gmail, névjegyek, naptár, Drive) nem kérünk hozzáférést. Részletek az [Adatkezelési tájékoztatóban](https://kor.fejlesztesek.hu/static/privacy-policy).
 
 ## Jogi dokumentumok
 
-- [Adatkezelési tájékoztató](https://kor.fejlesztesek.hu/legal/privacy-policy)
-- [Felhasználási feltételek](https://kor.fejlesztesek.hu/legal/terms-of-service)
+- [Adatkezelési tájékoztató](https://kor.fejlesztesek.hu/static/privacy-policy)
+- [Felhasználási feltételek](https://kor.fejlesztesek.hu/static/terms-of-service)
 
 ## Kapcsolat
 

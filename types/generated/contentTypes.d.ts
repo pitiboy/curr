@@ -697,13 +697,13 @@ export interface ApiCurrencyTypeCurrencyType
   };
 }
 
-export interface ApiLegalPageLegalPage extends Struct.CollectionTypeSchema {
-  collectionName: 'legal_pages';
+export interface ApiStaticPageStaticPage extends Struct.CollectionTypeSchema {
+  collectionName: 'static_pages';
   info: {
-    description: 'Public legal documents (privacy policy, terms of service, about). Rendered without login at /legal/{slug}?locale={hu|en}.';
-    displayName: 'Legal Page';
-    pluralName: 'legal-pages';
-    singularName: 'legal-page';
+    description: 'Public static pages (privacy policy, terms of service, about). Rendered without login at /static/{slug}?locale={hu|en}.';
+    displayName: 'Static Page';
+    pluralName: 'static-pages';
+    singularName: 'static-page';
   };
   options: {
     draftAndPublish: false;
@@ -734,7 +734,7 @@ export interface ApiLegalPageLegalPage extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::legal-page.legal-page'
+      'api::static-page.static-page'
     >;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.String &
@@ -1654,7 +1654,7 @@ declare module '@strapi/strapi' {
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;
-      'api::legal-page.legal-page': ApiLegalPageLegalPage;
+      'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::member.member': ApiMemberMember;
       'api::membership-type.membership-type': ApiMembershipTypeMembershipType;
       'api::membership.membership': ApiMembershipMembership;

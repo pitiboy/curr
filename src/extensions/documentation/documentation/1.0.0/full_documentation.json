@@ -2618,7 +2618,7 @@
         "operationId": "delete/currency-types/{id}"
       }
     },
-    "/legal-pages": {
+    "/static-pages": {
       "get": {
         "responses": {
           "200": {
@@ -2626,7 +2626,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LegalPageListResponse"
+                  "$ref": "#/components/schemas/StaticPageListResponse"
                 }
               }
             }
@@ -2683,7 +2683,7 @@
           }
         },
         "tags": [
-          "Legal-page"
+          "Static-page"
         ],
         "parameters": [
           {
@@ -2799,7 +2799,7 @@
             }
           }
         ],
-        "operationId": "get/legal-pages"
+        "operationId": "get/static-pages"
       },
       "post": {
         "responses": {
@@ -2808,7 +2808,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LegalPageResponse"
+                  "$ref": "#/components/schemas/StaticPageResponse"
                 }
               }
             }
@@ -2865,23 +2865,23 @@
           }
         },
         "tags": [
-          "Legal-page"
+          "Static-page"
         ],
         "parameters": [],
-        "operationId": "post/legal-pages",
+        "operationId": "post/static-pages",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LegalPageRequest"
+                "$ref": "#/components/schemas/StaticPageRequest"
               }
             }
           }
         }
       }
     },
-    "/legal-pages/{id}": {
+    "/static-pages/{id}": {
       "get": {
         "responses": {
           "200": {
@@ -2889,7 +2889,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LegalPageResponse"
+                  "$ref": "#/components/schemas/StaticPageResponse"
                 }
               }
             }
@@ -2946,7 +2946,7 @@
           }
         },
         "tags": [
-          "Legal-page"
+          "Static-page"
         ],
         "parameters": [
           {
@@ -2960,7 +2960,7 @@
             }
           }
         ],
-        "operationId": "get/legal-pages/{id}"
+        "operationId": "get/static-pages/{id}"
       },
       "put": {
         "responses": {
@@ -2969,7 +2969,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LegalPageResponse"
+                  "$ref": "#/components/schemas/StaticPageResponse"
                 }
               }
             }
@@ -3026,7 +3026,7 @@
           }
         },
         "tags": [
-          "Legal-page"
+          "Static-page"
         ],
         "parameters": [
           {
@@ -3040,13 +3040,13 @@
             }
           }
         ],
-        "operationId": "put/legal-pages/{id}",
+        "operationId": "put/static-pages/{id}",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LegalPageRequest"
+                "$ref": "#/components/schemas/StaticPageRequest"
               }
             }
           }
@@ -3117,7 +3117,7 @@
           }
         },
         "tags": [
-          "Legal-page"
+          "Static-page"
         ],
         "parameters": [
           {
@@ -3131,7 +3131,7 @@
             }
           }
         ],
-        "operationId": "delete/legal-pages/{id}"
+        "operationId": "delete/static-pages/{id}"
       }
     },
     "/members": {
@@ -10056,7 +10056,7 @@
           }
         }
       },
-      "LegalPageRequest": {
+      "StaticPageRequest": {
         "type": "object",
         "required": [
           "data"
@@ -10103,13 +10103,13 @@
           }
         }
       },
-      "LegalPageListResponse": {
+      "StaticPageListResponse": {
         "type": "object",
         "properties": {
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/LegalPage"
+              "$ref": "#/components/schemas/StaticPage"
             }
           },
           "meta": {
@@ -10138,7 +10138,7 @@
           }
         }
       },
-      "LegalPage": {
+      "StaticPage": {
         "type": "object",
         "required": [
           "title",
@@ -10225,16 +10225,16 @@
           "localizations": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/LegalPage"
+              "$ref": "#/components/schemas/StaticPage"
             }
           }
         }
       },
-      "LegalPageResponse": {
+      "StaticPageResponse": {
         "type": "object",
         "properties": {
           "data": {
-            "$ref": "#/components/schemas/LegalPage"
+            "$ref": "#/components/schemas/StaticPage"
           },
           "meta": {
             "type": "object"

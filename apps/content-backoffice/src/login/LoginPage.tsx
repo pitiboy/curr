@@ -19,7 +19,7 @@ import {
 } from '../auth/googleLogin';
 import { translateOAuthError } from '../auth/oauthErrors';
 import { DocumentTitle } from '../layout/AppTitle';
-import { LegalLinks } from '../legal/LegalLinks';
+import { StaticLinks } from '../static/StaticLinks';
 
 export function LoginPage() {
   const translate = useTranslate();
@@ -121,7 +121,7 @@ export function LoginPage() {
           width: 300,
         }}
       >
-        <LegalLinks sx={{ color: 'text.secondary' }} />
+        <StaticLinks sx={{ color: 'text.secondary' }} />
         <LocalesMenuButton />
       </Box>
     </Login>

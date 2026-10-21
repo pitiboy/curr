@@ -32,31 +32,31 @@ A Strapi `PUBLIC_URL` mezőjének originje egyezzen a fenti hosttal.
 
 | Mező | Érték |
 | --- | --- |
-| Application home page | `https://kor.fejlesztesek.hu/legal/about` (vagy `https://kor.fejlesztesek.hu`, ha a `PUBLIC_HOME_REDIRECT=/legal/about` be van állítva, lásd lent) |
-| Application privacy policy link | `https://kor.fejlesztesek.hu/legal/privacy-policy` |
-| Application terms of service link | `https://kor.fejlesztesek.hu/legal/terms-of-service` |
+| Application home page | `https://kor.fejlesztesek.hu/static/about` (vagy `https://kor.fejlesztesek.hu`, ha a `PUBLIC_HOME_REDIRECT=/static/about` be van állítva, lásd lent) |
+| Application privacy policy link | `https://kor.fejlesztesek.hu/static/privacy-policy` |
+| Application terms of service link | `https://kor.fejlesztesek.hu/static/terms-of-service` |
 | Authorised domains | `fejlesztesek.hu` |
 
 Az **Authorised domains** listába a `fejlesztesek.hu` kerüljön (a legfelső szintű, regisztrálható domain, nem a `kor.` aldomain). Enélkül a konzol pirossal jelzi a home page, privacy és terms linkeket, és a redirect URI-t sem fogadja el.
 
 Scope: csak `email` (a Strapi Google provider alapértéke). Nem érzékeny scope, így a Google-ellenőrzés csak a branding (logó, home page) miatt lehet szükséges.
 
-A jogi oldalak a Strapi `legal-page` gyűjteményéből jönnek, belépés nélkül, mindig az aktuális adatbázis-tartalommal (`src/legal-pages.ts`):
+A statikus oldalak a Strapi `static-page` gyűjteményéből jönnek, belépés nélkül, mindig az aktuális adatbázis-tartalommal (`src/static-pages.ts`):
 
-- Lista: `https://kor.fejlesztesek.hu/legal`
-- Oldal: `https://kor.fejlesztesek.hu/legal/{slug}` (magyar, alapértelmezett), `…/legal/{slug}?locale=en` (angol; ha nincs angol bejegyzés, a magyar jelenik meg)
-- JSON: `GET /api/legal-pages?locale=hu|en` (public role: `find`, `findOne`; a bootstrap adja meg)
+- Lista: `https://kor.fejlesztesek.hu/static`
+- Oldal: `https://kor.fejlesztesek.hu/static/{slug}` (magyar, alapértelmezett), `…/static/{slug}?locale=en` (angol; ha nincs angol bejegyzés, a magyar jelenik meg)
+- JSON: `GET /api/static-pages?locale=hu|en` (public role: `find`, `findOne`; a bootstrap adja meg)
 
 A Google konzolba a paraméter nélküli (magyar) címeket írd; mindegyik oldal fejlécében HU / EN váltó van, így a Google ellenőrzője az angol változatot is eléri.
 
-A szövegek forrása és a feltöltés lépései: [docs/legal/README.md](../legal/README.md). A Google konzolba csak akkor írd be a linkeket, ha a bejegyzések (`about`, `privacy-policy`, `terms-of-service`) már fent vannak, különben 404-et kap a Google.
+A szövegek forrása és a feltöltés lépései: [docs/static/README.md](../static/README.md). A Google konzolba csak akkor írd be a linkeket, ha a bejegyzések (`about`, `privacy-policy`, `terms-of-service`) már fent vannak, különben 404-et kap a Google.
 
 ### Kezdőlap
 
-A `legal-page` `about` bejegyzése a KÖR nyilvános bemutató oldala (mit csinál az alkalmazás, miért kéri az e-mail címet, linkek a tájékoztatóra). Élesen a gyökér csak `PUBLIC_HOME_REDIRECT=/backoffice/` (cPanel) mellett irányít a kezelő felületre.
+A `static-page` `about` bejegyzése a KÖR nyilvános bemutató oldala (mit csinál az alkalmazás, miért kéri az e-mail címet, linkek a tájékoztatóra). Élesen a gyökér csak `PUBLIC_HOME_REDIRECT=/backoffice/` (cPanel) mellett irányít a kezelő felületre.
 
-- **Ajánlott (Google konzol):** Application home page = `https://kor.fejlesztesek.hu/legal/about`. Nincs szerveroldali teendő.
-- **Opcionális:** a kor alkalmazás cPanel env-jében `PUBLIC_HOME_REDIRECT=/legal/about`, újraindítás. Ekkor `https://kor.fejlesztesek.hu/` → 302 → `/legal/about`, és a home page mezőbe a gyökér is mehet. Csak relatív, `/`-rel kezdődő utat fogad el. Ne a közös `.env`-be tedd, mert az aliasok örökölnék.
+- **Ajánlott (Google konzol):** Application home page = `https://kor.fejlesztesek.hu/static/about`. Nincs szerveroldali teendő.
+- **Opcionális:** a kor alkalmazás cPanel env-jében `PUBLIC_HOME_REDIRECT=/static/about`, újraindítás. Ekkor `https://kor.fejlesztesek.hu/` → 302 → `/static/about`, és a home page mezőbe a gyökér is mehet. Csak relatív, `/`-rel kezdődő utat fogad el. Ne a közös `.env`-be tedd, mert az aliasok örökölnék.
 
 Linkek a felületeken:
 
