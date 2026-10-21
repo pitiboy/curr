@@ -5,6 +5,8 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 LOG_FILE="${DEPLOY_LOG_FILE:-build-deploy.log}"
 LOG_PATH="$root/$LOG_FILE"
+STRAPI_DEPS_STATE="${DEPLOY_STRAPI_DEPS_STATE:-build-deploy.strapi-deps}"
+STRAPI_DEPS_PATH="$root/$STRAPI_DEPS_STATE"
 MAX_ENTRIES="${DEPLOY_LOG_MAX_ENTRIES:-80}"
 MARKER="--- deploy event ---"
 
@@ -58,16 +60,18 @@ commit_deploy_log() {
     return 0
   fi
 
-  if [[ ! -f "$LOG_PATH" ]]; then
+  if [[ ! -f "$LOG_PATH" ]] && [[ ! -f "$STRAPI_DEPS_PATH" ]]; then
     return 0
   fi
 
-  if git diff --quiet -- "$LOG_FILE" 2>/dev/null && git diff --cached --quiet -- "$LOG_FILE" 2>/dev/null; then
-    return 0
+  if [[ -f "$LOG_PATH" ]]; then
+    git add -- "$LOG_FILE"
+  fi
+  if [[ -f "$STRAPI_DEPS_PATH" ]]; then
+    git add -- "$STRAPI_DEPS_STATE"
   fi
 
-  git add -- "$LOG_FILE"
-  if git diff --cached --quiet -- "$LOG_FILE"; then
+  if git diff --cached --quiet; then
     return 0
   fi
 
