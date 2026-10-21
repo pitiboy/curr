@@ -24,6 +24,8 @@
 // import_key_fields is a top-level array in the JSON. `currency` means the
 // row's currency, or the file's currencyCode. Identical keys get #2, #3… in
 // file order. The Excel row number is not part of the key.
+// Negative Excel amounts are stored as |amount|; követel/tartozik labels stay as in the sheet.
+// import_key uses the stored (positive) amount; regen when amount or other key fields change.
 // --check recomputes keys and booking and exits 1 if the file is stale.
 // --xlsx reads the workbook and replaces the rows; with --check it only compares.
 import { createHash } from 'node:crypto';
@@ -223,6 +225,16 @@ export function resolveOrganization(project, source, orgNames) {
   return org;
 }
 
+/** Excel előjel → mindig pozitív amount a JSON-ban; a számlacímkék változatlanok. */
+export function absAmountRow(row) {
+  if (row.amount === undefined || row.amount === null || row.amount === '') return row;
+  const amount = Number(row.amount);
+  if (!Number.isFinite(amount)) throw new Error(`row ${row.row}: not an amount: ${row.amount}`);
+  const absAmount = Math.round(Math.abs(amount) * 100) / 100;
+  if (amount === absAmount) return row;
+  return { ...row, amount: absAmount };
+}
+
 export function resolveTransactionType(row, source, typeNames) {
   const name =
     (source.operationTransactionTypes && source.operationTransactionTypes[row.operation]) ||
@@ -262,23 +274,24 @@ export function assertLookupTables(source, ctx) {
 }
 
 export function bookRow(row, source, ctx) {
+  const withAmount = absAmountRow(row);
   let credit;
   let debit;
   try {
-    credit = resolveAccountLabel(row.credit_label, ctx.accountNames);
-    debit = resolveAccountLabel(row.debit_label, ctx.accountNames);
+    credit = resolveAccountLabel(withAmount.credit_label, ctx.accountNames);
+    debit = resolveAccountLabel(withAmount.debit_label, ctx.accountNames);
   } catch (error) {
     throw new Error(`row ${row.row}: ${error.message}`);
   }
   let organization;
   try {
-    organization = resolveOrganization(row.project, source, ctx.orgNames);
+    organization = resolveOrganization(withAmount.project, source, ctx.orgNames);
   } catch (error) {
-    throw new Error(`row ${row.row}: ${error.message}`);
+    throw new Error(`row ${withAmount.row}: ${error.message}`);
   }
-  const transactionType = resolveTransactionType(row, source, ctx.typeNames);
+  const transactionType = resolveTransactionType(withAmount, source, ctx.typeNames);
   const booked = {
-    ...row,
+    ...withAmount,
     credit_account: credit,
     debit_account: debit,
     organization,
@@ -300,9 +313,10 @@ function ordered(row) {
 
 export function buildTransactions(source, ctx, sheetRows) {
   assertLookupTables(source, ctx);
+  const rawRows = sheetRows || source.transactions || [];
   const next = {
     ...source,
-    transactions: (sheetRows || source.transactions || []).map((row) => bookRow(row, source, ctx)),
+    transactions: rawRows.map((row) => bookRow(row, source, ctx)),
   };
   const keys = importKeys(next);
   next.transactions = next.transactions.map((row, index) => ordered({ ...row, import_key: keys[index] }));
@@ -571,9 +585,19 @@ function main(argv) {
     }
   }
   const aliasText = [...aliases.entries()].map(([key, count]) => `${key} ×${count}`).join('; ') || 'none';
+  let amountUpdates = 0;
+  let keyUpdates = 0;
+  for (let index = 0; index < next.transactions.length; index += 1) {
+    const cur = current[index];
+    const nxt = next.transactions[index];
+    if (!cur) continue;
+    if (Number(cur.amount) !== Number(nxt.amount)) amountUpdates += 1;
+    if (cur.import_key !== nxt.import_key) keyUpdates += 1;
+  }
   console.log(
-    `${next.transactions.length} rows, ${stale.length} updated (fields: ${fields}) in ${file}`,
+    `${next.transactions.length} rows, ${stale.length} booking drift (fields: ${fields}) in ${file}`,
   );
+  console.log(`${amountUpdates} amounts, ${keyUpdates} import_keys updated`);
   console.log(`aliases: ${aliasText}`);
 }
 
