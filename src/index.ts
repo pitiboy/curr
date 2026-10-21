@@ -1,9 +1,10 @@
 import {
-  ensureLegalLocales,
-  LEGAL_PAGE_PUBLIC_ACTIONS,
-  registerLegalPageRoutes,
-  registerLegalSlugGuard,
-} from './legal-pages';
+  ensureStaticPageLocales,
+  migrateLegalPagesToStaticPages,
+  STATIC_PAGE_PUBLIC_ACTIONS,
+  registerStaticPageRoutes,
+  registerStaticPageSlugGuard,
+} from './static-pages';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
@@ -243,16 +244,16 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
 }
 
 /**
- * Legal pages (privacy policy, terms of service) are readable without login:
+ * Static pages (privacy policy, terms of service) are readable without login:
  * the Google OAuth consent screen links to them. Same additive pattern as the
  * content roles: missing permissions are created, existing ones are kept.
  */
-async function ensurePublicLegalPagePermissions(strapi: StrapiLike) {
+async function ensurePublicStaticPagePermissions(strapi: StrapiLike) {
   const role = await strapi.db
     .query('plugin::users-permissions.role')
     .findOne({ where: { type: 'public' } });
   if (!role) {
-    strapi.log.warn('Legal pages bootstrap: public role not found, skipped');
+    strapi.log.warn('Static pages bootstrap: public role not found, skipped');
     return;
   }
 
@@ -261,10 +262,10 @@ async function ensurePublicLegalPagePermissions(strapi: StrapiLike) {
     .service('users-permissions')
     .getActions();
 
-  for (const action of LEGAL_PAGE_PUBLIC_ACTIONS) {
+  for (const action of STATIC_PAGE_PUBLIC_ACTIONS) {
     if (!isActionInCatalog(actionCatalog, action)) {
       strapi.log.warn(
-        `Legal pages bootstrap: action "${action}" not in getActions(), skipped`,
+        `Static pages bootstrap: action "${action}" not in getActions(), skipped`,
       );
       continue;
     }
@@ -322,8 +323,8 @@ async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
 export default {
   register({ strapi }) {
     registerPublishGuard(strapi);
-    registerLegalPageRoutes(strapi);
-    registerLegalSlugGuard(strapi);
+    registerStaticPageRoutes(strapi);
+    registerStaticPageSlugGuard(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
     // socket is plain HTTP. The `cookies` package checks socket.encrypted and
@@ -353,7 +354,8 @@ export default {
     await ensureTransactionImportKeyIndex(strapi);
     await backfillMemberAccounts(strapi);
     await ensureGoogleOAuthGrant(strapi);
-    await ensureLegalLocales(strapi);
-    await ensurePublicLegalPagePermissions(strapi);
+    await migrateLegalPagesToStaticPages(strapi);
+    await ensureStaticPageLocales(strapi);
+    await ensurePublicStaticPagePermissions(strapi);
   },
 };

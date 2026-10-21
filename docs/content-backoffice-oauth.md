@@ -153,7 +153,7 @@ sequenceDiagram
 | Admin felvesz e-mail + role + jelszó — mehet utána Google? | **Igen**, ha a Google-fiók e-mailje megegyezik, és a user nincs tiltva: ugyanaz a user lép be, ugyanazzal a role-lal (repó override; stock Strapi ezt nem engedné). Local login is **marad**. |
 | Kell-e Adminban Google provider kapcsoló? | **Nem** kötelező; env + bootstrap beállítja. Ellenőrzésre használható. |
 | Hol a deploy URL lista? | [deploy/backoffice-google-oauth.md](./deploy/backoffice-google-oauth.md) |
-| Hol vannak az adatkezelési tájékoztató és a felhasználási feltételek? | Strapi `legal-page` gyűjtemény (hu/en), nyilvánosan: `/legal/privacy-policy`, `/legal/terms-of-service`, `/legal/about`, angolul `?locale=en`. Forrás: [legal/README.md](./legal/README.md) |
+| Hol vannak az adatkezelési tájékoztató és a felhasználási feltételek? | Strapi `static-page` gyűjtemény (hu/en), nyilvánosan: `/static/privacy-policy`, `/static/terms-of-service`, `/static/about`, angolul `?locale=en`. Forrás: [legal/README.md](./static/README.md) |
 
 ---
 

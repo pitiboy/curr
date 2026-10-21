@@ -1,22 +1,22 @@
 import type { StrapiApp } from '@strapi/strapi/admin';
 
 /**
- * Public legal pages served by Strapi itself (src/legal-pages.ts). Same origin
+ * Public static pages served by Strapi itself (src/static-pages.ts). Same origin
  * as the admin, so the links work locally (:1337) and on kor.fejlesztesek.hu.
  * hu is the default page language; en adds `?locale=en`.
  */
-const LEGAL_LINKS = {
+const STATIC_PAGE_LINKS = {
   hu: [
-    { href: '/legal/privacy-policy', label: 'Adatkezelési tájékoztató' },
-    { href: '/legal/terms-of-service', label: 'Felhasználási feltételek' },
+    { href: '/static/privacy-policy', label: 'Adatkezelési tájékoztató' },
+    { href: '/static/terms-of-service', label: 'Felhasználási feltételek' },
   ],
   en: [
-    { href: '/legal/privacy-policy?locale=en', label: 'Privacy Policy' },
-    { href: '/legal/terms-of-service?locale=en', label: 'Terms of Service' },
+    { href: '/static/privacy-policy?locale=en', label: 'Privacy Policy' },
+    { href: '/static/terms-of-service?locale=en', label: 'Terms of Service' },
   ],
 } as const;
 
-const LEGAL_FOOTER_ID = 'kor-legal-footer';
+const STATIC_PAGE_FOOTER_ID = 'kor-static-page-footer';
 const BACKOFFICE_ENTRY_ID = 'kor-backoffice-entry';
 
 const BACKOFFICE_ENTRY_LABELS = {
@@ -28,20 +28,20 @@ const BACKOFFICE_ENTRY_LABELS = {
  * The admin keeps its UI language on `<html lang>` (login dropdown and
  * profile setting both update it). Anything other than hu gets the en pages.
  */
-function adminLegalLocale(): keyof typeof LEGAL_LINKS {
+function adminStaticPageLocale(): keyof typeof STATIC_PAGE_LINKS {
   const lang = (document.documentElement.lang || 'en').toLowerCase();
   return lang.startsWith('hu') ? 'hu' : 'en';
 }
 
-function renderLegalFooter(footer: HTMLElement) {
-  const locale = adminLegalLocale();
+function renderStaticPageFooter(footer: HTMLElement) {
+  const locale = adminStaticPageLocale();
   if (footer.dataset.locale === locale) {
     return;
   }
   footer.dataset.locale = locale;
   footer.replaceChildren();
 
-  for (const link of LEGAL_LINKS[locale]) {
+  for (const link of STATIC_PAGE_LINKS[locale]) {
     const anchor = document.createElement('a');
     anchor.href = link.href;
     anchor.textContent = link.label;
@@ -126,7 +126,7 @@ function mountBackofficeEntry() {
   document.body.append(wrap);
 
   const sync = () => {
-    const locale = adminLegalLocale();
+    const locale = adminStaticPageLocale();
     const text = BACKOFFICE_ENTRY_LABELS[locale];
     label.textContent = text;
     link.setAttribute('aria-label', text);
@@ -149,13 +149,13 @@ function mountBackofficeEntry() {
   });
 }
 
-function mountLegalFooter() {
-  if (document.getElementById(LEGAL_FOOTER_ID)) {
+function mountStaticPageFooter() {
+  if (document.getElementById(STATIC_PAGE_FOOTER_ID)) {
     return;
   }
 
   const footer = document.createElement('div');
-  footer.id = LEGAL_FOOTER_ID;
+  footer.id = STATIC_PAGE_FOOTER_ID;
   footer.setAttribute('role', 'contentinfo');
   Object.assign(footer.style, {
     position: 'fixed',
@@ -173,10 +173,10 @@ function mountLegalFooter() {
     background: 'rgba(127, 127, 127, 0.12)',
   });
 
-  renderLegalFooter(footer);
+  renderStaticPageFooter(footer);
   document.body.appendChild(footer);
 
-  new MutationObserver(() => renderLegalFooter(footer)).observe(
+  new MutationObserver(() => renderStaticPageFooter(footer)).observe(
     document.documentElement,
     { attributes: true, attributeFilter: ['lang'] },
   );
@@ -266,7 +266,7 @@ export default {
   },
   bootstrap(_app: StrapiApp) {
     mountBackofficeEntry();
-    mountLegalFooter();
+    mountStaticPageFooter();
 
     const titlePrefix = 'KÖR | ';
 

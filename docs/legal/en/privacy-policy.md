@@ -136,6 +136,6 @@ You may also lodge a complaint with the supervisory authority of your EU country
 
 ## 11. Changes to this policy
 
-We update this policy when the service changes. The current version is always available at [https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en](https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en). This is a translation; in case of any discrepancy the [Hungarian version](https://kor.fejlesztesek.hu/legal/privacy-policy) prevails.
+We update this policy when the service changes. The current version is always available at [https://kor.fejlesztesek.hu/static/privacy-policy?locale=en](https://kor.fejlesztesek.hu/static/privacy-policy?locale=en). This is a translation; in case of any discrepancy the [Hungarian version](https://kor.fejlesztesek.hu/static/privacy-policy) prevails.
 
 **Effective from:** 6 October 2026

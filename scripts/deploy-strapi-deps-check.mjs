@@ -14,7 +14,14 @@ const pkgPath = path.join(root, "package.json");
 
 function isStrapiDeployCommand(command) {
   if (/backoffice/i.test(command)) return false;
-  return /\bdeploy\b/i.test(command);
+  if (/\bdeploy:f\b/.test(command)) return false;
+  if (command === "deploy" || command.startsWith("deploy:")) {
+    return true;
+  }
+  if (/^npm run deploy\b/.test(command)) {
+    return true;
+  }
+  return false;
 }
 
 function listSuccessfulStrapiDeploys(logText) {

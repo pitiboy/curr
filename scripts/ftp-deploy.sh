@@ -55,6 +55,9 @@ FTP_OVERRIDE_POLICY="${FTP_OVERRIDE_POLICY:-only-newer}"
 # így ott elég a hiányzókat feltölteni (--only-missing) és a régieket törölni
 # (--delete). Kivétel az index.html: nincs hash a nevében, ezért azt külön,
 # minden alkalommal feltöltjük (put).
+# A dist/ többi része (lefordított src, config) is --delete-tel megy fel, hogy a
+# lokálisan törölt API-k (pl. src/api/legal-page) a szerverről is eltűnjenek.
+# A gyökér mirrorban szándékosan nincs --delete (.env, node_modules, uploads).
 case "$FTP_OVERRIDE_POLICY" in
   only-newer)
     mirror_policy="--only-newer"
@@ -117,7 +120,8 @@ set net:timeout 30
 set net:max-retries 2
 open --env-password -u "$FTP_USER" -p "$FTP_PORT" "$FTP_HOST"
 mirror -R -p -v $build_policy --overwrite --delete --no-empty-dirs $dry -x '^index\.html\$' dist/build "$FTP_REMOTE_DIR/dist/build"
-mirror -R -p -v $mirror_policy --overwrite --no-empty-dirs $dry -i '^(dist(\$|/)|public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' -x '^dist/build/' -x '(^|/)public/uploads(/|\$)' -x '(^|/)\\.' . "$FTP_REMOTE_DIR"
+mirror -R -p -v $mirror_policy --overwrite --delete --no-empty-dirs $dry -x '^build/' dist "$FTP_REMOTE_DIR/dist"
+mirror -R -p -v $mirror_policy --overwrite --no-empty-dirs $dry -i '^(public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' -x '(^|/)public/uploads(/|\$)' -x '(^|/)\\.' . "$FTP_REMOTE_DIR"
 $index_put
 bye
 EOF

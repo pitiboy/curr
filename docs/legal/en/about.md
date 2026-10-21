@@ -20,12 +20,12 @@ Access is restricted: user accounts are created by the operator's administrator.
 
 The backoffice is available at [https://kor.fejlesztesek.hu/backoffice/](https://kor.fejlesztesek.hu/backoffice/). You can sign in with your email address and password, or with your Google account.
 
-When you sign in with Google, we request **only your email address** from Google, solely to identify your existing account. We do not request access to any other Google data (Gmail, contacts, calendar, Drive). See the [Privacy Policy](https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en) for details.
+When you sign in with Google, we request **only your email address** from Google, solely to identify your existing account. We do not request access to any other Google data (Gmail, contacts, calendar, Drive). See the [Privacy Policy](https://kor.fejlesztesek.hu/static/privacy-policy?locale=en) for details.
 
 ## Legal documents
 
-- [Privacy Policy](https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en)
-- [Terms of Service](https://kor.fejlesztesek.hu/legal/terms-of-service?locale=en)
+- [Privacy Policy](https://kor.fejlesztesek.hu/static/privacy-policy?locale=en)
+- [Terms of Service](https://kor.fejlesztesek.hu/static/terms-of-service?locale=en)
 
 ## Contact
 

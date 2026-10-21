@@ -3,7 +3,7 @@ import type { Core } from '@strapi/strapi';
 import {
   createHomeRedirectMiddleware,
   resolveSiteHomeRedirectTarget,
-} from '../legal-pages';
+} from '../static-pages';
 
 /**
  * Runs late in the global middleware stack (config/middlewares.ts), before the

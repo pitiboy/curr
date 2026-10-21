@@ -13,7 +13,7 @@ curl -sI https://kor.fejlesztesek.hu/ | grep -i '^location:'
 # location: https://kor.fejlesztesek.hu/backoffice/
 ```
 
-Bemutató oldal gyökérhez: `PUBLIC_HOME_REDIRECT=/legal/about`. Env nélkül vagy üres értéknél marad az `/admin`.
+Bemutató oldal gyökérhez: `PUBLIC_HOME_REDIRECT=/static/about`. Env nélkül vagy üres értéknél marad az `/admin`.
 
 A gyökérből:
 
