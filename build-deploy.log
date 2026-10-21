@@ -12,3 +12,9 @@ command: npm run deploy:backoffice
 build: success
 ftp: success
 
+--- deploy event ---
+date: 2026-10-21T09:28:47Z
+command: npm run deploy
+build: success
+ftp: success
+
