@@ -1,0 +1,14 @@
+# build-deploy.log — rolling npm run deploy audit (auto-generated; do not edit)
+
+--- deploy event ---
+date: 2026-10-21T09:16:15Z
+command: npm run deploy (test)
+build: success
+ftp: dry-run
+
+--- deploy event ---
+date: 2026-10-21T09:24:57Z
+command: npm run deploy:backoffice
+build: success
+ftp: success
+
