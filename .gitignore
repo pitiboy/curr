@@ -30,6 +30,7 @@ public/uploads/*
 
 # logs
 *.log
+!build-deploy.log
 error.log
 npm-debug.log
 yarn-error.log
