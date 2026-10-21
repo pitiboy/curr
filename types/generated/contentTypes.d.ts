@@ -697,72 +697,6 @@ export interface ApiCurrencyTypeCurrencyType
   };
 }
 
-export interface ApiStaticPageStaticPage extends Struct.CollectionTypeSchema {
-  collectionName: 'static_pages';
-  info: {
-    description: 'Public static pages (privacy policy, terms of service, about). Rendered without login at /static/{slug}?locale={hu|en}.';
-    displayName: 'Static Page';
-    pluralName: 'static-pages';
-    singularName: 'static-page';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  pluginOptions: {
-    i18n: {
-      localized: true;
-    };
-  };
-  attributes: {
-    body: Schema.Attribute.RichText &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    footer_order: Schema.Attribute.Integer &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false;
-        };
-      }> &
-      Schema.Attribute.DefaultTo<0>;
-    locale: Schema.Attribute.String;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::static-page.static-page'
-    >;
-    publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: false;
-        };
-      }> &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 128;
-      }>;
-    title: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }> &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 255;
-      }>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiMemberMember extends Struct.CollectionTypeSchema {
   collectionName: 'members';
   info: {
@@ -1023,6 +957,72 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     vendor: Schema.Attribute.String;
+  };
+}
+
+export interface ApiStaticPageStaticPage extends Struct.CollectionTypeSchema {
+  collectionName: 'static_pages';
+  info: {
+    description: 'Public static pages (privacy policy, terms of service, about). Rendered without login at /static/{slug}?locale={hu|en}.';
+    displayName: 'Static Page';
+    pluralName: 'static-pages';
+    singularName: 'static-page';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
+  attributes: {
+    body: Schema.Attribute.RichText &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    footer_order: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::static-page.static-page'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false;
+        };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128;
+      }>;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1654,13 +1654,13 @@ declare module '@strapi/strapi' {
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;
-      'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::member.member': ApiMemberMember;
       'api::membership-type.membership-type': ApiMembershipTypeMembershipType;
       'api::membership.membership': ApiMembershipMembership;
       'api::organization.organization': ApiOrganizationOrganization;
       'api::receipt-type.receipt-type': ApiReceiptTypeReceiptType;
       'api::receipt.receipt': ApiReceiptReceipt;
+      'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
       'api::transaction.transaction': ApiTransactionTransaction;
       'plugin::content-releases.release': PluginContentReleasesRelease;

@@ -1,4 +1,4 @@
-import { strapiUrl } from '../config';
+import { STRAPI_URL } from '../config';
 
 /**
  * Public static pages rendered by Strapi from the `static-page` content type
@@ -23,7 +23,7 @@ export function staticLocaleFor(uiLocale: string | undefined) {
 export function staticPageUrl(
   slug: string,
   uiLocale: string | undefined,
-  baseUrl: string = strapiUrl,
+  baseUrl: string = STRAPI_URL,
 ) {
   const base = `${baseUrl.replace(/\/+$/, '')}/static/${slug}`;
   return staticLocaleFor(uiLocale) === 'en' ? `${base}?locale=en` : base;
