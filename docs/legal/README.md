@@ -33,7 +33,7 @@ A módosítás azonnal látszik, nincs szükség buildre: a `/legal/:slug` oldal
 Két lehetőség:
 
 1. **Ajánlott, nincs teendő a szerveren:** a Google konzolba `https://kor.fejlesztesek.hu/legal/about` kerüljön.
-2. **Gyökér átirányítás:** a kor alkalmazás cPanel környezeti változói közé `PUBLIC_HOME_REDIRECT=/legal/about`, majd újraindítás. Ekkor a `https://kor.fejlesztesek.hu/` 302-vel a bemutató oldalra visz (a Strapi alapból `/admin`-ra irányít). Az admin továbbra is `/admin` alatt érhető el. A változót **ne a közös `.env`-be** írd, mert az aliasok (pl. edizone) is örökölnék; ott a saját adatbázisban nincs `about` oldal.
+2. **Gyökér átirányítás:** a kor cPanel env-jében pl. `PUBLIC_HOME_REDIRECT=/backoffice/` (kezelő felület) vagy `PUBLIC_HOME_REDIRECT=/legal/about` (bemutató), majd újraindítás. Env nélkül lokálisan és élesen is Strapi `/` → `/admin`. A változót **ne a közös `.env`-be** írd, mert az aliasok (pl. edizone) is örökölnék.
 
 ## Formázás
 

@@ -14,7 +14,6 @@ import {
 import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
-
 export function BackofficeMenu() {
   const translate = useTranslate();
   const { permissions } = usePermissions();

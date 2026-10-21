@@ -1,10 +1,14 @@
 import type { SidebarProps } from 'react-admin';
 import { Sidebar } from 'react-admin';
 
+import { SidebarMobileHeader } from './SidebarMobileHeader';
+
 export function FrameSidebar(props: SidebarProps) {
+  const { children, ...rest } = props;
+
   return (
     <Sidebar
-      {...props}
+      {...rest}
       sx={{
         '& .MuiPaper-root': {
           backgroundColor: 'background.paper',
@@ -12,6 +16,9 @@ export function FrameSidebar(props: SidebarProps) {
           borderColor: 'divider',
         },
       }}
-    />
+    >
+      <SidebarMobileHeader />
+      {children}
+    </Sidebar>
   );
 }

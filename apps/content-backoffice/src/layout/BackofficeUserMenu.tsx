@@ -11,7 +11,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { UserMenuContextProvider } from 'ra-core';
-import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 import type { AppBarProps } from 'react-admin';
 import {
@@ -29,6 +29,8 @@ import { Link } from 'react-router-dom';
 import { isContentRole } from '../auth/roles';
 import { userMenuEntries } from '../workflows/userMenuEntries';
 import { AppTitle } from './AppTitle';
+import { BackofficeAppBarToolbar } from './BackofficeAppBarToolbar';
+import { useRaPageTitle } from './useRaPageTitle';
 import { WhiteLogo } from './WhiteLogo';
 
 const ProfileMenuItem = forwardRef<HTMLAnchorElement>(
@@ -163,32 +165,11 @@ function BackofficeUserMenu() {
 }
 
 function PageTitleSlot() {
-  const [hasTitle, setHasTitle] = useState(false);
-
-  useEffect(() => {
-    const node = document.getElementById('react-admin-title');
-    if (!node) {
-      return;
-    }
-
-    const sync = () => {
-      const next = Boolean(node.textContent?.trim());
-      setHasTitle((current) => (current === next ? current : next));
-    };
-
-    sync();
-    const observer = new MutationObserver(sync);
-    observer.observe(node, {
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
-    return () => observer.disconnect();
-  }, []);
+  const pageTitle = useRaPageTitle();
 
   return (
     <>
-      {hasTitle ? (
+      {pageTitle ? (
         <span aria-hidden="true" style={{ marginInline: '0.5rem' }}>
           »
         </span>
@@ -199,18 +180,28 @@ function PageTitleSlot() {
 }
 
 export function BackofficeAppBar(props: AppBarProps) {
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+
   return (
-    <AppBar {...props} userMenu={<BackofficeUserMenu />}>
+    <AppBar
+      {...props}
+      toolbar={<BackofficeAppBarToolbar />}
+      userMenu={<BackofficeUserMenu />}
+    >
       <WhiteLogo />
 
-      <Typography
-        component="h2"
-        variant="h6"
-        sx={{ m: 0, fontWeight: 500, lineHeight: 1.2, pl: 1 }}
-      >
-        <AppTitle />
-      </Typography>
-      <PageTitleSlot />
+      {!isMobile ? (
+        <>
+          <Typography
+            component="h2"
+            variant="h6"
+            sx={{ m: 0, fontWeight: 500, lineHeight: 1.2, pl: 1 }}
+          >
+            <AppTitle />
+          </Typography>
+          <PageTitleSlot />
+        </>
+      ) : null}
     </AppBar>
   );
 }

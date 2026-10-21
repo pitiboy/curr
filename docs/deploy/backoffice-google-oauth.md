@@ -53,15 +53,15 @@ A szövegek forrása és a feltöltés lépései: [docs/legal/README.md](../lega
 
 ### Kezdőlap
 
-A `legal-page` `about` bejegyzése a KÖR nyilvános bemutató oldala (mit csinál az alkalmazás, miért kéri az e-mail címet, linkek a tájékoztatóra). A Strapi alapból a `/` címet `/admin`-ra irányítja, ami nem írja le az alkalmazást.
+A `legal-page` `about` bejegyzése a KÖR nyilvános bemutató oldala (mit csinál az alkalmazás, miért kéri az e-mail címet, linkek a tájékoztatóra). Élesen a gyökér csak `PUBLIC_HOME_REDIRECT=/backoffice/` (cPanel) mellett irányít a kezelő felületre.
 
-- **Ajánlott:** Application home page = `https://kor.fejlesztesek.hu/legal/about`. Nincs szerveroldali teendő.
+- **Ajánlott (Google konzol):** Application home page = `https://kor.fejlesztesek.hu/legal/about`. Nincs szerveroldali teendő.
 - **Opcionális:** a kor alkalmazás cPanel env-jében `PUBLIC_HOME_REDIRECT=/legal/about`, újraindítás. Ekkor `https://kor.fejlesztesek.hu/` → 302 → `/legal/about`, és a home page mezőbe a gyökér is mehet. Csak relatív, `/`-rel kezdődő utat fogad el. Ne a közös `.env`-be tedd, mert az aliasok örökölnék.
 
 Linkek a felületeken:
 
 - Backoffice SPA: a login oldalon a Google gomb alatt (alatta nyelvválasztó), belépés után a tartalom alján lévő láblécben. A kiválasztott felületnyelv szerinti oldalra mutat.
-- Strapi Admin: kis, rögzített lábléc a képernyő alján középen (login és belépés után is), `src/admin/app.tsx`. Az admin nyelvét követi (magyar admin → magyar oldal, minden más → `?locale=en`).
+- Strapi Admin: a bejelentkező képernyő jobb felső sarkában **+ Kezelő felület** gomb a `/backoffice/`-ra; kis, rögzített lábléc alul középen (login és belépés után is), `src/admin/app.tsx`. Az admin nyelvét követi (magyar admin → magyar oldal, minden más → `?locale=en`).
 
 ## Strapi grant
 
