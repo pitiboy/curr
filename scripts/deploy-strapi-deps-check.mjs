@@ -96,9 +96,19 @@ function main() {
 
   const after = dependenciesFromFile(pkgPath);
   const changes = diffDependencies(before, after);
-  if (changes.length === 0) return;
-
   const short = commit.slice(0, 7);
+
+  if (changes.length === 0) {
+    process.stderr.write("\n");
+    process.stderr.write(
+      `\x1b[1;32mRendben: a package.json dependencies nem változott az utolsó sikeres Strapi deploy óta (${last.date}).\x1b[0m\n`
+    );
+    process.stderr.write(
+      `Összehasonlítás: git ${short} (package.json @ deploy időpont) → mostani working tree\n\n`
+    );
+    return;
+  }
+
   process.stderr.write("\n");
   process.stderr.write(
     "\x1b[1;31mFIGYELEM: a package.json dependencies (Strapi) eltér az utolsó sikeres deploy óta rögzített git állapottól.\x1b[0m\n"
