@@ -77,7 +77,7 @@ command -v lftp >/dev/null || {
 
 local_dist="$root/apps/content-backoffice/dist"
 if [[ ! -d "$local_dist" ]]; then
-  echo "Nincs apps/content-backoffice/dist. Futtasd előbb: npm run deploy:backoffice:kor.fejlesztesek.hu (build lépés)." >&2
+  echo "Nincs apps/content-backoffice/dist. Futtasd: npm run deploy:backoffice:kor.fejlesztesek.hu (vagy deploy:f / deploy:backoffice)." >&2
   exit 1
 fi
 
