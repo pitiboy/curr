@@ -44,6 +44,7 @@
     "predeploy:backoffice:kor.fejlesztesek.hu": "npm run build:f:kor.fejlesztesek.hu",
     "deploy:backoffice:kor.fejlesztesek.hu": "bash scripts/ftp-deploy-backoffice.sh .env.deploy:kor.fejlesztesek.hu",
     "deploy:backoffice": "npm run deploy:backoffice:kor.fejlesztesek.hu",
+    "deploy:f": "npm run deploy:backoffice:kor.fejlesztesek.hu",
     "__deploy:cloud:strapi": "strapi deploy",
     "docker:dev": "docker compose --env-file .env.docker up -d",
     "docker:stop": "docker compose --env-file .env.docker down",
