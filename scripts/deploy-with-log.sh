@@ -64,6 +64,10 @@ fi
 
 record_and_commit "$attempted" "$build_status" "$ftp_status"
 
+if [[ "$target" == "strapi" && "$ftp_exit" -eq 0 ]]; then
+  DEPLOY_DEPS_BASELINE=previous bash "$root/scripts/deploy-strapi-deps.sh" warn-if-changed
+fi
+
 if [[ "$ftp_exit" -ne 0 ]]; then
   exit "$ftp_exit"
 fi

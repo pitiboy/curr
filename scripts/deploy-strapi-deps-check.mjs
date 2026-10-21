@@ -17,9 +17,10 @@ function isStrapiDeployCommand(command) {
   return /\bdeploy\b/i.test(command);
 }
 
-function parseLastSuccessfulStrapiDeploy(logText) {
+function listSuccessfulStrapiDeploys(logText) {
   const marker = "--- deploy event ---";
   const blocks = logText.split(marker).slice(1);
+  const found = [];
   for (let i = blocks.length - 1; i >= 0; i -= 1) {
     const block = blocks[i];
     const date = block.match(/^date: (.+)$/m)?.[1]?.trim();
@@ -29,9 +30,15 @@ function parseLastSuccessfulStrapiDeploy(logText) {
     if (!date || !command) continue;
     if (!isStrapiDeployCommand(command)) continue;
     if (build !== "success" || ftp !== "success") continue;
-    return { date, command };
+    found.push({ date, command });
   }
-  return null;
+  return found;
+}
+
+function baselineStrapiDeploy(logText) {
+  const deploys = listSuccessfulStrapiDeploys(logText);
+  const skip = process.env.DEPLOY_DEPS_BASELINE === "previous" ? 1 : 0;
+  return deploys[skip] ?? null;
 }
 
 function gitCommitAt(deployDate) {
@@ -81,7 +88,7 @@ function main() {
   if (!fs.existsSync(pkgPath)) return;
 
   const logText = fs.readFileSync(logPath, "utf8");
-  const last = parseLastSuccessfulStrapiDeploy(logText);
+  const last = baselineStrapiDeploy(logText);
   if (!last) return;
 
   const commit = gitCommitAt(last.date);

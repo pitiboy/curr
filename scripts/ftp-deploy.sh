@@ -125,9 +125,6 @@ status=$?
 set -e
 
 if [[ "$status" -eq 0 ]]; then
-  if [[ -z "$dry" ]]; then
-    bash "$root/scripts/deploy-strapi-deps.sh" warn-if-changed
-  fi
   printf '\n\033[1;32m%s\033[0m\n\033[1;33m%s\033[0m\n' \
     "A fájlok fent vannak. A szerver .env-je és a node_modules symlink megmaradt." \
     "Utána a célalkalmazáson NPM Install, majd újraindítás. Közös fánál az aliasokat is indítsd újra." >&2
