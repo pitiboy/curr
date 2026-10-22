@@ -65,9 +65,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       session_missing: 'The Google sign-in was interrupted. Please try again.',
       provider_disabled: 'Google sign-in is currently turned off.',
     },
-    legal_nav: 'Legal documents',
-    legal_privacy: 'Privacy Policy',
-    legal_terms: 'Terms of Service',
+    static_nav: 'Static pages',
+    static_privacy: 'Privacy Policy',
+    static_terms: 'Terms of Service',
     status: {
       draft: 'Draft',
       published: 'Published',

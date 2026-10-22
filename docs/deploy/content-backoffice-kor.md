@@ -6,7 +6,7 @@ CI pipeline nincs (v1). A feltöltés helyi FTPS-sel történik, a Strapi deploy
 
 ## Előkészítés
 
-1. Másold a gyökér `.env.deploy.example` backoffice szekcióját `.env.deploy:backoffice:kor.fejlesztesek.hu` néven.
+1. A Strapi deployhoz ugyanaz a `.env.deploy:kor.fejlesztesek.hu` (lásd `.env.deploy.example`).
 2. Töltsd ki az `FTP_PASS` értékét (ugyanaz a cPanel FTP user, mint a Strapi deploynál).
 3. Ellenőrizd: `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` (nincs perjel a végén).
 
@@ -17,13 +17,16 @@ A szerveren a cél a Strapi `public/backoffice` almappája (`node/kor-szupatak/p
 ## Build és feltöltés
 
 ```bash
-npm run deploy:backoffice
+npm run deploy:f
+# alias: deploy:backoffice → deploy:backoffice:kor.fejlesztesek.hu
 ```
 
-Ez lefuttatja a production buildet (`VITE_STRAPI_URL` az env fájlból), majd FTPS-sel feltölti a `dist` tartalmát. Csak száraz futtatás:
+Mindhárom npm script ugyanazt futtatja: `predeploy:backoffice:kor.fejlesztesek.hu` (build) → FTPS → `build-deploy.log` (`command: deploy:backoffice:kor.fejlesztesek.hu`).
+
+Ez lefuttatja a production buildet, majd FTPS-sel feltölti a `dist` tartalmát. Csak száraz futtatás:
 
 ```bash
-bash scripts/ftp-deploy-backoffice.sh .env.deploy:backoffice:kor.fejlesztesek.hu --dry-run
+bash scripts/ftp-deploy-backoffice.sh .env.deploy:kor.fejlesztesek.hu --dry-run
 ```
 
 Strapi deploy ettől független: `npm run deploy` továbbra is a teljes Strapi fát tölti fel.

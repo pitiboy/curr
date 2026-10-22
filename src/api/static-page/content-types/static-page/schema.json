@@ -1,11 +1,11 @@
 {
   "kind": "collectionType",
-  "collectionName": "legal_pages",
+  "collectionName": "static_pages",
   "info": {
-    "singularName": "legal-page",
-    "pluralName": "legal-pages",
-    "displayName": "Legal Page",
-    "description": "Public legal documents (privacy policy, terms of service, about). Rendered without login at /legal/{slug}?locale={hu|en}."
+    "singularName": "static-page",
+    "pluralName": "static-pages",
+    "displayName": "Static Page",
+    "description": "Public static pages (privacy policy, terms of service, about). Rendered without login at /static/{slug}?locale={hu|en}."
   },
   "options": {
     "draftAndPublish": false
@@ -40,7 +40,7 @@
       "required": true,
       "metadatas": {
         "label": "URL azonosító",
-        "description": "A nyilvános cím vége: /legal/{slug} (pl. privacy-policy, terms-of-service, about). Minden nyelven ugyanaz. Ne változtasd, ha a Google konzolban már szerepel."
+        "description": "A nyilvános cím vége: /static/{slug} (pl. privacy-policy, terms-of-service, about). Minden nyelven ugyanaz."
       },
       "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
       "maxLength": 128
@@ -68,7 +68,7 @@
       "default": 0,
       "metadatas": {
         "label": "Sorrend",
-        "description": "Sorrend a /legal listában (kisebb előbb)"
+        "description": "Sorrend a /static listában (kisebb előbb)"
       }
     }
   }

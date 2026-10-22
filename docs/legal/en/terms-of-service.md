@@ -51,7 +51,7 @@ The software of the System is owned by the Fejlesztesek.hu. The content recorded
 
 ## 9. Data protection
 
-The processing of personal data is governed by the [Privacy Policy](https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en).
+The processing of personal data is governed by the [Privacy Policy](https://kor.fejlesztesek.hu/static/privacy-policy?locale=en).
 
 ## 10. Closing an account
 
@@ -59,7 +59,7 @@ An account is closed when the administrator deletes or blocks it, or when the us
 
 ## 11. Changes to these terms
 
-The Operator may amend these terms. Users are notified of changes in the System or by email; continued use after the changes take effect constitutes acceptance of the amended terms. The current version is always available at [https://kor.fejlesztesek.hu/legal/terms-of-service?locale=en](https://kor.fejlesztesek.hu/legal/terms-of-service?locale=en). This is a translation; in case of any discrepancy the [Hungarian version](https://kor.fejlesztesek.hu/legal/terms-of-service) prevails.
+The Operator may amend these terms. Users are notified of changes in the System or by email; continued use after the changes take effect constitutes acceptance of the amended terms. The current version is always available at [https://kor.fejlesztesek.hu/static/terms-of-service?locale=en](https://kor.fejlesztesek.hu/static/terms-of-service?locale=en). This is a translation; in case of any discrepancy the [Hungarian version](https://kor.fejlesztesek.hu/static/terms-of-service) prevails.
 
 ## 12. Governing law and contact
 

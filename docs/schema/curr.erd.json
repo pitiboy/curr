@@ -219,7 +219,6 @@
           "col__currency_rates__document_id",
           "col__currency_rates__rate",
           "col__currency_rates__valid_from",
-          "col__currency_rates__valid_to",
           "col__currency_rates__from_currency_type_id",
           "col__currency_rates__to_currency_type_id",
           "col__currency_rates__created_at",
@@ -230,7 +229,6 @@
           "col__currency_rates__document_id",
           "col__currency_rates__rate",
           "col__currency_rates__valid_from",
-          "col__currency_rates__valid_to",
           "col__currency_rates__from_currency_type_id",
           "col__currency_rates__to_currency_type_id",
           "col__currency_rates__created_at",
@@ -1169,33 +1167,13 @@
         "id": "col__currency_rates__valid_from",
         "tableId": "tbl__currency_rates",
         "name": "valid_from",
-        "comment": "Az árfolyam érvényességének kezdő dátuma",
+        "comment": "Ettől az időponttól érvényes, amíg ugyanerre a pénznempárra újabb árfolyam nem lép életbe",
         "dataType": "TIMESTAMPTZ",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 94,
-          "widthComment": 300,
-          "widthDataType": 103,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1790627879208,
-          "createAt": 1790627879208
-        }
-      },
-      "col__currency_rates__valid_to": {
-        "id": "col__currency_rates__valid_to",
-        "tableId": "tbl__currency_rates",
-        "name": "valid_to",
-        "comment": "Az árfolyam érvényességének vége (opcionális)",
-        "dataType": "TIMESTAMPTZ",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 78,
           "widthComment": 300,
           "widthDataType": 103,
           "widthDefault": 60

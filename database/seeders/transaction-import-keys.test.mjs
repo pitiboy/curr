@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   ACCOUNT_ALIASES,
+  absAmountRow,
   bookRow,
   buildTransactions,
   excelAmount,
@@ -80,6 +81,20 @@ describe('resolveTransactionType', () => {
   });
 });
 
+describe('absAmountRow', () => {
+  it('keeps követel/tartozik labels and stores |amount|', () => {
+    const absed = absAmountRow({
+      row: 145,
+      amount: -25370,
+      credit_label: 'Bankszámlák',
+      debit_label: 'Péter - Saját számla',
+    });
+    assert.equal(absed.amount, 25370);
+    assert.equal(absed.credit_label, 'Bankszámlák');
+    assert.equal(absed.debit_label, 'Péter - Saját számla');
+  });
+});
+
 describe('buildTransactions', () => {
   it('books the row and keeps a stable key', () => {
     const row = {
@@ -110,6 +125,27 @@ describe('buildTransactions', () => {
       { accountNames: accounts, orgNames: orgs, typeNames: types },
     );
     assert.deepEqual(again.transactions, built.transactions);
+  });
+
+  it('books a negative Excel row with original accounts and a positive amount', () => {
+    const row = {
+      row: 145,
+      date: '2025-12-29',
+      payer: 'Bank',
+      payee: 'Péter',
+      project: 'Zöld Élet Program',
+      operation: 'Bányászás',
+      amount: -25370,
+      place: 'K&H',
+      description: 'Online Mentor',
+      credit_label: 'Bankszámlák',
+      debit_label: 'Péter - Saját számla',
+    };
+    const built = buildTransactions(source, { accountNames: accounts, orgNames: orgs, typeNames: types }, [row]);
+    assert.equal(built.transactions[0].amount, 25370);
+    assert.equal(built.transactions[0].credit_account, 'Bankszámlák');
+    assert.equal(built.transactions[0].debit_account, 'saját:péter');
+    assert.match(built.transactions[0].import_key, /^excel:e3f5095a5a0c95f8f0cf$/);
   });
 
   it('books a row through bookRow', () => {

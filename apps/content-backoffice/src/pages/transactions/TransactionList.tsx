@@ -1,6 +1,8 @@
 import GradingIcon from '@mui/icons-material/Grading';
 import QuizIcon from '@mui/icons-material/Quiz';
 import { Box, Button, Typography } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import type { Theme } from '@mui/material/styles';
 import {
   AutocompleteInput,
   Datagrid,
@@ -179,6 +181,7 @@ function TransactionOpenField(_props: {
             }
           : undefined
       }
+      state={{ _scrollToTop: true }}
       to={`/transactions/${encodeURIComponent(String(record.id))}/show`}
       variant="outlined"
       onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
@@ -201,8 +204,103 @@ function TransactionListEmpty() {
   );
 }
 
+function transactionDatagridColumns(locale: string, mobile: boolean) {
+  const openColumn = (
+    <TransactionOpenField
+      key="open"
+      label={false}
+      sortable={false}
+      source="open"
+    />
+  );
+
+  const columns = [
+    <DateField key="date" source="date" {...dateFieldProps(locale)} />,
+    <FunctionField
+      key="vendor"
+      render={(record: RaRecord) => firstReceiptVendor(record.receipts)}
+      source="vendor"
+    />,
+    <NumberField
+      key="amount"
+      locales={locale === 'en' ? 'en' : 'hu-HU'}
+      source="amount"
+    />,
+    <FunctionField
+      key="currency"
+      render={(record: RaRecord) => (
+        <CurrencyValue value={record.currency_type} />
+      )}
+      source="currency_type"
+    />,
+    <FunctionField
+      key="description"
+      render={(record: RaRecord) => (
+        <DescriptionText value={record.description} />
+      )}
+      source="description"
+    />,
+    <SelectField
+      key="status"
+      choices={statusChoices}
+      source="status"
+      translateChoice
+    />,
+    openColumn,
+    <FunctionField
+      key="organization"
+      render={(record: RaRecord) => relationName(record.organization)}
+      source="organization"
+    />,
+    <FunctionField
+      key="credit"
+      label={<AccountFieldLabel kind="credit" />}
+      render={(record: RaRecord) => (
+        <AccountValue kind="credit" value={record.credit_account} />
+      )}
+      source="credit_account"
+    />,
+    <FunctionField
+      key="debit"
+      label={<AccountFieldLabel kind="debit" />}
+      render={(record: RaRecord) => (
+        <AccountValue kind="debit" value={record.debit_account} />
+      )}
+      source="debit_account"
+    />,
+    <FunctionField
+      key="receipts"
+      label="resources.transactions.fields.receipt"
+      render={(record: RaRecord) => receiptCount(record.receipts)}
+      sortBy="receipts"
+      source="receipts"
+    />,
+    <DateField
+      key="createdAt"
+      source="createdAt"
+      {...dateFieldProps(locale, true)}
+    />,
+    <TextField key="entered_by" emptyText="—" source="entered_by" />,
+    <TextField key="published_by" emptyText="—" source="published_by" />,
+    <DateField
+      key="publishedAt"
+      emptyText="—"
+      source="publishedAt"
+      {...dateFieldProps(locale, true)}
+    />,
+  ];
+
+  if (mobile) {
+    const withoutOpen = columns.filter((column) => column.key !== 'open');
+    return [openColumn, ...withoutOpen];
+  }
+
+  return columns;
+}
+
 export function TransactionList() {
   const [locale] = useLocaleState();
+  const mobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
   return (
     <List
@@ -219,62 +317,13 @@ export function TransactionList() {
         hover={false}
         rowClick={false}
         rowSx={bandedRow}
+        sx={{
+          '& .column-open': {
+            whiteSpace: 'nowrap',
+          },
+        }}
       >
-        <DateField source="date" {...dateFieldProps(locale)} />
-        <FunctionField
-          render={(record: RaRecord) => firstReceiptVendor(record.receipts)}
-          source="vendor"
-        />
-        <NumberField
-          locales={locale === 'en' ? 'en' : 'hu-HU'}
-          source="amount"
-        />
-        <FunctionField
-          render={(record: RaRecord) => (
-            <CurrencyValue value={record.currency_type} />
-          )}
-          source="currency_type"
-        />
-        <FunctionField
-          render={(record: RaRecord) => (
-            <DescriptionText value={record.description} />
-          )}
-          source="description"
-        />
-        <SelectField choices={statusChoices} source="status" translateChoice />
-        <TransactionOpenField label={false} sortable={false} source="open" />
-        <FunctionField
-          render={(record: RaRecord) => relationName(record.organization)}
-          source="organization"
-        />
-        <FunctionField
-          label={<AccountFieldLabel kind="credit" />}
-          render={(record: RaRecord) => (
-            <AccountValue kind="credit" value={record.credit_account} />
-          )}
-          source="credit_account"
-        />
-        <FunctionField
-          label={<AccountFieldLabel kind="debit" />}
-          render={(record: RaRecord) => (
-            <AccountValue kind="debit" value={record.debit_account} />
-          )}
-          source="debit_account"
-        />
-        <FunctionField
-          label="resources.transactions.fields.receipt"
-          render={(record: RaRecord) => receiptCount(record.receipts)}
-          sortBy="receipts"
-          source="receipts"
-        />
-        <DateField source="createdAt" {...dateFieldProps(locale, true)} />
-        <TextField emptyText="—" source="entered_by" />
-        <TextField emptyText="—" source="published_by" />
-        <DateField
-          emptyText="—"
-          source="publishedAt"
-          {...dateFieldProps(locale, true)}
-        />
+        {transactionDatagridColumns(locale, mobile)}
       </Datagrid>
     </List>
   );

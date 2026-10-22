@@ -2,6 +2,19 @@
 
 A statikus SPA a Strapi `public/backoffice` mappájában van. A `strapi::public` middleware a `https://kor.fejlesztesek.hu/backoffice/` útvonalon adja. CI pipeline nincs.
 
+## Gyökér (`/`) → backoffice
+
+Alapból a Strapi a `/` címet az `/admin`-ra irányítja (`strapi::public` route). Élesen a kor alkalmazás cPanel env-jében add meg: **`PUBLIC_HOME_REDIRECT=/backoffice/`**, majd Strapi deploy + Passenger újraindítás. A `global::home-redirect` middleware csak explicit env mellett kapcsol (lokálisan nincs redirect).
+
+Ellenőrzés:
+
+```bash
+curl -sI https://kor.fejlesztesek.hu/ | grep -i '^location:'
+# location: https://kor.fejlesztesek.hu/backoffice/
+```
+
+Bemutató oldal gyökérhez: `PUBLIC_HOME_REDIRECT=/static/about`. Env nélkül vagy üres értéknél marad az `/admin`.
+
 A gyökérből:
 
 ```bash

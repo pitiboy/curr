@@ -27,14 +27,7 @@
       "required": true,
       "metadatas": {
         "label": "Érvényesség kezdete",
-        "description": "Az árfolyam érvényességének kezdő dátuma"
-      }
-    },
-    "valid_to": {
-      "type": "datetime",
-      "metadatas": {
-        "label": "Érvényesség vége",
-        "description": "Az árfolyam érvényességének vége (opcionális)"
+        "description": "Ettől az időponttól érvényes, amíg ugyanerre a pénznempárra újabb árfolyam nem lép életbe"
       }
     },
     "from_currency_type": {

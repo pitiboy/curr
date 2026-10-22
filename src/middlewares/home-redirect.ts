@@ -1,0 +1,21 @@
+import type { Core } from '@strapi/strapi';
+
+import {
+  createHomeRedirectMiddleware,
+  resolveSiteHomeRedirectTarget,
+} from '../static-pages';
+
+/**
+ * Runs late in the global middleware stack (config/middlewares.ts), before the
+ * Koa router. Strapi's strapi::public middleware registers GET `/` → admin;
+ * this handler intercepts `/` only when PUBLIC_HOME_REDIRECT is set (e.g. cPanel).
+ */
+export default (_config: unknown, { strapi }: { strapi: Core.Strapi }) => {
+  const target = resolveSiteHomeRedirectTarget();
+  if (!target) {
+    return async (_ctx: unknown, next: () => Promise<unknown>) => next();
+  }
+
+  strapi.log.info(`Site root redirects to ${target}`);
+  return createHomeRedirectMiddleware(target);
+};

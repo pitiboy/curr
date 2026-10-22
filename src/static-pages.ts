@@ -1,31 +1,31 @@
 import { errors } from '@strapi/utils';
 import MarkdownIt from 'markdown-it';
 
-export const LEGAL_PAGE_UID = 'api::legal-page.legal-page';
+export const STATIC_PAGE_UID = 'api::static-page.static-page';
 
 /** Public HTML path prefix on the Strapi host (no /api, no login). */
-export const LEGAL_PATH_PREFIX = '/legal';
+export const STATIC_PATH_PREFIX = '/static';
 
 /** Slugs the Google OAuth consent screen and the footers link to. */
-export const LEGAL_SLUGS = {
+export const STATIC_PAGE_SLUGS = {
   privacyPolicy: 'privacy-policy',
   termsOfService: 'terms-of-service',
   about: 'about',
 } as const;
 
 /** Content API actions opened to the users-permissions `public` role. */
-export const LEGAL_PAGE_PUBLIC_ACTIONS = [
-  'api::legal-page.legal-page.find',
-  'api::legal-page.legal-page.findOne',
+export const STATIC_PAGE_PUBLIC_ACTIONS = [
+  'api::static-page.static-page.find',
+  'api::static-page.static-page.findOne',
 ] as const;
 
 /** Page languages. The first one is the default and the fallback. */
-export const LEGAL_LOCALES = ['hu', 'en'] as const;
-export type LegalLocale = (typeof LEGAL_LOCALES)[number];
-export const DEFAULT_LEGAL_LOCALE: LegalLocale = 'hu';
+export const STATIC_PAGE_LOCALES = ['hu', 'en'] as const;
+export type StaticPageLocale = (typeof STATIC_PAGE_LOCALES)[number];
+export const DEFAULT_STATIC_PAGE_LOCALE: StaticPageLocale = 'hu';
 
 /** i18n plugin locale rows the bootstrap makes sure exist. */
-export const I18N_LOCALE_DEFS: Record<LegalLocale, { code: LegalLocale; name: string }> = {
+export const I18N_LOCALE_DEFS: Record<StaticPageLocale, { code: StaticPageLocale; name: string }> = {
   hu: { code: 'hu', name: 'Hungarian (hu)' },
   en: { code: 'en', name: 'English (en)' },
 };
@@ -43,30 +43,30 @@ type UiStrings = {
   switchLabel: string;
 };
 
-const UI: Record<LegalLocale, UiStrings> = {
+const UI: Record<StaticPageLocale, UiStrings> = {
   hu: {
     siteName: 'KÖR – Közösségi Önjegyző Rendszer',
     updated: 'Utolsó módosítás',
     backoffice: 'Kezelő felület',
-    indexTitle: 'Jogi dokumentumok',
+    indexTitle: 'Statikus oldalak',
     indexEmpty: 'Még nincs feltöltött dokumentum.',
     notFoundTitle: 'Nem található',
     notFoundBody: 'Ez a dokumentum még nincs feltöltve, vagy megváltozott a címe.',
     fallbackNotice: 'Ez az oldal még nem érhető el magyarul, ezért az alapnyelvi változatot látod.',
-    fallbackTitle: 'Jogi dokumentum',
+    fallbackTitle: 'Statikus oldal',
     switchLabel: 'Nyelv',
   },
   en: {
     siteName: 'KÖR – Community Unified Resource Registry',
     updated: 'Last updated',
     backoffice: 'Backoffice',
-    indexTitle: 'Legal documents',
+    indexTitle: 'Static pages',
     indexEmpty: 'No documents have been published yet.',
     notFoundTitle: 'Not found',
     notFoundBody: 'This document has not been published yet, or its address has changed.',
     fallbackNotice:
       'This page is not available in English yet, so you are seeing the Hungarian version.',
-    fallbackTitle: 'Legal document',
+    fallbackTitle: 'Static page',
     switchLabel: 'Language',
   },
 };
@@ -82,7 +82,7 @@ const markdown = new MarkdownIt({
   typographer: false,
 });
 
-export type LegalPageRecord = {
+export type StaticPageRecord = {
   title?: string | null;
   slug?: string | null;
   body?: string | null;
@@ -93,20 +93,20 @@ export type LegalPageRecord = {
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export function isValidLegalSlug(slug: unknown): slug is string {
+export function isValidStaticPageSlug(slug: unknown): slug is string {
   return typeof slug === 'string' && slug.length <= 128 && SLUG_PATTERN.test(slug);
 }
 
 /** `?locale=en` → `en`; anything unknown or missing → the default (`hu`). */
-export function resolveLegalLocale(value: unknown): LegalLocale {
+export function resolveStaticPageLocale(value: unknown): StaticPageLocale {
   const raw = Array.isArray(value) ? value[0] : value;
   if (typeof raw !== 'string') {
-    return DEFAULT_LEGAL_LOCALE;
+    return DEFAULT_STATIC_PAGE_LOCALE;
   }
   const code = raw.trim().toLowerCase().slice(0, 2);
-  return (LEGAL_LOCALES as readonly string[]).includes(code)
-    ? (code as LegalLocale)
-    : DEFAULT_LEGAL_LOCALE;
+  return (STATIC_PAGE_LOCALES as readonly string[]).includes(code)
+    ? (code as StaticPageLocale)
+    : DEFAULT_STATIC_PAGE_LOCALE;
 }
 
 export function escapeHtml(value: string) {
@@ -118,14 +118,14 @@ export function escapeHtml(value: string) {
     .replace(/'/g, '&#39;');
 }
 
-export function renderLegalMarkdown(body: string) {
+export function renderStaticPageMarkdown(body: string) {
   return markdown.render(body ?? '');
 }
 
 /** `2026. 10. 16.` (hu) or `2026-10-16` (en) without relying on ICU data. */
-export function formatLegalDate(
+export function formatStaticPageDate(
   value: string | Date | null | undefined,
-  locale: LegalLocale = DEFAULT_LEGAL_LOCALE,
+  locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE,
 ) {
   if (!value) {
     return '';
@@ -141,10 +141,10 @@ export function formatLegalDate(
   return locale === 'hu' ? `${y}. ${m}. ${d}.` : `${y}-${m}-${d}`;
 }
 
-/** `/legal/privacy-policy` for hu (stable Google URL), `…?locale=en` for en. */
-export function legalPagePath(slug?: string, locale: LegalLocale = DEFAULT_LEGAL_LOCALE) {
-  const path = slug ? `${LEGAL_PATH_PREFIX}/${slug}` : LEGAL_PATH_PREFIX;
-  return locale === DEFAULT_LEGAL_LOCALE ? path : `${path}?locale=${locale}`;
+/** `/static/privacy-policy` for hu (stable Google URL), `…?locale=en` for en. */
+export function staticPagePath(slug?: string, locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE) {
+  const path = slug ? `${STATIC_PATH_PREFIX}/${slug}` : STATIC_PATH_PREFIX;
+  return locale === DEFAULT_STATIC_PAGE_LOCALE ? path : `${path}?locale=${locale}`;
 }
 
 const STYLE = `
@@ -186,28 +186,28 @@ const STYLE = `
 
 type RenderContext = {
   /** Language of the UI chrome and of the links. */
-  locale: LegalLocale;
+  locale: StaticPageLocale;
   /** Pages for the footer nav, already in the best available locale. */
-  nav: LegalPageRecord[];
+  nav: StaticPageRecord[];
   /** Slug for the HU/EN switch; omitted on the index. */
   slug?: string;
 };
 
 function renderLanguageSwitch({ locale, slug }: RenderContext) {
-  const items = LEGAL_LOCALES.map((code) =>
+  const items = STATIC_PAGE_LOCALES.map((code) =>
     code === locale
       ? `<strong lang="${code}">${code.toUpperCase()}</strong>`
-      : `<a href="${escapeHtml(legalPagePath(slug, code))}" hreflang="${code}" lang="${code}">${code.toUpperCase()}</a>`,
+      : `<a href="${escapeHtml(staticPagePath(slug, code))}" hreflang="${code}" lang="${code}">${code.toUpperCase()}</a>`,
   );
   return `<nav class="lang" aria-label="${UI[locale].switchLabel}">${items.join('')}</nav>`;
 }
 
 function renderFooterNav({ locale, nav }: RenderContext) {
   const links = nav
-    .filter((page) => isValidLegalSlug(page.slug) && page.title)
+    .filter((page) => isValidStaticPageSlug(page.slug) && page.title)
     .map(
       (page) =>
-        `<a href="${escapeHtml(legalPagePath(page.slug as string, locale))}">${escapeHtml(page.title as string)}</a>`,
+        `<a href="${escapeHtml(staticPagePath(page.slug as string, locale))}">${escapeHtml(page.title as string)}</a>`,
     );
   links.push(`<a href="/backoffice/">${UI[locale].backoffice}</a>`);
   return `<nav>${links.join('')}</nav>`;
@@ -216,9 +216,9 @@ function renderFooterNav({ locale, nav }: RenderContext) {
 function renderDocument(title: string, content: string, ctx: RenderContext, contentLang?: string) {
   const ui = UI[ctx.locale];
   const alternates = ctx.slug
-    ? LEGAL_LOCALES.map(
+    ? STATIC_PAGE_LOCALES.map(
         (code) =>
-          `<link rel="alternate" hreflang="${code}" href="${escapeHtml(legalPagePath(ctx.slug, code))}">`,
+          `<link rel="alternate" hreflang="${code}" href="${escapeHtml(staticPagePath(ctx.slug, code))}">`,
       ).join('\n')
     : '';
   const mainLang = contentLang && contentLang !== ctx.locale ? ` lang="${escapeHtml(contentLang)}"` : '';
@@ -232,7 +232,7 @@ ${alternates}
 <style>${STYLE}</style>
 </head>
 <body>
-<header><a class="site" href="${escapeHtml(legalPagePath(undefined, ctx.locale))}">${escapeHtml(ui.siteName)}</a>${renderLanguageSwitch(ctx)}</header>
+<header><a class="site" href="${escapeHtml(staticPagePath(undefined, ctx.locale))}">${escapeHtml(ui.siteName)}</a>${renderLanguageSwitch(ctx)}</header>
 <main${mainLang}>
 ${content}
 </main>
@@ -242,37 +242,37 @@ ${content}
 `;
 }
 
-export function renderLegalPageHtml(
-  page: LegalPageRecord,
-  nav: LegalPageRecord[] = [],
-  locale: LegalLocale = DEFAULT_LEGAL_LOCALE,
+export function renderStaticPageHtml(
+  page: StaticPageRecord,
+  nav: StaticPageRecord[] = [],
+  locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE,
 ) {
   const ui = UI[locale];
   const title = page.title?.trim() || ui.fallbackTitle;
-  const pageLocale = resolveLegalLocale(page.locale ?? locale);
+  const pageLocale = resolveStaticPageLocale(page.locale ?? locale);
   const isFallback = pageLocale !== locale;
-  const updated = formatLegalDate(page.updatedAt, locale);
+  const updated = formatStaticPageDate(page.updatedAt, locale);
   const notice = isFallback ? `<p class="notice" lang="${locale}">${ui.fallbackNotice}</p>\n` : '';
   const meta = updated ? `<p class="meta" lang="${locale}">${ui.updated}: ${escapeHtml(updated)}</p>` : '';
-  const slug = isValidLegalSlug(page.slug) ? page.slug : undefined;
+  const slug = isValidStaticPageSlug(page.slug) ? page.slug : undefined;
   return renderDocument(
     title,
-    `${notice}<h1>${escapeHtml(title)}</h1>\n${meta}\n${renderLegalMarkdown(page.body ?? '')}`,
+    `${notice}<h1>${escapeHtml(title)}</h1>\n${meta}\n${renderStaticPageMarkdown(page.body ?? '')}`,
     { locale, nav, slug },
     pageLocale,
   );
 }
 
-export function renderLegalIndexHtml(
-  pages: LegalPageRecord[],
-  locale: LegalLocale = DEFAULT_LEGAL_LOCALE,
+export function renderStaticPageIndexHtml(
+  pages: StaticPageRecord[],
+  locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE,
 ) {
   const ui = UI[locale];
   const items = pages
-    .filter((page) => isValidLegalSlug(page.slug) && page.title)
+    .filter((page) => isValidStaticPageSlug(page.slug) && page.title)
     .map(
       (page) =>
-        `<li><a href="${escapeHtml(legalPagePath(page.slug as string, locale))}">${escapeHtml(page.title as string)}</a></li>`,
+        `<li><a href="${escapeHtml(staticPagePath(page.slug as string, locale))}">${escapeHtml(page.title as string)}</a></li>`,
     );
   const list = items.length ? `<ul>${items.join('')}</ul>` : `<p>${ui.indexEmpty}</p>`;
   return renderDocument(ui.indexTitle, `<h1>${ui.indexTitle}</h1>\n${list}`, {
@@ -281,9 +281,9 @@ export function renderLegalIndexHtml(
   });
 }
 
-export function renderLegalNotFoundHtml(
-  nav: LegalPageRecord[] = [],
-  locale: LegalLocale = DEFAULT_LEGAL_LOCALE,
+export function renderStaticPageNotFoundHtml(
+  nav: StaticPageRecord[] = [],
+  locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE,
 ) {
   const ui = UI[locale];
   return renderDocument(ui.notFoundTitle, `<h1>${ui.notFoundTitle}</h1>\n<p>${ui.notFoundBody}</p>`, {
@@ -292,13 +292,13 @@ export function renderLegalNotFoundHtml(
   });
 }
 
-type LegalDocuments = {
-  findMany: (params?: Record<string, unknown>) => Promise<LegalPageRecord[]>;
-  findFirst: (params?: Record<string, unknown>) => Promise<LegalPageRecord | null>;
+type StaticPageDocuments = {
+  findMany: (params?: Record<string, unknown>) => Promise<StaticPageRecord[]>;
+  findFirst: (params?: Record<string, unknown>) => Promise<StaticPageRecord | null>;
 };
 
-export type LegalPagesStrapi = {
-  documents: (uid: string) => LegalDocuments;
+export type StaticPagesStrapi = {
+  documents: (uid: string) => StaticPageDocuments;
   server: { routes: (routes: unknown) => unknown };
   log?: { warn: (message: string) => void };
 };
@@ -313,15 +313,15 @@ type HtmlContext = {
 };
 
 /** Requested locale first, then the default; one entry per slug. */
-function localeChain(locale: LegalLocale): LegalLocale[] {
-  return locale === DEFAULT_LEGAL_LOCALE ? [locale] : [locale, DEFAULT_LEGAL_LOCALE];
+function localeChain(locale: StaticPageLocale): StaticPageLocale[] {
+  return locale === DEFAULT_STATIC_PAGE_LOCALE ? [locale] : [locale, DEFAULT_STATIC_PAGE_LOCALE];
 }
 
-async function listForNav(strapi: LegalPagesStrapi, locale: LegalLocale) {
-  const bySlug = new Map<string, LegalPageRecord>();
+async function listForNav(strapi: StaticPagesStrapi, locale: StaticPageLocale) {
+  const bySlug = new Map<string, StaticPageRecord>();
   for (const code of localeChain(locale)) {
     try {
-      const rows = await strapi.documents(LEGAL_PAGE_UID).findMany({
+      const rows = await strapi.documents(STATIC_PAGE_UID).findMany({
         fields: ['title', 'slug', 'footer_order', 'locale'],
         sort: ['footer_order:asc', 'title:asc'],
         limit: 50,
@@ -333,7 +333,7 @@ async function listForNav(strapi: LegalPagesStrapi, locale: LegalLocale) {
         }
       }
     } catch (error) {
-      strapi.log?.warn(`Legal pages: list (${code}) failed: ${String(error)}`);
+      strapi.log?.warn(`Static pages: list (${code}) failed: ${String(error)}`);
     }
   }
   return [...bySlug.values()].sort(
@@ -344,14 +344,14 @@ async function listForNav(strapi: LegalPagesStrapi, locale: LegalLocale) {
 }
 
 /** The page in the requested locale, or the default-locale (hu) version. */
-export async function findLegalPage(
-  strapi: LegalPagesStrapi,
+export async function findStaticPage(
+  strapi: StaticPagesStrapi,
   slug: string,
-  locale: LegalLocale,
+  locale: StaticPageLocale,
 ) {
   for (const code of localeChain(locale)) {
     const page = await strapi
-      .documents(LEGAL_PAGE_UID)
+      .documents(STATIC_PAGE_UID)
       .findFirst({ filters: { slug: { $eq: slug } }, locale: code });
     if (page) {
       return { ...page, locale: page.locale ?? code };
@@ -368,49 +368,84 @@ function sendHtml(ctx: HtmlContext, status: number, html: string) {
   ctx.body = html;
 }
 
-export function createLegalPageHandlers(strapi: LegalPagesStrapi) {
+export function createStaticPageHandlers(strapi: StaticPagesStrapi) {
   return {
     async index(ctx: HtmlContext) {
-      const locale = resolveLegalLocale(ctx.query?.locale);
+      const locale = resolveStaticPageLocale(ctx.query?.locale);
       const pages = await listForNav(strapi, locale);
-      sendHtml(ctx, 200, renderLegalIndexHtml(pages, locale));
+      sendHtml(ctx, 200, renderStaticPageIndexHtml(pages, locale));
     },
     async show(ctx: HtmlContext) {
-      const locale = resolveLegalLocale(ctx.query?.locale);
+      const locale = resolveStaticPageLocale(ctx.query?.locale);
       const slug = ctx.params.slug;
       const nav = await listForNav(strapi, locale);
-      if (!isValidLegalSlug(slug)) {
-        sendHtml(ctx, 404, renderLegalNotFoundHtml(nav, locale));
+      if (!isValidStaticPageSlug(slug)) {
+        sendHtml(ctx, 404, renderStaticPageNotFoundHtml(nav, locale));
         return;
       }
-      const page = await findLegalPage(strapi, slug, locale);
+      const page = await findStaticPage(strapi, slug, locale);
       if (!page) {
-        sendHtml(ctx, 404, renderLegalNotFoundHtml(nav, locale));
+        sendHtml(ctx, 404, renderStaticPageNotFoundHtml(nav, locale));
         return;
       }
-      sendHtml(ctx, 200, renderLegalPageHtml(page, nav, locale));
+      sendHtml(ctx, 200, renderStaticPageHtml(page, nav, locale));
     },
   };
 }
 
 /**
  * Public, server-rendered pages on the Strapi host, outside the /api prefix:
- * `/legal` (list) and `/legal/:slug`, both with an optional `?locale=en`.
+ * `/static` (list) and `/static/:slug`, both with an optional `?locale=en`.
  * Always reflect the current DB content, so no rebuild is needed after
  * editing a page in Strapi Admin.
  */
-export function registerLegalPageRoutes(strapi: LegalPagesStrapi) {
-  const handlers = createLegalPageHandlers(strapi);
+const LEGACY_STATIC_PATH_PREFIX = '/legal';
+
+type RedirectContext = {
+  method: string;
+  path: string;
+  querystring?: string;
+  redirect: (url: string) => void;
+};
+
+/** Permanent redirects from the old `/legal` URLs (Google OAuth, bookmarks). */
+export function registerLegacyStaticPageRedirects(strapi: StaticPagesStrapi) {
   strapi.server.routes([
     {
       method: 'GET',
-      path: LEGAL_PATH_PREFIX,
+      path: LEGACY_STATIC_PATH_PREFIX,
+      handler: (ctx: RedirectContext) => {
+        const qs = ctx.querystring ? `?${ctx.querystring}` : '';
+        ctx.redirect(`${STATIC_PATH_PREFIX}${qs}`);
+      },
+      config: { auth: false },
+    },
+    {
+      method: 'GET',
+      path: `${LEGACY_STATIC_PATH_PREFIX}/:slug`,
+      handler: (ctx: RedirectContext & { params: { slug?: string } }) => {
+        const slug = ctx.params.slug ?? '';
+        const qs = ctx.querystring ? `?${ctx.querystring}` : '';
+        ctx.redirect(`${STATIC_PATH_PREFIX}/${slug}${qs}`);
+      },
+      config: { auth: false },
+    },
+  ]);
+}
+
+export function registerStaticPageRoutes(strapi: StaticPagesStrapi) {
+  const handlers = createStaticPageHandlers(strapi);
+  registerLegacyStaticPageRedirects(strapi);
+  strapi.server.routes([
+    {
+      method: 'GET',
+      path: STATIC_PATH_PREFIX,
       handler: handlers.index,
       config: { auth: false },
     },
     {
       method: 'GET',
-      path: `${LEGAL_PATH_PREFIX}/:slug`,
+      path: `${STATIC_PATH_PREFIX}/:slug`,
       handler: handlers.show,
       config: { auth: false },
     },
@@ -418,9 +453,10 @@ export function registerLegalPageRoutes(strapi: LegalPagesStrapi) {
 }
 
 /**
- * `PUBLIC_HOME_REDIRECT=/legal/about` turns the site root into the public
- * presentation page (Google OAuth "Application home page"). Unset: Strapi's
- * own `/` → `/admin` redirect stays. Only same-site paths are accepted.
+ * `PUBLIC_HOME_REDIRECT` sets the site root target when explicitly configured
+ * (e.g. cPanel env). Unset: no redirect (Strapi `/` → `/admin`). Example:
+ * `/backoffice/` or `/static/about`. Empty or invalid: same as unset. Only
+ * same-site paths are accepted.
  */
 export function resolveHomeRedirect(value: unknown) {
   if (typeof value !== 'string') {
@@ -451,11 +487,20 @@ export function createHomeRedirectMiddleware(target: string) {
   };
 }
 
+export function resolveSiteHomeRedirectTarget(
+  value: unknown = process.env.PUBLIC_HOME_REDIRECT,
+) {
+  if (value === undefined) {
+    return null;
+  }
+  return resolveHomeRedirect(value);
+}
+
 export function registerHomeRedirect(
   strapi: { server: { use: (fn: unknown) => unknown }; log?: { info: (m: string) => void } },
   value: unknown = process.env.PUBLIC_HOME_REDIRECT,
 ) {
-  const target = resolveHomeRedirect(value);
+  const target = resolveSiteHomeRedirectTarget(value);
   if (!target) {
     return false;
   }
@@ -470,7 +515,7 @@ type LocalesService = {
   setDefaultLocale: (params: { code: string }) => Promise<unknown>;
 };
 
-export type LegalLocalesStrapi = {
+export type StaticPageLocalesStrapi = {
   plugin: (name: string) => { service: (name: string) => unknown } | undefined;
   log: { info: (message: string) => void; warn: (message: string) => void };
 };
@@ -480,22 +525,22 @@ export type LegalLocalesStrapi = {
  * when this bootstrap is the one creating it, so a default chosen later in
  * Settings → Internationalization is never overridden on restart.
  */
-export async function ensureLegalLocales(strapi: LegalLocalesStrapi) {
+export async function ensureStaticPageLocales(strapi: StaticPageLocalesStrapi) {
   const plugin = strapi.plugin('i18n');
   const locales = plugin?.service('locales') as LocalesService | undefined;
   if (!locales) {
-    strapi.log.warn('Legal pages bootstrap: i18n plugin not available, locales skipped');
+    strapi.log.warn('Static pages bootstrap: i18n plugin not available, locales skipped');
     return;
   }
 
-  for (const code of LEGAL_LOCALES) {
+  for (const code of STATIC_PAGE_LOCALES) {
     const existing = await locales.findByCode(code);
     if (existing) {
       continue;
     }
     await locales.create(I18N_LOCALE_DEFS[code]);
     strapi.log.info(`Created i18n locale "${code}"`);
-    if (code === DEFAULT_LEGAL_LOCALE) {
+    if (code === DEFAULT_STATIC_PAGE_LOCALE) {
       await locales.setDefaultLocale({ code });
       strapi.log.info(`Set default i18n locale to "${code}"`);
     }
@@ -509,7 +554,7 @@ type SlugGuardContext = {
 };
 
 type SlugGuardStrapi = {
-  documents: ((uid: string) => LegalDocuments) & {
+  documents: ((uid: string) => StaticPageDocuments) & {
     use: (
       middleware: (context: SlugGuardContext, next: () => Promise<unknown>) => Promise<unknown>,
     ) => unknown;
@@ -521,34 +566,83 @@ type SlugGuardStrapi = {
  * (Strapi 5 checks uid uniqueness across locales and blocks the second locale).
  * Instead: a plain string, and this guard rejects the same slug twice in one locale.
  */
-export function registerLegalSlugGuard(strapi: SlugGuardStrapi) {
+export function registerStaticPageSlugGuard(strapi: SlugGuardStrapi) {
   strapi.documents.use(async (context, next) => {
     if (
-      context.uid === LEGAL_PAGE_UID &&
+      context.uid === STATIC_PAGE_UID &&
       (context.action === 'create' || context.action === 'update')
     ) {
       const slug = context.params?.data?.slug;
       if (typeof slug === 'string' && slug.length > 0) {
-        if (!isValidLegalSlug(slug)) {
+        if (!isValidStaticPageSlug(slug)) {
           throw new errors.ValidationError(
             'Slug: only lowercase letters, digits and single hyphens (e.g. privacy-policy)',
           );
         }
-        const existing = (await (strapi.documents(LEGAL_PAGE_UID) as unknown as {
+        const existing = (await (strapi.documents(STATIC_PAGE_UID) as unknown as {
           findMany: (params: unknown) => Promise<Array<{ documentId?: string }>>;
         }).findMany({
           filters: { slug: { $eq: slug } },
           fields: ['slug'],
           // Same slug in another locale is the same page (or its translation);
           // only a second page with this slug in the same locale is a conflict.
-          locale: context.params?.locale ?? DEFAULT_LEGAL_LOCALE,
+          locale: context.params?.locale ?? DEFAULT_STATIC_PAGE_LOCALE,
         })) ?? [];
         const ownId = context.params?.documentId;
         if (existing.some((row) => row.documentId && row.documentId !== ownId)) {
-          throw new errors.ValidationError(`Slug "${slug}" is already used by another legal page in this language`);
+          throw new errors.ValidationError(`Slug "${slug}" is already used by another static page in this language`);
         }
       }
     }
     return next();
   });
+}
+
+const LEGAL_PAGES_TABLE = 'legal_pages';
+const STATIC_PAGES_TABLE = 'static_pages';
+
+type MigrateStrapi = {
+  db: {
+    connection: {
+      schema: {
+        hasTable: (name: string) => Promise<boolean>;
+        renameTable: (from: string, to: string) => Promise<void>;
+      };
+      raw: (sql: string) => Promise<unknown>;
+    };
+  };
+  log: { info: (message: string) => void; warn: (message: string) => void };
+};
+
+/**
+ * Renames the pre-v1 `legal-page` collection table and public permissions so
+ * existing production data keeps working after the content type became
+ * `static-page`.
+ */
+export async function migrateLegalPagesToStaticPages(strapi: MigrateStrapi) {
+  const schema = strapi.db.connection.schema;
+  try {
+    const hasOld = await schema.hasTable(LEGAL_PAGES_TABLE);
+    const hasNew = await schema.hasTable(STATIC_PAGES_TABLE);
+    if (hasOld && !hasNew) {
+      await schema.renameTable(LEGAL_PAGES_TABLE, STATIC_PAGES_TABLE);
+      strapi.log.info(`Renamed DB table ${LEGAL_PAGES_TABLE} → ${STATIC_PAGES_TABLE}`);
+    }
+    const linkOld = `${LEGAL_PAGES_TABLE}_localizations_lnk`;
+    const linkNew = `${STATIC_PAGES_TABLE}_localizations_lnk`;
+    if ((await schema.hasTable(linkOld)) && !(await schema.hasTable(linkNew))) {
+      await schema.renameTable(linkOld, linkNew);
+      strapi.log.info(`Renamed DB table ${linkOld} → ${linkNew}`);
+    }
+  } catch (error) {
+    strapi.log.warn(`Static pages DB migration skipped: ${String(error)}`);
+  }
+
+  try {
+    await strapi.db.connection.raw(
+      "UPDATE up_permissions SET action = replace(action, 'api::legal-page.legal-page', 'api::static-page.static-page') WHERE action LIKE '%legal-page%'",
+    );
+  } catch (error) {
+    strapi.log.warn(`Static pages permission migration skipped: ${String(error)}`);
+  }
 }

@@ -3,22 +3,23 @@ import { describe, it } from 'node:test';
 
 import {
   createHomeRedirectMiddleware,
-  createLegalPageHandlers,
-  ensureLegalLocales,
-  formatLegalDate,
-  isValidLegalSlug,
-  LEGAL_PAGE_UID,
-  legalPagePath,
+  createStaticPageHandlers,
+  ensureStaticPageLocales,
+  formatStaticPageDate,
+  isValidStaticPageSlug,
+  STATIC_PAGE_UID,
+  staticPagePath,
   registerHomeRedirect,
-  registerLegalPageRoutes,
-  renderLegalPageHtml,
+  registerStaticPageRoutes,
+  renderStaticPageHtml,
   resolveHomeRedirect,
-  resolveLegalLocale,
-  type LegalPageRecord,
-  type LegalPagesStrapi,
-} from './legal-pages.ts';
+  resolveSiteHomeRedirectTarget,
+  resolveStaticPageLocale,
+  type StaticPageRecord,
+  type StaticPagesStrapi,
+} from './static-pages.ts';
 
-const hu: LegalPageRecord[] = [
+const hu: StaticPageRecord[] = [
   {
     title: 'Adatkezelési tájékoztató',
     slug: 'privacy-policy',
@@ -29,16 +30,16 @@ const hu: LegalPageRecord[] = [
   },
   { title: 'Felhasználási feltételek', slug: 'terms-of-service', locale: 'hu', body: 'x', footer_order: 2 },
 ];
-const en: LegalPageRecord[] = [
+const en: StaticPageRecord[] = [
   { title: 'Privacy Policy', slug: 'privacy-policy', locale: 'en', body: '## 1. Intro', footer_order: 1 },
 ];
 
 function fakeStrapi() {
   const routes: unknown[] = [];
-  const byLocale: Record<string, LegalPageRecord[]> = { hu, en };
-  const strapi: LegalPagesStrapi = {
+  const byLocale: Record<string, StaticPageRecord[]> = { hu, en };
+  const strapi: StaticPagesStrapi = {
     documents(uid) {
-      assert.equal(uid, LEGAL_PAGE_UID);
+      assert.equal(uid, STATIC_PAGE_UID);
       return {
         findMany: async (params) => byLocale[(params as { locale: string }).locale] ?? [],
         findFirst: async (params) => {
@@ -71,37 +72,37 @@ function fakeCtx(params: Record<string, string> = {}, query: Record<string, unkn
   };
 }
 
-describe('legal pages', () => {
+describe('static pages', () => {
   it('accepts kebab-case slugs only', () => {
-    assert.equal(isValidLegalSlug('privacy-policy'), true);
-    assert.equal(isValidLegalSlug('Privacy'), false);
-    assert.equal(isValidLegalSlug('../etc'), false);
-    assert.equal(isValidLegalSlug(''), false);
-    assert.equal(isValidLegalSlug(undefined), false);
+    assert.equal(isValidStaticPageSlug('privacy-policy'), true);
+    assert.equal(isValidStaticPageSlug('Privacy'), false);
+    assert.equal(isValidStaticPageSlug('../etc'), false);
+    assert.equal(isValidStaticPageSlug(''), false);
+    assert.equal(isValidStaticPageSlug(undefined), false);
   });
 
   it('resolves the locale query with hu as default', () => {
-    assert.equal(resolveLegalLocale(undefined), 'hu');
-    assert.equal(resolveLegalLocale('en'), 'en');
-    assert.equal(resolveLegalLocale('EN-gb'), 'en');
-    assert.equal(resolveLegalLocale(['en', 'hu']), 'en');
-    assert.equal(resolveLegalLocale('de'), 'hu');
+    assert.equal(resolveStaticPageLocale(undefined), 'hu');
+    assert.equal(resolveStaticPageLocale('en'), 'en');
+    assert.equal(resolveStaticPageLocale('EN-gb'), 'en');
+    assert.equal(resolveStaticPageLocale(['en', 'hu']), 'en');
+    assert.equal(resolveStaticPageLocale('de'), 'hu');
   });
 
   it('keeps the hu URL stable and adds ?locale for en', () => {
-    assert.equal(legalPagePath('privacy-policy'), '/legal/privacy-policy');
-    assert.equal(legalPagePath('privacy-policy', 'en'), '/legal/privacy-policy?locale=en');
-    assert.equal(legalPagePath(undefined, 'en'), '/legal?locale=en');
+    assert.equal(staticPagePath('privacy-policy'), '/static/privacy-policy');
+    assert.equal(staticPagePath('privacy-policy', 'en'), '/static/privacy-policy?locale=en');
+    assert.equal(staticPagePath(undefined, 'en'), '/static?locale=en');
   });
 
   it('formats dates per locale', () => {
-    assert.equal(formatLegalDate('2026-10-16T08:00:00.000Z', 'hu'), '2026. 10. 16.');
-    assert.equal(formatLegalDate('2026-10-16T08:00:00.000Z', 'en'), '2026-10-16');
-    assert.equal(formatLegalDate('nope'), '');
+    assert.equal(formatStaticPageDate('2026-10-16T08:00:00.000Z', 'hu'), '2026. 10. 16.');
+    assert.equal(formatStaticPageDate('2026-10-16T08:00:00.000Z', 'en'), '2026-10-16');
+    assert.equal(formatStaticPageDate('nope'), '');
   });
 
   it('renders markdown (headings, bold, lists, tables) and escapes raw HTML', () => {
-    const html = renderLegalPageHtml({ ...hu[0], body: `${hu[0].body}\n<script>alert(1)</script>\n` });
+    const html = renderStaticPageHtml({ ...hu[0], body: `${hu[0].body}\n<script>alert(1)</script>\n` });
     assert.match(html, /<html lang="hu">/);
     assert.match(html, /<h1>Adatkezelési tájékoztató<\/h1>/);
     assert.match(html, /<h2>1\. Bevezetés<\/h2>/);
@@ -109,14 +110,14 @@ describe('legal pages', () => {
     assert.match(html, /<li>egy<\/li>/);
     assert.match(html, /<table>/);
     assert.match(html, /Utolsó módosítás: 2026\. 10\. 16\./);
-    assert.match(html, /<strong lang="hu">HU<\/strong><a href="\/legal\/privacy-policy\?locale=en"/);
+    assert.match(html, /<strong lang="hu">HU<\/strong><a href="\/static\/privacy-policy\?locale=en"/);
     assert.equal(html.includes('<script>'), false);
     assert.match(html, /&lt;script&gt;/);
   });
 
-  it('registers /legal and /legal/:slug without auth', () => {
+  it('registers /static and /static/:slug without auth', () => {
     const { strapi, routes } = fakeStrapi();
-    registerLegalPageRoutes(strapi);
+    registerStaticPageRoutes(strapi);
     assert.deepEqual(
       routes.map((route) => {
         const r = route as { method: string; path: string; config: unknown };
@@ -125,20 +126,22 @@ describe('legal pages', () => {
       [
         ['GET', '/legal', { auth: false }],
         ['GET', '/legal/:slug', { auth: false }],
+        ['GET', '/static', { auth: false }],
+        ['GET', '/static/:slug', { auth: false }],
       ],
     );
   });
 
   it('serves hu by default, en on ?locale=en, and falls back to hu', async () => {
     const { strapi } = fakeStrapi();
-    const handlers = createLegalPageHandlers(strapi);
+    const handlers = createStaticPageHandlers(strapi);
 
     const huCtx = fakeCtx({ slug: 'privacy-policy' });
     await handlers.show(huCtx);
     assert.equal(huCtx.status, 200);
     assert.equal(huCtx.type, 'text/html; charset=utf-8');
     assert.match(String(huCtx.body), /<h1>Adatkezelési tájékoztató<\/h1>/);
-    assert.match(String(huCtx.body), /href="\/legal\/terms-of-service"/);
+    assert.match(String(huCtx.body), /href="\/static\/terms-of-service"/);
 
     const enCtx = fakeCtx({ slug: 'privacy-policy' }, { locale: 'en' });
     await handlers.show(enCtx);
@@ -146,7 +149,7 @@ describe('legal pages', () => {
     assert.match(String(enCtx.body), /<html lang="en">/);
     assert.match(String(enCtx.body), /<h1>Privacy Policy<\/h1>/);
     // nav: en title where it exists, hu fallback otherwise, links stay in en
-    assert.match(String(enCtx.body), /href="\/legal\/terms-of-service\?locale=en">Felhasználási feltételek/);
+    assert.match(String(enCtx.body), /href="\/static\/terms-of-service\?locale=en">Felhasználási feltételek/);
 
     const fallback = fakeCtx({ slug: 'terms-of-service' }, { locale: 'en' });
     await handlers.show(fallback);
@@ -165,7 +168,7 @@ describe('legal pages', () => {
     const index = fakeCtx({}, { locale: 'en' });
     await handlers.index(index);
     assert.equal(index.status, 200);
-    assert.match(String(index.body), /href="\/legal\/privacy-policy\?locale=en">Privacy Policy/);
+    assert.match(String(index.body), /href="\/static\/privacy-policy\?locale=en">Privacy Policy/);
   });
 
   it('creates missing locales and makes hu default only when it creates hu', async () => {
@@ -186,16 +189,16 @@ describe('legal pages', () => {
       }),
       log: { info() {}, warn() {} },
     };
-    await ensureLegalLocales(strapi);
+    await ensureStaticPageLocales(strapi);
     assert.deepEqual(calls, ['create:hu', 'default:hu']);
     calls.length = 0;
-    await ensureLegalLocales(strapi);
+    await ensureStaticPageLocales(strapi);
     assert.deepEqual(calls, []);
   });
 
   it('accepts only same-site home redirect paths', () => {
-    assert.equal(resolveHomeRedirect('/legal/about'), '/legal/about');
-    assert.equal(resolveHomeRedirect(' /legal/about '), '/legal/about');
+    assert.equal(resolveHomeRedirect('/static/about'), '/static/about');
+    assert.equal(resolveHomeRedirect(' /static/about '), '/static/about');
     assert.equal(resolveHomeRedirect(undefined), null);
     assert.equal(resolveHomeRedirect(''), null);
     assert.equal(resolveHomeRedirect('/'), null);
@@ -203,12 +206,23 @@ describe('legal pages', () => {
     assert.equal(resolveHomeRedirect('https://evil.example'), null);
   });
 
+  it('activates home redirect only when PUBLIC_HOME_REDIRECT is set', () => {
+    assert.equal(resolveSiteHomeRedirectTarget(undefined), null);
+    assert.equal(resolveSiteHomeRedirectTarget('/backoffice/'), '/backoffice/');
+  });
+
   it('redirects only GET / and keeps the query', async () => {
     const used: unknown[] = [];
     assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, undefined), false);
     assert.equal(used.length, 0);
+    assert.equal(
+      registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, '/backoffice/'),
+      true,
+    );
+    assert.equal(used.length, 1);
+    assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, ''), false);
 
-    const mw = createHomeRedirectMiddleware('/legal/about');
+    const mw = createHomeRedirectMiddleware('/static/about');
     let redirected = '';
     let nextCalled = false;
     await mw(
@@ -217,7 +231,7 @@ describe('legal pages', () => {
         nextCalled = true;
       },
     );
-    assert.equal(redirected, '/legal/about?locale=en');
+    assert.equal(redirected, '/static/about?locale=en');
     assert.equal(nextCalled, false);
 
     await mw({ method: 'GET', path: '/admin', redirect: () => assert.fail() }, async () => {

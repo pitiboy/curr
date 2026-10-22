@@ -1,41 +1,47 @@
 import type { StrapiApp } from '@strapi/strapi/admin';
 
 /**
- * Public legal pages served by Strapi itself (src/legal-pages.ts). Same origin
+ * Public static pages served by Strapi itself (src/static-pages.ts). Same origin
  * as the admin, so the links work locally (:1337) and on kor.fejlesztesek.hu.
  * hu is the default page language; en adds `?locale=en`.
  */
-const LEGAL_LINKS = {
+const STATIC_PAGE_LINKS = {
   hu: [
-    { href: '/legal/privacy-policy', label: 'Adatkezelési tájékoztató' },
-    { href: '/legal/terms-of-service', label: 'Felhasználási feltételek' },
+    { href: '/static/privacy-policy', label: 'Adatkezelési tájékoztató' },
+    { href: '/static/terms-of-service', label: 'Felhasználási feltételek' },
   ],
   en: [
-    { href: '/legal/privacy-policy?locale=en', label: 'Privacy Policy' },
-    { href: '/legal/terms-of-service?locale=en', label: 'Terms of Service' },
+    { href: '/static/privacy-policy?locale=en', label: 'Privacy Policy' },
+    { href: '/static/terms-of-service?locale=en', label: 'Terms of Service' },
   ],
 } as const;
 
-const LEGAL_FOOTER_ID = 'kor-legal-footer';
+const STATIC_PAGE_FOOTER_ID = 'kor-static-page-footer';
+const BACKOFFICE_ENTRY_ID = 'kor-backoffice-entry';
+
+const BACKOFFICE_ENTRY_LABELS = {
+  hu: 'Kezelő felület',
+  en: 'Backoffice',
+} as const;
 
 /**
  * The admin keeps its UI language on `<html lang>` (login dropdown and
  * profile setting both update it). Anything other than hu gets the en pages.
  */
-function adminLegalLocale(): keyof typeof LEGAL_LINKS {
+function adminStaticPageLocale(): keyof typeof STATIC_PAGE_LINKS {
   const lang = (document.documentElement.lang || 'en').toLowerCase();
   return lang.startsWith('hu') ? 'hu' : 'en';
 }
 
-function renderLegalFooter(footer: HTMLElement) {
-  const locale = adminLegalLocale();
+function renderStaticPageFooter(footer: HTMLElement) {
+  const locale = adminStaticPageLocale();
   if (footer.dataset.locale === locale) {
     return;
   }
   footer.dataset.locale = locale;
   footer.replaceChildren();
 
-  for (const link of LEGAL_LINKS[locale]) {
+  for (const link of STATIC_PAGE_LINKS[locale]) {
     const anchor = document.createElement('a');
     anchor.href = link.href;
     anchor.textContent = link.label;
@@ -56,13 +62,100 @@ function renderLegalFooter(footer: HTMLElement) {
  * routes, so it shows on the login screen and after login alike, and follows
  * the admin language.
  */
-function mountLegalFooter() {
-  if (document.getElementById(LEGAL_FOOTER_ID)) {
+function isAdminLoginRoute() {
+  return /\/auth\/login\/?$/.test(window.location.pathname);
+}
+
+/**
+ * Strapi has no login-page slot; a fixed entry on the auth screen sends editors
+ * and dataentry users to the content backoffice SPA at /backoffice/.
+ */
+function mountBackofficeEntry() {
+  if (document.getElementById(BACKOFFICE_ENTRY_ID)) {
+    return;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.id = BACKOFFICE_ENTRY_ID;
+  Object.assign(wrap.style, {
+    position: 'fixed',
+    top: '16px',
+    right: '16px',
+    zIndex: '10000',
+    display: 'none',
+  });
+
+  const link = document.createElement('a');
+  link.href = '/backoffice/';
+  link.setAttribute('aria-label', BACKOFFICE_ENTRY_LABELS.hu);
+  Object.assign(link.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    borderRadius: '999px',
+    fontSize: '14px',
+    fontWeight: '600',
+    fontFamily: 'inherit',
+    color: '#fff',
+    background: '#8A62B0',
+    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+    textDecoration: 'none',
+  });
+
+  const plus = document.createElement('span');
+  plus.textContent = '+';
+  plus.setAttribute('aria-hidden', 'true');
+  Object.assign(plus.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '22px',
+    height: '22px',
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.22)',
+    fontSize: '18px',
+    lineHeight: '1',
+  });
+
+  const label = document.createElement('span');
+  label.className = 'kor-backoffice-entry-label';
+
+  link.append(plus, label);
+  wrap.append(link);
+  document.body.append(wrap);
+
+  const sync = () => {
+    const locale = adminStaticPageLocale();
+    const text = BACKOFFICE_ENTRY_LABELS[locale];
+    label.textContent = text;
+    link.setAttribute('aria-label', text);
+    wrap.style.display = isAdminLoginRoute() ? 'block' : 'none';
+  };
+
+  sync();
+  window.addEventListener('popstate', sync);
+  for (const method of ['pushState', 'replaceState'] as const) {
+    const original = history[method].bind(history);
+    history[method] = (...args: Parameters<History['pushState']>) => {
+      const result = original(...args);
+      sync();
+      return result;
+    };
+  }
+  new MutationObserver(sync).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['lang'],
+  });
+}
+
+function mountStaticPageFooter() {
+  if (document.getElementById(STATIC_PAGE_FOOTER_ID)) {
     return;
   }
 
   const footer = document.createElement('div');
-  footer.id = LEGAL_FOOTER_ID;
+  footer.id = STATIC_PAGE_FOOTER_ID;
   footer.setAttribute('role', 'contentinfo');
   Object.assign(footer.style, {
     position: 'fixed',
@@ -80,10 +173,10 @@ function mountLegalFooter() {
     background: 'rgba(127, 127, 127, 0.12)',
   });
 
-  renderLegalFooter(footer);
+  renderStaticPageFooter(footer);
   document.body.appendChild(footer);
 
-  new MutationObserver(() => renderLegalFooter(footer)).observe(
+  new MutationObserver(() => renderStaticPageFooter(footer)).observe(
     document.documentElement,
     { attributes: true, attributeFilter: ['lang'] },
   );
@@ -172,7 +265,8 @@ export default {
     },
   },
   bootstrap(_app: StrapiApp) {
-    mountLegalFooter();
+    mountBackofficeEntry();
+    mountStaticPageFooter();
 
     const titlePrefix = 'KÖR | ';
 

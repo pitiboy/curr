@@ -136,6 +136,6 @@ Bírósághoz is fordulhatsz; a pert a lakóhelyed vagy tartózkodási helyed sz
 
 ## 11. A tájékoztató módosítása
 
-A tájékoztatót a szolgáltatás változásakor frissítjük. Az aktuális változat mindig ezen a címen érhető el: [https://kor.fejlesztesek.hu/legal/privacy-policy](https://kor.fejlesztesek.hu/legal/privacy-policy) ([angol nyelvű változat](https://kor.fejlesztesek.hu/legal/privacy-policy?locale=en)). Eltérés esetén a magyar változat az irányadó.
+A tájékoztatót a szolgáltatás változásakor frissítjük. Az aktuális változat mindig ezen a címen érhető el: [https://kor.fejlesztesek.hu/static/privacy-policy](https://kor.fejlesztesek.hu/static/privacy-policy) ([angol nyelvű változat](https://kor.fejlesztesek.hu/static/privacy-policy?locale=en)). Eltérés esetén a magyar változat az irányadó.
 
 **Hatályos:** 2026. 10. 06.
