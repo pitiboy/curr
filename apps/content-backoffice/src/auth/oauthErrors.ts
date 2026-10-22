@@ -11,14 +11,18 @@ const OAUTH_ERROR_KEYS: Record<string, string> = {
   'oauth.email_not_available': 'email_not_available',
   'oauth.email_taken': 'email_taken',
   'Your account has been blocked by an administrator': 'account_blocked',
-  'OAuth authentication requires a completed provider session': 'session_missing',
+  'OAuth authentication requires a completed provider session':
+    'session_missing',
   'This provider is disabled': 'provider_disabled',
 };
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 /** Translated text for a login error; unknown messages are shown as they are. */
-export function translateOAuthError(message: string, translate: Translate): string {
+export function translateOAuthError(
+  message: string,
+  translate: Translate,
+): string {
   const key = OAUTH_ERROR_KEYS[message];
   return key ? translate(`app.oauth_errors.${key}`, { _: message }) : message;
 }

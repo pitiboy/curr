@@ -140,7 +140,6 @@ function TransactionShowContent({
           )}
           source="description"
         />
-        
 
         <SelectField choices={statusChoices} source="status" translateChoice />
 

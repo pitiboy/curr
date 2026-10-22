@@ -67,7 +67,8 @@ function TransactionListMenuItem({
   mode: TransactionListMode;
 }) {
   const location = useLocation();
-  const active = transactionListMode(location.pathname, location.search) === mode;
+  const active =
+    transactionListMode(location.pathname, location.search) === mode;
   return (
     <Menu.Item
       leftIcon={icon}

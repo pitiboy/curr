@@ -23,7 +23,9 @@ const publishFilled = {
 
 describe('transactionFormErrors', () => {
   it('blocks a save that leaves the draft quartet empty', () => {
-    expect(transactionFormErrors({ description: 'csak leírás' }, [], translate)).toEqual({
+    expect(
+      transactionFormErrors({ description: 'csak leírás' }, [], translate),
+    ).toEqual({
       date: 'ra.validation.required',
       amount: 'ra.validation.required',
       currency_type: 'ra.validation.required',
@@ -31,18 +33,28 @@ describe('transactionFormErrors', () => {
   });
 
   it('accepts a draft without organization or accounts when the quartet is filled', () => {
-    expect(transactionFormErrors({ ...draftFilled }, [], translate)).toEqual({});
+    expect(transactionFormErrors({ ...draftFilled }, [], translate)).toEqual(
+      {},
+    );
   });
 
   it('accepts zero amount when description and the other draft fields are set', () => {
     expect(
-      transactionFormErrors({ ...draftFilled, amount: 0, description: 'x' }, [], translate),
+      transactionFormErrors(
+        { ...draftFilled, amount: 0, description: 'x' },
+        [],
+        translate,
+      ),
     ).toEqual({});
   });
 
   it('requires description on create even without a receipt file', () => {
     expect(
-      transactionFormErrors({ ...draftFilled, description: '   ' }, [], translate),
+      transactionFormErrors(
+        { ...draftFilled, description: '   ' },
+        [],
+        translate,
+      ),
     ).toEqual({
       description: 'ra.validation.required',
     });

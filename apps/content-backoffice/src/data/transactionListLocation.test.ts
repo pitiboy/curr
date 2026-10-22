@@ -39,7 +39,10 @@ describe('transactionsMenuTo', () => {
     expect(transactionListMode(draft.pathname, draft.search)).toBe('draft');
     expect(transactionListMode(all.pathname, all.search)).toBe('all');
     expect(
-      transactionListMode('/transactions', '?filter={"status":"draft","date_gte":"2026-01-01"}'),
+      transactionListMode(
+        '/transactions',
+        '?filter={"status":"draft","date_gte":"2026-01-01"}',
+      ),
     ).toBe('draft');
     expect(transactionListMode('/transactions/create', all.search)).toBeNull();
   });

@@ -14,6 +14,12 @@
     "strapi": "strapi develop",
     "local": "strapi develop",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/*.test.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:check:ci": "prettier --check \"apps/content-backoffice/**/*.{ts,tsx,json,md,css,html}\" \".github/**/*.{yml,yaml}\" \"docs/ci/**/*.md\" \"docs/prd/0002-content-backoffice-v2.md\" \"lefthook.yml\" \"package.json\"",
+    "ci:backoffice": "npm ci --prefix apps/content-backoffice && nx run content-backoffice:build && npm run lint --prefix apps/content-backoffice && npm run test --prefix apps/content-backoffice",
+    "prepare": "lefthook install",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
     "seed": "node scripts/seed-database.js",
@@ -74,7 +80,9 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "httpyac": "^6.16.7",
+    "lefthook": "^1.13.6",
     "nx": "^23.3.0",
+    "prettier": "^3.9.10",
     "typescript": "^5"
   },
   "engines": {

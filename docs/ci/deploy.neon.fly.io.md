@@ -26,15 +26,15 @@ Outcome of **this** run: the checkout is Path-1-ready (config, Docker, Fly, CI d
 
 ## Decision (already locked — do not reopen)
 
-| Locked | Meaning |
-| --- | --- |
-| Backend | This repo’s Strapi **5.27**. Stay on that version unless a security patch is required and you say so. |
-| Database | Neon Postgres, region **`aws-eu-central-1`**. Pooled `DATABASE_URL`. Sleep keeps **data**. |
-| API host | Fly Machine **`fra`**, **1 GB** RAM, `auto_stop_machines = "stop"`, `min_machines_running = 0`. Image built in **GitHub Actions**, not on Fly’s small builder. |
-| Year-1 UI | **Strapi Admin** at `/admin`. Hungarian labels already exist. |
-| Later client | Strapi **REST** (`/api`). **Out of year-1.** Do not design screens. |
-| Usage | About **one or two full CRUD workflows per day**. Cold start is acceptable. |
-| Not Path 2 | No PostgREST, no Neon Data API as the app, no Supabase, no DBeaver as treasurer UI, no SQL `post_transaction()`, no dropping Strapi. |
+| Locked                 | Meaning                                                                                                                                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend                | This repo’s Strapi **5.27**. Stay on that version unless a security patch is required and you say so.                                                                                                                         |
+| Database               | Neon Postgres, region **`aws-eu-central-1`**. Pooled `DATABASE_URL`. Sleep keeps **data**.                                                                                                                                    |
+| API host               | Fly Machine **`fra`**, **1 GB** RAM, `auto_stop_machines = "stop"`, `min_machines_running = 0`. Image built in **GitHub Actions**, not on Fly’s small builder.                                                                |
+| Year-1 UI              | **Strapi Admin** at `/admin`. Hungarian labels already exist.                                                                                                                                                                 |
+| Later client           | Strapi **REST** (`/api`). **Out of year-1.** Do not design screens.                                                                                                                                                           |
+| Usage                  | About **one or two full CRUD workflows per day**. Cold start is acceptable.                                                                                                                                                   |
+| Not Path 2             | No PostgREST, no Neon Data API as the app, no Supabase, no DBeaver as treasurer UI, no SQL `post_transaction()`, no dropping Strapi.                                                                                          |
 | Not a hosting bake-off | Do not deploy to Render, tárhely, FridayBuilds, Hostinger, or Hetzner in this run. Leave **`curr-zep-strapi`** and tárhely **untouched**. Do **not** apply [`render.yaml`](../render.yaml) (it would create a second web+DB). |
 
 Mid-year “Strapi now, PostgREST later” is invalid. GraphQL is extra work and **off**.
@@ -45,12 +45,12 @@ Mid-year “Strapi now, PostgREST later” is invalid. GraphQL is extra work and
 
 [`docs/backend-strategy-comparison.md`](./backend-strategy-comparison.md) §4 is the operating sequence. Map it like this:
 
-| Window | This run |
-| --- | --- |
-| **Days 1–14 — first experiment** | **Must do in-repo.** Dockerfile, `fly.toml`, `.dockerignore`, CI image → GHCR → `fly deploy` on a **special branch**, Neon-safe DB pool, env/docs. Operator checklist for Neon + Fly + secrets. If Fly/Neon credentials are already in the environment, you **may** run the first deploy and hit `/_health` and `/admin` twice (cold/warm). If they are not, stop at artifacts + checklist — do not invent accounts. |
-| **Days 14–30 — first real transaction** | **Do not** `seed:full` on production unless the user explicitly says the Neon project is empty and approved. **Do** document: `npm run seed:full`, Treasurer Admin role (Content Manager on transaction/receipt/member; read on accounts/types; **no** Content-Type Builder), Public `find`/`create` **off**, one live fee in Admin. Optional: a **bootstrap or documented Admin recipe** for the Treasurer role and default-deny Users & Permissions — no live posting. |
-| **Days 30–60 — integrity and uploads** | **In-repo only, allowed if cheap:** mark `debit_account` and `credit_account` **`required: true`** in [`src/api/transaction/content-types/transaction/schema.json`](../src/api/transaction/content-types/transaction/schema.json). Confirm Cloudinary stays in [`config/plugins.ts`](../config/plugins.ts) and env is listed. **Do not** add a SQL posting RPC. **Do not** add a transaction lifecycle unless it is a small JS guard for missing debit/credit **after** the schema change. |
-| **Days 60–90 — freeze** | **Document only:** weekly `pg_dump` of Neon, rehearse cold-start Admin, refuse custom client / member self-serve / CSV import / scheduled fees / project-balance API / org-scoped Admin. |
+| Window                                  | This run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Days 1–14 — first experiment**        | **Must do in-repo.** Dockerfile, `fly.toml`, `.dockerignore`, CI image → GHCR → `fly deploy` on a **special branch**, Neon-safe DB pool, env/docs. Operator checklist for Neon + Fly + secrets. If Fly/Neon credentials are already in the environment, you **may** run the first deploy and hit `/_health` and `/admin` twice (cold/warm). If they are not, stop at artifacts + checklist — do not invent accounts.                                                                       |
+| **Days 14–30 — first real transaction** | **Do not** `seed:full` on production unless the user explicitly says the Neon project is empty and approved. **Do** document: `npm run seed:full`, Treasurer Admin role (Content Manager on transaction/receipt/member; read on accounts/types; **no** Content-Type Builder), Public `find`/`create` **off**, one live fee in Admin. Optional: a **bootstrap or documented Admin recipe** for the Treasurer role and default-deny Users & Permissions — no live posting.                   |
+| **Days 30–60 — integrity and uploads**  | **In-repo only, allowed if cheap:** mark `debit_account` and `credit_account` **`required: true`** in [`src/api/transaction/content-types/transaction/schema.json`](../src/api/transaction/content-types/transaction/schema.json). Confirm Cloudinary stays in [`config/plugins.ts`](../config/plugins.ts) and env is listed. **Do not** add a SQL posting RPC. **Do not** add a transaction lifecycle unless it is a small JS guard for missing debit/credit **after** the schema change. |
+| **Days 60–90 — freeze**                 | **Document only:** weekly `pg_dump` of Neon, rehearse cold-start Admin, refuse custom client / member self-serve / CSV import / scheduled fees / project-balance API / org-scoped Admin.                                                                                                                                                                                                                                                                                                   |
 
 If time is short, finish **Days 1–14 in-repo** and the operator checklist. Do not start Path 2 work to “get ahead.”
 
@@ -58,26 +58,26 @@ If time is short, finish **Days 1–14 in-repo** and the operator checklist. Do 
 
 ## Repo facts (inspect before editing)
 
-| Fact | Detail |
-| --- | --- |
-| App | Strapi **5.27** at **repository root** (`package.json` name `backend-strapi`) |
-| Runtime | Node `>=20.0.0 <=22.x.x`, npm `>=10`. CI already uses **Node 20**. |
-| Start / build | `npm start` → `strapi start`; `npm run build` → `strapi build`. Admin build is memory-heavy — **never** `strapi build` on a 512 MB host. |
-| Health / Admin / API | `/_health`, `/admin`, `/api` |
-| HTTP API | **REST only.** `@strapi/plugin-graphql` is **not** in `package.json`. Leave it that way. |
-| Auth | `@strapi/plugin-users-permissions`. Admin users ≠ end-users. Super Admin = full DB. |
-| Uploads | `@strapi/provider-upload-cloudinary` already in [`config/plugins.ts`](../config/plugins.ts) |
-| DB config | [`config/database.ts`](../config/database.ts): `DATABASE_URL` **forces postgres**. Default pool **min 2 / max 10** — too hot for Neon scale-to-zero. Change default **min toward 0–1** when URL is set (env `DATABASE_POOL_MIN`). SSL via `DATABASE_SSL` (production default true). |
-| Server | [`config/server.ts`](../config/server.ts): `PUBLIC_URL`, `IS_PROXIED` (true in production), `HOST=0.0.0.0`, `PORT` (Fly sets `PORT`) |
-| CORS | [`config/middlewares.ts`](../config/middlewares.ts) still lists `RENDER_EXTERNAL_URL`. Keep it as a leftover; **do not** make Render the documented production URL. |
-| Local DX | [`docker-compose.yaml`](../docker-compose.yaml) Postgres **16**. Keep for `npm run develop`. Production is Neon, not Compose. |
-| Seeds | `npm run seed:full` → [`scripts/seed-database.js`](../scripts/seed-database.js). Keep. Path 2 SQL rewrite is **out**. |
-| Lifecycle | [`src/api/member/content-types/member/lifecycles.ts`](../src/api/member/content-types/member/lifecycles.ts) — **keep.** Member → account on first org. |
-| Transaction schema | `date` and `amount` required; **`debit_account` / `credit_account` are not.** `draftAndPublish: true` on `transaction` and `receipt` only. |
-| CI today | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `npm ci`, `strapi build` (sqlite), `typecheck` on `main` + PRs. **No Docker, no Fly, no GHCR.** |
-| Missing | **No** `Dockerfile`, **no** `fly.toml`, **no** `.dockerignore`, **no** deploy workflow. |
-| Sidecars | `apps/frontend-appsmith/`, `apps/cost-planner/`, leftover `apps/backend-strapi/` — **not** the production app. Do not size Path 1 around Appsmith. Do not delete the leftover tree unless the user asks. |
-| Domain write-up | [`docs/readme.md`](./readme.md) — self-serve, schedule, import, reports: **out of year-1**. Data model may still allow them later. |
+| Fact                 | Detail                                                                                                                                                                                                                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App                  | Strapi **5.27** at **repository root** (`package.json` name `backend-strapi`)                                                                                                                                                                                                       |
+| Runtime              | Node `>=20.0.0 <=22.x.x`, npm `>=10`. CI already uses **Node 20**.                                                                                                                                                                                                                  |
+| Start / build        | `npm start` → `strapi start`; `npm run build` → `strapi build`. Admin build is memory-heavy — **never** `strapi build` on a 512 MB host.                                                                                                                                            |
+| Health / Admin / API | `/_health`, `/admin`, `/api`                                                                                                                                                                                                                                                        |
+| HTTP API             | **REST only.** `@strapi/plugin-graphql` is **not** in `package.json`. Leave it that way.                                                                                                                                                                                            |
+| Auth                 | `@strapi/plugin-users-permissions`. Admin users ≠ end-users. Super Admin = full DB.                                                                                                                                                                                                 |
+| Uploads              | `@strapi/provider-upload-cloudinary` already in [`config/plugins.ts`](../config/plugins.ts)                                                                                                                                                                                         |
+| DB config            | [`config/database.ts`](../config/database.ts): `DATABASE_URL` **forces postgres**. Default pool **min 2 / max 10** — too hot for Neon scale-to-zero. Change default **min toward 0–1** when URL is set (env `DATABASE_POOL_MIN`). SSL via `DATABASE_SSL` (production default true). |
+| Server               | [`config/server.ts`](../config/server.ts): `PUBLIC_URL`, `IS_PROXIED` (true in production), `HOST=0.0.0.0`, `PORT` (Fly sets `PORT`)                                                                                                                                                |
+| CORS                 | [`config/middlewares.ts`](../config/middlewares.ts) still lists `RENDER_EXTERNAL_URL`. Keep it as a leftover; **do not** make Render the documented production URL.                                                                                                                 |
+| Local DX             | [`docker-compose.yaml`](../docker-compose.yaml) Postgres **16**. Keep for `npm run develop`. Production is Neon, not Compose.                                                                                                                                                       |
+| Seeds                | `npm run seed:full` → [`scripts/seed-database.js`](../scripts/seed-database.js). Keep. Path 2 SQL rewrite is **out**.                                                                                                                                                               |
+| Lifecycle            | [`src/api/member/content-types/member/lifecycles.ts`](../src/api/member/content-types/member/lifecycles.ts) — **keep.** Member → account on first org.                                                                                                                              |
+| Transaction schema   | `date` and `amount` required; **`debit_account` / `credit_account` are not.** `draftAndPublish: true` on `transaction` and `receipt` only.                                                                                                                                          |
+| CI today             | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `npm ci`, `strapi build` (sqlite), `typecheck` on `main` + PRs. **No Docker, no Fly, no GHCR.**                                                                                                                            |
+| Missing              | **No** `Dockerfile`, **no** `fly.toml`, **no** `.dockerignore`, **no** deploy workflow.                                                                                                                                                                                             |
+| Sidecars             | `apps/frontend-appsmith/`, `apps/cost-planner/`, leftover `apps/backend-strapi/` — **not** the production app. Do not size Path 1 around Appsmith. Do not delete the leftover tree unless the user asks.                                                                            |
+| Domain write-up      | [`docs/readme.md`](./readme.md) — self-serve, schedule, import, reports: **out of year-1**. Data model may still allow them later.                                                                                                                                                  |
 
 **Known failed path (constraint):** Render Free **512 MB cannot finish `strapi build`**. That is why CI builds the image. Do not “fix” year-1 by paying Render Standard.
 

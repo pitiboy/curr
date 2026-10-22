@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { strapiHttpClient } from 'ra-strapi';
 
 import { STRAPI_URL } from '../config';
@@ -22,7 +28,11 @@ function readOverride(): string[] | null {
   return parseWorkflowOverride(localStorage.getItem(WORKFLOW_OVERRIDE_KEY));
 }
 
-export function BackofficeConfigProvider({ children }: { children: ReactNode }) {
+export function BackofficeConfigProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [server, setServer] = useState<BackofficeConfigResponse>({
     enabled: [],
     available: [],

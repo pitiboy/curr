@@ -256,25 +256,27 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('populate[organization]')).toBe('true');
     expect(params.get('populate[debit_account]')).toBe('true');
     expect(params.get('populate[credit_account]')).toBe('true');
-    expect(params.get('populate[currency_type][populate][icon][fields][0]')).toBe(
-      'url',
+    expect(
+      params.get('populate[currency_type][populate][icon][fields][0]'),
+    ).toBe('url');
+    expect(
+      params.get('populate[currency_type][populate][icon][fields][1]'),
+    ).toBe('name');
+    expect(
+      params.get('populate[currency_type][populate][icon][fields][2]'),
+    ).toBe('mime');
+    expect(
+      params.get('populate[receipts][populate][document][fields][0]'),
+    ).toBe('url');
+    expect(
+      params.get('populate[receipts][populate][document][fields][1]'),
+    ).toBe('name');
+    expect(
+      params.get('populate[receipts][populate][document][fields][2]'),
+    ).toBe('mime');
+    expect(params.get('populate[receipts][populate][receipt_type]')).toBe(
+      'true',
     );
-    expect(params.get('populate[currency_type][populate][icon][fields][1]')).toBe(
-      'name',
-    );
-    expect(params.get('populate[currency_type][populate][icon][fields][2]')).toBe(
-      'mime',
-    );
-    expect(params.get('populate[receipts][populate][document][fields][0]')).toBe(
-      'url',
-    );
-    expect(params.get('populate[receipts][populate][document][fields][1]')).toBe(
-      'name',
-    );
-    expect(params.get('populate[receipts][populate][document][fields][2]')).toBe(
-      'mime',
-    );
-    expect(params.get('populate[receipts][populate][receipt_type]')).toBe('true');
   });
 });
 
@@ -331,7 +333,9 @@ describe('loadTransactionRecord', () => {
       true,
     );
     const parsed = calls.map((url) => new URL(url).searchParams);
-    expect(parsed.some((params) => params.get('status') === 'draft')).toBe(true);
+    expect(parsed.some((params) => params.get('status') === 'draft')).toBe(
+      true,
+    );
     expect(parsed.some((params) => params.get('status') === 'published')).toBe(
       true,
     );
@@ -355,7 +359,9 @@ describe('loadTransactionRecord', () => {
           error.status = 404;
           throw error;
         }
-        return { json: { data: { documentId: 'doc-1', description: 'draft' } } };
+        return {
+          json: { data: { documentId: 'doc-1', description: 'draft' } },
+        };
       },
       'http://localhost:1337',
       'doc-1',

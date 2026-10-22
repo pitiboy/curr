@@ -104,7 +104,9 @@ export async function updateTransactionDraft(
 function recordData(json: unknown): Record<string, unknown> {
   if (!json || typeof json !== 'object' || !('data' in json)) return {};
   const data = (json as { data?: unknown }).data;
-  return data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  return data && typeof data === 'object'
+    ? (data as Record<string, unknown>)
+    : {};
 }
 
 function asDate(value: unknown): string | undefined {
