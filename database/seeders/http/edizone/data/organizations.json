@@ -101,6 +101,24 @@
     "parentName": "I/4.12.1.2 Állattenyésztés"
   },
   {
+    "name": "I/4.12.1.2.1.1 2024 alom",
+    "description": "Tyúkól — 2024 alom",
+    "address": "",
+    "parentName": "I/4.12.1.2.1 Tyúktartás"
+  },
+  {
+    "name": "I/4.12.1.2.1.2 2025 alom",
+    "description": "Tyúkól — 2025 alom",
+    "address": "",
+    "parentName": "I/4.12.1.2.1 Tyúktartás"
+  },
+  {
+    "name": "I/4.12.1.2.1.3 2026 alom",
+    "description": "Tyúkól — 2026 alom",
+    "address": "",
+    "parentName": "I/4.12.1.2.1 Tyúktartás"
+  },
+  {
     "name": "I/4.12.1.2.2 Disznótartás",
     "description": "Disznótartás",
     "address": "",

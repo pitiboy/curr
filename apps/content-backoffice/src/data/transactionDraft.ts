@@ -39,6 +39,7 @@ export function transactionDraftBody(
     'debit_account',
     'credit_account',
     'currency_type',
+    'transaction_type',
   ] as const) {
     const value = relationId(input[key]);
     if (value) body[key] = value;
