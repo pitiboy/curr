@@ -19,19 +19,21 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       '%{smart_count} tranzakció véglegesítése |||| %{smart_count} tranzakció véglegesítése',
     transactions_bulk_finalize_body:
       'A kijelölt tranzakciók és bizonylataik változatlanok maradnak; nem szerkesztünk adatot, csak véglegesítünk.',
+    transactions_bulk_finalize_body_partial:
+      'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat, vagy te rögzítetted — a szerző nem véglegesítheti a saját tranzakcióját).',
     transactions_bulk_finalize_confirm: 'Véglegesít',
     transactions_bulk_done:
-      '%{count} tranzakció véglegesítve. |||| %{count} tranzakció véglegesítve.',
+      '%{smart_count} tranzakció véglegesítve. |||| %{smart_count} tranzakció véglegesítve.',
     transactions_bulk_incomplete:
-      'A kijelöltek közül %{count} még hiányos, ezért nem véglegesíthető. |||| A kijelöltek közül %{count} még hiányos, ezért nem véglegesíthető.',
+      'A kijelöltek közül %{smart_count} még hiányos, ezért nem véglegesíthető. |||| A kijelöltek közül %{smart_count} még hiányos, ezért nem véglegesíthető.',
     transactions_bulk_same_person:
-      'A kijelöltek közül %{count} a saját rögzítésed, ezért nem véglegesíthető. |||| A kijelöltek közül %{count} a saját rögzítésed, ezért nem véglegesíthető.',
+      'A kijelöltek közül %{smart_count} a saját rögzítésed, ezért nem véglegesíthető. |||| A kijelöltek közül %{smart_count} a saját rögzítésed, ezért nem véglegesíthető.',
     transactions_bulk_skipped_incomplete:
-      '%{count} hiányos tranzakció kimaradt. |||| %{count} hiányos tranzakció kimaradt.',
+      '%{smart_count} hiányos tranzakció kimaradt. |||| %{smart_count} hiányos tranzakció kimaradt.',
     transactions_bulk_skipped_same_person:
-      '%{count} saját rögzítésű tranzakció kimaradt. |||| %{count} saját rögzítésű tranzakció kimaradt.',
+      '%{smart_count} saját rögzítésű tranzakció kimaradt. |||| %{smart_count} saját rögzítésű tranzakció kimaradt.',
     transactions_bulk_failed:
-      '%{count} tranzakció véglegesítése sikertelen. |||| %{count} tranzakció véglegesítése sikertelen.',
+      '%{smart_count} tranzakció véglegesítése sikertelen. |||| %{smart_count} tranzakció véglegesítése sikertelen.',
     transactions_bulk_none_ready:
       'Egyetlen kijelölt tranzakció sem véglegesíthető.',
     transactions_finalize_hint:

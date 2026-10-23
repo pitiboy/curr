@@ -19,19 +19,21 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Finalize %{smart_count} transaction |||| Finalize %{smart_count} transactions',
     transactions_bulk_finalize_body:
       'Selected transactions and receipts stay unchanged. Only the publish action runs.',
+    transactions_bulk_finalize_body_partial:
+      '%{ready} transaction(s) will be finalized. %{skipped} selection(s) will be skipped (incomplete data, or entered by you — you cannot publish your own entries).',
     transactions_bulk_finalize_confirm: 'Finalize',
     transactions_bulk_done:
-      '%{count} transaction finalized. |||| %{count} transactions finalized.',
+      '%{smart_count} transaction finalized. |||| %{smart_count} transactions finalized.',
     transactions_bulk_incomplete:
-      '%{count} selected row is incomplete and cannot be finalized. |||| %{count} selected rows are incomplete and cannot be finalized.',
+      '%{smart_count} selected row is incomplete and cannot be finalized. |||| %{smart_count} selected rows are incomplete and cannot be finalized.',
     transactions_bulk_same_person:
-      '%{count} selected row was entered by you and cannot be finalized. |||| %{count} selected rows were entered by you and cannot be finalized.',
+      '%{smart_count} selected row was entered by you and cannot be finalized. |||| %{smart_count} selected rows were entered by you and cannot be finalized.',
     transactions_bulk_skipped_incomplete:
-      'Skipped %{count} incomplete transaction. |||| Skipped %{count} incomplete transactions.',
+      'Skipped %{smart_count} incomplete transaction. |||| Skipped %{smart_count} incomplete transactions.',
     transactions_bulk_skipped_same_person:
-      'Skipped %{count} transaction you entered. |||| Skipped %{count} transactions you entered.',
+      'Skipped %{smart_count} transaction you entered. |||| Skipped %{smart_count} transactions you entered.',
     transactions_bulk_failed:
-      'Failed to finalize %{count} transaction. |||| Failed to finalize %{count} transactions.',
+      'Failed to finalize %{smart_count} transaction. |||| Failed to finalize %{smart_count} transactions.',
     transactions_bulk_none_ready:
       'None of the selected transactions can be finalized.',
     transactions_finalize_hint:

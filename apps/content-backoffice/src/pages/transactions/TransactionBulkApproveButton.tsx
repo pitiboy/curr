@@ -96,6 +96,11 @@ export function TransactionBulkApproveButton() {
   };
 
   const readyCount = pending?.ready.length ?? 0;
+  const skippedCount = pending?.skipped.length ?? 0;
+  const confirmContent =
+    skippedCount > 0
+      ? 'app.transactions_bulk_finalize_body_partial'
+      : 'app.transactions_bulk_finalize_body';
 
   return (
     <Fragment>
@@ -111,7 +116,12 @@ export function TransactionBulkApproveButton() {
       </Button>
       <Confirm
         confirm="app.transactions_bulk_finalize_confirm"
-        content="app.transactions_bulk_finalize_body"
+        content={confirmContent}
+        contentTranslateOptions={
+          skippedCount > 0
+            ? { ready: readyCount, skipped: skippedCount }
+            : undefined
+        }
         isOpen={open}
         loading={busy}
         title="app.transactions_bulk_finalize_title"
@@ -126,6 +136,23 @@ export function TransactionBulkApproveButton() {
   );
 }
 
+function pluralNotify(
+  notify: ReturnType<typeof useNotify>,
+  messageKey: string,
+  count: number,
+  type: 'warning' | 'success' | 'error',
+) {
+  if (count <= 0) return;
+  notify(messageKey, {
+    type,
+    messageArgs: pluralArgs(count),
+  });
+}
+
+function pluralArgs(count: number) {
+  return { smart_count: count, count };
+}
+
 function notifySkipped(
   skipped: Array<{ reason: BulkApproveSkipReason }>,
   translate: (key: string, options?: Record<string, unknown>) => string,
@@ -133,17 +160,11 @@ function notifySkipped(
 ) {
   const counts = countSkipReasons(skipped);
   if (counts.incomplete) {
-    notify('app.transactions_bulk_incomplete', {
-      type: 'warning',
-      messageArgs: { count: counts.incomplete },
-    });
+    pluralNotify(notify, 'app.transactions_bulk_incomplete', counts.incomplete, 'warning');
     return;
   }
   if (counts.same_person) {
-    notify('app.transactions_bulk_same_person', {
-      type: 'warning',
-      messageArgs: { count: counts.same_person },
-    });
+    pluralNotify(notify, 'app.transactions_bulk_same_person', counts.same_person, 'warning');
     return;
   }
   notify(translate('app.transactions_bulk_none_ready'), { type: 'warning' });
@@ -159,31 +180,25 @@ function notifyBulkOutcome(
   const failedSamePerson = outcome.failed.filter((row) => row.samePerson).length;
   const failedOther = outcome.failed.length - failedSamePerson;
 
-  if (outcome.succeeded.length) {
-    notify('app.transactions_bulk_done', {
-      type: 'success',
-      messageArgs: { count: outcome.succeeded.length },
-    });
-  }
-
-  if (skipCounts.incomplete) {
-    notify('app.transactions_bulk_skipped_incomplete', {
-      type: 'warning',
-      messageArgs: { count: skipCounts.incomplete },
-    });
-  }
-  if (skipCounts.same_person + failedSamePerson) {
-    notify('app.transactions_bulk_skipped_same_person', {
-      type: 'warning',
-      messageArgs: { count: skipCounts.same_person + failedSamePerson },
-    });
-  }
-  if (failedOther) {
-    notify('app.transactions_bulk_failed', {
-      type: 'error',
-      messageArgs: { count: failedOther },
-    });
-  }
+  pluralNotify(
+    notify,
+    'app.transactions_bulk_done',
+    outcome.succeeded.length,
+    'success',
+  );
+  pluralNotify(
+    notify,
+    'app.transactions_bulk_skipped_incomplete',
+    skipCounts.incomplete,
+    'warning',
+  );
+  pluralNotify(
+    notify,
+    'app.transactions_bulk_skipped_same_person',
+    skipCounts.same_person + failedSamePerson,
+    'warning',
+  );
+  pluralNotify(notify, 'app.transactions_bulk_failed', failedOther, 'error');
   if (
     !outcome.succeeded.length &&
     !skipCounts.incomplete &&
