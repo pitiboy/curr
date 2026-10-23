@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { DataProvider } from 'react-admin';
 
 import {
+  accountChoicesForSelect,
   CREDIT_CODES,
   DEBIT_CODES,
+  EGG_CREDIT_ACCOUNT_CODE,
+  EGG_DEBIT_ACCOUNT_CODE,
   filterAccountChoices,
   isCreditCode,
   isDebitCode,
@@ -70,6 +73,42 @@ describe('account code filters', () => {
     expect(isCreditCode('2000')).toBe(false);
     expect(isCreditCode('4000')).toBe(false);
     expect(isCreditCode('5000')).toBe(false);
+  });
+
+  it('returns every account when the review profile is empty', () => {
+    expect(filterAccountChoices(accounts, 'debit', '')).toHaveLength(
+      accounts.length,
+    );
+    expect(filterAccountChoices(accounts, 'credit', '').map((row) => row.code)).toContain(
+      '4000',
+    );
+    expect(filterAccountChoices(accounts, 'credit', 'cost').map((row) => row.code)).not.toContain(
+      '4000',
+    );
+  });
+
+  it('limits the egg profile to the egg workflow account codes', () => {
+    const eggAccounts: AccountChoice[] = [
+      ...accounts,
+      { id: 'egg-revenue', code: EGG_CREDIT_ACCOUNT_CODE, name: 'Tojás bevétel' },
+    ];
+    expect(
+      filterAccountChoices(eggAccounts, 'debit', 'egg').map((row) => row.code),
+    ).toEqual([EGG_DEBIT_ACCOUNT_CODE]);
+    expect(
+      filterAccountChoices(eggAccounts, 'credit', 'egg').map((row) => row.code),
+    ).toEqual([EGG_CREDIT_ACCOUNT_CODE]);
+  });
+
+  it('keeps a selected account in the list when it is outside the profile', () => {
+    const choices = accountChoicesForSelect(
+      accounts,
+      'credit',
+      'cost',
+      'revenue',
+    );
+    expect(choices.map((row) => row.id)).toContain('revenue');
+    expect(choices.map((row) => row.code)).toContain('4000');
   });
 });
 

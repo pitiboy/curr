@@ -31,6 +31,10 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_leave_stay: 'Stay',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
+    account_profile: 'Account profile',
+    account_profile_all: 'All accounts',
+    account_profile_cost: 'Expense',
+    account_profile_egg: 'Eggs (EGG)',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
