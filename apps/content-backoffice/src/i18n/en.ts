@@ -21,6 +21,8 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Selected transactions and receipts stay unchanged. Only the publish action runs.',
     transactions_bulk_finalize_body_partial:
       '%{ready} transaction(s) will be finalized. %{skipped} selection(s) will be skipped (incomplete data, or entered by you — you cannot publish your own entries).',
+    transactions_bulk_finalize_body_partial_no_self_block:
+      '%{ready} transaction(s) will be finalized. %{skipped} selection(s) will be skipped (incomplete data or not eligible to finalize).',
     transactions_bulk_finalize_confirm: 'Finalize',
     transactions_bulk_done:
       '%{smart_count} transaction finalized. |||| %{smart_count} transactions finalized.',

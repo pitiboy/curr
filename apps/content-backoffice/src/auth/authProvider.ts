@@ -43,6 +43,7 @@ export const authProvider: AuthProvider = {
     return {
       id: user.id,
       fullName: user.username || user.email || String(user.id),
+      email: user.email ?? '',
     };
   },
   getPermissions: async () => {

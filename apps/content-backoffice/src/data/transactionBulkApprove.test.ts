@@ -51,7 +51,7 @@ describe('classifyBulkApproveRows', () => {
     ]);
   });
 
-  it('skips drafts the editor entered', () => {
+  it('skips drafts the editor entered when publisher must differ', () => {
     const own = {
       ...completeDraft,
       entered_by: 'Editor@Example.com',
@@ -59,6 +59,18 @@ describe('classifyBulkApproveRows', () => {
     const result = classifyBulkApproveRows([own], 'editor@example.com');
     expect(result.ready).toHaveLength(0);
     expect(result.skipped[0]?.reason).toBe('same_person');
+  });
+
+  it('allows own drafts when publisher must not differ', () => {
+    const own = {
+      ...completeDraft,
+      entered_by: 'Editor@Example.com',
+    };
+    const result = classifyBulkApproveRows([own], 'editor@example.com', {
+      publisherMustDiffer: false,
+    });
+    expect(result.ready).toHaveLength(1);
+    expect(result.skipped).toHaveLength(0);
   });
 });
 

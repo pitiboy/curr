@@ -19,6 +19,7 @@ import {
 } from '../../data/transactionBulkApprove';
 import { publishTransaction } from '../../data/dataProvider';
 import type { TransactionRow } from '../../data/transactionList';
+import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 
 function selectedRows(
   selectedIds: string[],
@@ -37,6 +38,7 @@ export function TransactionBulkApproveButton() {
   const refresh = useRefresh();
   const unselectAll = useUnselectAll('transactions');
   const { selectedIds, data } = useListContext<TransactionRow>();
+  const { publisherMustDiffer } = useBackofficeConfig();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<BulkApproveClassification | null>(
@@ -54,7 +56,9 @@ export function TransactionBulkApproveButton() {
     void fetchProfileFields()
       .then(({ email }) => {
         const editorEmail = email === '—' ? '' : email;
-        const next = classifyBulkApproveRows(rows, editorEmail);
+        const next = classifyBulkApproveRows(rows, editorEmail, {
+          publisherMustDiffer,
+        });
         if (!next.ready.length) {
           notifySkipped(next.skipped, translate, notify);
           return;
@@ -99,7 +103,9 @@ export function TransactionBulkApproveButton() {
   const skippedCount = pending?.skipped.length ?? 0;
   const confirmContent =
     skippedCount > 0
-      ? 'app.transactions_bulk_finalize_body_partial'
+      ? publisherMustDiffer
+        ? 'app.transactions_bulk_finalize_body_partial'
+        : 'app.transactions_bulk_finalize_body_partial_no_self_block'
       : 'app.transactions_bulk_finalize_body';
 
   return (

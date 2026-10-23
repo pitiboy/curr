@@ -29,6 +29,7 @@ import {
   useBlocker,
   useCanBlock,
   useDataProvider,
+  useGetIdentity,
   useNotify,
   useRefresh,
   useTranslate,
@@ -49,8 +50,10 @@ import {
 import { receiptCardInvalid, receiptCount } from '../../data/receiptDraft';
 import {
   isSamePersonPublishError,
+  samePersonPublishBlocked,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
+import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 import {
   firstReceiptVendor,
   type TransactionRow,
@@ -330,10 +333,12 @@ function FinalizeSection({
   blocked,
   documentId,
   missingReceipt,
+  samePersonBlocked,
 }: {
   blocked: boolean;
   documentId: string;
   missingReceipt: boolean;
+  samePersonBlocked: boolean;
 }) {
   const translate = useTranslate();
   const notify = useNotify();
@@ -343,7 +348,7 @@ function FinalizeSection({
   const savingRef = useRef(false);
 
   const onFinalize = () => {
-    if (blocked || savingRef.current) return;
+    if (blocked || samePersonBlocked || savingRef.current) return;
 
     const values = getValues() as Record<string, unknown>;
     clearErrors();
@@ -405,8 +410,13 @@ function FinalizeSection({
             {translate('app.transactions_finalize_pending')}
           </Typography>
         ) : null}
+        {samePersonBlocked ? (
+          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
+            {translate('app.transactions_finalize_same_person')}
+          </Typography>
+        ) : null}
         <Button
-          disabled={blocked || saving}
+          disabled={blocked || samePersonBlocked || saving}
           type="button"
           variant="contained"
           onClick={onFinalize}
@@ -549,11 +559,24 @@ export function TransactionReviewEditor({
   record: TransactionRow;
 }) {
   const catalog = useAccountCatalog();
+  const { publisherMustDiffer } = useBackofficeConfig();
+  const { identity } = useGetIdentity();
   const flatRecord = useMemo(() => reviewFormRecord(record), [record]);
   const pendingReceipt = cards.some((card) => card.file && card.file.size > 0);
   const blocked =
     pendingReceipt || cards.some((card) => receiptCardInvalid(card));
   const missingReceipt = receiptCount(record.receipts) === 0;
+  const editorEmail =
+    identity && typeof identity.email === 'string' ? identity.email : '';
+  const samePersonBlocked = useMemo(
+    () =>
+      samePersonPublishBlocked(
+        record.entered_by,
+        editorEmail,
+        publisherMustDiffer,
+      ),
+    [record.entered_by, editorEmail, publisherMustDiffer],
+  );
 
   return (
     <>
@@ -582,6 +605,7 @@ export function TransactionReviewEditor({
           blocked={blocked}
           documentId={record.documentId}
           missingReceipt={missingReceipt}
+          samePersonBlocked={samePersonBlocked}
         />
       </SimpleForm>
       <SimpleShowLayout spacing={0} sx={bandedShow}>

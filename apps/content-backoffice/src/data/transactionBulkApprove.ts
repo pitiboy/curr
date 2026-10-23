@@ -1,5 +1,8 @@
 import type { TransactionRow } from './transactionList';
-import { isSamePersonPublishError } from './transactionPublish';
+import {
+  isSamePersonPublishError,
+  samePersonPublishBlocked,
+} from './transactionPublish';
 import {
   reviewFormDefaults,
   transactionPublishFormErrors,
@@ -18,16 +21,26 @@ export type BulkPublishOutcome = {
 };
 
 /** List-row publish without a form save: the stored draft must already be complete. */
+export type BulkApproveOptions = {
+  /** From GET /api/backoffice/config; default true when omitted. */
+  publisherMustDiffer?: boolean;
+};
+
 export function classifyBulkApproveRows(
   records: TransactionRow[],
   editorEmail: string,
+  options?: BulkApproveOptions,
 ): BulkApproveClassification {
   const ready: TransactionRow[] = [];
   const skipped: BulkApproveClassification['skipped'] = [];
-  const normalizedEditor = editorEmail.trim().toLowerCase();
+  const publisherMustDiffer = options?.publisherMustDiffer !== false;
 
   for (const record of records) {
-    const reason = bulkApproveSkipReason(record, normalizedEditor);
+    const reason = bulkApproveSkipReason(
+      record,
+      editorEmail,
+      publisherMustDiffer,
+    );
     if (reason) skipped.push({ record, reason });
     else ready.push(record);
   }
@@ -37,7 +50,8 @@ export function classifyBulkApproveRows(
 
 function bulkApproveSkipReason(
   record: TransactionRow,
-  normalizedEditorEmail: string,
+  editorEmail: string,
+  publisherMustDiffer: boolean,
 ): BulkApproveSkipReason | null {
   if (record.status !== 'draft') return 'not_draft';
 
@@ -46,12 +60,12 @@ function bulkApproveSkipReason(
     Object.keys(transactionPublishFormErrors(values, () => '')).length > 0;
   if (incomplete) return 'incomplete';
 
-  const enteredBy =
-    typeof record.entered_by === 'string' ? record.entered_by.trim() : '';
   if (
-    normalizedEditorEmail &&
-    enteredBy &&
-    enteredBy.toLowerCase() === normalizedEditorEmail
+    samePersonPublishBlocked(
+      record.entered_by,
+      editorEmail,
+      publisherMustDiffer,
+    )
   ) {
     return 'same_person';
   }

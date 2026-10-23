@@ -21,6 +21,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A kijelölt tranzakciók és bizonylataik változatlanok maradnak; nem szerkesztünk adatot, csak véglegesítünk.',
     transactions_bulk_finalize_body_partial:
       'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat, vagy te rögzítetted — a szerző nem véglegesítheti a saját tranzakcióját).',
+    transactions_bulk_finalize_body_partial_no_self_block:
+      'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat vagy nem véglegesíthető).',
     transactions_bulk_finalize_confirm: 'Véglegesít',
     transactions_bulk_done:
       '%{smart_count} tranzakció véglegesítve. |||| %{smart_count} tranzakció véglegesítve.',
