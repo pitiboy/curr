@@ -197,7 +197,7 @@ const mobileChrome: ThemeOptions = {
         root: ({ theme }) => ({
           [`& .RaBulkActionsToolbar-toolbar`]: {
             position: 'relative',
-            transform: 'none',hol ho
+            transform: 'none',
             marginBottom: theme.spacing(0.5),
           },
           [`& .RaBulkActionsToolbar-collapsed`]: {
