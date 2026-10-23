@@ -1,7 +1,7 @@
 /** Known workflow ids, in menu order. Env tokens outside this list stay hidden. */
 export const KNOWN_BACKOFFICE_WORKFLOWS = [
   'member-fee',
-  'egg-production',
+  'egg-daily-entry',
 ] as const;
 
 export type BackofficeWorkflowConfig = {

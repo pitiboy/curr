@@ -37,6 +37,8 @@ const CONTENT_ROLE_ACTIONS = [
   'api::account.account.findOne',
   'api::currency-type.currency-type.find',
   'api::currency-type.currency-type.findOne',
+  'api::transaction-type.transaction-type.find',
+  'api::transaction-type.transaction-type.findOne',
   'api::receipt-type.receipt-type.find',
   'api::receipt-type.receipt-type.findOne',
   'plugin::upload.content-api.upload',
@@ -68,6 +70,11 @@ const usersPermissionsRolePermissions = {
   'api::currency-type': {
     controllers: {
       'currency-type': allow(['find', 'findOne']),
+    },
+  },
+  'api::transaction-type': {
+    controllers: {
+      'transaction-type': allow(['find', 'findOne']),
     },
   },
   'api::receipt-type': {

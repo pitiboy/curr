@@ -74,6 +74,30 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     feature_flags: 'Feature flagek',
     feature_flags_empty: 'Nincs kapcsolható ügylet.',
     feature_flags_reset: 'Szerver szerinti lista',
+    workflows: {
+      'egg-daily-entry': 'Napi tojás rögzítés',
+      'member-fee': 'Tagdíj',
+    },
+    bulk_quantity: {
+      save: 'Mentés',
+      catalog_missing:
+        'A szükséges törzsadat hiányzik (ól, számla, pénznem vagy tranzakciótípus).',
+      no_hen_houses: 'Nincs tyúkól a szervezeti fában.',
+      no_rows: 'Adj meg legalább egy nem nulla darabszámot.',
+      invalid_quantity: 'Egész szám, 0 vagy nagyobb.',
+      results_heading: 'Mentés eredménye',
+      retry_failed: 'Sikertelen sorok újrapróbálása',
+      conflict_title: 'Már van rögzítés erre a napra',
+      conflict_body:
+        'Ugyanerre a napra, ólra és könyvelési párosra már létezik tranzakció. Válaszd ki, mit tegyünk soronként.',
+      conflict_existing: 'Meglévő összeg: %{amount}',
+      conflict_update: 'Meglévő sor frissítése',
+      conflict_insert: 'Új sor felvétele',
+      conflict_continue: 'Folytatás',
+      description: {
+        egg: 'Napi tojás — %{organization}: %{amount} db',
+      },
+    },
     login_google: 'Bejelentkezés Google-lel',
     oauth_errors: {
       register_not_available:

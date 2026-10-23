@@ -347,6 +347,18 @@ A darabszámla és a forint bevétel külön pénznem. A tojásnak ebben a model
 
 Seedből hiányzik: `EGG`, `4500`, `1900`, és a Tojóól szervezeti csomópont.
 
+### Napi tojás rögzítés (edizone backoffice)
+
+Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `I/4.12.1.2.1 Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
+
+Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Könyvelés soronként:
+
+| Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
+| --- | --- | --- | --- | --- | --- |
+| `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab | EGG | az adott tyúkól | `Átvezetés` |
+
+Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A feature flag az edizone szerver `BACKOFFICE_WORKFLOWS` env-jében alapból engedélyezett; más példányon rejtett. Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
+
 ## Ügylet 3 — gyümölcs szürete és piaci eladása
 
 A gyümölcsfaligetben leszüretelt mennyiség készletre kerül. A piacra vitt rész kimegy a készletből, a befolyt forint a bevétel-blokkon át a `4000`-re kerül. A raktáron hagyott kiló a `1300`-on marad.

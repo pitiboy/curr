@@ -75,6 +75,30 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags: 'Feature flags',
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
+    workflows: {
+      'egg-daily-entry': 'Daily egg entry',
+      'member-fee': 'Member fee',
+    },
+    bulk_quantity: {
+      save: 'Save',
+      catalog_missing:
+        'Required master data is missing (hen house, account, currency, or transaction type).',
+      no_hen_houses: 'No hen houses found under the parent organization.',
+      no_rows: 'Enter at least one non-zero quantity.',
+      invalid_quantity: 'Whole number, 0 or greater.',
+      results_heading: 'Save results',
+      retry_failed: 'Retry failed rows',
+      conflict_title: 'Entry already exists for this day',
+      conflict_body:
+        'A transaction already exists for the same day, hen house, and account pair. Choose what to do for each row.',
+      conflict_existing: 'Existing amount: %{amount}',
+      conflict_update: 'Update existing row',
+      conflict_insert: 'Insert as new row',
+      conflict_continue: 'Continue',
+      description: {
+        egg: 'Daily eggs — %{organization}: %{amount}',
+      },
+    },
     login_google: 'Sign in with Google',
     oauth_errors: {
       register_not_available:
