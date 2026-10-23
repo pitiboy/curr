@@ -1,6 +1,14 @@
 import CheckIcon from '@mui/icons-material/Check';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box, Button, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import {
   useCallback,
@@ -37,9 +45,10 @@ import {
 
 import {
   accountChoiceLabel,
-  filterAccountChoices,
+  accountChoicesForSelect,
   loadAllAccounts,
   type AccountChoice,
+  type AccountProfile,
 } from '../../data/accountCodes';
 import {
   attachTransactionReceipt,
@@ -127,16 +136,24 @@ function ReviewAccountInput({
   failed,
   isPending,
   kind,
+  profile,
   source,
 }: {
   accounts: AccountChoice[];
   failed: boolean;
   isPending: boolean;
   kind: 'debit' | 'credit';
+  profile: AccountProfile;
   source: string;
 }) {
   const translate = useTranslate();
-  const choices = filterAccountChoices(accounts, kind).map((account) => ({
+  const selectedId = useWatch({ name: source });
+  const choices = accountChoicesForSelect(
+    accounts,
+    kind,
+    profile,
+    selectedId,
+  ).map((account) => ({
     id: account.id,
     name: accountChoiceLabel(account),
   }));
@@ -157,6 +174,74 @@ function ReviewAccountInput({
           {translate('app.accounts_seed_missing')}
         </Typography>
       ) : null}
+    </Box>
+  );
+}
+
+function AccountProfileSelect({
+  profile,
+  onProfileChange,
+}: {
+  profile: AccountProfile;
+  onProfileChange: (profile: AccountProfile) => void;
+}) {
+  const translate = useTranslate();
+  const label = translate('app.account_profile');
+
+  return (
+    <FormControl fullWidth>
+      <InputLabel id="review-account-profile-label">{label}</InputLabel>
+      <Select
+        displayEmpty
+        id="review-account-profile"
+        label={label}
+        labelId="review-account-profile-label"
+        value={profile}
+        onChange={(event) =>
+          onProfileChange(event.target.value as AccountProfile)
+        }
+      >
+        <MenuItem value="">{translate('app.account_profile_all')}</MenuItem>
+        <MenuItem value="cost">{translate('app.account_profile_cost')}</MenuItem>
+        <MenuItem value="egg">{translate('app.account_profile_egg')}</MenuItem>
+      </Select>
+    </FormControl>
+  );
+}
+
+function ReviewAccountRow({
+  catalog,
+}: {
+  catalog: ReturnType<typeof useAccountCatalog>;
+}) {
+  const [profile, setProfile] = useState<AccountProfile>('');
+
+  return (
+    <Box
+      className={bandedSpanClass}
+      sx={{
+        display: 'grid',
+        gap: 2,
+        gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+      }}
+    >
+      <AccountProfileSelect profile={profile} onProfileChange={setProfile} />
+      <ReviewAccountInput
+        accounts={catalog.accounts}
+        failed={catalog.failed}
+        isPending={catalog.isPending}
+        kind="credit"
+        profile={profile}
+        source="credit_account"
+      />
+      <ReviewAccountInput
+        accounts={catalog.accounts}
+        failed={catalog.failed}
+        isPending={catalog.isPending}
+        kind="debit"
+        profile={profile}
+        source="debit_account"
+      />
     </Box>
   );
 }
@@ -260,20 +345,7 @@ function ReviewEditableFields({
         />
       </ReferenceInput>
       <DescriptionInput />
-      <ReviewAccountInput
-        accounts={catalog.accounts}
-        failed={catalog.failed}
-        isPending={catalog.isPending}
-        kind="credit"
-        source="credit_account"
-      />
-      <ReviewAccountInput
-        accounts={catalog.accounts}
-        failed={catalog.failed}
-        isPending={catalog.isPending}
-        kind="debit"
-        source="debit_account"
-      />
+      <ReviewAccountRow catalog={catalog} />
     </>
   );
 }
