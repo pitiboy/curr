@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { strapiHttpClient } from 'ra-strapi';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import {
   DateInput,
   SaveButton,
@@ -59,6 +60,15 @@ function SaveToolbar({ disabled }: { disabled: boolean }) {
       <SaveButton disabled={disabled} label="app.bulk_quantity.save" />
     </Toolbar>
   );
+}
+
+/** Keeps react-hook-form dirty in sync with quantity fields (not RA inputs). */
+function BulkQuantityFormDirtySync({ rowCount }: { rowCount: number }) {
+  const { setValue } = useFormContext();
+  useEffect(() => {
+    setValue('_bulkRowCount', rowCount, { shouldDirty: rowCount > 0 });
+  }, [rowCount, setValue]);
+  return null;
 }
 
 export function BulkQuantityEntryPage({
@@ -118,6 +128,11 @@ export function BulkQuantityEntryPage({
   }, [config, translate]);
 
   const failedIds = useMemo(() => failedRowIds(results), [results]);
+
+  const rowsToSave = useMemo(
+    () => rowsFromQuantities(henHouses, quantities),
+    [henHouses, quantities],
+  );
 
   const buildPayload = useCallback(
     (plan: BulkQuantityRowPlan, date: string) => {
@@ -245,11 +260,18 @@ export function BulkQuantityEntryPage({
         </Alert>
       ) : null}
       <SimpleForm
-        defaultValues={{ date: todayIsoDate() }}
+        defaultValues={{ date: todayIsoDate(), _bulkRowCount: 0 }}
         sx={bandedForm}
-        toolbar={<SaveToolbar disabled={catalogPending || !refs || saving} />}
+        toolbar={
+          <SaveToolbar
+            disabled={
+              catalogPending || !refs || saving || rowsToSave.length === 0
+            }
+          />
+        }
         onSubmit={submit}
       >
+        <BulkQuantityFormDirtySync rowCount={rowsToSave.length} />
         <DateInput fullWidth source="date" />
 
         {catalogPending ? (
