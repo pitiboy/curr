@@ -14,6 +14,30 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',
     transactions_finalized: 'A tranzakció véglegesítve.',
+    transactions_bulk_finalize: 'Véglegesítés',
+    transactions_bulk_finalize_title:
+      '%{smart_count} tranzakció véglegesítése |||| %{smart_count} tranzakció véglegesítése',
+    transactions_bulk_finalize_body:
+      'A kijelölt tranzakciók és bizonylataik változatlanok maradnak; nem szerkesztünk adatot, csak véglegesítünk.',
+    transactions_bulk_finalize_body_partial:
+      'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat, vagy te rögzítetted — a szerző nem véglegesítheti a saját tranzakcióját).',
+    transactions_bulk_finalize_body_partial_no_self_block:
+      'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat vagy nem véglegesíthető).',
+    transactions_bulk_finalize_confirm: 'Véglegesít',
+    transactions_bulk_done:
+      '%{smart_count} tranzakció véglegesítve. |||| %{smart_count} tranzakció véglegesítve.',
+    transactions_bulk_incomplete:
+      'A kijelöltek közül %{smart_count} még hiányos, ezért nem véglegesíthető. |||| A kijelöltek közül %{smart_count} még hiányos, ezért nem véglegesíthető.',
+    transactions_bulk_same_person:
+      'A kijelöltek közül %{smart_count} a saját rögzítésed, ezért nem véglegesíthető. |||| A kijelöltek közül %{smart_count} a saját rögzítésed, ezért nem véglegesíthető.',
+    transactions_bulk_skipped_incomplete:
+      '%{smart_count} hiányos tranzakció kimaradt. |||| %{smart_count} hiányos tranzakció kimaradt.',
+    transactions_bulk_skipped_same_person:
+      '%{smart_count} saját rögzítésű tranzakció kimaradt. |||| %{smart_count} saját rögzítésű tranzakció kimaradt.',
+    transactions_bulk_failed:
+      '%{smart_count} tranzakció véglegesítése sikertelen. |||| %{smart_count} tranzakció véglegesítése sikertelen.',
+    transactions_bulk_none_ready:
+      'Egyetlen kijelölt tranzakció sem véglegesíthető.',
     transactions_finalize_hint:
       'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg minden kimutatásban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
     transactions_finalize_no_receipt:
