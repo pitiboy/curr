@@ -781,6 +781,7 @@ export interface ApiMembershipTypeMembershipType
         maxLength: 255;
       }>;
     publishedAt: Schema.Attribute.DateTime;
+    rules: Schema.Attribute.JSON;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -818,6 +819,7 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
       'api::organization.organization'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    rules: Schema.Attribute.JSON;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

@@ -359,6 +359,43 @@ Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként,
 
 Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A feature flag az edizone szerver `BACKOFFICE_WORKFLOWS` env-jében alapból engedélyezett; más példányon rejtett. Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
 
+### Napi tojás továbbosztás (edizone backoffice, 2. lépés)
+
+A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `I/4.12.1.2.1 Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.member` → tag, `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
+
+A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg nagyobb a termeltnél, a mentés tiltva van. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
+
+| Szabály | Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
+| --- | --- | --- | --- | --- | --- | --- |
+| `internal` | tag `1001` saját számla | `1300` Készletek | db | EGG | `I/4.12.1.2.1 Tyúktartás` | `Átvezetés` |
+| `sale` — készlet | `5600` Értékesítési költségek | `1300` Készletek | db | EGG | ugyanaz | `Átvezetés` |
+| `sale` — bevétel (nincs készpénz-láb) | tag `1101` tagi számla | `4000` Értékesítés bevétele | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz | `Átvezetés` |
+
+Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
+
+Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár (termelés és továbbosztás ugyanígy). Ha bármelyik lépéshez talál meglévő sort, egy párbeszéd kínál **új sor** vagy **meglévő frissítése** választást; a választás **minden** érintett sorra vonatkozik (termelés + továbbosztás).
+
+```mermaid
+sequenceDiagram
+  participant BO as Backoffice (2 lepes)
+  participant Ol as Tyukol (termelés)
+  participant Keszlet as 1300 Keszletek
+  participant Tag as Tag szamla
+  participant Ert as 5600 / 4000
+
+  BO->>Ol: 1. lepes — termelés sorok (1300 ← 4500)
+  BO->>BO: 2. lepes — tagonkénti db
+  alt bentlakó / társult (internal)
+    Keszlet->>Tag: EGG atvezetés (1001 ← 1300)
+  else értékesítési típus (sale)
+    Keszlet->>Ert: készletcsökkenés (5600 ← 1300)
+    Ert->>Tag: bevétel HUF (1101 ← 4000), árfolyam + ratio
+  end
+  Note over Keszlet: kiosztatlan db a 1300-on marad
+```
+
+**Későbbi riport:** tervezett készletkimutatás (termelt vs. kiosztott vs. `1300` maradvány); a tranzakciós adatok erre lekérdezhetők (dátum, `1300`/`4500`/`5600`, szervezet, EGG/HUF).
+
 ## Ügylet 3 — gyümölcs szürete és piaci eladása
 
 A gyümölcsfaligetben leszüretelt mennyiség készletre kerül. A piacra vitt rész kimegy a készletből, a befolyt forint a bevétel-blokkon át a `4000`-re kerül. A raktáron hagyott kiló a `1300`-on marad.

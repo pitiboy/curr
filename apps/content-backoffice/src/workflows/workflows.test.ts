@@ -20,7 +20,7 @@ describe('buildBackofficeConfig', () => {
       buildBackofficeConfig({ CONTENT_PUBLISHER_MUST_DIFFER: 'false' }),
     ).toMatchObject({
       publisherMustDiffer: false,
-      available: ['member-fee', 'egg-production'],
+      available: ['member-fee', 'egg-daily-entry'],
     });
     expect(buildBackofficeConfig({})).toMatchObject({
       publisherMustDiffer: true,

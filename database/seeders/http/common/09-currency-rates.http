@@ -1,0 +1,71 @@
+# Árfolyamok
+# A rekordok a dataDir/currency-rates.json fájlban vannak.
+#
+#   npm run seed:http:edizone -- local
+
+{{
+  if (typeof rateItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.rateItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "currency-rates.json"), "utf8")
+    );
+    exports.rateFailed = {};
+  }
+}}
+
+###
+# @name create-currency-rate
+# @loop for item of rateItems
+{{
+  exports.fromCode = item.fromCurrencyCode;
+  exports.toCode = item.toCurrencyCode;
+}}
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{fromCode}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+  }
+  exports.fromId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+}}
+
+###
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{toCode}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+  }
+  exports.toId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+  if (!fromId || !toId) {
+    exports.$cancel = true;
+    console.error("currency rate skipped: missing currency type", item.fromCurrencyCode, item.toCurrencyCode);
+  } else {
+    exports.ratePayload = JSON.stringify({
+      data: {
+        rate: item.rate,
+        valid_from: item.validFrom,
+        from_currency_type: fromId,
+        to_currency_type: toId,
+      },
+    });
+  }
+}}
+
+###
+POST {{baseUrl}}/api/currency-rates
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{ratePayload}}
