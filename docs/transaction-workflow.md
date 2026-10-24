@@ -14,7 +14,7 @@ Az **ügylet** a teljes gazdasági esemény. Egy kitöltésből több sor szüle
 
 A **tranzakció** egy sor: egy tartozik, egy követel, egy összeg, egy pénznem. A mostani felület ezt mutatja: `Tranzakció` / `Tranzakciók` a [hu.ts](../apps/content-backoffice/src/i18n/hu.ts)-ben, `Transaction` / `Transactions` az [en.ts](../apps/content-backoffice/src/i18n/en.ts)-ben. Ezek a képernyők egy sort szerkesztenek, a feliratuk tranzakció marad.
 
-A belső collection neve lehet `posting-workflow`. A felhasználó az Ügylet szót látja.
+A belső collection neve lehet `transaction-workflow` vagy `accounting-workflow`. A felhasználó az `Ügylet` szót látja.
 
 ## Mit rögzít egy sor
 
@@ -717,7 +717,7 @@ Seedből hiányzik: `1900`.
 
 Ez javaslat a későbbi egyszerűsített űrlaphoz. A collection és a resolver még nincs a kódban. A v1 képernyő ettől nem változik, és a `dataentry` továbbra sem publikál.
 
-A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A lépéssort egy külön collection írja le, kódban szállítva, draft nélkül. A belső neve `posting-workflow`. A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
+A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A lépéssort egy külön collection írja le, kódban szállítva, draft nélkül. A belső neve `transaction-workflow`. A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
 
 ### Ki mit csinál
 
