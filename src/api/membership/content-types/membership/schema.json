@@ -37,6 +37,7 @@
       "relation": "manyToOne",
       "target": "api::membership-type.membership-type",
       "inversedBy": "memberships",
+      "required": true,
       "metadatas": {
         "label": "Tagság típus",
         "description": "A tagság típusa (pl. tag, bentlakó tag, szimpatizáns)"

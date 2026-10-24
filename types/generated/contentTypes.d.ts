@@ -813,7 +813,8 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
     membership_type: Schema.Attribute.Relation<
       'manyToOne',
       'api::membership-type.membership-type'
-    >;
+    > &
+      Schema.Attribute.Required;
     organization: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
