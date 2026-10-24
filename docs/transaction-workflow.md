@@ -349,7 +349,7 @@ Seedből hiányzik: `EGG`, `4500`, `1900`, és a Tojóól szervezeti csomópont.
 
 ### Napi tojás rögzítés (edizone backoffice)
 
-Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `I/4.12.1.2.1 Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
+Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
 
 Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Könyvelés soronként:
 
@@ -361,13 +361,13 @@ Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` p
 
 ### Napi tojás továbbosztás (edizone backoffice, 2. lépés)
 
-A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `I/4.12.1.2.1 Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.member` → tag, `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
+A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.member` → tag, `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
 
 A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg nagyobb a termeltnél, a mentés tiltva van. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
 
 | Szabály | Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
 | --- | --- | --- | --- | --- | --- | --- |
-| `internal` | tag `1001` saját számla | `1300` Készletek | db | EGG | `I/4.12.1.2.1 Tyúktartás` | `Átvezetés` |
+| `internal` | tag `1001` saját számla | `1300` Készletek | db | EGG | `Tyúktartás` | `Átvezetés` |
 | `sale` — készlet | `5600` Értékesítési költségek | `1300` Készletek | db | EGG | ugyanaz | `Átvezetés` |
 | `sale` — bevétel (nincs készpénz-láb) | tag `1101` tagi számla | `4000` Értékesítés bevétele | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz | `Átvezetés` |
 

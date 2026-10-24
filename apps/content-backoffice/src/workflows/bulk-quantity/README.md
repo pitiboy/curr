@@ -8,7 +8,7 @@ Optional **distribution** (second wizard step) allocates the day’s total quant
 
 Members are **not** linked to organizations directly. The **`membership`** collection connects them:
 
-- `membership.organization` — which org (for eggs: `I/4.12.1.2.1 Tyúktartás`, constant `DISTRIBUTION_MEMBER_ORG` in `configs/eggDailyEntry.config.ts`)
+- `membership.organization` — which org (for eggs: `Tyúktartás`, constant `DISTRIBUTION_MEMBER_ORG` in `configs/eggDailyEntry.config.ts`)
 - `membership.member` — the member record (with `account` / `private_account`)
 - `membership.membership_type` — role/type; default egg rules live on `membership_type.rules`, overridable on `membership.rules`
 

@@ -8,7 +8,7 @@ import type {
 } from '../types';
 
 /** Members listed on the distribution step (membership.organization). */
-export const DISTRIBUTION_MEMBER_ORG = 'I/4.12.1.2.1 Tyúktartás';
+export const DISTRIBUTION_MEMBER_ORG = 'Tyúktartás';
 
 /** Hen houses and booking org for distribution legs (parent org under Állattenyésztés). */
 export const PULTRY_PARENT_ORG_NAME = DISTRIBUTION_MEMBER_ORG;
