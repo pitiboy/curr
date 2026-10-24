@@ -1,0 +1,8 @@
+[
+  {
+    "fromCurrencyCode": "EGG",
+    "toCurrencyCode": "HUF",
+    "rate": 200,
+    "validFrom": "2020-01-01T00:00:00.000Z"
+  }
+]

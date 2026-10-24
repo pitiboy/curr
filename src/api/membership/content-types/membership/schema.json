@@ -37,6 +37,7 @@
       "relation": "manyToOne",
       "target": "api::membership-type.membership-type",
       "inversedBy": "memberships",
+      "required": true,
       "metadatas": {
         "label": "Tagság típus",
         "description": "A tagság típusa (pl. tag, bentlakó tag, szimpatizáns)"
@@ -54,7 +55,14 @@
       "type": "datetime",
       "metadatas": {
         "label": "Érvényesség vége",
-        "description": "A tagság érvényességének vége (opcionális)"
+        "description": "A tagság érvényesség vége (opcionális)"
+      }
+    },
+    "rules": {
+      "type": "json",
+      "metadatas": {
+        "label": "Szabályok",
+        "description": "Opcionális tagságspecifikus szabályok (pl. tojás továbbosztás); hiányzó mezőnél a tagságtípus szabályai érvényesek"
       }
     }
   }
