@@ -2,7 +2,19 @@
   {
     "fromCurrencyCode": "EGG",
     "toCurrencyCode": "HUF",
-    "rate": 200,
-    "validFrom": "2020-01-01T00:00:00.000Z"
+    "rate": 100,
+    "validFrom": "2023-01-01T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "HOUR",
+    "toCurrencyCode": "HUF",
+    "rate": 3000,
+    "validFrom": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "HUF",
+    "toCurrencyCode": "EUR",
+    "rate": 0.0026,
+    "validFrom": "2026-01-01T00:00:00.000Z"
   }
 ]
