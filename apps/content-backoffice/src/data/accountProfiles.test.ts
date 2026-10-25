@@ -84,7 +84,7 @@ describe('selectableAccountProfiles', () => {
     expect(selectableAccountProfilesWithAll([], true)[0]).toBe('');
   });
 
-  it('adds egg profiles only when egg-daily-entry is effective', () => {
+  it('adds egg profiles only when egg-daily-entry is enabled', () => {
     expect(selectableAccountProfiles([EGG_DAILY_ENTRY_WORKFLOW_ID], true)).toEqual([
       'cost',
       'revenue',

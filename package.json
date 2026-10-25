@@ -21,6 +21,8 @@
     "seed:help": "node scripts/seed-database.js --help",
     "seed:basic": "node scripts/seed-database.js --name \"Zöld források szövetkezet @Szupatak\" --level 0",
     "seed:full": "node scripts/seed-database.js --name \"Zöld források szövetkezet @Szupatak\" --level 3 --accounts",
+    "seed:backoffice-features:kor": "node scripts/seed-backoffice-features.js kor",
+    "seed:backoffice-features:edizone": "node scripts/seed-backoffice-features.js edizone",
     "seed:http:edizone": "httpyac send database/seeders/http/common/0*.http --all --var dataDir=database/seeders/http/edizone/data --env",
     "seed:http:edizone:local": "httpyac send database/seeders/http/common/0*.http --all --var dataDir=database/seeders/http/edizone/data --env local",
     "seed:http:kor": "httpyac send database/seeders/http/common/0*.http --all --var dataDir=database/seeders/http/kor/data --env",

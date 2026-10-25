@@ -54,15 +54,9 @@ export const DEFAULT_PUBLISH_POLICY: PublishPolicy = {
   publisherMustDiffer: true,
 };
 
-export function readPublishPolicy(
-  env: Record<string, string | undefined> = process.env,
-): PublishPolicy {
-  const status = env.CONTENT_DEFAULT_STATUS?.trim().toLowerCase();
-  const differ = env.CONTENT_PUBLISHER_MUST_DIFFER?.trim().toLowerCase();
-  return {
-    defaultStatus: status === 'published' ? 'published' : 'draft',
-    publisherMustDiffer: differ !== 'false' && differ !== '0',
-  };
+/** Default policy when no database rows exist or the table is unavailable. */
+export function readPublishPolicy(): PublishPolicy {
+  return { ...DEFAULT_PUBLISH_POLICY };
 }
 
 export type ContentActor = {
@@ -465,11 +459,18 @@ async function assertStoredTransactionPublishable(
   );
 }
 
+export type PublishPolicyLoader = () => Promise<PublishPolicy>;
+
 export function registerPublishGuard(
   strapi: PublishGuardStrapi,
-  policy: PublishPolicy = readPublishPolicy(),
+  loadPolicy: PublishPolicyLoader = async () => readPublishPolicy(),
 ) {
   strapi.documents.use(async (context, next) => {
+    if (!GUARDED_UIDS.has(context.uid)) {
+      return next();
+    }
+
+    const policy = await loadPolicy();
     const actor = await contentApiActor(strapi);
     const requestState = strapi.requestContext.get()?.state;
     const linkedPublish = requestState?.publishGuardLinked === true;

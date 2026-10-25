@@ -17,7 +17,7 @@ Distribution lists memberships valid on the form date (`valid_from` / `valid_to`
 ## Add a new production-only workflow
 
 1. Create a config module under `configs/`, exporting a `BulkQuantityWorkflowConfig`:
-   - `workflowId` — must appear in `KNOWN_BACKOFFICE_WORKFLOWS` (`src/api/backoffice/workflows.ts`) and in the target instance `BACKOFFICE_WORKFLOWS` env when it should be enabled by default.
+   - `workflowId` — must match a **Settings** row with that `key` and `enabled: true` (seed per instance under `database/seeders/http/<instance>/data/backoffice-features.json`).
    - `parentOrganizationName` — exact name of the parent organization whose **direct children** are listed as quantity rows.
    - `currencyCode`, `debitAccountCode`, `creditAccountCode`, `transactionTypeName` — resolved from Strapi master data at runtime.
    - `descriptionKey` — i18n key with `%{organization}` and `%{amount}` placeholders.
@@ -42,7 +42,7 @@ Set `distribution` on `BulkQuantityWorkflowConfig` (`BulkQuantityDistributionCon
 - Account codes and transaction type names for internal vs sale legs
 - Egg rules key is `egg` on membership / membership-type `rules` JSON
 
-Env: `VITE_EGG_SALE_CURRENCY` (default `HUF`) for sale revenue currency — see repo root `.env.example`.
+Sale revenue currency: `app.egg_sale_currency` setting or `saleCurrency` in the workflow row’s `config` JSON (default `HUF`).
 
 Pure logic: `logic.ts`, `distributionLogic.ts`, `membershipRules.ts`. Plans: `distributionPlans.ts`. Loaders: `loadCatalog.ts`, `loadDistribution.ts`. UI: `BulkQuantityEntryPage.tsx` (wizard when `distribution` is set).
 
