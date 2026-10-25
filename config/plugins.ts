@@ -30,7 +30,13 @@ export default ({ env }) => ({
           );
           allowedOrigins.add(new URL(configuredCallback).origin);
           allowedOrigins.add('http://localhost:5173');
+
+          const publicUrl = env('PUBLIC_URL', '');
+          if (publicUrl) {
+            allowedOrigins.add(new URL(publicUrl).origin);
+          }
           allowedOrigins.add('https://kor.fejlesztesek.hu');
+          allowedOrigins.add('https://edizone.fejlesztesek.hu');
 
           if (provider?.callback) {
             allowedOrigins.add(new URL(provider.callback).origin);
