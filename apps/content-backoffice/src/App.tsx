@@ -8,7 +8,6 @@ import { i18nProvider } from './i18n';
 import { AppTitle } from './layout/AppTitle';
 import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
-import { FeatureFlagsPage } from './pages/feature-flags/FeatureFlagsPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
@@ -45,14 +44,6 @@ export function App() {
           path="/transactions/create"
         />
         <Route element={<ProfilePage />} path="/profile" />
-        <Route
-          element={
-            <RoleGuard allow={['dataentry', 'editor']}>
-              <FeatureFlagsPage />
-            </RoleGuard>
-          }
-          path="/feature-flags"
-        />
         {workflowForms.map((form) => (
           <Route
             key={form.id}

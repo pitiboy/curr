@@ -1,143 +1,81 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildBackofficeConfig } from '../../../../src/api/backoffice/config';
-import {
-  KNOWN_BACKOFFICE_WORKFLOWS,
-  selectWorkflows,
-} from '../../../../src/api/backoffice/workflows';
+import { buildBackofficeConfigFromRows } from '../../../../src/api/backoffice/config';
+import { workflowConfigFromKeys } from '../../../../src/api/backoffice/workflows';
 import { parseBackofficeConfig } from './parseBackofficeConfig';
-import {
-  effectiveWorkflows,
-  parseWorkflowOverride,
-  visibleWorkflowForms,
-} from './effectiveWorkflows';
+import { visibleWorkflowForms } from './effectiveWorkflows';
 import { eggDailyEntryConfig } from './bulk-quantity/configs/eggDailyEntry.config';
-import { userMenuEntries } from './userMenuEntries';
 
-describe('buildBackofficeConfig', () => {
-  it('includes publisherMustDiffer from CONTENT_PUBLISHER_MUST_DIFFER', () => {
+describe('buildBackofficeConfigFromRows', () => {
+  it('maps database rows to the config payload', () => {
     expect(
-      buildBackofficeConfig({ CONTENT_PUBLISHER_MUST_DIFFER: 'false' }),
+      buildBackofficeConfigFromRows([
+        {
+          key: 'content.publisher_must_differ',
+          enabled: false,
+          config: null,
+        },
+        { key: 'member-fee', enabled: true, config: {} },
+        { key: 'egg-daily-entry', enabled: false, config: {} },
+      ]),
     ).toMatchObject({
       publisherMustDiffer: false,
+      enabled: ['member-fee'],
       available: ['member-fee', 'egg-daily-entry'],
-    });
-    expect(buildBackofficeConfig({})).toMatchObject({
-      publisherMustDiffer: true,
     });
   });
 });
 
 describe('parseBackofficeConfig', () => {
-  it('reads publisherMustDiffer and defaults to true', () => {
+  it('reads publisherMustDiffer and account patterns from the API body', () => {
     expect(parseBackofficeConfig(null).publisherMustDiffer).toBe(true);
     expect(
-      parseBackofficeConfig({ enabled: [], available: [], publisherMustDiffer: false })
-        .publisherMustDiffer,
-    ).toBe(false);
+      parseBackofficeConfig({
+        enabled: ['egg-daily-entry'],
+        available: ['member-fee', 'egg-daily-entry'],
+        publisherMustDiffer: false,
+        debitCodesPattern: '/^6/',
+        creditCodesPattern: '/^2/',
+        eggSaleCurrency: 'EUR',
+        features: {},
+      }),
+    ).toMatchObject({
+      publisherMustDiffer: false,
+      debitCodesPattern: '/^6/',
+      eggSaleCurrency: 'EUR',
+    });
   });
 });
 
-describe('selectWorkflows', () => {
-  it('enables known env tokens in catalog order and hides the rest', () => {
-    expect(KNOWN_BACKOFFICE_WORKFLOWS).toEqual([
-      'member-fee',
-      'egg-daily-entry',
-    ]);
-    expect(selectWorkflows('egg-daily-entry, member-fee, unknown')).toEqual({
-      enabled: ['member-fee', 'egg-daily-entry'],
-      available: ['member-fee', 'egg-daily-entry'],
-    });
-    expect(selectWorkflows('not-a-workflow')).toEqual({
-      enabled: [],
-      available: ['member-fee', 'egg-daily-entry'],
-    });
-  });
-
-  it('keeps known ids in catalog order and drops blanks and unknowns', () => {
+describe('workflowConfigFromKeys', () => {
+  it('filters enabled ids to the available workflow list', () => {
     expect(
-      selectWorkflows(' unknown , member-fee, ,egg ', ['egg', 'member-fee']),
+      workflowConfigFromKeys(
+        ['member-fee', 'egg-daily-entry'],
+        ['egg-daily-entry', 'unknown'],
+      ),
     ).toEqual({
-      enabled: ['egg', 'member-fee'],
-      available: ['egg', 'member-fee'],
+      enabled: ['egg-daily-entry'],
+      available: ['member-fee', 'egg-daily-entry'],
     });
-  });
-
-  it('returns an empty enabled list when the env value is missing', () => {
-    expect(selectWorkflows(undefined, ['member-fee'])).toEqual({
-      enabled: [],
-      available: ['member-fee'],
-    });
-  });
-});
-
-describe('effectiveWorkflows', () => {
-  const enabled = ['member-fee'];
-  const available = ['member-fee', 'egg'];
-
-  it('follows the server list when there is no override', () => {
-    expect(effectiveWorkflows(enabled, available, null)).toEqual(['member-fee']);
-  });
-
-  it('uses the stored list when an override is present', () => {
-    expect(effectiveWorkflows(enabled, available, ['egg'])).toEqual(['egg']);
-    expect(effectiveWorkflows(enabled, available, [])).toEqual([]);
-  });
-
-  it('follows the server list again after the override is cleared', () => {
-    const stored = parseWorkflowOverride('["egg"]');
-    expect(effectiveWorkflows(enabled, available, stored)).toEqual(['egg']);
-    const cleared = parseWorkflowOverride(null);
-    expect(effectiveWorkflows(enabled, available, cleared)).toEqual([
-      'member-fee',
-    ]);
-  });
-
-  it('drops stored ids that are not in the available list', () => {
-    expect(effectiveWorkflows(enabled, available, ['egg', 'gone'])).toEqual([
-      'egg',
-    ]);
-  });
-});
-
-describe('parseWorkflowOverride', () => {
-  it('rejects malformed storage', () => {
-    expect(parseWorkflowOverride('nope')).toBeNull();
-    expect(parseWorkflowOverride('{"on":true}')).toBeNull();
-    expect(parseWorkflowOverride('[1]')).toBeNull();
   });
 });
 
 describe('visibleWorkflowForms', () => {
   const forms = [
-    { id: 'member-fee', roles: ['dataentry'] },
-    { id: 'egg', roles: ['editor'] },
+    {
+      id: eggDailyEntryConfig.workflowId,
+      roles: eggDailyEntryConfig.roles,
+    },
   ];
 
-  it('shows the intersection of the effective list, the registry, and the role', () => {
-    expect(
-      visibleWorkflowForms(forms, ['member-fee', 'egg'], 'dataentry').map(
-        (form) => form.id,
-      ),
-    ).toEqual(['member-fee']);
-  });
-});
-
-describe('egg daily entry config', () => {
-  it('uses the egg-daily-entry workflow id for both write roles', () => {
-    expect(eggDailyEntryConfig.workflowId).toBe('egg-daily-entry');
-    expect(eggDailyEntryConfig.path).toBe('/workflows/egg-daily-entry');
-    expect(eggDailyEntryConfig.roles).toEqual(['dataentry', 'editor']);
-  });
-});
-
-describe('userMenuEntries', () => {
-  it('hides the feature-flag item unless the click includes the meta key', () => {
-    expect(userMenuEntries(false)).toEqual(['profile', 'logout']);
-    expect(userMenuEntries(true)).toEqual([
-      'profile',
-      'logout',
-      'feature-flags',
+  it('shows the intersection of the enabled list, the registry, and the role', () => {
+    expect(visibleWorkflowForms(forms, ['egg-daily-entry'], 'dataentry')).toEqual([
+      forms[0],
+    ]);
+    expect(visibleWorkflowForms(forms, [], 'dataentry')).toEqual([]);
+    expect(visibleWorkflowForms(forms, ['egg-daily-entry'], 'editor')).toEqual([
+      forms[0],
     ]);
   });
 });

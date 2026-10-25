@@ -20,6 +20,7 @@ import {
   type AccountProfile,
 } from '../../data/accountProfiles';
 import { bandedSpanClass } from '../../theme';
+import { useAccountCodePatterns } from '../../workflows/useAccountCodePatterns';
 import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 import { AccountFieldLabel } from './accountField';
 
@@ -70,6 +71,7 @@ function ProfileAccountInput({
   failed,
   isPending,
   kind,
+  patterns,
   profile,
   requireAccounts,
   source,
@@ -78,6 +80,7 @@ function ProfileAccountInput({
   failed: boolean;
   isPending: boolean;
   kind: 'debit' | 'credit';
+  patterns: ReturnType<typeof useAccountCodePatterns>;
   profile: AccountProfile;
   requireAccounts: boolean;
   source: string;
@@ -89,6 +92,7 @@ function ProfileAccountInput({
     kind,
     profile,
     selectedId,
+    patterns,
   ).map((account) => ({
     id: account.id,
     name: accountChoiceLabel(account),
@@ -129,10 +133,11 @@ export function TransactionAccountProfileRow({
   isPending: boolean;
   requireAccounts?: boolean;
 }) {
-  const { effective, ready } = useBackofficeConfig();
+  const { enabled, ready } = useBackofficeConfig();
+  const patterns = useAccountCodePatterns();
   const allowedProfiles = useMemo(
-    () => selectableAccountProfilesWithAll(effective, ready),
-    [effective, ready],
+    () => selectableAccountProfilesWithAll(enabled, ready),
+    [enabled, ready],
   );
   const [profile, setProfile] = useState<AccountProfile>(defaultProfile);
 
@@ -161,6 +166,7 @@ export function TransactionAccountProfileRow({
         failed={failed}
         isPending={isPending}
         kind="credit"
+        patterns={patterns}
         profile={profile}
         requireAccounts={requireAccounts}
         source="credit_account"
@@ -170,6 +176,7 @@ export function TransactionAccountProfileRow({
         failed={failed}
         isPending={isPending}
         kind="debit"
+        patterns={patterns}
         profile={profile}
         requireAccounts={requireAccounts}
         source="debit_account"

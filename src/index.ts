@@ -5,7 +5,15 @@ import {
   registerStaticPageRoutes,
   registerStaticPageSlugGuard,
 } from './static-pages';
+import { createPublishPolicyLoader } from './backoffice-features/policy';
 import { registerPublishGuard } from './publish-guard';
+import path from 'node:path';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const backofficeFeatureSeed = require(path.join(
+  process.cwd(),
+  'database/seeders/backoffice-features.js',
+));
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
@@ -357,7 +365,7 @@ async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
 
 export default {
   register({ strapi }) {
-    registerPublishGuard(strapi);
+    registerPublishGuard(strapi, createPublishPolicyLoader(strapi));
     registerStaticPageRoutes(strapi);
     registerStaticPageSlugGuard(strapi);
 
@@ -384,6 +392,22 @@ export default {
     });
   },
   async bootstrap({ strapi }) {
+    const seedInstance = process.env.BACKOFFICE_FEATURES_INSTANCE?.trim();
+    if (seedInstance) {
+      const seedPath =
+        backofficeFeatureSeed.resolveBackofficeFeaturesSeedPath(seedInstance);
+      try {
+        await backofficeFeatureSeed.upsertBackofficeFeaturesFromFile(
+          strapi,
+          seedPath,
+        );
+      } catch (error) {
+        strapi.log.warn(
+          `Backoffice feature seed skipped for instance "${seedInstance}": ${error instanceof Error ? error.message : error}`,
+        );
+      }
+    }
+
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);

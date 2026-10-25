@@ -543,6 +543,45 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiBackofficeFeatureBackofficeFeature
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'backoffice_features';
+  info: {
+    description: 'Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config).';
+    displayName: 'Backoffice feature';
+    pluralName: 'backoffice-features';
+    singularName: 'backoffice-feature';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    config: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::backoffice-feature.backoffice-feature'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCurrencyCategoryCurrencyCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'currency_categories';
@@ -1654,6 +1693,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::account-category.account-category': ApiAccountCategoryAccountCategory;
       'api::account.account': ApiAccountAccount;
+      'api::backoffice-feature.backoffice-feature': ApiBackofficeFeatureBackofficeFeature;
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;

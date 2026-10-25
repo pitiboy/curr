@@ -95,6 +95,26 @@ Edit the `initial-data.js` file to:
 - Relations are properly established between entities
 - The seeder is idempotent (safe to run multiple times)
 
+## Backoffice features (kor / edizone)
+
+Workflow toggles and backoffice settings live in the **Backoffice feature** collection (`key`, `enabled`, `config` JSON). Strapi Admin can edit them; the Content API exposes read-only values via `GET /api/backoffice/config`.
+
+Instance seed files:
+
+- `database/seeders/http/kor/data/backoffice-features.json`
+- `database/seeders/http/edizone/data/backoffice-features.json`
+
+Upsert is **insert-only**: existing keys are left unchanged (Admin edits are preserved).
+
+```bash
+npm run seed:backoffice-features:kor
+npm run seed:backoffice-features:edizone
+```
+
+Optional boot-time upsert: set `BACKOFFICE_FEATURES_INSTANCE=kor` (or `edizone`) in `.env`.
+
+Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `key` is treated as a workflow id for the backoffice menu.
+
 ## HTTP seed (kor / edizone)
 
 A `database/seeders/http/common/01`–`09` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak.
