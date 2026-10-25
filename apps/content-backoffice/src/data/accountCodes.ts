@@ -1,11 +1,5 @@
 import type { DataProvider, Identifier } from 'react-admin';
 
-export type { AccountProfile } from './accountProfiles';
-export {
-  accountChoicesForProfile as accountChoicesForSelect,
-  filterAccountsByProfile as filterAccountChoices,
-} from './accountProfiles';
-
 export type AccountChoice = {
   id: Identifier;
   code?: string | null;
