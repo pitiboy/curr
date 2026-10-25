@@ -22,28 +22,26 @@ export const CREDIT_CODES = parseCodeRegex(
 );
 
 export function isDebitCode(code: string | null | undefined): boolean {
-  return DEBIT_CODES.test(normalizeCode(code));
+  return DEBIT_CODES.test(normalizeAccountCode(code));
 }
 
 export function isCreditCode(code: string | null | undefined): boolean {
-  return CREDIT_CODES.test(normalizeCode(code));
+  return CREDIT_CODES.test(normalizeAccountCode(code));
 }
 
-export function filterAccountChoices(
-  accounts: AccountChoice[],
-  kind: 'debit' | 'credit',
-): AccountChoice[] {
-  const matches = kind === 'debit' ? isDebitCode : isCreditCode;
-  return accounts
-    .filter((account) => matches(account.code))
-    .sort((left, right) => {
-      const byCode = normalizeCode(left.code).localeCompare(
-        normalizeCode(right.code),
-        'hu',
-      );
-      if (byCode !== 0) return byCode;
-      return String(left.name ?? '').localeCompare(String(right.name ?? ''), 'hu');
-    });
+export function normalizeAccountCode(code: string | null | undefined): string {
+  return typeof code === 'string' ? code.trim() : '';
+}
+
+export function sortAccountChoices(accounts: AccountChoice[]): AccountChoice[] {
+  return [...accounts].sort((left, right) => {
+    const byCode = normalizeAccountCode(left.code).localeCompare(
+      normalizeAccountCode(right.code),
+      'hu',
+    );
+    if (byCode !== 0) return byCode;
+    return String(left.name ?? '').localeCompare(String(right.name ?? ''), 'hu');
+  });
 }
 
 export function accountChoiceLabel(account: AccountChoice): string {
@@ -93,6 +91,3 @@ export function parseCodeRegex(value: string | undefined, fallback: RegExp): Reg
   return flags === pattern.flags ? pattern : new RegExp(pattern.source, flags);
 }
 
-function normalizeCode(code: string | null | undefined): string {
-  return typeof code === 'string' ? code.trim() : '';
-}

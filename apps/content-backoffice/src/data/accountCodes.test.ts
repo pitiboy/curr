@@ -5,13 +5,16 @@ import type { DataProvider } from 'react-admin';
 import {
   CREDIT_CODES,
   DEBIT_CODES,
-  filterAccountChoices,
   isCreditCode,
   isDebitCode,
   loadAllAccounts,
   parseCodeRegex,
   type AccountChoice,
 } from './accountCodes';
+import {
+  accountChoicesForProfile,
+  filterAccountsByProfile,
+} from './accountProfiles';
 
 const accounts: AccountChoice[] = [
   { id: 'cash', code: '1000', name: 'Készpénz' },
@@ -47,7 +50,7 @@ describe('parseCodeRegex', () => {
 describe('account code filters', () => {
   it('uses /^5/ for debit when VITE_DEBIT_CODES is unset', () => {
     expect(DEBIT_CODES.source).toBe('^5');
-    expect(filterAccountChoices(accounts, 'debit').map((row) => row.code)).toEqual([
+    expect(filterAccountsByProfile(accounts, 'debit').map((row) => row.code)).toEqual([
       '5000',
       '5100',
       '5200',
@@ -60,7 +63,7 @@ describe('account code filters', () => {
 
   it('uses /^(1|3)/ for credit when VITE_CREDIT_CODES is unset', () => {
     expect(CREDIT_CODES.source).toBe('^(1|3)');
-    expect(filterAccountChoices(accounts, 'credit').map((row) => row.code)).toEqual([
+    expect(filterAccountsByProfile(accounts, 'credit').map((row) => row.code)).toEqual([
       '1000',
       '1100',
       '1200',
@@ -70,6 +73,29 @@ describe('account code filters', () => {
     expect(isCreditCode('2000')).toBe(false);
     expect(isCreditCode('4000')).toBe(false);
     expect(isCreditCode('5000')).toBe(false);
+  });
+
+  it('returns every account when the review profile is empty', () => {
+    expect(filterAccountsByProfile(accounts, 'debit', '')).toHaveLength(
+      accounts.length,
+    );
+    expect(filterAccountsByProfile(accounts, 'credit', '').map((row) => row.code)).toContain(
+      '4000',
+    );
+    expect(filterAccountsByProfile(accounts, 'credit', 'cost').map((row) => row.code)).not.toContain(
+      '4000',
+    );
+  });
+
+  it('keeps a selected account in the list when it is outside the profile', () => {
+    const choices = accountChoicesForProfile(
+      accounts,
+      'credit',
+      'cost',
+      'revenue',
+    );
+    expect(choices.map((row) => row.id)).toContain('revenue');
+    expect(choices.map((row) => row.code)).toContain('4000');
   });
 });
 
@@ -89,7 +115,7 @@ describe('loadAllAccounts', () => {
 
     const loaded = await loadAllAccounts(getList);
     expect(loaded).toHaveLength(accounts.length);
-    expect(filterAccountChoices(loaded, 'debit').map((row) => row.code)).toEqual([
+    expect(filterAccountsByProfile(loaded, 'debit').map((row) => row.code)).toEqual([
       '5000',
       '5100',
       '5200',

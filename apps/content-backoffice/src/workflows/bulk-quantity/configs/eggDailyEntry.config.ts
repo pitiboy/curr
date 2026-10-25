@@ -1,4 +1,12 @@
-import { MEMBER_PRIVATE_ACCOUNT_CODE } from '../memberAccounts';
+import {
+  CREDIT_ACCOUNT_CODE,
+  DEBIT_ACCOUNT_CODE,
+  DISTRIBUTION_INVENTORY_ACCOUNT_CODE,
+  DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE,
+  DISTRIBUTION_REVENUE_ACCOUNT_CODE,
+  DISTRIBUTION_SALE_CASH_ACCOUNT_CODE,
+  EGG_DAILY_ENTRY_WORKFLOW_ID,
+} from '../eggDailyEntry.constants';
 import type {
   BulkQuantityDistributionConfig,
   BulkQuantityWorkflowConfig,
@@ -10,16 +18,15 @@ export const DISTRIBUTION_MEMBER_ORG = 'Tyúktartás';
 /** Hen houses and booking org for distribution legs (parent org under Állattenyésztés). */
 export const PULTRY_PARENT_ORG_NAME = DISTRIBUTION_MEMBER_ORG;
 
-export const DEBIT_ACCOUNT_CODE = '1300';
-export const CREDIT_ACCOUNT_CODE = '4500';
-
-/** Member saját (Homály) account — sale egg, cash payment credit, revenue debit. */
-export const DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE =
-  MEMBER_PRIVATE_ACCOUNT_CODE;
-
-export const DISTRIBUTION_INVENTORY_ACCOUNT_CODE = '1300';
-export const DISTRIBUTION_SALE_CASH_ACCOUNT_CODE = '1000';
-export const DISTRIBUTION_REVENUE_ACCOUNT_CODE = '4000';
+export {
+  CREDIT_ACCOUNT_CODE,
+  DEBIT_ACCOUNT_CODE,
+  DISTRIBUTION_INVENTORY_ACCOUNT_CODE,
+  DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE,
+  DISTRIBUTION_REVENUE_ACCOUNT_CODE,
+  DISTRIBUTION_SALE_CASH_ACCOUNT_CODE,
+  EGG_DAILY_ENTRY_WORKFLOW_ID,
+} from '../eggDailyEntry.constants';
 
 export const eggDistributionConfig: BulkQuantityDistributionConfig = {
   memberOrganizationName: DISTRIBUTION_MEMBER_ORG,
@@ -36,7 +43,7 @@ export const eggDistributionConfig: BulkQuantityDistributionConfig = {
 };
 
 export const eggDailyEntryConfig: BulkQuantityWorkflowConfig = {
-  workflowId: 'egg-daily-entry',
+  workflowId: EGG_DAILY_ENTRY_WORKFLOW_ID,
   path: '/workflows/egg-daily-entry',
   labelKey: 'app.workflows.egg-daily-entry',
   parentOrganizationName: PULTRY_PARENT_ORG_NAME,
