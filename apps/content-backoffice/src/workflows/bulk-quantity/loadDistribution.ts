@@ -24,7 +24,7 @@ type MembershipRow = {
     account?: { documentId?: string; code?: string | null } | null;
     private_account?: { documentId?: string; code?: string | null } | null;
   } | null;
-  membership_type?: { rules?: unknown } | null;
+  membership_type?: { name?: string | null; rules?: unknown } | null;
 };
 
 type CurrencyRateApiRow = {
@@ -74,7 +74,7 @@ export async function loadDistributionMembers(
           private_account: { fields: ['documentId', 'code'] },
         },
       },
-      membership_type: { fields: ['rules'] },
+      membership_type: { fields: ['name', 'rules'] },
     },
     sort: ['member.name:asc'],
     pagination: { page: 1, pageSize: 200 },
@@ -95,6 +95,7 @@ export async function loadDistributionMembers(
     members.push({
       memberId: member.documentId,
       memberName: member.name,
+      membershipTypeName: row.membership_type?.name ?? null,
       membershipRules: row.rules,
       membershipTypeRules: row.membership_type?.rules,
       account: member.account ?? null,
@@ -154,10 +155,11 @@ export async function loadDistributionRefs(
     eggCurrency,
     saleCurrency,
     inventoryAccount,
-    saleExpenseAccount,
+    saleCashAccount,
     revenueAccount,
     internalType,
-    saleStockType,
+    saleEggType,
+    saleCashPaymentType,
     saleRevenueType,
   ] = await Promise.all([
     fetchOneByFilter(httpClient, strapiUrl, 'organizations', {
@@ -170,10 +172,10 @@ export async function loadDistributionRefs(
       code: { $eq: EGG_SALE_CURRENCY },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-      code: { $eq: config.stockCreditAccountCode },
+      code: { $eq: config.inventoryAccountCode },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-      code: { $eq: config.stockDebitAccountCode },
+      code: { $eq: config.saleCashAccountCode },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
       code: { $eq: config.revenueCreditAccountCode },
@@ -182,7 +184,10 @@ export async function loadDistributionRefs(
       name: { $eq: config.internalTransactionTypeName },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
-      name: { $eq: config.saleStockTransactionTypeName },
+      name: { $eq: config.saleEggTransactionTypeName },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
+      name: { $eq: config.saleCashPaymentTransactionTypeName },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
       name: { $eq: config.saleRevenueTransactionTypeName },
@@ -193,10 +198,11 @@ export async function loadDistributionRefs(
   const eggCurrencyTypeId = eggCurrency?.documentId;
   const saleCurrencyTypeId = saleCurrency?.documentId;
   const inventoryAccountId = inventoryAccount?.documentId;
-  const saleExpenseAccountId = saleExpenseAccount?.documentId;
+  const saleCashAccountId = saleCashAccount?.documentId;
   const revenueAccountId = revenueAccount?.documentId;
   const internalTransactionTypeId = internalType?.documentId;
-  const saleStockTransactionTypeId = saleStockType?.documentId;
+  const saleEggTransactionTypeId = saleEggType?.documentId;
+  const saleCashPaymentTransactionTypeId = saleCashPaymentType?.documentId;
   const saleRevenueTransactionTypeId = saleRevenueType?.documentId;
 
   if (
@@ -204,10 +210,11 @@ export async function loadDistributionRefs(
     !eggCurrencyTypeId ||
     !saleCurrencyTypeId ||
     !inventoryAccountId ||
-    !saleExpenseAccountId ||
+    !saleCashAccountId ||
     !revenueAccountId ||
     !internalTransactionTypeId ||
-    !saleStockTransactionTypeId ||
+    !saleEggTransactionTypeId ||
+    !saleCashPaymentTransactionTypeId ||
     !saleRevenueTransactionTypeId
   ) {
     return null;
@@ -218,10 +225,11 @@ export async function loadDistributionRefs(
     eggCurrencyTypeId,
     saleCurrencyTypeId,
     inventoryAccountId,
-    saleExpenseAccountId,
+    saleCashAccountId,
     revenueAccountId,
     internalTransactionTypeId,
-    saleStockTransactionTypeId,
+    saleEggTransactionTypeId,
+    saleCashPaymentTransactionTypeId,
     saleRevenueTransactionTypeId,
   };
 }

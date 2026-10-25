@@ -435,6 +435,7 @@ export function BulkQuantityEntryPage({
         distributionMembers.map((member) => ({
           memberId: member.memberId,
           memberName: member.memberName,
+          membershipTypeName: member.membershipTypeName,
           membershipRules: member.membershipRules,
           membershipTypeRules: member.membershipTypeRules,
           memberAccountId: null,

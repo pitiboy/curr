@@ -27,26 +27,20 @@ export function buildDistributionLegList(input: {
     eggCurrencyTypeId: input.distributionRefs.eggCurrencyTypeId,
     saleCurrencyTypeId: input.distributionRefs.saleCurrencyTypeId,
     inventoryAccountId: input.distributionRefs.inventoryAccountId,
-    saleExpenseAccountId: input.distributionRefs.saleExpenseAccountId,
+    saleCashAccountId: input.distributionRefs.saleCashAccountId,
     revenueAccountId: input.distributionRefs.revenueAccountId,
     internalTransactionTypeId: input.distributionRefs.internalTransactionTypeId,
-    saleStockTransactionTypeId:
-      input.distributionRefs.saleStockTransactionTypeId,
+    saleEggTransactionTypeId: input.distributionRefs.saleEggTransactionTypeId,
+    saleCashPaymentTransactionTypeId:
+      input.distributionRefs.saleCashPaymentTransactionTypeId,
     saleRevenueTransactionTypeId:
       input.distributionRefs.saleRevenueTransactionTypeId,
     eggToSaleRate: input.eggToSaleRate,
-    internalMemberAccountIdForRow: (row) => {
+    memberPrivateAccountIdForRow: (row) => {
       const member = memberById.get(row.memberId);
       return memberAccountDocumentIdByCode(
         member,
-        input.distributionConfig.internalMemberAccountCode,
-      );
-    },
-    saleMemberAccountIdForRow: (row) => {
-      const member = memberById.get(row.memberId);
-      return memberAccountDocumentIdByCode(
-        member,
-        input.distributionConfig.saleMemberAccountCode,
+        input.distributionConfig.memberPrivateAccountCode,
       );
     },
   });

@@ -368,8 +368,9 @@ A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** 
 | Szabály | Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
 | --- | --- | --- | --- | --- | --- | --- |
 | `internal` | tag `1001` saját számla | `1300` Készletek | db | EGG | `Tyúktartás` | `Átvezetés` |
-| `sale` — készlet | `5600` Értékesítési költségek | `1300` Készletek | db | EGG | ugyanaz | `Átvezetés` |
-| `sale` — bevétel (nincs készpénz-láb) | tag `1101` tagi számla | `4000` Értékesítés bevétele | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz | `Átvezetés` |
+| `sale` — tojás | tag `1001` saját számla | `1300` Készletek | db | EGG | ugyanaz | `Átvezetés` |
+| `sale` — kp befizetés | `1000` Készpénz | tag `1001` saját számla | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz | `Készpénz` |
+| `sale` — bevétel | `4000` Értékesítés bevétele | `1000` Készpénz | ugyanaz | HUF | ugyanaz | `Átvezetés` |
 
 Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
 
@@ -380,21 +381,23 @@ sequenceDiagram
   participant BO as Backoffice (2 lepes)
   participant Ol as Tyukol (termelés)
   participant Keszlet as 1300 Keszletek
-  participant Tag as Tag szamla
-  participant Ert as 5600 / 4000
+  participant Tag as 1001 sajat szamla
+  participant Penztar as 1000 Keszpenz
+  participant Ert as 4000 Bevetel
 
   BO->>Ol: 1. lepes — termelés sorok (1300 ← 4500)
   BO->>BO: 2. lepes — tagonkénti db
   alt bentlakó / társult (internal)
     Keszlet->>Tag: EGG atvezetés (1001 ← 1300)
   else értékesítési típus (sale)
-    Keszlet->>Ert: készletcsökkenés (5600 ← 1300)
-    Ert->>Tag: bevétel HUF (1101 ← 4000), árfolyam + ratio
+    Keszlet->>Tag: tojás (1001 ← 1300), EGG
+    Tag->>Penztar: kp befizetés (1000 ← 1001), HUF
+    Penztar->>Ert: bevétel (1000 → 4000), HUF, árfolyam + ratio
   end
   Note over Keszlet: kiosztatlan db a 1300-on marad
 ```
 
-**Későbbi riport:** tervezett készletkimutatás (termelt vs. kiosztott vs. `1300` maradvány); a tranzakciós adatok erre lekérdezhetők (dátum, `1300`/`4500`/`5600`, szervezet, EGG/HUF).
+**Későbbi riport:** tervezett készletkimutatás (termelt vs. kiosztott vs. `1300` maradvány); a tranzakciós adatok erre lekérdezhetők (dátum, `1300`/`4500`/`1000`/`4000`, szervezet, EGG/HUF).
 
 ## Ügylet 3 — gyümölcs szürete és piaci eladása
 

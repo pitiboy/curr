@@ -118,10 +118,12 @@ export const enMessages = mergeTranslations(englishMessages, {
         egg: 'Daily eggs — %{organization}: %{amount}',
         egg_distribution_internal:
           'Egg distribution (internal) — %{member}: %{amount}',
-        egg_distribution_stock:
-          'Egg distribution (stock) — %{member}: %{amount}',
+        egg_distribution_sale_egg:
+          'Egg sale (eggs) — %{member}: %{amount}',
+        egg_distribution_cash:
+          'Egg sale (cash payment) — %{member}: %{amount} → %{revenue}',
         egg_distribution_revenue:
-          'Egg distribution (revenue) — %{member}: %{amount} → %{revenue}',
+          'Egg sale (revenue) — %{member}: %{amount} → %{revenue}',
       },
     },
     login_google: 'Sign in with Google',

@@ -125,6 +125,7 @@ export function distributionRowsFromQuantities(
   members: readonly {
     memberId: string;
     memberName: string;
+    membershipTypeName: string | null;
     membershipRules: unknown;
     membershipTypeRules: unknown;
     memberAccountId: string | null;
@@ -149,6 +150,7 @@ export function distributionRowsFromQuantities(
       eggRule: resolveEggRule(
         member.membershipRules,
         member.membershipTypeRules,
+        member.membershipTypeName,
       ),
       memberAccountId: member.memberAccountId,
     });
@@ -162,22 +164,24 @@ export function buildDistributionLegs(input: {
   eggCurrencyTypeId: string;
   saleCurrencyTypeId: string;
   inventoryAccountId: string;
-  saleExpenseAccountId: string;
+  saleCashAccountId: string;
   revenueAccountId: string;
-  internalMemberAccountIdForRow: (row: DistributionMemberRow) => string | null;
-  saleMemberAccountIdForRow: (row: DistributionMemberRow) => string | null;
+  memberPrivateAccountIdForRow: (row: DistributionMemberRow) => string | null;
   internalTransactionTypeId: string;
-  saleStockTransactionTypeId: string;
+  saleEggTransactionTypeId: string;
+  saleCashPaymentTransactionTypeId: string;
   saleRevenueTransactionTypeId: string;
   eggToSaleRate: number;
 }): DistributionTransactionLeg[] {
   const legs: DistributionTransactionLeg[] = [];
   for (const row of input.rows) {
+    const memberPrivateAccountId =
+      input.memberPrivateAccountIdForRow(row);
+    if (!memberPrivateAccountId) {
+      continue;
+    }
+
     if (row.eggRule.mode === 'internal') {
-      const memberAccountId = input.internalMemberAccountIdForRow(row);
-      if (!memberAccountId) {
-        continue;
-      }
       legs.push({
         legKey: `${row.memberId}:internal`,
         organizationId: input.bookingOrganizationId,
@@ -185,7 +189,7 @@ export function buildDistributionLegs(input: {
         memberName: row.memberName,
         amount: row.amount,
         currencyTypeId: input.eggCurrencyTypeId,
-        debitAccountId: memberAccountId,
+        debitAccountId: memberPrivateAccountId,
         creditAccountId: input.inventoryAccountId,
         transactionTypeId: input.internalTransactionTypeId,
         descriptionKey: 'app.bulk_quantity.description.egg_distribution_internal',
@@ -197,24 +201,6 @@ export function buildDistributionLegs(input: {
       continue;
     }
 
-    legs.push({
-      legKey: `${row.memberId}:stock`,
-      organizationId: input.bookingOrganizationId,
-      memberId: row.memberId,
-      memberName: row.memberName,
-      amount: row.amount,
-      currencyTypeId: input.eggCurrencyTypeId,
-      debitAccountId: input.saleExpenseAccountId,
-      creditAccountId: input.inventoryAccountId,
-      transactionTypeId: input.saleStockTransactionTypeId,
-      descriptionKey: 'app.bulk_quantity.description.egg_distribution_stock',
-      descriptionParams: { member: row.memberName, amount: row.amount },
-    });
-
-    const memberAccountId = input.saleMemberAccountIdForRow(row);
-    if (!memberAccountId) {
-      continue;
-    }
     const revenue = saleRevenueAmount(
       row.amount,
       row.eggRule.ratio,
@@ -223,6 +209,39 @@ export function buildDistributionLegs(input: {
     if (revenue <= 0) {
       continue;
     }
+
+    legs.push({
+      legKey: `${row.memberId}:egg`,
+      organizationId: input.bookingOrganizationId,
+      memberId: row.memberId,
+      memberName: row.memberName,
+      amount: row.amount,
+      currencyTypeId: input.eggCurrencyTypeId,
+      debitAccountId: memberPrivateAccountId,
+      creditAccountId: input.inventoryAccountId,
+      transactionTypeId: input.saleEggTransactionTypeId,
+      descriptionKey: 'app.bulk_quantity.description.egg_distribution_sale_egg',
+      descriptionParams: { member: row.memberName, amount: row.amount },
+    });
+
+    legs.push({
+      legKey: `${row.memberId}:cash`,
+      organizationId: input.bookingOrganizationId,
+      memberId: row.memberId,
+      memberName: row.memberName,
+      amount: revenue,
+      currencyTypeId: input.saleCurrencyTypeId,
+      debitAccountId: input.saleCashAccountId,
+      creditAccountId: memberPrivateAccountId,
+      transactionTypeId: input.saleCashPaymentTransactionTypeId,
+      descriptionKey: 'app.bulk_quantity.description.egg_distribution_cash',
+      descriptionParams: {
+        member: row.memberName,
+        amount: row.amount,
+        revenue,
+      },
+    });
+
     legs.push({
       legKey: `${row.memberId}:revenue`,
       organizationId: input.bookingOrganizationId,
@@ -230,8 +249,8 @@ export function buildDistributionLegs(input: {
       memberName: row.memberName,
       amount: revenue,
       currencyTypeId: input.saleCurrencyTypeId,
-      debitAccountId: memberAccountId,
-      creditAccountId: input.revenueAccountId,
+      debitAccountId: input.revenueAccountId,
+      creditAccountId: input.saleCashAccountId,
       transactionTypeId: input.saleRevenueTransactionTypeId,
       descriptionKey: 'app.bulk_quantity.description.egg_distribution_revenue',
       descriptionParams: {
@@ -245,9 +264,18 @@ export function buildDistributionLegs(input: {
 }
 
 export function memberNeedsSaleRate(
-  members: readonly { membershipRules: unknown; membershipTypeRules: unknown }[],
+  members: readonly {
+    membershipTypeName: string | null;
+    membershipRules: unknown;
+    membershipTypeRules: unknown;
+  }[],
 ): boolean {
   return members.some(
-    (member) => resolveEggRule(member.membershipRules, member.membershipTypeRules).mode === 'sale',
+    (member) =>
+      resolveEggRule(
+        member.membershipRules,
+        member.membershipTypeRules,
+        member.membershipTypeName,
+      ).mode === 'sale',
   );
 }

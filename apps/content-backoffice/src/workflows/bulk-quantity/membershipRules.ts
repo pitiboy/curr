@@ -14,6 +14,18 @@ const DEFAULT_EGG_RULE: EggDistributionRule = {
   ratio: 1,
 };
 
+/** When Strapi has no `rules` JSON yet, match seeded membership-type names. */
+export const EGG_RULE_FALLBACK_BY_MEMBERSHIP_TYPE_NAME: Readonly<
+  Record<string, EggDistributionRule>
+> = {
+  'Bentlakó tag': { mode: 'internal', ratio: 1 },
+  'Társult tag': { mode: 'internal', ratio: 1 },
+  'Partner / Bedolgozó': { mode: 'sale', ratio: 1 },
+  Vásárló: { mode: 'sale', ratio: 1 },
+  'Pártoló tag': { mode: 'sale', ratio: 1 },
+  Érdeklődő: { mode: 'sale', ratio: 0.75 },
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -37,23 +49,27 @@ function parseEggRuleFragment(value: unknown): EggDistributionRule | null {
   return { mode, ratio };
 }
 
+function eggRuleFromTypeRules(rules: unknown): EggDistributionRule | null {
+  if (!isRecord(rules) || rules.egg === undefined) {
+    return null;
+  }
+  return parseEggRuleFragment(rules.egg);
+}
+
 /** Validates `rules` JSON; fills defaults when keys are missing. */
 export function parseEggRule(rules: unknown): EggDistributionRule {
-  if (!isRecord(rules)) {
-    return { ...DEFAULT_EGG_RULE };
+  const fromType = eggRuleFromTypeRules(rules);
+  if (fromType) {
+    return fromType;
   }
-  const egg = rules.egg;
-  const parsed = parseEggRuleFragment(egg);
-  if (!parsed) {
-    return { ...DEFAULT_EGG_RULE };
-  }
-  return parsed;
+  return { ...DEFAULT_EGG_RULE };
 }
 
 /** Membership override wins over membership-type defaults. */
 export function resolveEggRule(
   membershipRules: unknown,
   membershipTypeRules: unknown,
+  membershipTypeName?: string | null,
 ): EggDistributionRule {
   if (isRecord(membershipRules) && membershipRules.egg !== undefined) {
     const fromMembership = parseEggRuleFragment(
@@ -63,5 +79,16 @@ export function resolveEggRule(
       return fromMembership;
     }
   }
-  return parseEggRule(membershipTypeRules);
+  const fromType = eggRuleFromTypeRules(membershipTypeRules);
+  if (fromType) {
+    return fromType;
+  }
+  if (membershipTypeName) {
+    const fallback =
+      EGG_RULE_FALLBACK_BY_MEMBERSHIP_TYPE_NAME[membershipTypeName];
+    if (fallback) {
+      return { ...fallback };
+    }
+  }
+  return { ...DEFAULT_EGG_RULE };
 }

@@ -48,4 +48,4 @@ Pure logic: `logic.ts`, `distributionLogic.ts`, `membershipRules.ts`. Plans: `di
 
 ## Egg daily entry constants
 
-See `configs/eggDailyEntry.config.ts`: production `1300`/`4500`, distribution internal `1001` ← `1300`, sale `5600`/`1300` + `1101` ← `4000`, types `Átvezetés`.
+See `configs/eggDailyEntry.config.ts`: production `1300`/`4500`; distribution `internal` one leg `1001` ← `1300` (EGG); `sale` three legs — `1001` ← `1300` (EGG), `1000` ← `1001` (HUF, `Készpénz`), listán `1000` → `4000` bevétel (HUF, `Átvezetés`; tartozik `4000`, követel `1000`).

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildDistributionLegs,
+  distributionRowsFromQuantities,
   isOverDistributed,
   pickLatestCurrencyRate,
   remainingEggs,
@@ -38,6 +39,31 @@ describe('membership egg rules', () => {
       ),
     ).toEqual({ mode: 'internal', ratio: 1 });
   });
+
+  it('uses internal for bentlakó when type rules JSON is empty', () => {
+    expect(resolveEggRule(null, null, 'Bentlakó tag')).toEqual({
+      mode: 'internal',
+      ratio: 1,
+    });
+  });
+
+  it('resolves egg mode from membership type name in distribution rows', () => {
+    const rows = distributionRowsFromQuantities(
+      [
+        {
+          memberId: 'm1',
+          memberName: 'Laci',
+          membershipTypeName: 'Bentlakó tag',
+          membershipRules: null,
+          membershipTypeRules: null,
+          memberAccountId: null,
+        },
+      ],
+      { m1: 5 },
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.eggRule).toEqual({ mode: 'internal', ratio: 1 });
+  });
 });
 
 describe('currency rate pick', () => {
@@ -72,55 +98,67 @@ describe('currency rate pick', () => {
 });
 
 describe('distribution legs', () => {
-  const refs = {
+  const baseInput = {
     bookingOrganizationId: 'org-poultry',
     eggCurrencyTypeId: 'cur-egg',
     saleCurrencyTypeId: 'cur-huf',
     inventoryAccountId: 'acc-1300',
-    saleExpenseAccountId: 'acc-5600',
+    saleCashAccountId: 'acc-1000',
     revenueAccountId: 'acc-4000',
     internalTransactionTypeId: 'type-atv',
-    saleStockTransactionTypeId: 'type-atv',
+    saleEggTransactionTypeId: 'type-atv',
+    saleCashPaymentTransactionTypeId: 'type-cash',
     saleRevenueTransactionTypeId: 'type-atv',
+    memberPrivateAccountIdForRow: () => 'acc-1001-member',
+    eggToSaleRate: 200,
   };
 
   it('builds internal and sale legs', () => {
     const legs = buildDistributionLegs({
+      ...baseInput,
       rows: [
         {
           memberId: 'm1',
           memberName: 'Anna',
           amount: 4,
           eggRule: { mode: 'internal', ratio: 1 },
-          memberAccountId: 'acc-private',
+          memberAccountId: 'acc-1001-member',
         },
         {
           memberId: 'm2',
           memberName: 'Béla',
           amount: 2,
           eggRule: { mode: 'sale', ratio: 1 },
-          memberAccountId: 'acc-tag',
+          memberAccountId: 'acc-1001-member',
         },
       ],
-      bookingOrganizationId: refs.bookingOrganizationId,
-      eggCurrencyTypeId: refs.eggCurrencyTypeId,
-      saleCurrencyTypeId: refs.saleCurrencyTypeId,
-      inventoryAccountId: refs.inventoryAccountId,
-      saleExpenseAccountId: refs.saleExpenseAccountId,
-      revenueAccountId: refs.revenueAccountId,
-      internalTransactionTypeId: refs.internalTransactionTypeId,
-      saleStockTransactionTypeId: refs.saleStockTransactionTypeId,
-      saleRevenueTransactionTypeId: refs.saleRevenueTransactionTypeId,
-      eggToSaleRate: 200,
-      internalMemberAccountIdForRow: () => 'acc-private',
-      saleMemberAccountIdForRow: () => 'acc-tag',
     });
-    expect(legs).toHaveLength(3);
+    expect(legs).toHaveLength(4);
     expect(legs[0]).toMatchObject({
       legKey: 'm1:internal',
       amount: 4,
-      debitAccountId: 'acc-private',
+      debitAccountId: 'acc-1001-member',
       creditAccountId: 'acc-1300',
+    });
+    expect(legs[1]).toMatchObject({
+      legKey: 'm2:egg',
+      amount: 2,
+      currencyTypeId: 'cur-egg',
+      debitAccountId: 'acc-1001-member',
+      creditAccountId: 'acc-1300',
+    });
+    expect(legs[2]).toMatchObject({
+      legKey: 'm2:cash',
+      amount: 400,
+      debitAccountId: 'acc-1000',
+      creditAccountId: 'acc-1001-member',
+      transactionTypeId: 'type-cash',
+    });
+    expect(legs[3]).toMatchObject({
+      legKey: 'm2:revenue',
+      amount: 400,
+      debitAccountId: 'acc-4000',
+      creditAccountId: 'acc-1000',
     });
     expect(saleRevenueAmount(2, 1, 200)).toBe(400);
   });

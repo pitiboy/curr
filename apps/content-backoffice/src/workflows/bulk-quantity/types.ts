@@ -6,13 +6,15 @@ export type BulkQuantityDistributionConfig = {
   /** `transaction.organization` on distribution legs (parent org). */
   bookingOrganizationName: string;
   rulesKey: 'egg';
-  internalMemberAccountCode: string;
-  saleMemberAccountCode: string;
-  stockDebitAccountCode: string;
-  stockCreditAccountCode: string;
+  /** Tag `1001` saját számla — internal EGG and sale HUF legs. */
+  memberPrivateAccountCode: string;
+  inventoryAccountCode: string;
+  /** Szövetkezeti készpénz (`1000`) for immediate cash payment on sale. */
+  saleCashAccountCode: string;
   revenueCreditAccountCode: string;
   internalTransactionTypeName: string;
-  saleStockTransactionTypeName: string;
+  saleEggTransactionTypeName: string;
+  saleCashPaymentTransactionTypeName: string;
   saleRevenueTransactionTypeName: string;
 };
 
@@ -74,6 +76,7 @@ export type BulkQuantityGlobalConflictChoice = 'insert' | 'update';
 export type DistributionMember = {
   memberId: string;
   memberName: string;
+  membershipTypeName: string | null;
   membershipRules: unknown;
   membershipTypeRules: unknown;
   account: { documentId?: string; code?: string | null } | null;
@@ -85,10 +88,11 @@ export type DistributionResolvedRefs = {
   eggCurrencyTypeId: string;
   saleCurrencyTypeId: string;
   inventoryAccountId: string;
-  saleExpenseAccountId: string;
+  saleCashAccountId: string;
   revenueAccountId: string;
   internalTransactionTypeId: string;
-  saleStockTransactionTypeId: string;
+  saleEggTransactionTypeId: string;
+  saleCashPaymentTransactionTypeId: string;
   saleRevenueTransactionTypeId: string;
 };
 

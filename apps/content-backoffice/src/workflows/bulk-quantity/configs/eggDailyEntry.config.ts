@@ -1,7 +1,4 @@
-import {
-  MEMBER_PRIVATE_ACCOUNT_CODE,
-  MEMBER_TAG_ACCOUNT_CODE,
-} from '../memberAccounts';
+import { MEMBER_PRIVATE_ACCOUNT_CODE } from '../memberAccounts';
 import type {
   BulkQuantityDistributionConfig,
   BulkQuantityWorkflowConfig,
@@ -16,27 +13,25 @@ export const PULTRY_PARENT_ORG_NAME = DISTRIBUTION_MEMBER_ORG;
 export const DEBIT_ACCOUNT_CODE = '1300';
 export const CREDIT_ACCOUNT_CODE = '4500';
 
-/** Member saját (Homály) account code — see `src/member-accounts.ts`. */
-export const DISTRIBUTION_INTERNAL_ACCOUNT_CODE = MEMBER_PRIVATE_ACCOUNT_CODE;
+/** Member saját (Homály) account — sale egg, cash payment credit, revenue debit. */
+export const DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE =
+  MEMBER_PRIVATE_ACCOUNT_CODE;
 
-/** Member tagi account code for sale revenue legs. */
-export const DISTRIBUTION_SALE_MEMBER_ACCOUNT_CODE = MEMBER_TAG_ACCOUNT_CODE;
-
-export const DISTRIBUTION_STOCK_DEBIT_CODE = '5600';
-export const DISTRIBUTION_STOCK_CREDIT_CODE = '1300';
-export const DISTRIBUTION_REVENUE_CREDIT_CODE = '4000';
+export const DISTRIBUTION_INVENTORY_ACCOUNT_CODE = '1300';
+export const DISTRIBUTION_SALE_CASH_ACCOUNT_CODE = '1000';
+export const DISTRIBUTION_REVENUE_ACCOUNT_CODE = '4000';
 
 export const eggDistributionConfig: BulkQuantityDistributionConfig = {
   memberOrganizationName: DISTRIBUTION_MEMBER_ORG,
   bookingOrganizationName: DISTRIBUTION_MEMBER_ORG,
   rulesKey: 'egg',
-  internalMemberAccountCode: DISTRIBUTION_INTERNAL_ACCOUNT_CODE,
-  saleMemberAccountCode: DISTRIBUTION_SALE_MEMBER_ACCOUNT_CODE,
-  stockDebitAccountCode: DISTRIBUTION_STOCK_DEBIT_CODE,
-  stockCreditAccountCode: DISTRIBUTION_STOCK_CREDIT_CODE,
-  revenueCreditAccountCode: DISTRIBUTION_REVENUE_CREDIT_CODE,
+  memberPrivateAccountCode: DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE,
+  inventoryAccountCode: DISTRIBUTION_INVENTORY_ACCOUNT_CODE,
+  saleCashAccountCode: DISTRIBUTION_SALE_CASH_ACCOUNT_CODE,
+  revenueCreditAccountCode: DISTRIBUTION_REVENUE_ACCOUNT_CODE,
   internalTransactionTypeName: 'Átvezetés',
-  saleStockTransactionTypeName: 'Átvezetés',
+  saleEggTransactionTypeName: 'Átvezetés',
+  saleCashPaymentTransactionTypeName: 'Készpénz',
   saleRevenueTransactionTypeName: 'Átvezetés',
 };
 

@@ -117,10 +117,12 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         egg: 'Napi tojás — %{organization}: %{amount} db',
         egg_distribution_internal:
           'Tojás továbbosztás (belső) — %{member}: %{amount} db',
-        egg_distribution_stock:
-          'Tojás továbbosztás (készlet) — %{member}: %{amount} db',
+        egg_distribution_sale_egg:
+          'Tojás eladás (tojás) — %{member}: %{amount} db',
+        egg_distribution_cash:
+          'Tojás eladás (kp befizetés) — %{member}: %{amount} db → %{revenue} Ft',
         egg_distribution_revenue:
-          'Tojás továbbosztás (bevétel) — %{member}: %{amount} db → %{revenue} Ft',
+          'Tojás eladás (bevétel) — %{member}: %{amount} db → %{revenue} Ft',
       },
     },
     login_google: 'Bejelentkezés Google-lel',
