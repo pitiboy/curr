@@ -1,4 +1,4 @@
-import { BACKOFFICE_FEATURE_UID } from './constants';
+import { SETTING_UID } from './constants';
 import type { BackofficeFeatureRow } from './types';
 
 type FeatureDocument = {
@@ -30,7 +30,7 @@ export async function loadBackofficeFeatureRows(strapi: {
   documents: (uid: string) => FeatureApi;
 }): Promise<BackofficeFeatureRow[]> {
   try {
-    const rows = await strapi.documents(BACKOFFICE_FEATURE_UID).findMany({
+    const rows = await strapi.documents(SETTING_UID).findMany({
       sort: { key: 'asc' },
     });
     return rows

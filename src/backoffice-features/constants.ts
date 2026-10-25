@@ -13,8 +13,7 @@ export const BACKOFFICE_SETTING_KEYS = {
   eggSaleCurrency: 'app.egg_sale_currency',
 } as const;
 
-export const BACKOFFICE_FEATURE_UID =
-  'api::backoffice-feature.backoffice-feature';
+export const SETTING_UID = 'api::setting.setting';
 
 export const DEFAULT_DEBIT_CODES_PATTERN = '/^5/';
 export const DEFAULT_CREDIT_CODES_PATTERN = '/^(1|3)/';

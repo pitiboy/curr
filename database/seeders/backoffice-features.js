@@ -3,13 +3,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const BACKOFFICE_FEATURE_UID = 'api::backoffice-feature.backoffice-feature';
+const SETTING_UID = 'api::setting.setting';
 
 function parseSeedFile(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed)) {
-    throw new Error(`Backoffice feature seed must be a JSON array: ${filePath}`);
+    throw new Error(`Settings seed must be a JSON array: ${filePath}`);
   }
 
   return parsed.map((entry, index) => {
@@ -34,7 +34,7 @@ function parseSeedFile(filePath) {
 }
 
 async function upsertBackofficeFeatureSeeds(strapi, entries) {
-  const api = strapi.documents(BACKOFFICE_FEATURE_UID);
+  const api = strapi.documents(SETTING_UID);
   const existing = await api.findMany({});
   const byKey = new Set(
     existing
@@ -54,7 +54,7 @@ async function upsertBackofficeFeatureSeeds(strapi, entries) {
       },
     });
     byKey.add(entry.key);
-    strapi.log.info(`Created backoffice feature "${entry.key}"`);
+    strapi.log.info(`Created setting "${entry.key}"`);
   }
 }
 
@@ -77,7 +77,7 @@ function resolveBackofficeFeaturesSeedPath(instance) {
 }
 
 module.exports = {
-  BACKOFFICE_FEATURE_UID,
+  SETTING_UID,
   parseSeedFile,
   upsertBackofficeFeatureSeeds,
   upsertBackofficeFeaturesFromFile,

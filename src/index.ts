@@ -403,7 +403,7 @@ export default {
         );
       } catch (error) {
         strapi.log.warn(
-          `Backoffice feature seed skipped for instance "${seedInstance}": ${error instanceof Error ? error.message : error}`,
+          `Settings seed skipped for instance "${seedInstance}": ${error instanceof Error ? error.message : error}`,
         );
       }
     }

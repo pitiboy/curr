@@ -543,45 +543,6 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiBackofficeFeatureBackofficeFeature
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'backoffice_features';
-  info: {
-    description: 'Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config).';
-    displayName: 'Backoffice feature';
-    pluralName: 'backoffice-features';
-    singularName: 'backoffice-feature';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    config: Schema.Attribute.JSON;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    enabled: Schema.Attribute.Boolean &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<false>;
-    key: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 128;
-      }>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::backoffice-feature.backoffice-feature'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiCurrencyCategoryCurrencyCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'currency_categories';
@@ -999,6 +960,44 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     vendor: Schema.Attribute.String;
+  };
+}
+
+export interface ApiSettingSetting extends Struct.CollectionTypeSchema {
+  collectionName: 'backoffice_features';
+  info: {
+    description: 'Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config).';
+    displayName: 'Settings';
+    pluralName: 'settings';
+    singularName: 'setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    config: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::setting.setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1693,7 +1692,6 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::account-category.account-category': ApiAccountCategoryAccountCategory;
       'api::account.account': ApiAccountAccount;
-      'api::backoffice-feature.backoffice-feature': ApiBackofficeFeatureBackofficeFeature;
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;
@@ -1703,6 +1701,7 @@ declare module '@strapi/strapi' {
       'api::organization.organization': ApiOrganizationOrganization;
       'api::receipt-type.receipt-type': ApiReceiptTypeReceiptType;
       'api::receipt.receipt': ApiReceiptReceipt;
+      'api::setting.setting': ApiSettingSetting;
       'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
       'api::transaction.transaction': ApiTransactionTransaction;

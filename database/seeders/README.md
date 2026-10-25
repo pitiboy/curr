@@ -95,9 +95,9 @@ Edit the `initial-data.js` file to:
 - Relations are properly established between entities
 - The seeder is idempotent (safe to run multiple times)
 
-## Backoffice features (kor / edizone)
+## Settings (kor / edizone)
 
-Workflow toggles and backoffice settings live in the **Backoffice feature** collection (`key`, `enabled`, `config` JSON). Strapi Admin can edit them; the Content API exposes read-only values via `GET /api/backoffice/config`.
+Workflow toggles and backoffice settings live in the **Settings** collection (`key`, `enabled`, `config` JSON). Strapi Admin can edit them; the Content API exposes read-only values via `GET /api/backoffice/config`.
 
 Instance seed files:
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Upsert backoffice feature rows from an instance seed file (insert-only for existing keys).
+ * Upsert Settings collection rows from an instance seed file (insert-only for existing keys).
  *
  * Usage:
  *   node scripts/seed-backoffice-features.js kor
@@ -25,7 +25,7 @@ async function main() {
   }
 
   const seedPath = resolveBackofficeFeaturesSeedPath(instance);
-  console.log(`🌱 Backoffice features seed: ${seedPath}`);
+  console.log(`🌱 Settings seed: ${seedPath}`);
 
   const { createStrapi } = require('@strapi/strapi');
   const app = await createStrapi({
@@ -39,13 +39,13 @@ async function main() {
 
   try {
     await upsertBackofficeFeaturesFromFile(app, seedPath);
-    console.log('✅ Backoffice feature seed finished');
+    console.log('✅ Settings seed finished');
   } finally {
     await app.destroy();
   }
 }
 
 main().catch((error) => {
-  console.error('❌ Backoffice feature seed failed:', error);
+  console.error('❌ Settings seed failed:', error);
   process.exit(1);
 });

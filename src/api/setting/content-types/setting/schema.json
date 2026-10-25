@@ -2,9 +2,9 @@
   "kind": "collectionType",
   "collectionName": "backoffice_features",
   "info": {
-    "singularName": "backoffice-feature",
-    "pluralName": "backoffice-features",
-    "displayName": "Backoffice feature",
+    "singularName": "setting",
+    "pluralName": "settings",
+    "displayName": "Settings",
     "description": "Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config)."
   },
   "options": {
