@@ -106,7 +106,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_produced: 'Total produced today: %{count}',
       distribution_remaining: 'Still unallocated: %{count}',
       distribution_over_limit:
-        'Distributed quantity cannot exceed total production.',
+        'Distribution exceeds today’s production by %{count}. Overspending is allowed ( which will be deducted from earlier stock).',
       distribution_rate:
         'Rate (%{from} → %{to}): %{rate}, valid since %{date}',
       distribution_rate_missing:

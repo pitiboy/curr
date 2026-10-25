@@ -363,7 +363,7 @@ Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` p
 
 A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.member` → tag, `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
 
-A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg nagyobb a termeltnél, a mentés tiltva van. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
+A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
 
 | Szabály | Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
 | --- | --- | --- | --- | --- | --- | --- |

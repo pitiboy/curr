@@ -636,7 +636,7 @@ export function BulkQuantityEntryPage({
   };
 
   const handleSaveAll = async () => {
-    if (!refs || overLimit) {
+    if (!refs) {
       return;
     }
     if (memberNeedsSaleRate(distributionMembers) && eggToSaleRate === null) {
@@ -717,9 +717,8 @@ export function BulkQuantityEntryPage({
     saving ||
     productionRows.length === 0 ||
     (activeStep === 1 &&
-      (overLimit ||
-        (memberNeedsSaleRate(distributionMembers) &&
-          eggToSaleRate === null)));
+      memberNeedsSaleRate(distributionMembers) &&
+      eggToSaleRate === null);
 
   return (
     <Box
@@ -838,14 +837,13 @@ export function BulkQuantityEntryPage({
                   count: producedTotal,
                 })}
               </Typography>
-              <Typography
-                color={remaining < 0 ? 'error.main' : 'text.primary'}
-                variant="body1"
-              >
-                {translate('app.bulk_quantity.distribution_remaining', {
-                  count: remaining,
-                })}
-              </Typography>
+              {remaining >= 0 ? (
+                <Typography variant="body1">
+                  {translate('app.bulk_quantity.distribution_remaining', {
+                    count: remaining,
+                  })}
+                </Typography>
+              ) : null}
               {eggToSaleRate !== null && rateValidFrom ? (
                 <Typography color="text.secondary" variant="body2">
                   {translate('app.bulk_quantity.distribution_rate', {
@@ -860,8 +858,10 @@ export function BulkQuantityEntryPage({
                 <Alert severity="warning">{distributionLoadError}</Alert>
               ) : null}
               {overLimit ? (
-                <Alert severity="error">
-                  {translate('app.bulk_quantity.distribution_over_limit')}
+                <Alert severity="warning">
+                  {translate('app.bulk_quantity.distribution_over_limit', {
+                    count: distributedTotal - producedTotal,
+                  })}
                 </Alert>
               ) : null}
               {distributionMembers.length === 0 ? (

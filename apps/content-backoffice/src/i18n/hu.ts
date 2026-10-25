@@ -105,7 +105,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       distribution_produced: 'Mai termelés összesen: %{count} db',
       distribution_remaining: 'Még kiosztatlan: %{count} db',
       distribution_over_limit:
-        'A kiosztott mennyiség nem lehet nagyobb a termeltnél.',
+        'A kiosztás %{count} db-tal meghaladja a mai termelést. A mentés engedélyezett (azt az előző napi raktár adagokból osztjuk ki).',
       distribution_rate:
         'Árfolyam (%{from} → %{to}): %{rate}, érvényes %{date} óta',
       distribution_rate_missing:
