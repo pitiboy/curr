@@ -6,35 +6,43 @@ import {
   normalizeAccountCode,
   sortAccountChoices,
 } from './accountCodes';
+import {
+  EGG_DAILY_ENTRY_WORKFLOW_ID,
+  EGG_GATED_ACCOUNT_PROFILES,
+  EGG_INTERNAL_CREDIT_ACCOUNT_CODE,
+  EGG_INTERNAL_DEBIT_ACCOUNT_CODE,
+  EGG_PRODUCTION_CREDIT_ACCOUNT_CODE,
+  EGG_PRODUCTION_DEBIT_ACCOUNT_CODE,
+  EGG_SALE_CREDIT_ACCOUNT_CODES,
+  EGG_SALE_DEBIT_ACCOUNT_CODES,
+  type EggGatedAccountProfile,
+} from '../workflows/bulk-quantity/eggDailyEntry.constants';
 
 /** Empty string = no profile filter (all loaded accounts). */
 export type AccountProfile =
   | ''
   | 'cost'
   | 'revenue'
-  | 'egg-production'
-  | 'egg-internal'
-  | 'egg-sale';
+  | EggGatedAccountProfile;
 
-export const EGG_DAILY_ENTRY_WORKFLOW_ID = 'egg-daily-entry';
+export { EGG_DAILY_ENTRY_WORKFLOW_ID };
 
-const EGG_PRODUCTION_DEBIT = '1300';
-const EGG_PRODUCTION_CREDIT = '4500';
-const EGG_INTERNAL_DEBIT = '1001';
-const EGG_INTERNAL_CREDIT = '1300';
-const EGG_SALE_DEBIT_CODES = new Set(['1001', '1000', '4000']);
-const EGG_SALE_CREDIT_CODES = new Set(['1300', '1001', '1000']);
+const EGG_SALE_DEBIT_CODES = new Set<string>(EGG_SALE_DEBIT_ACCOUNT_CODES);
+const EGG_SALE_CREDIT_CODES = new Set<string>(EGG_SALE_CREDIT_ACCOUNT_CODES);
 
-const REVENUE_DEBIT = CREDIT_CODES;
+/** Bevétel profil tartozik oldalán mérleg-szerű (1/3) kódok, követel oldalán 4-es bevétel. */
+const revenueDebitPattern = CREDIT_CODES;
 const REVENUE_CREDIT = /^4/;
 
 type NonEmptyAccountProfile = Exclude<AccountProfile, ''>;
 
-const PROFILE_WORKFLOW: Partial<Record<NonEmptyAccountProfile, string>> = {
-  'egg-production': EGG_DAILY_ENTRY_WORKFLOW_ID,
-  'egg-internal': EGG_DAILY_ENTRY_WORKFLOW_ID,
-  'egg-sale': EGG_DAILY_ENTRY_WORKFLOW_ID,
-};
+const PROFILE_WORKFLOW: Record<EggGatedAccountProfile, string> =
+  Object.fromEntries(
+    EGG_GATED_ACCOUNT_PROFILES.map((profile) => [
+      profile,
+      EGG_DAILY_ENTRY_WORKFLOW_ID,
+    ]),
+  ) as Record<EggGatedAccountProfile, string>;
 
 function codeInSet(code: string | null | undefined, allowed: Set<string>): boolean {
   return allowed.has(normalizeAccountCode(code));
@@ -51,16 +59,16 @@ function accountMatchesProfile(
       return kind === 'debit' ? isDebitCode(code) : isCreditCode(code);
     case 'revenue':
       return kind === 'debit'
-        ? REVENUE_DEBIT.test(code)
+        ? revenueDebitPattern.test(code)
         : REVENUE_CREDIT.test(code);
     case 'egg-production':
       return kind === 'debit'
-        ? code === EGG_PRODUCTION_DEBIT
-        : code === EGG_PRODUCTION_CREDIT;
+        ? code === EGG_PRODUCTION_DEBIT_ACCOUNT_CODE
+        : code === EGG_PRODUCTION_CREDIT_ACCOUNT_CODE;
     case 'egg-internal':
       return kind === 'debit'
-        ? code === EGG_INTERNAL_DEBIT
-        : code === EGG_INTERNAL_CREDIT;
+        ? code === EGG_INTERNAL_DEBIT_ACCOUNT_CODE
+        : code === EGG_INTERNAL_CREDIT_ACCOUNT_CODE;
     case 'egg-sale':
       return kind === 'debit'
         ? codeInSet(code, EGG_SALE_DEBIT_CODES)
@@ -110,13 +118,9 @@ export function selectableAccountProfiles(
   if (!configReady) {
     return profiles;
   }
-  for (const profile of [
-    'egg-production',
-    'egg-internal',
-    'egg-sale',
-  ] as const) {
+  for (const profile of EGG_GATED_ACCOUNT_PROFILES) {
     const workflowId = PROFILE_WORKFLOW[profile];
-    if (workflowId && effective.has(workflowId)) {
+    if (effective.has(workflowId)) {
       profiles.push(profile);
     }
   }

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { AccountChoice } from './accountCodes';
 import {
   accountChoicesForProfile,
+  EGG_DAILY_ENTRY_WORKFLOW_ID,
   filterAccountsByProfile,
   selectableAccountProfiles,
   selectableAccountProfilesWithAll,
@@ -84,7 +85,7 @@ describe('selectableAccountProfiles', () => {
   });
 
   it('adds egg profiles only when egg-daily-entry is effective', () => {
-    expect(selectableAccountProfiles(['egg-daily-entry'], true)).toEqual([
+    expect(selectableAccountProfiles([EGG_DAILY_ENTRY_WORKFLOW_ID], true)).toEqual([
       'cost',
       'revenue',
       'egg-production',
@@ -98,7 +99,7 @@ describe('selectableAccountProfiles', () => {
   });
 
   it('hides egg profiles until config is ready', () => {
-    expect(selectableAccountProfiles(['egg-daily-entry'], false)).toEqual([
+    expect(selectableAccountProfiles([EGG_DAILY_ENTRY_WORKFLOW_ID], false)).toEqual([
       'cost',
       'revenue',
     ]);
