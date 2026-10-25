@@ -1,4 +1,3 @@
-import { Box, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormState } from 'react-hook-form';
 import {
@@ -15,20 +14,14 @@ import {
   Toolbar,
   useBlocker,
   useCanBlock,
-  useDataProvider,
   useFormIsDirty,
   useTranslate,
   type RaRecord,
 } from 'react-admin';
 
-import {
-  accountChoiceLabel,
-  filterAccountChoices,
-  loadAllAccounts,
-  type AccountChoice,
-} from '../../data/accountCodes';
 import { bandedForm, bandedSpanClass } from '../../theme';
-import { AccountFieldLabel } from './accountField';
+import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
+import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
@@ -128,74 +121,6 @@ function CreateLeaveBlocker({
   );
 }
 
-function useAccountCatalog() {
-  const dataProvider = useDataProvider();
-  const [accounts, setAccounts] = useState<AccountChoice[]>([]);
-  const [isPending, setPending] = useState(true);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadAllAccounts((resource, params) =>
-      dataProvider.getList(resource, params),
-    )
-      .then((rows) => {
-        if (!cancelled) setAccounts(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setPending(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dataProvider]);
-
-  return { accounts, isPending, failed };
-}
-
-function AccountCodeInput({
-  accounts,
-  failed,
-  isPending,
-  kind,
-  required = false,
-  source,
-}: {
-  accounts: AccountChoice[];
-  failed: boolean;
-  isPending: boolean;
-  kind: 'debit' | 'credit';
-  required?: boolean;
-  source: string;
-}) {
-  const translate = useTranslate();
-  const choices = filterAccountChoices(accounts, kind).map((account) => ({
-    id: account.id,
-    name: accountChoiceLabel(account),
-  }));
-
-  return (
-    <Box>
-      <AutocompleteInput
-        choices={choices}
-        fullWidth
-        isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} required={required} />}
-        source={source}
-        translateChoice={false}
-      />
-      {!isPending && !failed && choices.length === 0 ? (
-        <Typography color="warning.main" variant="body2">
-          {translate('app.accounts_seed_missing')}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-}
-
 /** Dataentry create. Save always goes out as a draft; there is no publish action. */
 export function TransactionCreate() {
   const catalog = useAccountCatalog();
@@ -262,19 +187,11 @@ export function TransactionCreate() {
           validate={required()}
         />
 
-        <AccountCodeInput
+        <TransactionAccountProfileRow
           accounts={catalog.accounts}
+          defaultProfile="cost"
           failed={catalog.failed}
           isPending={catalog.isPending}
-          kind="credit"
-          source="credit_account"
-        />
-        <AccountCodeInput
-          accounts={catalog.accounts}
-          failed={catalog.failed}
-          isPending={catalog.isPending}
-          kind="debit"
-          source="debit_account"
         />
 
         <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
