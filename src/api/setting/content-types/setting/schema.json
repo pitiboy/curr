@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "backoffice_features",
+  "info": {
+    "singularName": "setting",
+    "pluralName": "settings",
+    "displayName": "Settings",
+    "description": "Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 128,
+      "metadatas": {
+        "label": "Kulcs",
+        "description": "Workflow azonosító (pl. egg-daily-entry) vagy beállítás (pl. content.default_status, accounts.debit_codes)."
+      }
+    },
+    "enabled": {
+      "type": "boolean",
+      "required": true,
+      "default": false,
+      "metadatas": {
+        "label": "Engedélyezve",
+        "description": "Workflownál: megjelenik-e a backoffice menüben. Beállításnál: a kapcsoló értéke (pl. publisher_must_differ)."
+      }
+    },
+    "config": {
+      "type": "json",
+      "required": false,
+      "metadatas": {
+        "label": "Config (JSON)",
+        "description": "Plugin- vagy beállítás-specifikus értékek (pl. regex minta, saleCurrency)."
+      }
+    }
+  }
+}

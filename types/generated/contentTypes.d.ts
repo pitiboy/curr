@@ -963,6 +963,44 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiSettingSetting extends Struct.CollectionTypeSchema {
+  collectionName: 'backoffice_features';
+  info: {
+    description: 'Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config).';
+    displayName: 'Settings';
+    pluralName: 'settings';
+    singularName: 'setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    config: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::setting.setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiStaticPageStaticPage extends Struct.CollectionTypeSchema {
   collectionName: 'static_pages';
   info: {
@@ -1663,6 +1701,7 @@ declare module '@strapi/strapi' {
       'api::organization.organization': ApiOrganizationOrganization;
       'api::receipt-type.receipt-type': ApiReceiptTypeReceiptType;
       'api::receipt.receipt': ApiReceiptReceipt;
+      'api::setting.setting': ApiSettingSetting;
       'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
       'api::transaction.transaction': ApiTransactionTransaction;

@@ -1,11 +1,11 @@
-import { buildBackofficeConfig } from '../config';
+import { loadBackofficeConfig } from '../config';
 
 type ConfigContext = {
   body: unknown;
 };
 
 export default {
-  config(ctx: ConfigContext) {
-    ctx.body = buildBackofficeConfig(process.env);
+  async config(ctx: ConfigContext) {
+    ctx.body = await loadBackofficeConfig(strapi);
   },
 };
