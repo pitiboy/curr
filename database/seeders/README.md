@@ -95,11 +95,21 @@ Edit the `initial-data.js` file to:
 - Relations are properly established between entities
 - The seeder is idempotent (safe to run multiple times)
 
+## HTTP seed (kor / edizone)
+
+A `database/seeders/http/common/01`–`09` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak.
+
+| Lépés | HTTP | Adat |
+| ----- | ---- | ---- |
+| 09 | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json` |
+
+Előfeltétel: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
+
 ## Transaction import (kor)
 
 `http/common/transactions.http` loads the rows of the "Pénzmozgások" Excel sheet
 from `http/kor/data/transactions.json` as draft transactions. It is not part of
-the `0*.http` run; start it on its own after the 01-08 seeders:
+the `0*.http` run; start it on its own after the 01-09 seeders:
 
 ```bash
 npm run seed:http:kor:transactions -- local

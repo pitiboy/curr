@@ -94,8 +94,35 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       conflict_update: 'Meglévő sor frissítése',
       conflict_insert: 'Új sor felvétele',
       conflict_continue: 'Folytatás',
+      conflict_global_body:
+        'Már van rögzítés erre a napra (termelés vagy továbbosztás). Az alábbi választás minden érintett sorra vonatkozik.',
+      step_production: 'Termelés',
+      step_distribution: 'Továbbosztás',
+      next_distribution: 'Tovább: továbbosztás',
+      back_production: 'Vissza: termelés',
+      save_production_only: 'Csak termelés mentése',
+      save_production_and_distribution: 'Termelés és továbbosztás mentése',
+      distribution_produced: 'Mai termelés összesen: %{count} db',
+      distribution_remaining: 'Még kiosztatlan: %{count} db',
+      distribution_over_limit:
+        'A kiosztás %{count} db-tal meghaladja a mai termelést. A mentés engedélyezett (azt az előző napi raktár adagokból osztjuk ki).',
+      distribution_rate:
+        'Árfolyam (%{from} → %{to}): %{rate}, érvényes %{date} óta',
+      distribution_rate_missing:
+        'Nincs %{from} → %{to} árfolyam a kiválasztott napra; az értékesítési sorok nem menthetők.',
+      distribution_no_members:
+        'Nincs tag a(z) „%{org}” szervezetben ehhez a naphoz.',
+      distribution_members_failed: 'A taglista betöltése nem sikerült.',
       description: {
         egg: 'Napi tojás — %{organization}: %{amount} db',
+        egg_distribution_internal:
+          'Tojás továbbosztás (belső) — %{member}: %{amount} db',
+        egg_distribution_sale_egg:
+          'Tojás eladás (tojás) — %{member}: %{amount} db',
+        egg_distribution_cash:
+          'Tojás eladás (kp befizetés) — %{member}: %{amount} db → %{revenue} Ft',
+        egg_distribution_revenue:
+          'Tojás eladás (bevétel) — %{member}: %{amount} db → %{revenue} Ft',
       },
     },
     login_google: 'Bejelentkezés Google-lel',

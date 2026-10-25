@@ -1,0 +1,20 @@
+[
+  {
+    "fromCurrencyCode": "KOR",
+    "toCurrencyCode": "HUF",
+    "rate": 600,
+    "validFrom": "2020-01-01T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "HOUR",
+    "toCurrencyCode": "HUF",
+    "rate": 3000,
+    "validFrom": "2020-01-01T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "HUF",
+    "toCurrencyCode": "EUR",
+    "rate": 0.0026,
+    "validFrom": "2020-01-01T00:00:00.000Z"
+  }
+]
