@@ -1,5 +1,11 @@
 import type { DataProvider, Identifier } from 'react-admin';
 
+export type { AccountProfile } from './accountProfiles';
+export {
+  accountChoicesForProfile as accountChoicesForSelect,
+  filterAccountsByProfile as filterAccountChoices,
+} from './accountProfiles';
+
 export type AccountChoice = {
   id: Identifier;
   code?: string | null;
@@ -22,73 +28,26 @@ export const CREDIT_CODES = parseCodeRegex(
 );
 
 export function isDebitCode(code: string | null | undefined): boolean {
-  return DEBIT_CODES.test(normalizeCode(code));
+  return DEBIT_CODES.test(normalizeAccountCode(code));
 }
 
 export function isCreditCode(code: string | null | undefined): boolean {
-  return CREDIT_CODES.test(normalizeCode(code));
+  return CREDIT_CODES.test(normalizeAccountCode(code));
 }
 
-/** Egg daily entry workflow (see eggDailyEntry.config on egg-daily-entry branch). */
-export const EGG_DEBIT_ACCOUNT_CODE = '1300';
-export const EGG_CREDIT_ACCOUNT_CODE = '4500';
-
-/** Empty string means every account; cost and egg are client-side review filters only. */
-export type AccountProfile = '' | 'cost' | 'egg';
-
-function accountMatchesProfile(
-  account: AccountChoice,
-  kind: 'debit' | 'credit',
-  profile: AccountProfile,
-): boolean {
-  if (profile === '') return true;
-  if (profile === 'cost') {
-    return kind === 'debit'
-      ? isDebitCode(account.code)
-      : isCreditCode(account.code);
-  }
-  const code = normalizeCode(account.code);
-  return kind === 'debit'
-    ? code === EGG_DEBIT_ACCOUNT_CODE
-    : code === EGG_CREDIT_ACCOUNT_CODE;
+export function normalizeAccountCode(code: string | null | undefined): string {
+  return typeof code === 'string' ? code.trim() : '';
 }
 
-function sortAccountChoices(accounts: AccountChoice[]): AccountChoice[] {
+export function sortAccountChoices(accounts: AccountChoice[]): AccountChoice[] {
   return [...accounts].sort((left, right) => {
-    const byCode = normalizeCode(left.code).localeCompare(
-      normalizeCode(right.code),
+    const byCode = normalizeAccountCode(left.code).localeCompare(
+      normalizeAccountCode(right.code),
       'hu',
     );
     if (byCode !== 0) return byCode;
     return String(left.name ?? '').localeCompare(String(right.name ?? ''), 'hu');
   });
-}
-
-export function filterAccountChoices(
-  accounts: AccountChoice[],
-  kind: 'debit' | 'credit',
-  profile: AccountProfile = 'cost',
-): AccountChoice[] {
-  return sortAccountChoices(
-    accounts.filter((account) => accountMatchesProfile(account, kind, profile)),
-  );
-}
-
-/** Keeps the current selection visible when it falls outside the active profile filter. */
-export function accountChoicesForSelect(
-  accounts: AccountChoice[],
-  kind: 'debit' | 'credit',
-  profile: AccountProfile,
-  selectedId: unknown,
-): AccountChoice[] {
-  const filtered = filterAccountChoices(accounts, kind, profile);
-  if (selectedId === null || selectedId === undefined || selectedId === '') {
-    return filtered;
-  }
-  const id = String(selectedId);
-  if (filtered.some((row) => String(row.id) === id)) return filtered;
-  const selected = accounts.find((row) => String(row.id) === id);
-  return selected ? sortAccountChoices([...filtered, selected]) : filtered;
 }
 
 export function accountChoiceLabel(account: AccountChoice): string {
@@ -138,6 +97,3 @@ export function parseCodeRegex(value: string | undefined, fallback: RegExp): Reg
   return flags === pattern.flags ? pattern : new RegExp(pattern.source, flags);
 }
 
-function normalizeCode(code: string | null | undefined): string {
-  return typeof code === 'string' ? code.trim() : '';
-}

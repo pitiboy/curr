@@ -1,14 +1,6 @@
 import CheckIcon from '@mui/icons-material/Check';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import {
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import {
   useCallback,
@@ -36,7 +28,6 @@ import {
   TextInput,
   useBlocker,
   useCanBlock,
-  useDataProvider,
   useGetIdentity,
   useNotify,
   useRefresh,
@@ -44,13 +35,6 @@ import {
   type RaRecord,
 } from 'react-admin';
 
-import {
-  accountChoiceLabel,
-  accountChoicesForSelect,
-  loadAllAccounts,
-  type AccountChoice,
-  type AccountProfile,
-} from '../../data/accountCodes';
 import {
   attachTransactionReceipt,
   publishTransaction,
@@ -68,8 +52,9 @@ import {
   type TransactionRow,
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
-import { AccountFieldLabel } from './accountField';
+import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { dateFieldProps } from './dateField';
+import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
@@ -104,149 +89,6 @@ function codeOrNameFilterToQuery(searchText: string) {
   return {
     $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
   };
-}
-
-function useAccountCatalog() {
-  const dataProvider = useDataProvider();
-  const [accounts, setAccounts] = useState<AccountChoice[]>([]);
-  const [isPending, setPending] = useState(true);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadAllAccounts((resource, params) =>
-      dataProvider.getList(resource, params),
-    )
-      .then((rows) => {
-        if (!cancelled) setAccounts(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setPending(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dataProvider]);
-
-  return { accounts, isPending, failed };
-}
-
-function ReviewAccountInput({
-  accounts,
-  failed,
-  isPending,
-  kind,
-  profile,
-  source,
-}: {
-  accounts: AccountChoice[];
-  failed: boolean;
-  isPending: boolean;
-  kind: 'debit' | 'credit';
-  profile: AccountProfile;
-  source: string;
-}) {
-  const translate = useTranslate();
-  const selectedId = useWatch({ name: source });
-  const choices = accountChoicesForSelect(
-    accounts,
-    kind,
-    profile,
-    selectedId,
-  ).map((account) => ({
-    id: account.id,
-    name: accountChoiceLabel(account),
-  }));
-
-  return (
-    <Box>
-      <AutocompleteInput
-        choices={choices}
-        fullWidth
-        isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} required />}
-        source={source}
-        translateChoice={false}
-        validate={requiredMark}
-      />
-      {!isPending && !failed && choices.length === 0 ? (
-        <Typography color="warning.main" variant="body2">
-          {translate('app.accounts_seed_missing')}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-}
-
-function AccountProfileSelect({
-  profile,
-  onProfileChange,
-}: {
-  profile: AccountProfile;
-  onProfileChange: (profile: AccountProfile) => void;
-}) {
-  const translate = useTranslate();
-  const label = translate('app.account_profile');
-
-  return (
-    <FormControl fullWidth>
-      <InputLabel id="review-account-profile-label">{label}</InputLabel>
-      <Select
-        displayEmpty
-        id="review-account-profile"
-        label={label}
-        labelId="review-account-profile-label"
-        value={profile}
-        onChange={(event) =>
-          onProfileChange(event.target.value as AccountProfile)
-        }
-      >
-        <MenuItem value="">{translate('app.account_profile_all')}</MenuItem>
-        <MenuItem value="cost">{translate('app.account_profile_cost')}</MenuItem>
-        <MenuItem value="egg">{translate('app.account_profile_egg')}</MenuItem>
-      </Select>
-    </FormControl>
-  );
-}
-
-function ReviewAccountRow({
-  catalog,
-}: {
-  catalog: ReturnType<typeof useAccountCatalog>;
-}) {
-  const [profile, setProfile] = useState<AccountProfile>('');
-
-  return (
-    <Box
-      className={bandedSpanClass}
-      sx={{
-        display: 'grid',
-        gap: 2,
-        gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
-      }}
-    >
-      <AccountProfileSelect profile={profile} onProfileChange={setProfile} />
-      <ReviewAccountInput
-        accounts={catalog.accounts}
-        failed={catalog.failed}
-        isPending={catalog.isPending}
-        kind="credit"
-        profile={profile}
-        source="credit_account"
-      />
-      <ReviewAccountInput
-        accounts={catalog.accounts}
-        failed={catalog.failed}
-        isPending={catalog.isPending}
-        kind="debit"
-        profile={profile}
-        source="debit_account"
-      />
-    </Box>
-  );
 }
 
 function DescriptionInput() {
@@ -348,7 +190,13 @@ function ReviewEditableFields({
         />
       </ReferenceInput>
       <DescriptionInput />
-      <ReviewAccountRow catalog={catalog} />
+      <TransactionAccountProfileRow
+        accounts={catalog.accounts}
+        defaultProfile=""
+        failed={catalog.failed}
+        isPending={catalog.isPending}
+        requireAccounts
+      />
     </>
   );
 }
