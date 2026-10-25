@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildBackofficeConfig } from '../../../../src/api/backoffice/config';
 import {
   KNOWN_BACKOFFICE_WORKFLOWS,
   selectWorkflows,
 } from '../../../../src/api/backoffice/workflows';
+import { parseBackofficeConfig } from './parseBackofficeConfig';
 import {
   effectiveWorkflows,
   parseWorkflowOverride,
@@ -11,6 +13,30 @@ import {
 } from './effectiveWorkflows';
 import { eggDailyEntryConfig } from './bulk-quantity/configs/eggDailyEntry.config';
 import { userMenuEntries } from './userMenuEntries';
+
+describe('buildBackofficeConfig', () => {
+  it('includes publisherMustDiffer from CONTENT_PUBLISHER_MUST_DIFFER', () => {
+    expect(
+      buildBackofficeConfig({ CONTENT_PUBLISHER_MUST_DIFFER: 'false' }),
+    ).toMatchObject({
+      publisherMustDiffer: false,
+      available: ['member-fee', 'egg-daily-entry'],
+    });
+    expect(buildBackofficeConfig({})).toMatchObject({
+      publisherMustDiffer: true,
+    });
+  });
+});
+
+describe('parseBackofficeConfig', () => {
+  it('reads publisherMustDiffer and defaults to true', () => {
+    expect(parseBackofficeConfig(null).publisherMustDiffer).toBe(true);
+    expect(
+      parseBackofficeConfig({ enabled: [], available: [], publisherMustDiffer: false })
+        .publisherMustDiffer,
+    ).toBe(false);
+  });
+});
 
 describe('selectWorkflows', () => {
   it('enables known env tokens in catalog order and hides the rest', () => {

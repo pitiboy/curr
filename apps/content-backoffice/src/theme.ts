@@ -190,6 +190,22 @@ const mobileChrome: ThemeOptions = {
         }),
       },
     },
+    // Default RA slides the bulk bar upward (negative translateY). Our list card and
+    // layout use overflow clipping, so that bar was invisible despite row selection.
+    RaBulkActionsToolbar: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          [`& .RaBulkActionsToolbar-toolbar`]: {
+            position: 'relative',
+            transform: 'none',
+            marginBottom: theme.spacing(0.5),
+          },
+          [`& .RaBulkActionsToolbar-collapsed`]: {
+            marginBottom: 0,
+          },
+        }),
+      },
+    },
     RaAppBar: {
       styleOverrides: {
         toolbar: ({ theme }) => ({

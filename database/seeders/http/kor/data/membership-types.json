@@ -2,26 +2,41 @@
   {
     "name": "Bentlakó tag",
     "description": "Teljes jogú tag, aki a szövetkezeti birtokon lakik",
-    "color": "#10B981"
+    "color": "#10B981",
+    "rules": {
+      "egg": { "mode": "internal", "ratio": 1 }
+    }
   },
   {
     "name": "Társult tag",
     "description": "Társult tag, aki támogatja a szövetkezetet",
-    "color": "#3B82F6"
+    "color": "#3B82F6",
+    "rules": {
+      "egg": { "mode": "internal", "ratio": 1 }
+    }
   },
   {
     "name": "Pártoló tag",
     "description": "Pártoló tag, aki segíti a szövetkezet munkáját",
-    "color": "#8B5CF6"
+    "color": "#8B5CF6",
+    "rules": {
+      "egg": { "mode": "sale", "ratio": 1 }
+    }
   },
   {
     "name": "Partner / Bedolgozó",
     "description": "Közreműködő, aki segíti a munkát, de nem tag",
-    "color": "#F43F5E"
+    "color": "#F43F5E",
+    "rules": {
+      "egg": { "mode": "sale", "ratio": 1 }
+    }
   },
   {
     "name": "Érdeklődő",
     "description": "Érdeklődő személy, aki még nem tag",
-    "color": "#F59E0B"
+    "color": "#F59E0B",
+    "rules": {
+      "egg": { "mode": "sale", "ratio": 0.75 }
+    }
   }
 ]

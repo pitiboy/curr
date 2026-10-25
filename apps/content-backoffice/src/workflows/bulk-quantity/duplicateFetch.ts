@@ -32,20 +32,27 @@ async function fetchStatusMatches(
   return json.data ?? [];
 }
 
-export async function findDuplicateForRow(
+export async function findDuplicateForTransaction(
   httpClient: ContentHttpClient,
   strapiUrl: string,
   input: {
     date: string;
-    row: BulkQuantityRow;
+    organizationId: string;
+    organizationLabel: string;
+    amount: number;
     currencyTypeId: string;
     debitAccountId: string;
     creditAccountId: string;
   },
 ): Promise<BulkQuantityDuplicate | null> {
+  const row: BulkQuantityRow = {
+    organizationId: input.organizationId,
+    organizationName: input.organizationLabel,
+    amount: input.amount,
+  };
   const filters = duplicateQueryFilters({
     date: input.date,
-    organizationId: input.row.organizationId,
+    organizationId: input.organizationId,
     currencyTypeId: input.currencyTypeId,
     debitAccountId: input.debitAccountId,
     creditAccountId: input.creditAccountId,
@@ -62,8 +69,30 @@ export async function findDuplicateForRow(
     return null;
   }
   return {
-    row: input.row,
+    row,
     existingDocumentId: match.documentId,
     existingAmount: match.amount,
   };
+}
+
+export async function findDuplicateForRow(
+  httpClient: ContentHttpClient,
+  strapiUrl: string,
+  input: {
+    date: string;
+    row: BulkQuantityRow;
+    currencyTypeId: string;
+    debitAccountId: string;
+    creditAccountId: string;
+  },
+): Promise<BulkQuantityDuplicate | null> {
+  return findDuplicateForTransaction(httpClient, strapiUrl, {
+    date: input.date,
+    organizationId: input.row.organizationId,
+    organizationLabel: input.row.organizationName,
+    amount: input.row.amount,
+    currencyTypeId: input.currencyTypeId,
+    debitAccountId: input.debitAccountId,
+    creditAccountId: input.creditAccountId,
+  });
 }

@@ -69,6 +69,11 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 | mindkettő | `api::organization.organization.find`, `findOne` |
 | mindkettő | `api::account.account.find`, `findOne` |
 | mindkettő | `api::currency-type.currency-type.find`, `findOne` |
+| mindkettő | `api::currency-rate.currency-rate.find`, `findOne` |
+| mindkettő | `api::member.member.find`, `findOne` |
+| mindkettő | `api::membership.membership.find`, `findOne` |
+| mindkettő | `api::membership-type.membership-type.find`, `findOne` |
+| mindkettő | `api::transaction-type.transaction-type.find`, `findOne` |
 | mindkettő | `api::receipt-type.receipt-type.find`, `findOne` |
 | mindkettő | a content-api upload action (`plugin::upload.content-api.upload`, ha a getActions így hívja) |
 | mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs) |

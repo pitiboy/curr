@@ -1,4 +1,4 @@
-import { selectWorkflows } from '../workflows';
+import { buildBackofficeConfig } from '../config';
 
 type ConfigContext = {
   body: unknown;
@@ -6,6 +6,6 @@ type ConfigContext = {
 
 export default {
   config(ctx: ConfigContext) {
-    ctx.body = selectWorkflows(process.env.BACKOFFICE_WORKFLOWS);
+    ctx.body = buildBackofficeConfig(process.env);
   },
 };
