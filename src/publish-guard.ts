@@ -466,6 +466,10 @@ export function registerPublishGuard(
   loadPolicy: PublishPolicyLoader = async () => readPublishPolicy(),
 ) {
   strapi.documents.use(async (context, next) => {
+    if (!GUARDED_UIDS.has(context.uid)) {
+      return next();
+    }
+
     const policy = await loadPolicy();
     const actor = await contentApiActor(strapi);
     const requestState = strapi.requestContext.get()?.state;
