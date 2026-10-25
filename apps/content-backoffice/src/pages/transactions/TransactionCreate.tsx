@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormState } from 'react-hook-form';
+import type { Middleware } from 'ra-core';
 import {
   AutocompleteInput,
   Confirm,
@@ -15,6 +16,7 @@ import {
   useBlocker,
   useCanBlock,
   useFormIsDirty,
+  useRegisterMutationMiddleware,
   useTranslate,
   type RaRecord,
 } from 'react-admin';
@@ -52,13 +54,36 @@ function DraftSaveToolbar() {
   );
 }
 
-function CreateLeaveGuard({ receiptCardCount }: { receiptCardCount: number }) {
+function CreateSaveSucceededMarker({
+  onSaveSucceeded,
+}: {
+  onSaveSucceeded: () => void;
+}) {
+  const middleware = useCallback<Middleware>(
+    async (resource, params, next) => {
+      const result = await next(resource, params);
+      onSaveSucceeded();
+      return result;
+    },
+    [onSaveSucceeded],
+  );
+  useRegisterMutationMiddleware(middleware);
+  return null;
+}
+
+function CreateLeaveGuard({
+  receiptCardCount,
+  saveSucceeded,
+}: {
+  receiptCardCount: number;
+  saveSucceeded: boolean;
+}) {
   const formDirty = useFormIsDirty();
   const { isSubmitSuccessful } = useFormState();
   const dirtyRef = useRef(false);
   const submittedRef = useRef(false);
   dirtyRef.current = formDirty || receiptCardCount > 0;
-  submittedRef.current = isSubmitSuccessful;
+  submittedRef.current = isSubmitSuccessful || saveSucceeded;
   const unsaved = dirtyRef.current && !submittedRef.current;
 
   useEffect(() => {
@@ -73,16 +98,35 @@ function CreateLeaveGuard({ receiptCardCount }: { receiptCardCount: number }) {
 
   const canBlock = useCanBlock();
   if (!canBlock) return null;
-  return <CreateLeaveBlocker dirtyRef={dirtyRef} submittedRef={submittedRef} />;
+  const submitted = isSubmitSuccessful || saveSucceeded;
+
+  return (
+    <CreateLeaveBlocker
+      dirty={dirtyRef.current}
+      dirtyRef={dirtyRef}
+      submitted={submitted}
+      submittedRef={submittedRef}
+    />
+  );
 }
 
 function CreateLeaveBlocker({
+  dirty,
   dirtyRef,
+  submitted,
   submittedRef,
 }: {
+  dirty: boolean;
   dirtyRef: { current: boolean };
+  submitted: boolean;
   submittedRef: { current: boolean };
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const pendingNavigationRef = useRef<{
+    currentPathname: string;
+    nextPathname: string;
+  } | null>(null);
+
   const shouldBlock = useCallback(
     ({
       currentLocation,
@@ -90,22 +134,43 @@ function CreateLeaveBlocker({
     }: {
       currentLocation: { pathname: string };
       nextLocation: { pathname: string };
-    }) =>
-      shouldConfirmDirtyCreateLeave({
+    }) => {
+      pendingNavigationRef.current = {
+        currentPathname: currentLocation.pathname,
+        nextPathname: nextLocation.pathname,
+      };
+      return shouldConfirmDirtyCreateLeave({
         dirty: dirtyRef.current,
         submitted: submittedRef.current,
         currentPathname: currentLocation.pathname,
         nextPathname: nextLocation.pathname,
-      }),
+      });
+    },
     [dirtyRef, submittedRef],
   );
   const blocker = useBlocker(shouldBlock);
 
   useEffect(() => {
-    if (blocker.state !== 'blocked') return;
-    if (dirtyRef.current && !submittedRef.current) return;
-    blocker.proceed?.();
-  }, [blocker, dirtyRef, submittedRef]);
+    if (blocker.state !== 'blocked') {
+      setConfirmOpen(false);
+      return;
+    }
+    const pending = pendingNavigationRef.current;
+    const shouldConfirm =
+      pending != null &&
+      shouldConfirmDirtyCreateLeave({
+        dirty: dirtyRef.current,
+        submitted: submittedRef.current,
+        currentPathname: pending.currentPathname,
+        nextPathname: pending.nextPathname,
+      });
+    if (!shouldConfirm) {
+      setConfirmOpen(false);
+      blocker.proceed?.();
+      return;
+    }
+    setConfirmOpen(true);
+  }, [blocker.state, dirty, submitted, dirtyRef, submittedRef, blocker]);
 
   return (
     <Confirm
@@ -113,10 +178,16 @@ function CreateLeaveBlocker({
       confirm="app.transactions_leave_go"
       confirmColor="warning"
       content="app.transactions_leave_unsaved_body"
-      isOpen={blocker.state === 'blocked'}
+      isOpen={confirmOpen}
       title="app.transactions_leave_unsaved_title"
-      onClose={() => blocker.reset?.()}
-      onConfirm={() => blocker.proceed?.()}
+      onClose={() => {
+        setConfirmOpen(false);
+        blocker.reset?.();
+      }}
+      onConfirm={() => {
+        setConfirmOpen(false);
+        blocker.proceed?.();
+      }}
     />
   );
 }
@@ -126,6 +197,8 @@ export function TransactionCreate() {
   const catalog = useAccountCatalog();
   const translate = useTranslate();
   const [receiptCards, setReceiptCards] = useState<ReceiptCardValue[]>([]);
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
+  const onSaveSucceeded = useCallback(() => setSaveSucceeded(true), []);
 
   return (
     <Create
@@ -148,7 +221,11 @@ export function TransactionCreate() {
           )
         }
       >
-        <CreateLeaveGuard receiptCardCount={receiptCards.length} />
+        <CreateSaveSucceededMarker onSaveSucceeded={onSaveSucceeded} />
+        <CreateLeaveGuard
+          receiptCardCount={receiptCards.length}
+          saveSucceeded={saveSucceeded}
+        />
 
         <DateInput fullWidth source="date" validate={required()} />
         <ReferenceInput
