@@ -14,6 +14,30 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',
     transactions_finalized: 'Transaction finalized.',
+    transactions_bulk_finalize: 'Finalize',
+    transactions_bulk_finalize_title:
+      'Finalize %{smart_count} transaction |||| Finalize %{smart_count} transactions',
+    transactions_bulk_finalize_body:
+      'Selected transactions and receipts stay unchanged. Only the publish action runs.',
+    transactions_bulk_finalize_body_partial:
+      '%{ready} transaction(s) will be finalized. %{skipped} selection(s) will be skipped (incomplete data, or entered by you — you cannot publish your own entries).',
+    transactions_bulk_finalize_body_partial_no_self_block:
+      '%{ready} transaction(s) will be finalized. %{skipped} selection(s) will be skipped (incomplete data or not eligible to finalize).',
+    transactions_bulk_finalize_confirm: 'Finalize',
+    transactions_bulk_done:
+      '%{smart_count} transaction finalized. |||| %{smart_count} transactions finalized.',
+    transactions_bulk_incomplete:
+      '%{smart_count} selected row is incomplete and cannot be finalized. |||| %{smart_count} selected rows are incomplete and cannot be finalized.',
+    transactions_bulk_same_person:
+      '%{smart_count} selected row was entered by you and cannot be finalized. |||| %{smart_count} selected rows were entered by you and cannot be finalized.',
+    transactions_bulk_skipped_incomplete:
+      'Skipped %{smart_count} incomplete transaction. |||| Skipped %{smart_count} incomplete transactions.',
+    transactions_bulk_skipped_same_person:
+      'Skipped %{smart_count} transaction you entered. |||| Skipped %{smart_count} transactions you entered.',
+    transactions_bulk_failed:
+      'Failed to finalize %{smart_count} transaction. |||| Failed to finalize %{smart_count} transactions.',
+    transactions_bulk_none_ready:
+      'None of the selected transactions can be finalized.',
     transactions_finalize_hint:
       'This transaction is not finalized yet, which means it will not appear in financial statements. Once you have reviewed and found the data and attached receipts to be correct, finalize the transaction and its receipts.',
     transactions_finalize_no_receipt:
@@ -31,6 +55,13 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_leave_stay: 'Stay',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
+    account_profile: 'Account profile',
+    account_profile_all: 'All accounts',
+    account_profile_cost: 'Expense',
+    account_profile_revenue: 'Revenue',
+    account_profile_egg_production: 'Eggs — production',
+    account_profile_egg_internal: 'Eggs — internal distribution',
+    account_profile_egg_sale: 'Eggs — sale',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
@@ -51,6 +82,55 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags: 'Feature flags',
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
+    workflows: {
+      'egg-daily-entry': 'Daily egg entry',
+      'member-fee': 'Member fee',
+    },
+    bulk_quantity: {
+      save: 'Save',
+      catalog_missing:
+        'Required master data is missing (hen house, account, currency, or transaction type).',
+      no_hen_houses: 'No hen houses found under the parent organization.',
+      no_rows: 'Enter at least one non-zero quantity.',
+      invalid_quantity: 'Whole number, 0 or greater.',
+      results_heading: 'Save results',
+      retry_failed: 'Retry failed rows',
+      conflict_title: 'Entry already exists for this day',
+      conflict_body:
+        'A transaction already exists for the same day, hen house, and account pair. Choose what to do for each row.',
+      conflict_existing: 'Existing amount: %{amount}',
+      conflict_update: 'Update existing row',
+      conflict_insert: 'Insert as new row',
+      conflict_continue: 'Continue',
+      conflict_global_body:
+        'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
+      step_production: 'Production',
+      step_distribution: 'Distribution',
+      next_distribution: 'Next: distribution',
+      back_production: 'Back: production',
+      save_production_only: 'Save production only',
+      save_production_and_distribution: 'Save production and distribution',
+      distribution_produced: 'Total produced today: %{count}',
+      distribution_remaining: 'Still unallocated: %{count}',
+      distribution_over_limit:
+        'Distribution exceeds today’s production by %{count}. Overspending is allowed ( which will be deducted from earlier stock).',
+      distribution_rate: 'Rate (%{from} → %{to}): %{rate}, valid since %{date}',
+      distribution_rate_missing:
+        'No %{from} → %{to} rate for the selected day; sale rows cannot be saved.',
+      distribution_no_members:
+        'No members in organization “%{org}” for this date.',
+      distribution_members_failed: 'Could not load the member list.',
+      description: {
+        egg: 'Daily eggs — %{organization}: %{amount}',
+        egg_distribution_internal:
+          'Egg distribution (internal) — %{member}: %{amount}',
+        egg_distribution_sale_egg: 'Egg sale (eggs) — %{member}: %{amount}',
+        egg_distribution_cash:
+          'Egg sale (cash payment) — %{member}: %{amount} → %{revenue}',
+        egg_distribution_revenue:
+          'Egg sale (revenue) — %{member}: %{amount} → %{revenue}',
+      },
+    },
     login_google: 'Sign in with Google',
     oauth_errors: {
       register_not_available:

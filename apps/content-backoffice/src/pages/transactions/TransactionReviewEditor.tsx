@@ -28,19 +28,13 @@ import {
   TextInput,
   useBlocker,
   useCanBlock,
-  useDataProvider,
+  useGetIdentity,
   useNotify,
   useRefresh,
   useTranslate,
   type RaRecord,
 } from 'react-admin';
 
-import {
-  accountChoiceLabel,
-  filterAccountChoices,
-  loadAllAccounts,
-  type AccountChoice,
-} from '../../data/accountCodes';
 import {
   attachTransactionReceipt,
   publishTransaction,
@@ -49,15 +43,18 @@ import {
 import { receiptCardInvalid, receiptCount } from '../../data/receiptDraft';
 import {
   isSamePersonPublishError,
+  samePersonPublishBlocked,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
+import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 import {
   firstReceiptVendor,
   type TransactionRow,
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
-import { AccountFieldLabel } from './accountField';
+import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { dateFieldProps } from './dateField';
+import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
@@ -92,73 +89,6 @@ function codeOrNameFilterToQuery(searchText: string) {
   return {
     $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
   };
-}
-
-function useAccountCatalog() {
-  const dataProvider = useDataProvider();
-  const [accounts, setAccounts] = useState<AccountChoice[]>([]);
-  const [isPending, setPending] = useState(true);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadAllAccounts((resource, params) =>
-      dataProvider.getList(resource, params),
-    )
-      .then((rows) => {
-        if (!cancelled) setAccounts(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setPending(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dataProvider]);
-
-  return { accounts, isPending, failed };
-}
-
-function ReviewAccountInput({
-  accounts,
-  failed,
-  isPending,
-  kind,
-  source,
-}: {
-  accounts: AccountChoice[];
-  failed: boolean;
-  isPending: boolean;
-  kind: 'debit' | 'credit';
-  source: string;
-}) {
-  const translate = useTranslate();
-  const choices = filterAccountChoices(accounts, kind).map((account) => ({
-    id: account.id,
-    name: accountChoiceLabel(account),
-  }));
-
-  return (
-    <Box>
-      <AutocompleteInput
-        choices={choices}
-        fullWidth
-        isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} required />}
-        source={source}
-        translateChoice={false}
-        validate={requiredMark}
-      />
-      {!isPending && !failed && choices.length === 0 ? (
-        <Typography color="warning.main" variant="body2">
-          {translate('app.accounts_seed_missing')}
-        </Typography>
-      ) : null}
-    </Box>
-  );
 }
 
 function DescriptionInput() {
@@ -260,19 +190,12 @@ function ReviewEditableFields({
         />
       </ReferenceInput>
       <DescriptionInput />
-      <ReviewAccountInput
+      <TransactionAccountProfileRow
         accounts={catalog.accounts}
+        defaultProfile=""
         failed={catalog.failed}
         isPending={catalog.isPending}
-        kind="credit"
-        source="credit_account"
-      />
-      <ReviewAccountInput
-        accounts={catalog.accounts}
-        failed={catalog.failed}
-        isPending={catalog.isPending}
-        kind="debit"
-        source="debit_account"
+        requireAccounts
       />
     </>
   );
@@ -330,10 +253,12 @@ function FinalizeSection({
   blocked,
   documentId,
   missingReceipt,
+  samePersonBlocked,
 }: {
   blocked: boolean;
   documentId: string;
   missingReceipt: boolean;
+  samePersonBlocked: boolean;
 }) {
   const translate = useTranslate();
   const notify = useNotify();
@@ -343,7 +268,7 @@ function FinalizeSection({
   const savingRef = useRef(false);
 
   const onFinalize = () => {
-    if (blocked || savingRef.current) return;
+    if (blocked || samePersonBlocked || savingRef.current) return;
 
     const values = getValues() as Record<string, unknown>;
     clearErrors();
@@ -405,8 +330,13 @@ function FinalizeSection({
             {translate('app.transactions_finalize_pending')}
           </Typography>
         ) : null}
+        {samePersonBlocked ? (
+          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
+            {translate('app.transactions_finalize_same_person')}
+          </Typography>
+        ) : null}
         <Button
-          disabled={blocked || saving}
+          disabled={blocked || samePersonBlocked || saving}
           type="button"
           variant="contained"
           onClick={onFinalize}
@@ -549,11 +479,24 @@ export function TransactionReviewEditor({
   record: TransactionRow;
 }) {
   const catalog = useAccountCatalog();
+  const { publisherMustDiffer } = useBackofficeConfig();
+  const { identity } = useGetIdentity();
   const flatRecord = useMemo(() => reviewFormRecord(record), [record]);
   const pendingReceipt = cards.some((card) => card.file && card.file.size > 0);
   const blocked =
     pendingReceipt || cards.some((card) => receiptCardInvalid(card));
   const missingReceipt = receiptCount(record.receipts) === 0;
+  const editorEmail =
+    identity && typeof identity.email === 'string' ? identity.email : '';
+  const samePersonBlocked = useMemo(
+    () =>
+      samePersonPublishBlocked(
+        record.entered_by,
+        editorEmail,
+        publisherMustDiffer,
+      ),
+    [record.entered_by, editorEmail, publisherMustDiffer],
+  );
 
   return (
     <>
@@ -582,6 +525,7 @@ export function TransactionReviewEditor({
           blocked={blocked}
           documentId={record.documentId}
           missingReceipt={missingReceipt}
+          samePersonBlocked={samePersonBlocked}
         />
       </SimpleForm>
       <SimpleShowLayout spacing={0} sx={bandedShow}>

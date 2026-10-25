@@ -32,6 +32,7 @@ describe('transactionDraftBody', () => {
       debit_account: 'debit-1',
       credit_account: 'credit-1',
       currency_type: 'currency-1',
+      transaction_type: 'type-1',
     });
   });
 

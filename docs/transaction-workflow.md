@@ -14,7 +14,7 @@ Az **ügylet** a teljes gazdasági esemény. Egy kitöltésből több sor szüle
 
 A **tranzakció** egy sor: egy tartozik, egy követel, egy összeg, egy pénznem. A mostani felület ezt mutatja: `Tranzakció` / `Tranzakciók` a [hu.ts](../apps/content-backoffice/src/i18n/hu.ts)-ben, `Transaction` / `Transactions` az [en.ts](../apps/content-backoffice/src/i18n/en.ts)-ben. Ezek a képernyők egy sort szerkesztenek, a feliratuk tranzakció marad.
 
-A belső collection neve lehet `posting-workflow`. A felhasználó az Ügylet szót látja.
+A belső collection neve lehet `transaction-workflow` vagy `accounting-workflow`. A felhasználó az `Ügylet` szót látja.
 
 ## Mit rögzít egy sor
 
@@ -347,6 +347,58 @@ A darabszámla és a forint bevétel külön pénznem. A tojásnak ebben a model
 
 Seedből hiányzik: `EGG`, `4500`, `1900`, és a Tojóól szervezeti csomópont.
 
+### Napi tojás rögzítés (edizone backoffice)
+
+Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
+
+Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Könyvelés soronként:
+
+| Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
+| --- | --- | --- | --- | --- | --- |
+| `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab | EGG | az adott tyúkól | `Átvezetés` |
+
+Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A feature flag az edizone szerver `BACKOFFICE_WORKFLOWS` env-jében alapból engedélyezett; más példányon rejtett. Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
+
+### Napi tojás továbbosztás (edizone backoffice, 2. lépés)
+
+A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.member` → tag, `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
+
+A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
+
+| Szabály | Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
+| --- | --- | --- | --- | --- | --- | --- |
+| `internal` | tag `1001` saját számla | `1300` Készletek | db | EGG | `Tyúktartás` | `Átvezetés` |
+| `sale` — tojás | tag `1001` saját számla | `1300` Készletek | db | EGG | ugyanaz | `Átvezetés` |
+| `sale` — kp befizetés | `1000` Készpénz | tag `1001` saját számla | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz | `Készpénz` |
+| `sale` — bevétel | `4000` Értékesítés bevétele | `1000` Készpénz | ugyanaz | HUF | ugyanaz | `Átvezetés` |
+
+Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
+
+Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár (termelés és továbbosztás ugyanígy). Ha bármelyik lépéshez talál meglévő sort, egy párbeszéd kínál **új sor** vagy **meglévő frissítése** választást; a választás **minden** érintett sorra vonatkozik (termelés + továbbosztás).
+
+```mermaid
+sequenceDiagram
+  participant BO as Backoffice (2 lepes)
+  participant Ol as Tyukol (termelés)
+  participant Keszlet as 1300 Keszletek
+  participant Tag as 1001 sajat szamla
+  participant Penztar as 1000 Keszpenz
+  participant Ert as 4000 Bevetel
+
+  BO->>Ol: 1. lepes — termelés sorok (1300 ← 4500)
+  BO->>BO: 2. lepes — tagonkénti db
+  alt bentlakó / társult (internal)
+    Keszlet->>Tag: EGG atvezetés (1001 ← 1300)
+  else értékesítési típus (sale)
+    Keszlet->>Tag: tojás (1001 ← 1300), EGG
+    Tag->>Penztar: kp befizetés (1000 ← 1001), HUF
+    Penztar->>Ert: bevétel (1000 → 4000), HUF, árfolyam + ratio
+  end
+  Note over Keszlet: kiosztatlan db a 1300-on marad
+```
+
+**Későbbi riport:** tervezett készletkimutatás (termelt vs. kiosztott vs. `1300` maradvány); a tranzakciós adatok erre lekérdezhetők (dátum, `1300`/`4500`/`1000`/`4000`, szervezet, EGG/HUF).
+
 ## Ügylet 3 — gyümölcs szürete és piaci eladása
 
 A gyümölcsfaligetben leszüretelt mennyiség készletre kerül. A piacra vitt rész kimegy a készletből, a befolyt forint a bevétel-blokkon át a `4000`-re kerül. A raktáron hagyott kiló a `1300`-on marad.
@@ -668,7 +720,7 @@ Seedből hiányzik: `1900`.
 
 Ez javaslat a későbbi egyszerűsített űrlaphoz. A collection és a resolver még nincs a kódban. A v1 képernyő ettől nem változik, és a `dataentry` továbbra sem publikál.
 
-A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A lépéssort egy külön collection írja le, kódban szállítva, draft nélkül. A belső neve `posting-workflow`. A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
+A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A lépéssort egy külön collection írja le, kódban szállítva, draft nélkül. A belső neve `transaction-workflow`. A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
 
 ### Ki mit csinál
 

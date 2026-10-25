@@ -36,6 +36,7 @@ export function BackofficeConfigProvider({
   const [server, setServer] = useState<BackofficeConfigResponse>({
     enabled: [],
     available: [],
+    publisherMustDiffer: true,
   });
   const [override, setOverrideState] = useState<string[] | null>(readOverride);
   const [ready, setReady] = useState(false);
@@ -50,7 +51,11 @@ export function BackofficeConfigProvider({
       })
       .catch(() => {
         if (active) {
-          setServer({ enabled: [], available: [] });
+          setServer({
+            enabled: [],
+            available: [],
+            publisherMustDiffer: true,
+          });
         }
       })
       .finally(() => {
@@ -87,6 +92,7 @@ export function BackofficeConfigProvider({
       effective: ready
         ? effectiveWorkflows(server.enabled, server.available, override)
         : [],
+      publisherMustDiffer: server.publisherMustDiffer,
       hasOverride: override !== null,
       ready,
       setOverride,

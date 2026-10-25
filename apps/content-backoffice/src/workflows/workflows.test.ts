@@ -1,29 +1,59 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildBackofficeConfig } from '../../../../src/api/backoffice/config';
 import {
   KNOWN_BACKOFFICE_WORKFLOWS,
   selectWorkflows,
 } from '../../../../src/api/backoffice/workflows';
+import { parseBackofficeConfig } from './parseBackofficeConfig';
 import {
   effectiveWorkflows,
   parseWorkflowOverride,
   visibleWorkflowForms,
 } from './effectiveWorkflows';
+import { eggDailyEntryConfig } from './bulk-quantity/configs/eggDailyEntry.config';
 import { userMenuEntries } from './userMenuEntries';
+
+describe('buildBackofficeConfig', () => {
+  it('includes publisherMustDiffer from CONTENT_PUBLISHER_MUST_DIFFER', () => {
+    expect(
+      buildBackofficeConfig({ CONTENT_PUBLISHER_MUST_DIFFER: 'false' }),
+    ).toMatchObject({
+      publisherMustDiffer: false,
+      available: ['member-fee', 'egg-daily-entry'],
+    });
+    expect(buildBackofficeConfig({})).toMatchObject({
+      publisherMustDiffer: true,
+    });
+  });
+});
+
+describe('parseBackofficeConfig', () => {
+  it('reads publisherMustDiffer and defaults to true', () => {
+    expect(parseBackofficeConfig(null).publisherMustDiffer).toBe(true);
+    expect(
+      parseBackofficeConfig({
+        enabled: [],
+        available: [],
+        publisherMustDiffer: false,
+      }).publisherMustDiffer,
+    ).toBe(false);
+  });
+});
 
 describe('selectWorkflows', () => {
   it('enables known env tokens in catalog order and hides the rest', () => {
     expect(KNOWN_BACKOFFICE_WORKFLOWS).toEqual([
       'member-fee',
-      'egg-production',
+      'egg-daily-entry',
     ]);
-    expect(selectWorkflows('egg-production, member-fee, unknown')).toEqual({
-      enabled: ['member-fee', 'egg-production'],
-      available: ['member-fee', 'egg-production'],
+    expect(selectWorkflows('egg-daily-entry, member-fee, unknown')).toEqual({
+      enabled: ['member-fee', 'egg-daily-entry'],
+      available: ['member-fee', 'egg-daily-entry'],
     });
     expect(selectWorkflows('not-a-workflow')).toEqual({
       enabled: [],
-      available: ['member-fee', 'egg-production'],
+      available: ['member-fee', 'egg-daily-entry'],
     });
   });
 
@@ -95,6 +125,14 @@ describe('visibleWorkflowForms', () => {
         (form) => form.id,
       ),
     ).toEqual(['member-fee']);
+  });
+});
+
+describe('egg daily entry config', () => {
+  it('uses the egg-daily-entry workflow id for both write roles', () => {
+    expect(eggDailyEntryConfig.workflowId).toBe('egg-daily-entry');
+    expect(eggDailyEntryConfig.path).toBe('/workflows/egg-daily-entry');
+    expect(eggDailyEntryConfig.roles).toEqual(['dataentry', 'editor']);
   });
 });
 

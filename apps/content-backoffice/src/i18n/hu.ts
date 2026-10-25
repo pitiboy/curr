@@ -14,6 +14,30 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',
     transactions_finalized: 'A tranzakció véglegesítve.',
+    transactions_bulk_finalize: 'Véglegesítés',
+    transactions_bulk_finalize_title:
+      '%{smart_count} tranzakció véglegesítése |||| %{smart_count} tranzakció véglegesítése',
+    transactions_bulk_finalize_body:
+      'A kijelölt tranzakciók és bizonylataik változatlanok maradnak; nem szerkesztünk adatot, csak véglegesítünk.',
+    transactions_bulk_finalize_body_partial:
+      'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat, vagy te rögzítetted — a szerző nem véglegesítheti a saját tranzakcióját).',
+    transactions_bulk_finalize_body_partial_no_self_block:
+      'Ebből %{ready} tranzakciót véglegesítünk. %{skipped} kijelölés kimarad (hiányos adat vagy nem véglegesíthető).',
+    transactions_bulk_finalize_confirm: 'Véglegesít',
+    transactions_bulk_done:
+      '%{smart_count} tranzakció véglegesítve. |||| %{smart_count} tranzakció véglegesítve.',
+    transactions_bulk_incomplete:
+      'A kijelöltek közül %{smart_count} még hiányos, ezért nem véglegesíthető. |||| A kijelöltek közül %{smart_count} még hiányos, ezért nem véglegesíthető.',
+    transactions_bulk_same_person:
+      'A kijelöltek közül %{smart_count} a saját rögzítésed, ezért nem véglegesíthető. |||| A kijelöltek közül %{smart_count} a saját rögzítésed, ezért nem véglegesíthető.',
+    transactions_bulk_skipped_incomplete:
+      '%{smart_count} hiányos tranzakció kimaradt. |||| %{smart_count} hiányos tranzakció kimaradt.',
+    transactions_bulk_skipped_same_person:
+      '%{smart_count} saját rögzítésű tranzakció kimaradt. |||| %{smart_count} saját rögzítésű tranzakció kimaradt.',
+    transactions_bulk_failed:
+      '%{smart_count} tranzakció véglegesítése sikertelen. |||| %{smart_count} tranzakció véglegesítése sikertelen.',
+    transactions_bulk_none_ready:
+      'Egyetlen kijelölt tranzakció sem véglegesíthető.',
     transactions_finalize_hint:
       'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg minden kimutatásban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
     transactions_finalize_no_receipt:
@@ -30,6 +54,13 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_leave_go: 'Elhagyom',
     transactions_leave_stay: 'Maradok',
     accounts_seed_missing: 'A számlalista üres, mert a seed hiányzik.',
+    account_profile: 'Számlaprofil',
+    account_profile_all: 'Minden számla',
+    account_profile_cost: 'Költség',
+    account_profile_revenue: 'Bevétel',
+    account_profile_egg_production: 'Tojás — termelés',
+    account_profile_egg_internal: 'Tojás — belső továbbosztás',
+    account_profile_egg_sale: 'Tojás — eladás',
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',
@@ -50,6 +81,57 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     feature_flags: 'Feature flagek',
     feature_flags_empty: 'Nincs kapcsolható ügylet.',
     feature_flags_reset: 'Szerver szerinti lista',
+    workflows: {
+      'egg-daily-entry': 'Napi tojás rögzítés',
+      'member-fee': 'Tagdíj',
+    },
+    bulk_quantity: {
+      save: 'Mentés',
+      catalog_missing:
+        'A szükséges törzsadat hiányzik (ól, számla, pénznem vagy tranzakciótípus).',
+      no_hen_houses: 'Nincs tyúkól a szervezeti fában.',
+      no_rows: 'Adj meg legalább egy nem nulla darabszámot.',
+      invalid_quantity: 'Egész szám, 0 vagy nagyobb.',
+      results_heading: 'Mentés eredménye',
+      retry_failed: 'Sikertelen sorok újrapróbálása',
+      conflict_title: 'Már van rögzítés erre a napra',
+      conflict_body:
+        'Ugyanerre a napra, ólra és könyvelési párosra már létezik tranzakció. Válaszd ki, mit tegyünk soronként.',
+      conflict_existing: 'Meglévő összeg: %{amount}',
+      conflict_update: 'Meglévő sor frissítése',
+      conflict_insert: 'Új sor felvétele',
+      conflict_continue: 'Folytatás',
+      conflict_global_body:
+        'Már van rögzítés erre a napra (termelés vagy továbbosztás). Az alábbi választás minden érintett sorra vonatkozik.',
+      step_production: 'Termelés',
+      step_distribution: 'Továbbosztás',
+      next_distribution: 'Tovább: továbbosztás',
+      back_production: 'Vissza: termelés',
+      save_production_only: 'Csak termelés mentése',
+      save_production_and_distribution: 'Termelés és továbbosztás mentése',
+      distribution_produced: 'Mai termelés összesen: %{count} db',
+      distribution_remaining: 'Még kiosztatlan: %{count} db',
+      distribution_over_limit:
+        'A kiosztás %{count} db-tal meghaladja a mai termelést. A mentés engedélyezett (azt az előző napi raktár adagokból osztjuk ki).',
+      distribution_rate:
+        'Árfolyam (%{from} → %{to}): %{rate}, érvényes %{date} óta',
+      distribution_rate_missing:
+        'Nincs %{from} → %{to} árfolyam a kiválasztott napra; az értékesítési sorok nem menthetők.',
+      distribution_no_members:
+        'Nincs tag a(z) „%{org}” szervezetben ehhez a naphoz.',
+      distribution_members_failed: 'A taglista betöltése nem sikerült.',
+      description: {
+        egg: 'Napi tojás — %{organization}: %{amount} db',
+        egg_distribution_internal:
+          'Tojás továbbosztás (belső) — %{member}: %{amount} db',
+        egg_distribution_sale_egg:
+          'Tojás eladás (tojás) — %{member}: %{amount} db',
+        egg_distribution_cash:
+          'Tojás eladás (kp befizetés) — %{member}: %{amount} db → %{revenue} Ft',
+        egg_distribution_revenue:
+          'Tojás eladás (bevétel) — %{member}: %{amount} db → %{revenue} Ft',
+      },
+    },
     login_google: 'Bejelentkezés Google-lel',
     oauth_errors: {
       register_not_available:

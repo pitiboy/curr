@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isSamePersonPublishError,
   publishTransactionDraft,
+  samePersonPublishBlocked,
   strapiErrorMessage,
   transactionPublishUrl,
 } from './transactionPublish';
@@ -34,6 +35,28 @@ describe('publishTransactionDraft', () => {
     expect(seen?.body).not.toContain('entered_by');
     expect(seen?.body).not.toContain('published_by');
     expect(seen?.url).not.toContain('status=published');
+  });
+});
+
+describe('samePersonPublishBlocked', () => {
+  it('matches emails case-insensitively when policy is on', () => {
+    expect(
+      samePersonPublishBlocked(
+        'Editor@Example.com',
+        'editor@example.com',
+        true,
+      ),
+    ).toBe(true);
+    expect(
+      samePersonPublishBlocked('other@example.com', 'editor@example.com', true),
+    ).toBe(false);
+    expect(
+      samePersonPublishBlocked(
+        'editor@example.com',
+        'editor@example.com',
+        false,
+      ),
+    ).toBe(false);
   });
 });
 

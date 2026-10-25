@@ -35,6 +35,7 @@ import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
 import { DescriptionText } from './DescriptionText';
+import { TransactionBulkApproveButton } from './TransactionBulkApproveButton';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -298,9 +299,15 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
   return columns;
 }
 
+function draftRowSelectable(record: RaRecord & { status?: string }) {
+  return record.status === 'draft';
+}
+
 export function TransactionList() {
   const [locale] = useLocaleState();
   const mobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const { permissions, isPending } = usePermissions();
+  const editorBulkApprove = !isPending && permissions === 'editor';
 
   return (
     <List
@@ -312,9 +319,12 @@ export function TransactionList() {
       sort={{ field: 'date', order: 'DESC' }}
     >
       <Datagrid
-        bulkActionButtons={false}
+        bulkActionButtons={
+          editorBulkApprove ? <TransactionBulkApproveButton /> : false
+        }
         empty={<TransactionListEmpty />}
         hover={false}
+        isRowSelectable={editorBulkApprove ? draftRowSelectable : undefined}
         rowClick={false}
         rowSx={bandedRow}
         sx={{

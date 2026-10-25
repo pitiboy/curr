@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-21T12:08:13.507Z"
+    "x-generation-date": "2026-10-25T10:20:01.240Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -10291,6 +10291,7 @@
         "properties": {
           "data": {
             "required": [
+              "membership_type",
               "valid_from"
             ],
             "type": "object",
@@ -10336,6 +10337,7 @@
                 "type": "string",
                 "format": "date-time"
               },
+              "rules": {},
               "locale": {
                 "type": "string"
               },
@@ -10395,6 +10397,7 @@
       "Membership": {
         "type": "object",
         "required": [
+          "membership_type",
           "valid_from"
         ],
         "properties": {
@@ -10428,6 +10431,7 @@
             "type": "string",
             "format": "date-time"
           },
+          "rules": {},
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -10533,6 +10537,7 @@
                   "example": "string or id"
                 }
               },
+              "rules": {},
               "locale": {
                 "type": "string"
               },
@@ -10623,6 +10628,7 @@
               "$ref": "#/components/schemas/Membership"
             }
           },
+          "rules": {},
           "createdAt": {
             "type": "string",
             "format": "date-time"

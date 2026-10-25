@@ -305,21 +305,25 @@ async function seedMembershipTypes(strapi) {
         name: 'Bentlakó tag',
         description: 'Teljes jogú tag, aki a szövetkezeti birtokon lakik',
         color: '#10B981', // Green
+        rules: { egg: { mode: 'internal', ratio: 1 } },
       },
       {
         name: 'Társult tag',
         description: 'Társult tag, aki támogatja a szövetkezetet',
         color: '#3B82F6', // Blue
+        rules: { egg: { mode: 'internal', ratio: 1 } },
       },
       {
         name: 'Pártoló tag',
         description: 'Pártoló tag, aki segíti a szövetkezet munkáját',
         color: '#8B5CF6', // Purple
+        rules: { egg: { mode: 'sale', ratio: 1 } },
       },
       {
         name: 'Érdeklődő',
         description: 'Érdeklődő személy, aki még nem tag',
         color: '#F59E0B', // Yellow
+        rules: { egg: { mode: 'sale', ratio: 0.75 } },
       },
     ];
 

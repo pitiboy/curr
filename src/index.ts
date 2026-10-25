@@ -37,6 +37,16 @@ const CONTENT_ROLE_ACTIONS = [
   'api::account.account.findOne',
   'api::currency-type.currency-type.find',
   'api::currency-type.currency-type.findOne',
+  'api::currency-rate.currency-rate.find',
+  'api::currency-rate.currency-rate.findOne',
+  'api::member.member.find',
+  'api::member.member.findOne',
+  'api::membership.membership.find',
+  'api::membership.membership.findOne',
+  'api::membership-type.membership-type.find',
+  'api::membership-type.membership-type.findOne',
+  'api::transaction-type.transaction-type.find',
+  'api::transaction-type.transaction-type.findOne',
   'api::receipt-type.receipt-type.find',
   'api::receipt-type.receipt-type.findOne',
   'plugin::upload.content-api.upload',
@@ -68,6 +78,31 @@ const usersPermissionsRolePermissions = {
   'api::currency-type': {
     controllers: {
       'currency-type': allow(['find', 'findOne']),
+    },
+  },
+  'api::currency-rate': {
+    controllers: {
+      'currency-rate': allow(['find', 'findOne']),
+    },
+  },
+  'api::member': {
+    controllers: {
+      member: allow(['find', 'findOne']),
+    },
+  },
+  'api::membership': {
+    controllers: {
+      membership: allow(['find', 'findOne']),
+    },
+  },
+  'api::membership-type': {
+    controllers: {
+      'membership-type': allow(['find', 'findOne']),
+    },
+  },
+  'api::transaction-type': {
+    controllers: {
+      'transaction-type': allow(['find', 'findOne']),
     },
   },
   'api::receipt-type': {

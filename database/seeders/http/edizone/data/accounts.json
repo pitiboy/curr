@@ -163,6 +163,13 @@
       "organizationName": "I/3.7 Bevételi központ"
     },
     {
+      "name": "Saját termelésű készletek állományváltozása",
+      "code": "4500",
+      "description": "Saját termelésű készletek állományváltozása számla",
+      "categoryType": "revenue",
+      "organizationName": "I/4. Termelési Igazgatóság"
+    },
+    {
       "name": "Anyagköltség",
       "code": "5000",
       "description": "Anyagköltség számla",

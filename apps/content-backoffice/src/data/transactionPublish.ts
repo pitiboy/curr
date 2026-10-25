@@ -32,6 +32,20 @@ export function isSamePersonPublishError(message: string): boolean {
   return message.includes('entered the document');
 }
 
+/** Matches Strapi publish-guard samePerson when CONTENT_PUBLISHER_MUST_DIFFER is on. */
+export function samePersonPublishBlocked(
+  enteredBy: string | null | undefined,
+  publisherEmail: string,
+  publisherMustDiffer: boolean,
+): boolean {
+  if (!publisherMustDiffer) return false;
+  const entered =
+    typeof enteredBy === 'string' ? enteredBy.trim().toLowerCase() : '';
+  const publisher = publisherEmail.trim().toLowerCase();
+  if (!entered || !publisher) return false;
+  return entered === publisher;
+}
+
 function errorBody(error: unknown): unknown {
   if (!error || typeof error !== 'object' || !('body' in error))
     return undefined;
