@@ -722,7 +722,12 @@ export function BulkQuantityEntryPage({
           eggToSaleRate === null)));
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 640 }}>
+    <Box
+      sx={{
+        p: { xs: 1, sm: 2 },
+        maxWidth: hasDistribution ? { xs: '100%', md: 960 } : 640,
+      }}
+    >
       <Title title={config.labelKey} />
       {catalogError ? (
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -774,23 +779,23 @@ export function BulkQuantityEntryPage({
       >
         <BulkQuantityFormDirtySync rowCount={productionRows.length} />
         <FormDateWatcher onDate={setFormDate} />
-        <DateInput fullWidth source="date" />
 
         {activeStep === 0 ? (
           <>
-            {catalogPending ? (
-              <Typography color="text.secondary" variant="body2">
-                {translate('ra.message.loading')}
-              </Typography>
-            ) : null}
-
-            {!catalogPending && henHouses.length === 0 ? (
-              <Typography color="warning.main" variant="body2">
-                {translate('app.bulk_quantity.no_hen_houses')}
-              </Typography>
-            ) : null}
-
             <Stack spacing={2} sx={{ width: '100%' }}>
+              <DateInput fullWidth source="date" />
+              {catalogPending ? (
+                <Typography color="text.secondary" variant="body2">
+                  {translate('ra.message.loading')}
+                </Typography>
+              ) : null}
+
+              {!catalogPending && henHouses.length === 0 ? (
+                <Typography color="warning.main" variant="body2">
+                  {translate('app.bulk_quantity.no_hen_houses')}
+                </Typography>
+              ) : null}
+
               {henHouses.map((house) => (
                 <TextField
                   key={house.documentId}
@@ -815,76 +820,87 @@ export function BulkQuantityEntryPage({
                 />
               ))}
             </Stack>
+            {hasDistribution ? (
+              <Box
+                aria-hidden
+                sx={{ display: { xs: 'none', md: 'block' }, minHeight: 1 }}
+              />
+            ) : null}
           </>
         ) : null}
 
         {activeStep === 1 && hasDistribution ? (
-          <Stack spacing={2} sx={{ width: '100%' }}>
-            <Typography variant="body1">
-              {translate('app.bulk_quantity.distribution_produced', {
-                count: producedTotal,
-              })}
-            </Typography>
-            <Typography
-              color={remaining < 0 ? 'error.main' : 'text.primary'}
-              variant="body1"
-            >
-              {translate('app.bulk_quantity.distribution_remaining', {
-                count: remaining,
-              })}
-            </Typography>
-            {eggToSaleRate !== null && rateValidFrom ? (
-              <Typography color="text.secondary" variant="body2">
-                {translate('app.bulk_quantity.distribution_rate', {
-                  from: config.currencyCode,
-                  to: EGG_SALE_CURRENCY,
-                  rate: eggToSaleRate,
-                  date: rateValidFrom.slice(0, 10),
+          <>
+            <Stack spacing={2} sx={{ width: '100%' }}>
+              <DateInput fullWidth source="date" />
+              <Typography variant="body1">
+                {translate('app.bulk_quantity.distribution_produced', {
+                  count: producedTotal,
                 })}
               </Typography>
-            ) : null}
-            {distributionLoadError ? (
-              <Alert severity="warning">{distributionLoadError}</Alert>
-            ) : null}
-            {overLimit ? (
-              <Alert severity="error">
-                {translate('app.bulk_quantity.distribution_over_limit')}
-              </Alert>
-            ) : null}
-            {distributionMembers.length === 0 ? (
-              <Typography color="warning.main" variant="body2">
-                {translate('app.bulk_quantity.distribution_no_members', {
-                  org: config.distribution?.memberOrganizationName ?? '',
+              <Typography
+                color={remaining < 0 ? 'error.main' : 'text.primary'}
+                variant="body1"
+              >
+                {translate('app.bulk_quantity.distribution_remaining', {
+                  count: remaining,
                 })}
               </Typography>
-            ) : null}
-            {distributionMembers.map((member) => (
-              <TextField
-                key={member.memberId}
-                disabled={
-                  memberNeedsSaleRate([member]) && eggToSaleRate === null
-                }
-                fullWidth
-                inputMode="numeric"
-                label={member.memberName}
-                slotProps={{
-                  htmlInput: {
-                    min: 0,
-                    step: 1,
-                    style: { fontSize: '1.25rem', padding: '14px 12px' },
-                  },
-                }}
-                type="number"
-                value={memberQuantities[member.memberId] ?? ''}
-                onChange={(event) =>
-                  setMemberQuantities((previous) => ({
-                    ...previous,
-                    [member.memberId]: event.target.value,
-                  }))
-                }
-              />
-            ))}
-          </Stack>
+              {eggToSaleRate !== null && rateValidFrom ? (
+                <Typography color="text.secondary" variant="body2">
+                  {translate('app.bulk_quantity.distribution_rate', {
+                    from: config.currencyCode,
+                    to: EGG_SALE_CURRENCY,
+                    rate: eggToSaleRate,
+                    date: rateValidFrom.slice(0, 10),
+                  })}
+                </Typography>
+              ) : null}
+              {distributionLoadError ? (
+                <Alert severity="warning">{distributionLoadError}</Alert>
+              ) : null}
+              {overLimit ? (
+                <Alert severity="error">
+                  {translate('app.bulk_quantity.distribution_over_limit')}
+                </Alert>
+              ) : null}
+              {distributionMembers.length === 0 ? (
+                <Typography color="warning.main" variant="body2">
+                  {translate('app.bulk_quantity.distribution_no_members', {
+                    org: config.distribution?.memberOrganizationName ?? '',
+                  })}
+                </Typography>
+              ) : null}
+            </Stack>
+            <Stack spacing={2} sx={{ width: '100%' }}>
+              {distributionMembers.map((member) => (
+                <TextField
+                  key={member.memberId}
+                  disabled={
+                    memberNeedsSaleRate([member]) && eggToSaleRate === null
+                  }
+                  fullWidth
+                  inputMode="numeric"
+                  label={member.memberName}
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      step: 1,
+                      style: { fontSize: '1.25rem', padding: '14px 12px' },
+                    },
+                  }}
+                  type="number"
+                  value={memberQuantities[member.memberId] ?? ''}
+                  onChange={(event) =>
+                    setMemberQuantities((previous) => ({
+                      ...previous,
+                      [member.memberId]: event.target.value,
+                    }))
+                  }
+                />
+              ))}
+            </Stack>
+          </>
         ) : null}
       </SimpleForm>
 
