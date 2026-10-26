@@ -9,6 +9,8 @@ export type BackofficeConfigResponse = {
   publisherMustDiffer: boolean;
   debitCodesPattern: string;
   creditCodesPattern: string;
+  /** Brand prefix from Settings `app.title`. Empty omits the prefix. */
+  appTitle: string;
   eggSaleCurrency: string;
   features: Record<string, BackofficeFeatureState>;
 };
@@ -16,6 +18,7 @@ export type BackofficeConfigResponse = {
 const DEFAULT_PUBLISHER_MUST_DIFFER = true;
 const DEFAULT_DEBIT_PATTERN = '/^5/';
 const DEFAULT_CREDIT_PATTERN = '/^(1|3)/';
+const DEFAULT_APP_TITLE = '';
 const DEFAULT_EGG_SALE_CURRENCY = 'HUF';
 
 function stringList(value: unknown): string[] {
@@ -71,6 +74,7 @@ export function parseBackofficeConfig(body: unknown): BackofficeConfigResponse {
       publisherMustDiffer: DEFAULT_PUBLISHER_MUST_DIFFER,
       debitCodesPattern: DEFAULT_DEBIT_PATTERN,
       creditCodesPattern: DEFAULT_CREDIT_PATTERN,
+      appTitle: DEFAULT_APP_TITLE,
       eggSaleCurrency: DEFAULT_EGG_SALE_CURRENCY,
       features: {},
     };
@@ -91,6 +95,10 @@ export function parseBackofficeConfig(body: unknown): BackofficeConfigResponse {
       record.creditCodesPattern,
       DEFAULT_CREDIT_PATTERN,
     ),
+    appTitle:
+      typeof record.appTitle === 'string' && record.appTitle.trim().length > 0
+        ? record.appTitle.trim()
+        : DEFAULT_APP_TITLE,
     eggSaleCurrency:
       typeof record.eggSaleCurrency === 'string' &&
       record.eggSaleCurrency.trim().length > 0

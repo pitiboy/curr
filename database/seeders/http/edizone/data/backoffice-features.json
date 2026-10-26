@@ -20,6 +20,11 @@
     "config": { "pattern": "/^(1|3)/" }
   },
   {
+    "key": "app.title",
+    "enabled": true,
+    "config": { "value": "EdiZone" }
+  },
+  {
     "key": "app.egg_sale_currency",
     "enabled": true,
     "config": { "value": "HUF" }

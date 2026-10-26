@@ -17,6 +17,8 @@ export type BackofficeConfigResponse = {
   publisherMustDiffer: boolean;
   debitCodesPattern: string;
   creditCodesPattern: string;
+  /** Brand prefix for the SPA app bar (`app.title` setting). Empty omits the prefix. */
+  appTitle: string;
   eggSaleCurrency: string;
   /** All rows keyed by `key` (workflows and settings). */
   features: Record<string, BackofficeFeatureState>;

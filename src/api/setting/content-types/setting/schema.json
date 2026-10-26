@@ -19,7 +19,7 @@
       "maxLength": 128,
       "metadatas": {
         "label": "Kulcs",
-        "description": "Workflow azonosító (pl. egg-daily-entry) vagy beállítás (pl. content.default_status, accounts.debit_codes)."
+        "description": "Workflow azonosító (pl. egg-daily-entry) vagy beállítás (pl. content.default_status, accounts.debit_codes, app.title)."
       }
     },
     "enabled": {

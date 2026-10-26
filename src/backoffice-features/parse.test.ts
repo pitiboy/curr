@@ -23,6 +23,7 @@ describe('buildBackofficeConfigFromFeatures', () => {
       publisherMustDiffer: true,
       debitCodesPattern: '/^5/',
       creditCodesPattern: '/^(1|3)/',
+      appTitle: '',
       eggSaleCurrency: 'HUF',
       features: {},
     });
@@ -40,6 +41,11 @@ describe('buildBackofficeConfigFromFeatures', () => {
         enabled: true,
         config: { pattern: '/^6/' },
       },
+      {
+        key: 'app.title',
+        enabled: true,
+        config: { value: 'KÖR' },
+      },
       { key: 'member-fee', enabled: false, config: {} },
       { key: 'egg-daily-entry', enabled: true, config: { saleCurrency: 'EUR' } },
     ]);
@@ -48,6 +54,7 @@ describe('buildBackofficeConfigFromFeatures', () => {
     assert.deepEqual(config.available, ['member-fee', 'egg-daily-entry']);
     assert.equal(config.publisherMustDiffer, false);
     assert.equal(config.debitCodesPattern, '/^6/');
+    assert.equal(config.appTitle, 'KÖR');
     assert.equal(config.features['egg-daily-entry']?.enabled, true);
   });
 });

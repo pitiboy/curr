@@ -115,8 +115,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx nx build content-backoffice
-        env:
-          VITE_STRAPI_URL: ${{ vars.VITE_STRAPI_URL }}
       - uses: actions/upload-artifact@v4
         with:
           name: content-backoffice-dist

@@ -151,7 +151,7 @@ Konfigurálható / szerveroldali allowlist → v2.
 | Azonosító | react-admin `id` = Strapi `documentId` (ADR wrapper ha kell) |
 | i18n | default `hu`; `en` katalogus is (RA i18nProvider / react-i18next) |
 | Deploy v1 | Manuális `vite build` + static feltöltés a cPanel `/backoffice` pathra |
-| Env | `VITE_STRAPI_URL` (ugyanaz a origin / API gyökér) |
+| API origin | Élesen `window.location.origin` (ugyanaz a host); lokálon `http://localhost:1337` |
 
 ```mermaid
 flowchart LR
