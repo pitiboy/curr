@@ -71,5 +71,3 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run ci:backoffice
-        env:
-          VITE_STRAPI_URL: https://kor.fejlesztesek.hu

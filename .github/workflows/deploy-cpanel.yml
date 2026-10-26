@@ -29,8 +29,6 @@ permissions:
 
 env:
   DEPLOY_BASE_URL: https://kor.fejlesztesek.hu
-  VITE_STRAPI_URL: https://kor.fejlesztesek.hu
-  VITE_APP_TITLE: KÖR
 
 jobs:
   changes:
