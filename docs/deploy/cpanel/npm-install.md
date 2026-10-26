@@ -6,7 +6,7 @@ A futó admin és a collection type lista azt jelenti, hogy a Strapi elindult. A
 
 ## Mikor kell telepíteni
 
-Csak akkor, ha a lockfile változott, vagy egy művelet hiányzó modullal elhasal. A félbemaradt NPM Install logot hagyd, amíg az admin és az API válaszol. A deploy script „NPM Install” sora erre az esetre szól.
+Csak akkor, ha a lockfile változott, vagy egy művelet hiányzó modullal elhasal. A félbemaradt NPM Install logot hagyd, amíg az admin és az API válaszol. A GitHub Actions deploy lockfile változáskor job summary-t, Trello/email értesítést és `manual-cpanel` approvalt állít — ott kell elvégezni ezt a lépést.
 
 Telepítés előtt a Fájlkezelőben töröld a `nodevenv/node/kor-szupatak/22/lib/node_modules` tartalmát. A kvóta 3096 MB, a `nodevenv` ebből kb. 1,6 GB. Az install a régi fa mellé másol, és enélkül megtelik a lemez. Kell kb. 1,2 GB szabad hely. Az alkalmazásgyökér `node_modules` symlinkjét ne töröld: az a fenti mappára mutat.
 

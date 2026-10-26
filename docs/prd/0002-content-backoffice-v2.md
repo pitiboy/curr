@@ -88,7 +88,7 @@ A v1 a jogosultság betöltése alatt üresen hagyja a felületet. v2-ben az AJA
 
 ### 4.2 GitHub Actions skeleton (javaslat)
 
-**Implementáció (cPanel / kor.fejlesztesek.hu):** [`docs/ci/github-actions-cpanel.md`](../ci/github-actions-cpanel.md) — CI + deploy workflow, FTP, cPanel UAPI, Trello/email, `manual-cpanel` environment. Branch protection: [`docs/ci/branch-protection.md`](../ci/branch-protection.md).
+**Implementáció (cPanel / kor.fejlesztesek.hu):** [`docs/ci/github-actions-cpanel.md`](../ci/github-actions-cpanel.md) — CI + deploy workflow, FTP, `tmp/restart.txt`, lockfile esetén manuális NPM Install gate (`manual-cpanel`), Trello/email. Branch protection: [`docs/ci/branch-protection.md`](../ci/branch-protection.md).
 
 v1 manuális deploy után v2-ben pipeline. Javasolt skeleton (történeti váz — a fenti doc az éles megoldás):
 

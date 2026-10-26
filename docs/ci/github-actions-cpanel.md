@@ -26,14 +26,11 @@ flowchart TD
     G -->|backoffice| I[Vite build /backoffice]
     H --> J[FTPS lftp mirror]
     I --> J
-    J --> K[cPanel UAPI probe]
-    K -->|WebApp/restart| L[Health check]
-    K -->|nincs restart API| M[tmp/restart.txt FTP]
-    M --> L
-    L -->|lockfile változott| N{ensure_deps?}
-    N -->|nem| O[Job summary + Trello + email]
+    J --> K[tmp/restart.txt FTP]
+    K --> L[Health check]
+    L -->|lockfile változott| O[Job summary + Trello + email]
     L -->|hiba| O
-    O --> P[Environment manual-cpanel approval]
+    O --> P[Environment KOR.fejlesztesek.hu approval]
     P --> L2[Health újra]
     L2 --> Q[Siker: Trello zár / Done lista]
   end
@@ -59,44 +56,23 @@ Biztonság:
 2. `tmp/restart.txt` frissítése az alkalmazás gyökerében, vagy Setup Node.js App **Restart**.
 3. Ha a hiba kód-oldali: git revert + merge `main` (új deploy), vagy lokális `npm run deploy` a régi commit buildjével.
 
-## cPanel UAPI (post-deploy, SSH nélkül)
+## Post-deploy: restart és NPM
 
-Script: [`scripts/deploy/cpanel-api.sh`](../../scripts/deploy/cpanel-api.sh)
+DotRoll cPanelen a `WebApp` / `PassengerApps` UAPI üres listát ad (`data: []` / `{}`), ezért **nincs automatikus UAPI restart vagy `ensure_deps`**. A deploy ezt a két utat használja:
 
-| Lépés                  | Endpoint / módszer                                  | Megjegyzés                                                                             |
-| ---------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Token ellenőrzés       | `GET /execute/Tokens/list`                          | 401/403 → token vagy felhasználó hibás                                                 |
-| App lista (Web Apps)   | `GET /execute/WebApp/list`                          | Újabb cPanel; ha nincs modul, kihagyjuk                                                |
-| Restart (Web Apps)     | `GET /execute/WebApp/restart?name=<slug>`           | Csak ha `CPANEL_WEBAPP_NAME` / listából talált slug és **server** kategória            |
-| Passenger app lista    | `GET /execute/PassengerApps/list_applications`      | CloudLinux Setup Node.js App                                                           |
-| NPM / deps (Passenger) | `GET /execute/PassengerApps/ensure_deps?name=<app>` | Hosszú folyamat; **lockfile változáskor** próbáljuk                                    |
-| Restart fallback       | FTP: `<app-root>/tmp/restart.txt`                   | [cPanel Passenger restart](https://support.cpanel.net/hc/en-us/articles/1500002443862) |
+| Lépés | Módszer | Mikor |
+| ----- | ------- | ----- |
+| Passenger restart | FTP: `<app-root>/tmp/restart.txt` | Minden backend deploy után ([cPanel Passenger restart](https://support.cpanel.net/hc/en-us/articles/1500002443862)) |
+| NPM Install | Manuális: Setup Node.js App → **Run NPM Install** | Ha a `package-lock.json` változott a deployban |
 
-A **CloudLinux „Run NPM Install”** gombhoz nincs dokumentált UAPI a fiók szintjén (a `cloudlinux-selector install-modules` csak SSH/WHM). Ha `ensure_deps` nem érhető el vagy nem indul el, a workflow **manuális NPM Install** lépést ír a job summary-ba.
+Lockfile változáskor a workflow:
 
-### API token létrehozása és curl teszt
+1. Job summary-ba írja a cPanel kattintós lépéseket ([npm-install.md](../deploy/cpanel/npm-install.md)).
+2. Trello / email értesítést küld.
+3. Megáll a `KOR.fejlesztesek.hu` environment approvalnél, amíg az operátor elvégzi az NPM Install + Restartot.
+4. Utána újra lefuttatja a health checket.
 
-1. cPanel → **Security** → **Manage API Tokens** → **Create**.
-2. Másold a tokent (egyszer látszik); tárold GitHub Secret `CPANEL_API_TOKEN` néven.
-3. Teszt (cseréld a helyőrzőket):
-
-```bash
-CPANEL_HOST=kor.fejlesztesek.hu
-CPANEL_USER=your_cpanel_username
-CPANEL_TOKEN=your_token
-
-curl -sS -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-  "https://${CPANEL_HOST}:2083/execute/Tokens/list?api.version=1" | head
-```
-
-Sikeres válasz: `"status":1` a JSON-ban.
-
-Opcionális Passenger lista:
-
-```bash
-curl -sS -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-  "https://${CPANEL_HOST}:2083/execute/PassengerApps/list_applications?api.version=1"
-```
+Ha a lockfile **nem** változott, de a health check elbukik, ugyanez a manuális gate fut (javítás / Restart után approval).
 
 ## GitHub Secrets és Variables
 
@@ -107,10 +83,7 @@ curl -sS -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
 | `FTP_PASS`                                                                 | deploy      | FTP jelszó                                                      |
 | `FTP_REMOTE_DIR`                                                           | deploy      | pl. `kor-szupatak` (relatív a home-hoz)                         |
 | `FTP_PORT`                                                                 | opcionális  | alap: `21`                                                      |
-| `CPANEL_HOST`                                                              | post-deploy | általában ugyanaz mint FTP host                                 |
-| `CPANEL_USERNAME`                                                          | post-deploy | cPanel **fiók** felhasználó (nem FTP user)                      |
-| `CPANEL_API_TOKEN`                                                         | post-deploy | Manage API Tokens                                               |
-| `CPANEL_APP_ROOT`                                                          | post-deploy | pl. `node/kor-szupatak` (restart.txt)                           |
+| `CPANEL_APP_ROOT`                                                          | post-deploy | pl. `node/kor-szupatak` (`tmp/restart.txt` célja)               |
 | `TRELLO_KEY`                                                               | értesítés   | [Trello Power-Up / API Key](https://trello.com/power-ups/admin) |
 | `TRELLO_TOKEN`                                                             | értesítés   | OAuth token (read/write)                                        |
 | `TRELLO_LIST_ID`                                                           | értesítés   | Cél lista ID (URL-ben a board/list után)                        |
@@ -119,14 +92,14 @@ curl -sS -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
 
 **Repository variables** (Settings → Secrets and variables → Actions → Variables):
 
-| Név                         | Alapértelmezés                                     |
-| --------------------------- | -------------------------------------------------- |
-| `FTP_OVERRIDE_POLICY`       | `only-newer`                                       |
-| `FTP_BACKOFFICE_REMOTE_DIR` | `public/backoffice`                                |
-| `CPANEL_WEBAPP_NAME`        | üres (WebApp restart, ha kitöltöd)                 |
-| `CPANEL_PASSENGER_APP_NAME` | üres (ensure_deps név, ha a listából nem derül ki) |
+| Név                         | Alapértelmezés      |
+| --------------------------- | ------------------- |
+| `FTP_OVERRIDE_POLICY`       | `only-newer`        |
+| `FTP_BACKOFFICE_REMOTE_DIR` | `public/backoffice` |
 
-**Environment:** hozd létre a `manual-cpanel` environmentet **Required reviewers**-rel (Settings → Environments).
+**Environment:** `KOR.fejlesztesek.hu` **Required reviewers**-rel (Settings → Environments → Configure).
+
+A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBAPP_NAME` / `CPANEL_PASSENGER_APP_NAME` secretök és változók **nem kellenek** — törölhetők a repo settingsből.
 
 ## Trello kulcs, token, lista ID
 
@@ -136,14 +109,14 @@ curl -sS -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
 
 ## Automatizált vs manuális
 
-| Lépés                                       | Automatizált                             | Manuális                                                                                                     |
-| ------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `npm ci`, typecheck, tesztek, build         | CI / runner                              | —                                                                                                            |
-| FTPS feltöltés                              | Actions                                  | Lokális `npm run deploy*`                                                                                    |
-| Passenger restart                           | WebApp/restart vagy `tmp/restart.txt`    | cPanel Setup Node.js App **Restart** (aliasok is)                                                            |
-| `npm install` lockfile változáskor          | `PassengerApps/ensure_deps` (ha működik) | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
-| Health `/_health`, `/admin`, `/backoffice/` | Script backoff                           | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
-| Deploy jóváhagyás manuális lépésnél         | `manual-cpanel` environment              | Reviewer a GitHubon                                                                                          |
+| Lépés                                       | Automatizált                  | Manuális                                                                                                     |
+| ------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `npm ci`, typecheck, tesztek, build         | CI / runner                   | —                                                                                                            |
+| FTPS feltöltés                              | Actions                       | Lokális `npm run deploy*`                                                                                    |
+| Passenger restart                           | FTP `tmp/restart.txt`         | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
+| `npm install` lockfile változáskor          | — (gate + summary)            | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
+| Health `/_health`, `/admin`, `/backoffice/` | Script backoff                | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
+| Deploy jóváhagyás manuális lépésnél         | `manual-cpanel` environment   | Reviewer a GitHubon                                                                                          |
 
 ## Workflow kézi futtatása
 

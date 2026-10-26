@@ -143,34 +143,8 @@ jobs:
             bash scripts/deploy/upload.sh backoffice $dry
           fi
 
-      - name: cPanel UAPI probe (restart / npm)
+      - name: Passenger restart.txt
         if: needs.changes.outputs.backend == 'true' && github.event.inputs.dry_run != 'true'
-        id: cpanel
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
-          CPANEL_USERNAME: ${{ secrets.CPANEL_USERNAME }}
-          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
-          CPANEL_APP_ROOT: ${{ secrets.CPANEL_APP_ROOT }}
-          CPANEL_WEBAPP_NAME: ${{ vars.CPANEL_WEBAPP_NAME }}
-          CPANEL_PASSENGER_APP_NAME: ${{ vars.CPANEL_PASSENGER_APP_NAME }}
-          RUN_NPM_INSTALL: ${{ needs.changes.outputs.lockfile == 'true' && '1' || '0' }}
-        run: |
-          bash scripts/deploy/cpanel-api.sh | tee cpanel-api.log
-          if grep -q 'WebApp restart sikeres' cpanel-api.log; then
-            echo "restart=uapi" >> "$GITHUB_OUTPUT"
-          else
-            echo "restart=ftp" >> "$GITHUB_OUTPUT"
-          fi
-          if [[ "${{ needs.changes.outputs.lockfile }}" == "true" ]] && ! grep -q 'ensure_deps elindítva' cpanel-api.log; then
-            echo "npm_manual=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "npm_manual=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Passenger restart.txt fallback
-        if: needs.changes.outputs.backend == 'true' && steps.cpanel.outputs.restart == 'ftp' && github.event.inputs.dry_run != 'true'
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
@@ -189,23 +163,23 @@ jobs:
         continue-on-error: true
 
       - name: Manual step summary (NPM Install)
-        if: steps.cpanel.outputs.npm_manual == 'true'
+        if: needs.changes.outputs.lockfile == 'true'
         run: |
           {
             echo "## Manuális lépés: NPM Install (cPanel)"
             echo ""
-            echo "A \`package-lock.json\` változott, és a cPanel UAPI nem indította el az \`ensure_deps\` telepítést."
+            echo "A \`package-lock.json\` változott. DotRoll cPanelen nincs UAPI a Node.js app NPM Install / restartához — kézi lépés kell."
             echo ""
             echo "1. Jelentkezz be a cPanelbe."
             echo "2. **Software → Setup Node.js App**."
             echo "3. Válaszd a \`kor.fejlesztesek.hu\` alkalmazást (gyökér: \`node/kor-szupatak\`)."
-            echo "4. **Run NPM Install** (alias alkalmazáson ne)."
-            echo "5. Telepítés előtt töröld a \`nodevenv/node/kor-szupatak/22/lib/node_modules\` tartalmát a Fájlkezelőben (lásd docs/deploy/cpanel/npm-install.md)."
+            echo "4. Telepítés előtt töröld a \`nodevenv/node/kor-szupatak/22/lib/node_modules\` tartalmát a Fájlkezelőben (lásd docs/deploy/cpanel/npm-install.md)."
+            echo "5. **Run NPM Install** (alias alkalmazáson ne)."
             echo "6. **Restart** mindkét Node.js alkalmazáson (kor + edizone alias), ha van."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notify manual / failure
-        if: (steps.cpanel.outputs.npm_manual == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
+        if: (needs.changes.outputs.lockfile == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
         id: notify
         env:
           NOTIFY_ACTION: manual
@@ -225,12 +199,12 @@ jobs:
         run: python3 scripts/deploy/notify.py
 
       - name: Wait for operator approval
-        if: (steps.cpanel.outputs.npm_manual == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
-        environment: manual-cpanel
-        run: echo "manual-cpanel environment approved; continuing deploy."
+        if: (needs.changes.outputs.lockfile == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
+        environment: KOR.fejlesztesek.hu
+        run: echo "KOR.fejlesztesek.hu environment approved; continuing deploy."
 
       - name: Re-run health check after approval
-        if: (steps.cpanel.outputs.npm_manual == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
+        if: (needs.changes.outputs.lockfile == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
         env:
           CHECK_BACKEND: ${{ needs.changes.outputs.backend == 'true' && '1' || '0' }}
           CHECK_BACKOFFICE: ${{ needs.changes.outputs.backoffice == 'true' && '1' || '0' }}
