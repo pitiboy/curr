@@ -27,7 +27,7 @@ import { STRAPI_URL } from './config';
 const authProvider = strapiAuthProvider({ baseURL: STRAPI_URL });
 const httpClient = strapiHttpClient();
 const dataProvider = withDocumentId(
-  strapiDataProvider({ baseURL: STRAPI_URL, httpClient })
+  strapiDataProvider({ baseURL: STRAPI_URL, httpClient }),
 );
 ```
 
@@ -43,13 +43,13 @@ A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél 
 
 Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és megtekintés. Guesser nincs az éles fában. Külön review lista nincs.
 
-| Route | Szerep | Viselkedés |
-| --- | --- | --- |
-| `/transactions/create` | `dataentry`, `editor` | Create. Mentés draft. Publish nincs. |
-| `/transactions/:id/show` | mindkettő | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít. |
-| `/transactions` | mindkettő | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
-| `/login` | vendég | Email/jelszó és Google. |
-| `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |
+| Route                    | Szerep                | Viselkedés                                                                                                                                                                             |
+| ------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/transactions/create`   | `dataentry`, `editor` | Create. Mentés draft. Publish nincs.                                                                                                                                                   |
+| `/transactions/:id/show` | mindkettő             | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít.                                 |
+| `/transactions`          | mindkettő             | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
+| `/login`                 | vendég                | Email/jelszó és Google.                                                                                                                                                                |
+| `/profile`               | mindkettő             | Név, email. Jelszócsere csak `provider === 'local'`.                                                                                                                                   |
 
 A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 

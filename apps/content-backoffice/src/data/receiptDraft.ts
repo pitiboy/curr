@@ -123,8 +123,8 @@ export function receiptCardInvalid(card: {
 }): boolean {
   return Boolean(
     card.file &&
-    card.file.size > 0 &&
-    (!card.vendor.trim() || !card.receiptTypeId),
+      card.file.size > 0 &&
+      (!card.vendor.trim() || !card.receiptTypeId),
   );
 }
 

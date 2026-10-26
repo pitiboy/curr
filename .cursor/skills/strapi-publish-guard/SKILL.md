@@ -62,21 +62,21 @@ Idempotens ensure a `src/index.ts` `bootstrap({ strapi })` függvényében. Prod
 
 Engedélyezendő actionök, ha a listában szerepelnek:
 
-| Szerep | Action |
-| --- | --- |
-| mindkettő | `api::transaction.transaction.find`, `findOne`, `create`, `update` |
-| mindkettő | `api::receipt.receipt.find`, `findOne`, `create`, `update` |
-| mindkettő | `api::organization.organization.find`, `findOne` |
-| mindkettő | `api::account.account.find`, `findOne` |
-| mindkettő | `api::currency-type.currency-type.find`, `findOne` |
-| mindkettő | `api::currency-rate.currency-rate.find`, `findOne` |
-| mindkettő | `api::member.member.find`, `findOne` |
-| mindkettő | `api::membership.membership.find`, `findOne` |
-| mindkettő | `api::membership-type.membership-type.find`, `findOne` |
-| mindkettő | `api::transaction-type.transaction-type.find`, `findOne` |
-| mindkettő | `api::receipt-type.receipt-type.find`, `findOne` |
+| Szerep    | Action                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------- |
+| mindkettő | `api::transaction.transaction.find`, `findOne`, `create`, `update`                           |
+| mindkettő | `api::receipt.receipt.find`, `findOne`, `create`, `update`                                   |
+| mindkettő | `api::organization.organization.find`, `findOne`                                             |
+| mindkettő | `api::account.account.find`, `findOne`                                                       |
+| mindkettő | `api::currency-type.currency-type.find`, `findOne`                                           |
+| mindkettő | `api::currency-rate.currency-rate.find`, `findOne`                                           |
+| mindkettő | `api::member.member.find`, `findOne`                                                         |
+| mindkettő | `api::membership.membership.find`, `findOne`                                                 |
+| mindkettő | `api::membership-type.membership-type.find`, `findOne`                                       |
+| mindkettő | `api::transaction-type.transaction-type.find`, `findOne`                                     |
+| mindkettő | `api::receipt-type.receipt-type.find`, `findOne`                                             |
 | mindkettő | a content-api upload action (`plugin::upload.content-api.upload`, ha a getActions így hívja) |
-| mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs) |
+| mindkettő | `plugin::users-permissions.user.me` (a saját profil; user find/create/update/delete nincs)   |
 
 A Content API sanitize leveszi a `role` relációt, ha nincs `role.find`. Azt ne add ki: a `GET /roles` a szereplistát nyitná meg. A `src/extensions/users-permissions/strapi-server.ts` a `/api/users/me` válaszba a hívó saját role-ját teszi vissza (`type` a `ctx.state.user.role`-ból).
 

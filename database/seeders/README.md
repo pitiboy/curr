@@ -121,10 +121,10 @@ Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `k
 
 A `database/seeders/http/common/01`–`10` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak.
 
-| Lépés | HTTP | Adat |
-| ----- | ---- | ---- |
-| 09 | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json` |
-| 10 | `common/10-backoffice-features.http` | `data/backoffice-features.json` |
+| Lépés | HTTP                                                                                                  | Adat                            |
+| ----- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`      |
+| 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json` |
 
 Előfeltétel a 09-hez: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
 

@@ -4,4 +4,6 @@
 
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreController('api::currency-category.currency-category');
+export default factories.createCoreController(
+  'api::currency-category.currency-category',
+);

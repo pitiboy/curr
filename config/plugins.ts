@@ -49,7 +49,8 @@ export default ({ env }) => ({
           }
 
           const normalizedPath =
-            callbackUrl.pathname.endsWith('/') && callbackUrl.pathname.length > 1
+            callbackUrl.pathname.endsWith('/') &&
+            callbackUrl.pathname.length > 1
               ? callbackUrl.pathname
               : `${callbackUrl.pathname}/`;
 

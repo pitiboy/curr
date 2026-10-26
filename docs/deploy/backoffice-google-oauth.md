@@ -17,7 +17,7 @@ Helye: [Google Auth Platform → Clients](https://console.cloud.google.com/auth/
 
 ### Audience (publikálás)
 
-[Google Auth Platform → Audience](https://console.cloud.google.com/auth/audience): ha a Publishing status **Testing**, csak a *Test users* listán szereplő fiókok tudnak belépni. Vagy vedd fel őket, vagy **Publish app**. Csak `email` scope mellett nincs hosszú ellenőrzés, legfeljebb a branding (logó) miatt.
+[Google Auth Platform → Audience](https://console.cloud.google.com/auth/audience): ha a Publishing status **Testing**, csak a _Test users_ listán szereplő fiókok tudnak belépni. Vagy vedd fel őket, vagy **Publish app**. Csak `email` scope mellett nincs hosszú ellenőrzés, legfeljebb a branding (logó) miatt.
 
 ### Redirect URI
 
@@ -30,12 +30,12 @@ A Strapi `PUBLIC_URL` mezőjének originje egyezzen a fenti hosttal.
 
 ### OAuth consent screen (Branding)
 
-| Mező | Érték |
-| --- | --- |
-| Application home page | `https://kor.fejlesztesek.hu/static/about` (vagy `https://kor.fejlesztesek.hu`, ha a `PUBLIC_HOME_REDIRECT=/static/about` be van állítva, lásd lent) |
-| Application privacy policy link | `https://kor.fejlesztesek.hu/static/privacy-policy` |
-| Application terms of service link | `https://kor.fejlesztesek.hu/static/terms-of-service` |
-| Authorised domains | `fejlesztesek.hu` |
+| Mező                              | Érték                                                                                                                                                |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Application home page             | `https://kor.fejlesztesek.hu/static/about` (vagy `https://kor.fejlesztesek.hu`, ha a `PUBLIC_HOME_REDIRECT=/static/about` be van állítva, lásd lent) |
+| Application privacy policy link   | `https://kor.fejlesztesek.hu/static/privacy-policy`                                                                                                  |
+| Application terms of service link | `https://kor.fejlesztesek.hu/static/terms-of-service`                                                                                                |
+| Authorised domains                | `fejlesztesek.hu`                                                                                                                                    |
 
 Az **Authorised domains** listába a `fejlesztesek.hu` kerüljön (a legfelső szintű, regisztrálható domain, nem a `kor.` aldomain). Enélkül a konzol pirossal jelzi a home page, privacy és terms linkeket, és a redirect URI-t sem fogadja el.
 

@@ -44,8 +44,8 @@ In TypeScript applications, use `@neon/sdk`. Project and branch are positional, 
 
 ```typescript
 for await (const record of neon.logs.query(projectId, branchId, {
-  since: "1h",
-  source: "function",
+  since: '1h',
+  source: 'function',
 })) {
   console.log(record.timestamp, record.severity_text, record.message);
 }
@@ -54,7 +54,7 @@ const { data: fields } = await neon.logs.fields(projectId, branchId);
 const { data: serviceNames } = await neon.logs.fieldValues(
   projectId,
   branchId,
-  "service_name",
+  'service_name',
 );
 ```
 

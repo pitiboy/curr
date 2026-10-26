@@ -54,12 +54,7 @@
       "type": "media",
       "multiple": false,
       "required": true,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ],
+      "allowedTypes": ["images", "files", "videos", "audios"],
       "metadatas": {
         "label": "Dokumentum",
         "description": "A nyugta dokumentuma (kép, PDF, stb.)"

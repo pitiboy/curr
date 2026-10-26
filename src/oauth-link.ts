@@ -30,10 +30,12 @@ export type OAuthErrorCode = (typeof OAUTH_ERROR)[keyof typeof OAUTH_ERROR];
 
 /** Stock users-permissions connect messages, mapped to the same codes. */
 const STOCK_MESSAGE_CODES: Record<string, OAuthErrorCode> = {
-  'Register action is actually not available.': OAUTH_ERROR.registerNotAvailable,
+  'Register action is actually not available.':
+    OAUTH_ERROR.registerNotAvailable,
   'Email was not available.': OAUTH_ERROR.emailNotAvailable,
   'Email is already taken.': OAUTH_ERROR.emailTaken,
-  'Your account has been blocked by an administrator': OAUTH_ERROR.accountBlocked,
+  'Your account has been blocked by an administrator':
+    OAUTH_ERROR.accountBlocked,
   'Your account email is not confirmed': OAUTH_ERROR.emailNotConfirmed,
 };
 
@@ -84,7 +86,9 @@ export function decideOAuthLink<U extends OAuthLinkCandidate>(
     return { type: 'stock' };
   }
 
-  const sameEmail = users.filter((user) => normalizeEmail(user.email) === wanted);
+  const sameEmail = users.filter(
+    (user) => normalizeEmail(user.email) === wanted,
+  );
 
   // A user that already signed up through this provider wins, as in stock.
   const own = sameEmail.find((user) => user.provider === provider);
@@ -106,7 +110,11 @@ export function decideOAuthLink<U extends OAuthLinkCandidate>(
 
   const [user] = sameEmail;
   if (user.blocked === true) {
-    return { type: 'reject', message: OAUTH_ERROR.accountBlocked, reason: 'user is blocked' };
+    return {
+      type: 'reject',
+      message: OAUTH_ERROR.accountBlocked,
+      reason: 'user is blocked',
+    };
   }
   if (settings?.email_confirmation === true && user.confirmed !== true) {
     return {

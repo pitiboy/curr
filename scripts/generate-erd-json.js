@@ -3,15 +3,15 @@
  * Generate a dineug ERD Editor v3 document from Strapi content-type schemas.
  * Output: docs/schema/curr.erd.json
  */
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const ROOT = path.join(__dirname, "..");
-const API_DIR = path.join(ROOT, "src/api");
-const OUT_FILE = path.join(ROOT, "docs/schema/curr.erd.json");
+const ROOT = path.join(__dirname, '..');
+const API_DIR = path.join(ROOT, 'src/api');
+const OUT_FILE = path.join(ROOT, 'docs/schema/curr.erd.json');
 
 const SCHEMA_URL =
-  "https://raw.githubusercontent.com/dineug/erd-editor/main/json-schema/schema.json";
+  'https://raw.githubusercontent.com/dineug/erd-editor/main/json-schema/schema.json';
 
 const ColumnOption = {
   autoIncrement: 1,
@@ -38,18 +38,18 @@ const Show = {
 };
 
 const CLUSTER_COLOR = {
-  organization: "#4A90D9",
-  member: "#4A90D9",
-  membership: "#4A90D9",
-  "membership-type": "#4A90D9",
-  "account-category": "#7B68A6",
-  account: "#7B68A6",
-  receipt: "#3D8B6E",
-  transaction: "#3D8B6E",
-  "transaction-type": "#3D8B6E",
-  "currency-category": "#C9A227",
-  "currency-type": "#C9A227",
-  "currency-rate": "#C9A227",
+  organization: '#4A90D9',
+  member: '#4A90D9',
+  membership: '#4A90D9',
+  'membership-type': '#4A90D9',
+  'account-category': '#7B68A6',
+  account: '#7B68A6',
+  receipt: '#3D8B6E',
+  transaction: '#3D8B6E',
+  'transaction-type': '#3D8B6E',
+  'currency-category': '#C9A227',
+  'currency-type': '#C9A227',
+  'currency-rate': '#C9A227',
 };
 
 const now = Date.now();
@@ -59,13 +59,13 @@ const MIN_W = 60;
 const MAX_COMMENT_W = 300;
 
 function textWidth(text, { max } = {}) {
-  const value = String(text || "");
+  const value = String(text || '');
   const width = Math.max(MIN_W, Math.ceil(value.length * 8.4) + 10);
   return max ? Math.min(width, max) : width;
 }
 
 function uid(parts) {
-  return parts.join("__");
+  return parts.join('__');
 }
 
 function loadSchemas() {
@@ -74,12 +74,12 @@ function loadSchemas() {
     const schemaPath = path.join(
       API_DIR,
       apiName,
-      "content-types",
+      'content-types',
       apiName,
-      "schema.json"
+      'schema.json',
     );
     if (!fs.existsSync(schemaPath)) continue;
-    const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+    const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
     schemas.push({ apiName, schema });
   }
   return schemas;
@@ -87,46 +87,46 @@ function loadSchemas() {
 
 function mapDataType(attr) {
   switch (attr.type) {
-    case "string":
-      return attr.maxLength ? `VARCHAR(${attr.maxLength})` : "VARCHAR(255)";
-    case "text":
-      return "TEXT";
-    case "email":
-      return "VARCHAR(255)";
-    case "uid":
-      return attr.maxLength ? `VARCHAR(${attr.maxLength})` : "VARCHAR(255)";
-    case "decimal": {
+    case 'string':
+      return attr.maxLength ? `VARCHAR(${attr.maxLength})` : 'VARCHAR(255)';
+    case 'text':
+      return 'TEXT';
+    case 'email':
+      return 'VARCHAR(255)';
+    case 'uid':
+      return attr.maxLength ? `VARCHAR(${attr.maxLength})` : 'VARCHAR(255)';
+    case 'decimal': {
       if (attr.precision && attr.scale) {
         return `DECIMAL(${attr.precision},${attr.scale})`;
       }
-      return "DECIMAL";
+      return 'DECIMAL';
     }
-    case "integer":
-      return "INTEGER";
-    case "biginteger":
-      return "BIGINT";
-    case "float":
-      return "DOUBLE PRECISION";
-    case "boolean":
-      return "BOOLEAN";
-    case "datetime":
-      return "TIMESTAMPTZ";
-    case "date":
-      return "DATE";
-    case "time":
-      return "TIME";
-    case "json":
-      return "JSONB";
-    case "enumeration":
-      return `ENUM(${(attr.enum || []).map((v) => `'${v}'`).join(",")})`;
-    case "media":
-      return "media";
+    case 'integer':
+      return 'INTEGER';
+    case 'biginteger':
+      return 'BIGINT';
+    case 'float':
+      return 'DOUBLE PRECISION';
+    case 'boolean':
+      return 'BOOLEAN';
+    case 'datetime':
+      return 'TIMESTAMPTZ';
+    case 'date':
+      return 'DATE';
+    case 'time':
+      return 'TIME';
+    case 'json':
+      return 'JSONB';
+    case 'enumeration':
+      return `ENUM(${(attr.enum || []).map((v) => `'${v}'`).join(',')})`;
+    case 'media':
+      return 'media';
     default:
-      return (attr.type || "TEXT").toUpperCase();
+      return (attr.type || 'TEXT').toUpperCase();
   }
 }
 
-function commentFor(attr, fallback = "") {
+function commentFor(attr, fallback = '') {
   return (attr.metadatas && attr.metadatas.description) || fallback;
 }
 
@@ -147,14 +147,14 @@ function makeColumn({
   name,
   comment,
   dataType,
-  defaultValue = "",
+  defaultValue = '',
   pk = false,
   fk = false,
   unique = false,
   notNull = false,
   autoIncrement = false,
 }) {
-  const id = uid(["col", tableId.replace(/^tbl__/, ""), name]);
+  const id = uid(['col', tableId.replace(/^tbl__/, ''), name]);
   const { options, keys } = columnOptions({
     pk,
     fk,
@@ -202,13 +202,13 @@ function targetCollection(target, schemasByUid) {
 }
 
 function isOwningRelation(attr) {
-  if (attr.type !== "relation") return false;
+  if (attr.type !== 'relation') return false;
   // Inverse sides are mappedBy; skip them so each FK is drawn once.
   if (attr.mappedBy) return false;
   return (
-    attr.relation === "manyToOne" ||
-    attr.relation === "oneToOne" ||
-    attr.relation === "manyToMany"
+    attr.relation === 'manyToOne' ||
+    attr.relation === 'oneToOne' ||
+    attr.relation === 'manyToMany'
   );
 }
 
@@ -239,10 +239,10 @@ function main() {
 
   for (const { schema } of loaded) {
     const collection = schema.collectionName;
-    const tableId = uid(["tbl", collection]);
+    const tableId = uid(['tbl', collection]);
     const singular = schema.info.singularName;
-    const comment = schema.info.description || schema.info.displayName || "";
-    const color = CLUSTER_COLOR[singular] || "";
+    const comment = schema.info.description || schema.info.displayName || '';
+    const color = CLUSTER_COLOR[singular] || '';
 
     const columns = [];
     const add = (col) => {
@@ -252,9 +252,9 @@ function main() {
 
     const idCol = makeColumn({
       tableId,
-      name: "id",
-      comment: "Strapi row primary key",
-      dataType: "INTEGER",
+      name: 'id',
+      comment: 'Strapi row primary key',
+      dataType: 'INTEGER',
       pk: true,
       notNull: true,
       autoIncrement: true,
@@ -265,37 +265,37 @@ function main() {
     add(
       makeColumn({
         tableId,
-        name: "document_id",
-        comment: "Strapi 5 document identifier",
-        dataType: "VARCHAR(255)",
+        name: 'document_id',
+        comment: 'Strapi 5 document identifier',
+        dataType: 'VARCHAR(255)',
         unique: true,
         notNull: true,
-      })
+      }),
     );
     pendingIndexes.push({
       tableId,
       collection,
-      columnName: "document_id",
+      columnName: 'document_id',
       unique: true,
     });
 
     for (const [attrName, attr] of Object.entries(schema.attributes)) {
-      if (attr.type === "relation") {
+      if (attr.type === 'relation') {
         if (!isOwningRelation(attr)) continue;
         const target = schemasByUid[attr.target];
         if (!target) continue;
         const fkName = `${attrName}_id`;
-        const oneToOne = attr.relation === "oneToOne";
+        const oneToOne = attr.relation === 'oneToOne';
         add(
           makeColumn({
             tableId,
             name: fkName,
             comment: commentFor(attr, `FK → ${target.collectionName}.id`),
-            dataType: "INTEGER",
+            dataType: 'INTEGER',
             fk: true,
             unique: oneToOne,
             notNull: Boolean(attr.required),
-          })
+          }),
         );
         pendingRels.push({
           fromCollection: collection,
@@ -316,23 +316,23 @@ function main() {
         continue;
       }
 
-      if (attr.type === "media") {
+      if (attr.type === 'media') {
         add(
           makeColumn({
             tableId,
             name: attrName,
             comment: commentFor(
               attr,
-              `Media (${(attr.allowedTypes || []).join(", ") || "file"})`
+              `Media (${(attr.allowedTypes || []).join(', ') || 'file'})`,
             ),
-            dataType: "media",
+            dataType: 'media',
             notNull: Boolean(attr.required),
-          })
+          }),
         );
         continue;
       }
 
-      const unique = Boolean(attr.unique) || attr.type === "uid";
+      const unique = Boolean(attr.unique) || attr.type === 'uid';
       add(
         makeColumn({
           tableId,
@@ -341,7 +341,7 @@ function main() {
           dataType: mapDataType(attr),
           notNull: Boolean(attr.required),
           unique,
-        })
+        }),
       );
       if (unique) {
         pendingIndexes.push({
@@ -356,30 +356,30 @@ function main() {
     add(
       makeColumn({
         tableId,
-        name: "created_at",
-        comment: "Row created at",
-        dataType: "TIMESTAMPTZ",
+        name: 'created_at',
+        comment: 'Row created at',
+        dataType: 'TIMESTAMPTZ',
         notNull: true,
-      })
+      }),
     );
     add(
       makeColumn({
         tableId,
-        name: "updated_at",
-        comment: "Row updated at",
-        dataType: "TIMESTAMPTZ",
+        name: 'updated_at',
+        comment: 'Row updated at',
+        dataType: 'TIMESTAMPTZ',
         notNull: true,
-      })
+      }),
     );
 
     if (schema.options && schema.options.draftAndPublish) {
       add(
         makeColumn({
           tableId,
-          name: "published_at",
-          comment: "Draft & publish timestamp",
-          dataType: "TIMESTAMPTZ",
-        })
+          name: 'published_at',
+          comment: 'Draft & publish timestamp',
+          dataType: 'TIMESTAMPTZ',
+        }),
       );
     }
 
@@ -410,9 +410,9 @@ function main() {
 
   // Layout: domain clusters, left-to-right then top-to-bottom.
   const layout = [
-    ["organizations", "memberships", "members", "membership_types"],
-    ["account_categories", "accounts", "receipts", "transaction_types"],
-    ["currency_categories", "currency_types", "currency_rates", "transactions"],
+    ['organizations', 'memberships', 'members', 'membership_types'],
+    ['account_categories', 'accounts', 'receipts', 'transaction_types'],
+    ['currency_categories', 'currency_types', 'currency_rates', 'transactions'],
   ];
   const layoutOrder = layout.flat();
   const originX = 80;
@@ -437,7 +437,7 @@ function main() {
   }
 
   function columnId(collection, name) {
-    return uid(["col", collection, name]);
+    return uid(['col', collection, name]);
   }
 
   function tableBox(collection) {
@@ -484,17 +484,17 @@ function main() {
   }
 
   for (const rel of pendingRels) {
-    const id = uid(["rel", rel.fromCollection, rel.attrName]);
-    const startTableId = uid(["tbl", rel.toCollection]);
-    const endTableId = uid(["tbl", rel.fromCollection]);
+    const id = uid(['rel', rel.fromCollection, rel.attrName]);
+    const startTableId = uid(['tbl', rel.toCollection]);
+    const endTableId = uid(['tbl', rel.fromCollection]);
     const { startDir, endDir } = pickDirections(
       rel.fromCollection,
-      rel.toCollection
+      rel.toCollection,
     );
     const start = edgePoint(tableBox(rel.toCollection), startDir);
     const end = edgePoint(tableBox(rel.fromCollection), endDir);
 
-    const oneToOne = rel.relation === "oneToOne";
+    const oneToOne = rel.relation === 'oneToOne';
     const relationshipType = oneToOne
       ? rel.required
         ? RelationshipType.OneOnly
@@ -527,8 +527,8 @@ function main() {
   }
 
   for (const idx of pendingIndexes) {
-    const id = uid(["idx", idx.collection, idx.columnName]);
-    const indexColumnId = uid(["idxcol", idx.collection, idx.columnName]);
+    const id = uid(['idx', idx.collection, idx.columnName]);
+    const indexColumnId = uid(['idxcol', idx.collection, idx.columnName]);
     indexEntities[id] = {
       id,
       name: `uq_${idx.collection}_${idx.columnName}`,
@@ -547,27 +547,27 @@ function main() {
     };
   }
 
-  const memoId = "memo__legend";
+  const memoId = 'memo__legend';
   memoEntities[memoId] = {
     id: memoId,
     value: [
-      "CURR — Strapi 5 content types",
-      "Source: src/api/**/schema.json",
-      "",
-      "Blue: community  ·  Purple: accounts",
-      "Green: ledger  ·  Gold: currency",
-      "",
-      "Owning-side FKs only (mappedBy omitted).",
-      "document_id is the Strapi 5 document key.",
-      "published_at only when draftAndPublish is on.",
-    ].join("\n"),
+      'CURR — Strapi 5 content types',
+      'Source: src/api/**/schema.json',
+      '',
+      'Blue: community  ·  Purple: accounts',
+      'Green: ledger  ·  Gold: currency',
+      '',
+      'Owning-side FKs only (mappedBy omitted).',
+      'document_id is the Strapi 5 document key.',
+      'published_at only when draftAndPublish is on.',
+    ].join('\n'),
     ui: {
       x: 80,
       y: y + 20,
       width: 420,
       height: 210,
       zIndex: 1,
-      color: "",
+      color: '',
     },
     meta: meta(),
   };
@@ -581,7 +581,7 @@ function main() {
 
   const doc = {
     $schema: SCHEMA_URL,
-    version: "3.0.0",
+    version: '3.0.0',
     settings: {
       width: 5000,
       height: 3500,
@@ -601,8 +601,8 @@ function main() {
         Show.columnNotNull |
         Show.relationship,
       database: 16, // PostgreSQL
-      databaseName: "curr",
-      canvasType: "ERD",
+      databaseName: 'curr',
+      canvasType: 'ERD',
       language: 16, // TypeScript
       tableNameCase: 1, // none
       columnNameCase: 1, // none
@@ -615,7 +615,7 @@ function main() {
     },
     doc: {
       tableIds: layoutOrder
-        .map((collection) => uid(["tbl", collection]))
+        .map((collection) => uid(['tbl', collection]))
         .filter((id) => tableEntities[id]),
       relationshipIds: Object.keys(relationshipEntities),
       indexIds: Object.keys(indexEntities),
@@ -637,7 +637,7 @@ function main() {
     `Wrote ${path.relative(ROOT, OUT_FILE)} ` +
       `(${doc.doc.tableIds.length} tables, ` +
       `${doc.doc.relationshipIds.length} relationships, ` +
-      `${Object.keys(tableColumnEntities).length} columns)`
+      `${Object.keys(tableColumnEntities).length} columns)`,
   );
   for (const collection of layoutOrder) {
     const t = tablesByCollection[collection];
@@ -645,7 +645,7 @@ function main() {
     const size = sizes[t.id];
     console.log(
       `  ${collection.padEnd(22)} x=${String(t.ui.x).padStart(4)} y=${String(t.ui.y).padStart(4)} ` +
-        `w=${size.w} h=${size.h}`
+        `w=${size.w} h=${size.h}`,
     );
   }
 }

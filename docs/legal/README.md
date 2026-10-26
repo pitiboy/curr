@@ -2,11 +2,11 @@
 
 A Google OAuth hozzájárulási képernyő (consent screen) kezdőlapot, adatkezelési tájékoztatót és felhasználási feltételeket kér. A szövegek a Strapi `static-page` gyűjteményben élnek, két nyelven (i18n: `hu` alapértelmezett, `en`). A Strapi nyilvánosan, belépés nélkül szolgálja ki őket.
 
-| Dokumentum | slug | `footer_order` | Forrás | Magyar (alap, a Google-nek ezt add meg) | Angol |
-| --- | --- | --- | --- | --- | --- |
-| Adatkezelési tájékoztató / Privacy Policy | `privacy-policy` | 1 | `hu/privacy-policy.md`, `en/privacy-policy.md` | https://kor.fejlesztesek.hu/static/privacy-policy | https://kor.fejlesztesek.hu/static/privacy-policy?locale=en |
-| Felhasználási feltételek / Terms of Service | `terms-of-service` | 2 | `hu/terms-of-service.md`, `en/terms-of-service.md` | https://kor.fejlesztesek.hu/static/terms-of-service | https://kor.fejlesztesek.hu/static/terms-of-service?locale=en |
-| A KÖR rendszerről / About (bemutató oldal, Google home page) | `about` | 3 | `hu/about.md`, `en/about.md` | https://kor.fejlesztesek.hu/static/about | https://kor.fejlesztesek.hu/static/about?locale=en |
+| Dokumentum                                                   | slug               | `footer_order` | Forrás                                             | Magyar (alap, a Google-nek ezt add meg)             | Angol                                                         |
+| ------------------------------------------------------------ | ------------------ | -------------- | -------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------- |
+| Adatkezelési tájékoztató / Privacy Policy                    | `privacy-policy`   | 1              | `hu/privacy-policy.md`, `en/privacy-policy.md`     | https://kor.fejlesztesek.hu/static/privacy-policy   | https://kor.fejlesztesek.hu/static/privacy-policy?locale=en   |
+| Felhasználási feltételek / Terms of Service                  | `terms-of-service` | 2              | `hu/terms-of-service.md`, `en/terms-of-service.md` | https://kor.fejlesztesek.hu/static/terms-of-service | https://kor.fejlesztesek.hu/static/terms-of-service?locale=en |
+| A KÖR rendszerről / About (bemutató oldal, Google home page) | `about`            | 3              | `hu/about.md`, `en/about.md`                       | https://kor.fejlesztesek.hu/static/about            | https://kor.fejlesztesek.hu/static/about?locale=en            |
 
 Lista: `/static` (és `/static?locale=en`). JSON: `GET /api/static-pages?locale=hu|en` (public role: `find`, `findOne`, a bootstrap állítja be).
 

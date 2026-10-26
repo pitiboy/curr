@@ -4,4 +4,6 @@
 
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreController('api::currency-rate.currency-rate');
+export default factories.createCoreController(
+  'api::currency-rate.currency-rate',
+);

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { memberIdentifierBase, uniqueMemberIdentifier } from './member-identifier.ts';
+import {
+  memberIdentifierBase,
+  uniqueMemberIdentifier,
+} from './member-identifier.ts';
 
 describe('memberIdentifierBase', () => {
   it('keeps Hungarian accents and joins words with dots', () => {
@@ -14,11 +17,17 @@ describe('memberIdentifierBase', () => {
   });
 
   it('collapses separators and trims them', () => {
-    assert.equal(memberIdentifierBase('  Dr. Nagy-Szabó   Pál! '), 'dr.nagy.szabó.pál');
+    assert.equal(
+      memberIdentifierBase('  Dr. Nagy-Szabó   Pál! '),
+      'dr.nagy.szabó.pál',
+    );
   });
 
   it('drops accents that are not Hungarian', () => {
-    assert.equal(memberIdentifierBase('Müller Jürgen Çelik'), 'müller.jürgen.celik');
+    assert.equal(
+      memberIdentifierBase('Müller Jürgen Çelik'),
+      'müller.jürgen.celik',
+    );
     assert.equal(memberIdentifierBase('Anaïs'), 'anais');
   });
 
@@ -34,7 +43,10 @@ describe('uniqueMemberIdentifier', () => {
   it('returns the base when free, else the next numbered one', () => {
     assert.equal(uniqueMemberIdentifier('kovács.erika', []), 'kovács.erika');
     assert.equal(
-      uniqueMemberIdentifier('kovács.erika', ['kovács.erika', 'kovács.erika-2']),
+      uniqueMemberIdentifier('kovács.erika', [
+        'kovács.erika',
+        'kovács.erika-2',
+      ]),
       'kovács.erika-3',
     );
   });

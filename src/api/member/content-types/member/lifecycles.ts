@@ -72,11 +72,18 @@ export default {
 
     try {
       // Member account (1101) and private account (1001), unless given.
-      await createMissingMemberAccounts(accountsStrapi(), member as Record<string, unknown>, {
-        identifier: member.identifier,
-      });
+      await createMissingMemberAccounts(
+        accountsStrapi(),
+        member as Record<string, unknown>,
+        {
+          identifier: member.identifier,
+        },
+      );
     } catch (error) {
-      strapi.log.error('Member beforeCreate: creating the accounts failed', error);
+      strapi.log.error(
+        'Member beforeCreate: creating the accounts failed',
+        error,
+      );
     }
   },
 
@@ -84,7 +91,9 @@ export default {
     const {
       params: { data: member, where },
     } = event;
-    strapi.log.info(`Member beforeUpdate: ${member.name ?? ''} (${JSON.stringify(where)})`);
+    strapi.log.info(
+      `Member beforeUpdate: ${member.name ?? ''} (${JSON.stringify(where)})`,
+    );
 
     if ('identifier' in member && !String(member.identifier ?? '').trim()) {
       if (typeof member.name !== 'string' || !member.name.trim()) {
@@ -97,13 +106,22 @@ export default {
     try {
       // The update payload usually omits relations, so check the stored member;
       // otherwise every save would create a new account.
-      const stored = where ? await findMemberWithAccounts(accountsStrapi(), where) : null;
-      await createMissingMemberAccounts(accountsStrapi(), member as Record<string, unknown>, {
-        identifier: member.identifier || stored?.identifier,
-        existing: stored,
-      });
+      const stored = where
+        ? await findMemberWithAccounts(accountsStrapi(), where)
+        : null;
+      await createMissingMemberAccounts(
+        accountsStrapi(),
+        member as Record<string, unknown>,
+        {
+          identifier: member.identifier || stored?.identifier,
+          existing: stored,
+        },
+      );
     } catch (error) {
-      strapi.log.error('Member beforeUpdate: creating the accounts failed', error);
+      strapi.log.error(
+        'Member beforeUpdate: creating the accounts failed',
+        error,
+      );
     }
   },
 };

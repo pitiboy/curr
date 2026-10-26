@@ -18,7 +18,7 @@ module.exports = {
       // Create main organization
       const organization = await createMainOrganization(
         strapi,
-        organizationName
+        organizationName,
       );
 
       // Create child organizations based on level
@@ -45,7 +45,7 @@ async function createMainOrganization(strapi, name) {
 
   const existingOrg = await strapi.entityService.findMany(
     'api::organization.organization',
-    { filters: { name } }
+    { filters: { name } },
   );
 
   if (existingOrg.length > 0) {
@@ -61,7 +61,7 @@ async function createMainOrganization(strapi, name) {
         description: '',
         address: '',
       },
-    }
+    },
   );
 
   console.log(`✅ Created organization: ${organization.name}`);
@@ -78,7 +78,7 @@ async function createChildOrganizations(strapi, parentOrgId, level) {
     totalCreated += await createOrganizationRecursively(
       strapi,
       childOrg,
-      parentOrgId
+      parentOrgId,
     );
   }
 
@@ -96,7 +96,7 @@ async function createOrganizationRecursively(strapi, orgData, parentId) {
         address: '',
         parent: parentId,
       },
-    }
+    },
   );
 
   let count = 1; // Count this organization
@@ -107,7 +107,7 @@ async function createOrganizationRecursively(strapi, orgData, parentId) {
       count += await createOrganizationRecursively(
         strapi,
         child,
-        createdOrg.id
+        createdOrg.id,
       );
     }
   }
@@ -283,7 +283,7 @@ async function seedOrganizationAccounts(strapi, organizationId) {
 
   // Get account categories first
   const accountCategories = await strapi.entityService.findMany(
-    'api::account-category.account-category'
+    'api::account-category.account-category',
   );
 
   const categoryMap = {};
@@ -500,7 +500,7 @@ async function seedOrganizationAccounts(strapi, organizationId) {
     const mappedOrgId = await findOrganizationByName(
       strapi,
       account.childOrganizationToLink,
-      organizationId
+      organizationId,
     );
 
     await strapi.entityService.create('api::account.account', {
@@ -515,7 +515,7 @@ async function seedOrganizationAccounts(strapi, organizationId) {
   }
 
   console.log(
-    `✅ Created ${accounts.length} accounts with hardcoded organization mapping`
+    `✅ Created ${accounts.length} accounts with hardcoded organization mapping`,
   );
 }
 
@@ -530,7 +530,7 @@ async function findOrganizationByName(strapi, targetOrgName, defaultOrgId) {
     {
       filters: { name: targetOrgName },
       limit: 1,
-    }
+    },
   );
 
   if (organizations.length > 0) {

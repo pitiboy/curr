@@ -118,23 +118,32 @@ function normalize(field, value) {
 export function keyFields(source) {
   const fields = source.import_key_fields;
   if (!Array.isArray(fields) || fields.length === 0) {
-    throw new Error('import_key_fields is missing or empty in transactions.json');
+    throw new Error(
+      'import_key_fields is missing or empty in transactions.json',
+    );
   }
   const rows = source.transactions || [];
   const seen = new Set();
   for (const field of fields) {
     if (typeof field !== 'string' || !field.trim()) {
-      throw new Error(`import_key_fields contains an invalid name: ${JSON.stringify(field)}`);
+      throw new Error(
+        `import_key_fields contains an invalid name: ${JSON.stringify(field)}`,
+      );
     }
-    if (seen.has(field)) throw new Error(`import_key_fields lists "${field}" twice`);
+    if (seen.has(field))
+      throw new Error(`import_key_fields lists "${field}" twice`);
     seen.add(field);
     if (field === 'import_key' || field === 'row') {
       throw new Error(`import_key_fields must not contain "${field}"`);
     }
     if (field === CURRENCY) {
-      const missing = rows.filter((row) => !(CURRENCY in row) && !source.currencyCode);
+      const missing = rows.filter(
+        (row) => !(CURRENCY in row) && !source.currencyCode,
+      );
       if (missing.length) {
-        throw new Error('import_key_fields uses "currency" but there is no currencyCode and rows have no currency');
+        throw new Error(
+          'import_key_fields uses "currency" but there is no currencyCode and rows have no currency',
+        );
       }
       continue;
     }
@@ -151,7 +160,10 @@ export function keyFields(source) {
 export function canonicalRow(row, fields, currencyCode = '') {
   return JSON.stringify(
     fields.map((field) =>
-      normalize(field, field === CURRENCY && !(CURRENCY in row) ? currencyCode : row[field]),
+      normalize(
+        field,
+        field === CURRENCY && !(CURRENCY in row) ? currencyCode : row[field],
+      ),
     ),
   );
 }
@@ -174,8 +186,12 @@ function aliasTable() {
   const table = new Map();
   for (const [label, target] of Object.entries(ACCOUNT_ALIASES)) {
     const key = fold(label);
-    if (!key || !target) throw new Error(`ACCOUNT_ALIASES has an empty entry: ${JSON.stringify(label)}`);
-    if (table.has(key)) throw new Error(`ACCOUNT_ALIASES lists "${label}" twice`);
+    if (!key || !target)
+      throw new Error(
+        `ACCOUNT_ALIASES has an empty entry: ${JSON.stringify(label)}`,
+      );
+    if (table.has(key))
+      throw new Error(`ACCOUNT_ALIASES lists "${label}" twice`);
     table.set(key, target);
   }
   return table;
@@ -185,14 +201,19 @@ function aliasTable() {
  * Sheet account label → chart name, or tag:<identifier> / saját:<identifier>.
  * `accountNames` is the set of accounts.json names.
  */
-export function resolveAccountLabel(label, accountNames, aliases = aliasTable()) {
+export function resolveAccountLabel(
+  label,
+  accountNames,
+  aliases = aliasTable(),
+) {
   const text = fold(label);
   if (!text) throw new Error('empty account label');
   const byFold = new Map([...accountNames].map((name) => [fold(name), name]));
   if (aliases.has(text)) {
     const target = aliases.get(text);
     const canonical = byFold.get(fold(target));
-    if (!canonical) throw new Error(`alias "${label}" points at unknown account "${target}"`);
+    if (!canonical)
+      throw new Error(`alias "${label}" points at unknown account "${target}"`);
     return canonical;
   }
   const exact = byFold.get(text);
@@ -200,7 +221,8 @@ export function resolveAccountLabel(label, accountNames, aliases = aliasTable())
   const member = /^(.*?)\s-\s(tagi|saját)\s+számla$/iu.exec(text);
   if (member) {
     const identifier = memberIdentifierBase(member[1]);
-    if (!identifier) throw new Error(`account label "${label}" has no member name`);
+    if (!identifier)
+      throw new Error(`account label "${label}" has no member name`);
     const kind = member[2].toLocaleLowerCase('hu') === 'tagi' ? 'tag' : 'saját';
     return `${kind}:${identifier}`;
   }
@@ -209,10 +231,14 @@ export function resolveAccountLabel(label, accountNames, aliases = aliasTable())
 
 export function resolveOrganization(project, source, orgNames) {
   const name = fold(project);
-  const canonical = (value) => [...orgNames].find((org) => fold(org) === fold(value));
+  const canonical = (value) =>
+    [...orgNames].find((org) => fold(org) === fold(value));
   if (!name) {
     const main = canonical(source.mainOrganization);
-    if (!main) throw new Error('row has no project and mainOrganization is not an organization');
+    if (!main)
+      throw new Error(
+        'row has no project and mainOrganization is not an organization',
+      );
     return main;
   }
   const direct = canonical(name);
@@ -221,15 +247,20 @@ export function resolveOrganization(project, source, orgNames) {
   const mapped = Object.entries(table).find(([key]) => fold(key) === name)?.[1];
   if (!mapped) throw new Error(`no organization for project "${project}"`);
   const org = canonical(mapped);
-  if (!org) throw new Error(`project "${project}" maps to "${mapped}", which is not an organization`);
+  if (!org)
+    throw new Error(
+      `project "${project}" maps to "${mapped}", which is not an organization`,
+    );
   return org;
 }
 
 /** Excel előjel → mindig pozitív amount a JSON-ban; a számlacímkék változatlanok. */
 export function absAmountRow(row) {
-  if (row.amount === undefined || row.amount === null || row.amount === '') return row;
+  if (row.amount === undefined || row.amount === null || row.amount === '')
+    return row;
   const amount = Number(row.amount);
-  if (!Number.isFinite(amount)) throw new Error(`row ${row.row}: not an amount: ${row.amount}`);
+  if (!Number.isFinite(amount))
+    throw new Error(`row ${row.row}: not an amount: ${row.amount}`);
   const absAmount = Math.round(Math.abs(amount) * 100) / 100;
   if (amount === absAmount) return row;
   return { ...row, amount: absAmount };
@@ -237,12 +268,16 @@ export function absAmountRow(row) {
 
 export function resolveTransactionType(row, source, typeNames) {
   const name =
-    (source.operationTransactionTypes && source.operationTransactionTypes[row.operation]) ||
+    (source.operationTransactionTypes &&
+      source.operationTransactionTypes[row.operation]) ||
     (source.placeTransactionTypes && source.placeTransactionTypes[row.place]) ||
     null;
   if (!name) return null;
   const canonical = [...typeNames].find((type) => fold(type) === fold(name));
-  if (!canonical) throw new Error(`row ${row.row}: transaction type "${name}" is not in transaction-types.json`);
+  if (!canonical)
+    throw new Error(
+      `row ${row.row}: transaction type "${name}" is not in transaction-types.json`,
+    );
   return canonical;
 }
 
@@ -250,21 +285,60 @@ function assertNamed(table, names, label, what) {
   for (const [key, value] of Object.entries(table || {})) {
     if (!value) continue;
     if (![...names].some((name) => fold(name) === fold(value))) {
-      throw new Error(`${label}["${key}"] is "${value}", which is not a ${what}`);
+      throw new Error(
+        `${label}["${key}"] is "${value}", which is not a ${what}`,
+      );
     }
   }
 }
 
 /** Fallback maps must point at the final chart, organizations, and types. */
 export function assertLookupTables(source, ctx) {
-  assertNamed(source.partyAccounts, ctx.accountNames, 'partyAccounts', 'chart account');
-  assertNamed(source.operationCreditAccounts, ctx.accountNames, 'operationCreditAccounts', 'chart account');
-  assertNamed(source.expenseDebitAccounts, ctx.accountNames, 'expenseDebitAccounts', 'chart account');
-  assertNamed(source.projectOrganizations, ctx.orgNames, 'projectOrganizations', 'organization');
-  assertNamed(source.placeTransactionTypes, ctx.typeNames, 'placeTransactionTypes', 'transaction type');
-  assertNamed(source.operationTransactionTypes, ctx.typeNames, 'operationTransactionTypes', 'transaction type');
-  if (source.mainOrganization && ![...ctx.orgNames].some((name) => fold(name) === fold(source.mainOrganization))) {
-    throw new Error(`mainOrganization "${source.mainOrganization}" is not an organization`);
+  assertNamed(
+    source.partyAccounts,
+    ctx.accountNames,
+    'partyAccounts',
+    'chart account',
+  );
+  assertNamed(
+    source.operationCreditAccounts,
+    ctx.accountNames,
+    'operationCreditAccounts',
+    'chart account',
+  );
+  assertNamed(
+    source.expenseDebitAccounts,
+    ctx.accountNames,
+    'expenseDebitAccounts',
+    'chart account',
+  );
+  assertNamed(
+    source.projectOrganizations,
+    ctx.orgNames,
+    'projectOrganizations',
+    'organization',
+  );
+  assertNamed(
+    source.placeTransactionTypes,
+    ctx.typeNames,
+    'placeTransactionTypes',
+    'transaction type',
+  );
+  assertNamed(
+    source.operationTransactionTypes,
+    ctx.typeNames,
+    'operationTransactionTypes',
+    'transaction type',
+  );
+  if (
+    source.mainOrganization &&
+    ![...ctx.orgNames].some(
+      (name) => fold(name) === fold(source.mainOrganization),
+    )
+  ) {
+    throw new Error(
+      `mainOrganization "${source.mainOrganization}" is not an organization`,
+    );
   }
   for (const target of aliasTable().values()) {
     if (![...ctx.accountNames].some((name) => fold(name) === fold(target))) {
@@ -285,11 +359,19 @@ export function bookRow(row, source, ctx) {
   }
   let organization;
   try {
-    organization = resolveOrganization(withAmount.project, source, ctx.orgNames);
+    organization = resolveOrganization(
+      withAmount.project,
+      source,
+      ctx.orgNames,
+    );
   } catch (error) {
     throw new Error(`row ${withAmount.row}: ${error.message}`);
   }
-  const transactionType = resolveTransactionType(withAmount, source, ctx.typeNames);
+  const transactionType = resolveTransactionType(
+    withAmount,
+    source,
+    ctx.typeNames,
+  );
   const booked = {
     ...withAmount,
     credit_account: credit,
@@ -305,7 +387,13 @@ function ordered(row) {
   const out = {};
   for (const field of ROW_FIELDS) {
     if (row[field] === undefined || row[field] === null) continue;
-    if (row[field] === '' && field !== 'payer' && field !== 'payee' && field !== 'project') continue;
+    if (
+      row[field] === '' &&
+      field !== 'payer' &&
+      field !== 'payee' &&
+      field !== 'project'
+    )
+      continue;
     out[field] = row[field];
   }
   return out;
@@ -319,12 +407,16 @@ export function buildTransactions(source, ctx, sheetRows) {
     transactions: rawRows.map((row) => bookRow(row, source, ctx)),
   };
   const keys = importKeys(next);
-  next.transactions = next.transactions.map((row, index) => ordered({ ...row, import_key: keys[index] }));
+  next.transactions = next.transactions.map((row, index) =>
+    ordered({ ...row, import_key: keys[index] }),
+  );
   return next;
 }
 
 function sameBooking(left, right) {
-  return ROW_FIELDS.every((field) => (left[field] ?? '') === (right[field] ?? ''));
+  return ROW_FIELDS.every(
+    (field) => (left[field] ?? '') === (right[field] ?? ''),
+  );
 }
 
 function unescapeXml(value) {
@@ -335,12 +427,15 @@ function unescapeXml(value) {
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCodePoint(parseInt(n, 16)));
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) =>
+      String.fromCodePoint(parseInt(n, 16)),
+    );
 }
 
 function xmlAttrs(tag) {
   const attrs = {};
-  for (const match of tag.matchAll(/([\w:]+)="([^"]*)"/g)) attrs[match[1]] = unescapeXml(match[2]);
+  for (const match of tag.matchAll(/([\w:]+)="([^"]*)"/g))
+    attrs[match[1]] = unescapeXml(match[2]);
   return attrs;
 }
 
@@ -351,7 +446,8 @@ function readZip(buffer) {
   let cursor = buffer.readUInt32LE(eocd + 16);
   const files = new Map();
   for (let index = 0; index < count; index += 1) {
-    if (buffer.readUInt32LE(cursor) !== 0x02014b50) throw new Error('bad zip directory');
+    if (buffer.readUInt32LE(cursor) !== 0x02014b50)
+      throw new Error('bad zip directory');
     const method = buffer.readUInt16LE(cursor + 10);
     const compressedSize = buffer.readUInt32LE(cursor + 20);
     const nameLength = buffer.readUInt16LE(cursor + 28);
@@ -363,7 +459,12 @@ function readZip(buffer) {
     const localExtraLength = buffer.readUInt16LE(localOffset + 28);
     const start = localOffset + 30 + localNameLength + localExtraLength;
     const compressed = buffer.subarray(start, start + compressedSize);
-    const data = method === 0 ? compressed : method === 8 ? inflateRawSync(compressed) : null;
+    const data =
+      method === 0
+        ? compressed
+        : method === 8
+          ? inflateRawSync(compressed)
+          : null;
     if (!data) throw new Error(`unsupported zip method ${method} in ${name}`);
     files.set(name, data);
     cursor += 46 + nameLength + extraLength + commentLength;
@@ -376,7 +477,9 @@ function sharedStrings(xml) {
   for (const part of xml.split(/<si\b[^>]*>/).slice(1)) {
     const body = part.split(/<\/si>/)[0];
     strings.push(
-      [...body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map((match) => unescapeXml(match[1])).join(''),
+      [...body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)]
+        .map((match) => unescapeXml(match[1]))
+        .join(''),
     );
   }
   return strings;
@@ -419,7 +522,9 @@ function sheetRows(xml, strings) {
 export function excelDate(serial) {
   const day = Math.round(Number(serial));
   if (!Number.isFinite(day)) throw new Error(`not an Excel date: ${serial}`);
-  return new Date(Date.UTC(1899, 11, 30) + day * 86400000).toISOString().slice(0, 10);
+  return new Date(Date.UTC(1899, 11, 30) + day * 86400000)
+    .toISOString()
+    .slice(0, 10);
 }
 
 export function excelAmount(value) {
@@ -447,7 +552,9 @@ export function readWorkbook(file) {
     .find((attrs) => attrs.Id === sheet['r:id']);
   if (!relation) throw new Error(`no relationship for sheet "${SHEET_NAME}"`);
   const target = relation.Target.replace(/^\//, '');
-  const path = target.startsWith('xl/') ? target : `xl/${target.replace(/^\.\//, '')}`;
+  const path = target.startsWith('xl/')
+    ? target
+    : `xl/${target.replace(/^\.\//, '')}`;
   const sheetXml = files.get(path);
   if (!sheetXml) throw new Error(`missing ${path} in ${file}`);
   const strings = files.has('xl/sharedStrings.xml')
@@ -463,21 +570,33 @@ export function readWorkbook(file) {
     [COL.amount, 'Amount'],
   ];
   for (const [column, name] of expected) {
-    if (fold(header[column]).toLocaleLowerCase('hu') !== fold(name).toLocaleLowerCase('hu')) {
-      throw new Error(`column ${column} is "${header[column] ?? ''}", expected "${name}"`);
+    if (
+      fold(header[column]).toLocaleLowerCase('hu') !==
+      fold(name).toLocaleLowerCase('hu')
+    ) {
+      throw new Error(
+        `column ${column} is "${header[column] ?? ''}", expected "${name}"`,
+      );
     }
   }
   const transactions = [];
   for (let index = 1; index < rows.length; index += 1) {
     const cells = rows[index] || [];
-    const empty = ![COL.date, COL.payer, COL.credit, COL.debit, COL.amount].some((column) =>
-      cellText(cells[column]),
-    );
+    const empty = ![
+      COL.date,
+      COL.payer,
+      COL.credit,
+      COL.debit,
+      COL.amount,
+    ].some((column) => cellText(cells[column]));
     if (empty) continue;
     const rowNumber = index + 1;
-    if (!cellText(cells[COL.date])) throw new Error(`row ${rowNumber} has no date`);
+    if (!cellText(cells[COL.date]))
+      throw new Error(`row ${rowNumber} has no date`);
     if (!cellText(cells[COL.credit]) || !cellText(cells[COL.debit])) {
-      throw new Error(`row ${rowNumber} has no credit_Account or Debit_account`);
+      throw new Error(
+        `row ${rowNumber} has no credit_Account or Debit_account`,
+      );
     }
     transactions.push({
       row: rowNumber,
@@ -490,7 +609,9 @@ export function readWorkbook(file) {
       operation: cellText(cells[COL.operation]),
       amount: excelAmount(cells[COL.amount]),
       place: cellText(cells[COL.place]),
-      description: String(cells[COL.description] ?? '').normalize('NFC').trim(),
+      description: String(cells[COL.description] ?? '')
+        .normalize('NFC')
+        .trim(),
       credit_label: cellText(cells[COL.credit]),
       debit_label: cellText(cells[COL.debit]),
     });
@@ -500,9 +621,15 @@ export function readWorkbook(file) {
 
 function loadContext(transactionsFile) {
   const dir = dirname(transactionsFile);
-  const accounts = JSON.parse(readFileSync(resolve(dir, 'accounts.json'), 'utf8'));
-  const organizations = JSON.parse(readFileSync(resolve(dir, 'organizations.json'), 'utf8'));
-  const types = JSON.parse(readFileSync(resolve(dir, 'transaction-types.json'), 'utf8'));
+  const accounts = JSON.parse(
+    readFileSync(resolve(dir, 'accounts.json'), 'utf8'),
+  );
+  const organizations = JSON.parse(
+    readFileSync(resolve(dir, 'organizations.json'), 'utf8'),
+  );
+  const types = JSON.parse(
+    readFileSync(resolve(dir, 'transaction-types.json'), 'utf8'),
+  );
   return {
     accountNames: new Set(accounts.accounts.map((account) => account.name)),
     orgNames: new Set(organizations.map((organization) => organization.name)),
@@ -537,7 +664,9 @@ function parseArgs(argv) {
 
 function main(argv) {
   const args = parseArgs(argv);
-  const file = resolve(args.file || 'database/seeders/http/kor/data/transactions.json');
+  const file = resolve(
+    args.file || 'database/seeders/http/kor/data/transactions.json',
+  );
   const source = JSON.parse(readFileSync(file, 'utf8'));
   const ctx = loadContext(file);
   let sheetRows;
@@ -557,8 +686,11 @@ function main(argv) {
     process.exit(1);
   }
   const current = source.transactions || [];
-  const stale = next.transactions.filter((row, index) => !current[index] || !sameBooking(current[index], row));
-  const drifted = stale.length > 0 || current.length !== next.transactions.length;
+  const stale = next.transactions.filter(
+    (row, index) => !current[index] || !sameBooking(current[index], row),
+  );
+  const drifted =
+    stale.length > 0 || current.length !== next.transactions.length;
   const fields = source.import_key_fields.join(', ');
   if (args.check) {
     if (drifted) {
@@ -567,7 +699,9 @@ function main(argv) {
       );
       process.exit(1);
     }
-    console.log(`${next.transactions.length} import rows ok (fields: ${fields}) in ${file}`);
+    console.log(
+      `${next.transactions.length} import rows ok (fields: ${fields}) in ${file}`,
+    );
     return;
   }
   source.transactions = next.transactions;
@@ -584,7 +718,10 @@ function main(argv) {
       }
     }
   }
-  const aliasText = [...aliases.entries()].map(([key, count]) => `${key} ×${count}`).join('; ') || 'none';
+  const aliasText =
+    [...aliases.entries()]
+      .map(([key, count]) => `${key} ×${count}`)
+      .join('; ') || 'none';
   let amountUpdates = 0;
   let keyUpdates = 0;
   for (let index = 0; index < next.transactions.length; index += 1) {
@@ -601,6 +738,9 @@ function main(argv) {
   console.log(`aliases: ${aliasText}`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   main(process.argv.slice(2));
 }

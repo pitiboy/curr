@@ -60,10 +60,10 @@ Biztonság:
 
 DotRoll cPanelen a `WebApp` / `PassengerApps` UAPI üres listát ad (`data: []` / `{}`), ezért **nincs automatikus UAPI restart vagy `ensure_deps`**. A deploy ezt a két utat használja:
 
-| Lépés | Módszer | Mikor |
-| ----- | ------- | ----- |
-| Passenger restart | FTP: `<app-root>/tmp/restart.txt` | Minden backend deploy után ([cPanel Passenger restart](https://support.cpanel.net/hc/en-us/articles/1500002443862)) |
-| NPM Install | Manuális: Setup Node.js App → **Run NPM Install** | Ha a `package-lock.json` változott a deployban |
+| Lépés             | Módszer                                           | Mikor                                                                                                               |
+| ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Passenger restart | FTP: `<app-root>/tmp/restart.txt`                 | Minden backend deploy után ([cPanel Passenger restart](https://support.cpanel.net/hc/en-us/articles/1500002443862)) |
+| NPM Install       | Manuális: Setup Node.js App → **Run NPM Install** | Ha a `package-lock.json` változott a deployban                                                                      |
 
 Lockfile változáskor a workflow:
 
@@ -109,14 +109,14 @@ A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBA
 
 ## Automatizált vs manuális
 
-| Lépés                                       | Automatizált                  | Manuális                                                                                                     |
-| ------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `npm ci`, typecheck, tesztek, build         | CI / runner                   | —                                                                                                            |
-| FTPS feltöltés                              | Actions                       | Lokális `npm run deploy*`                                                                                    |
-| Passenger restart                           | FTP `tmp/restart.txt`         | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
-| `npm install` lockfile változáskor          | — (gate + summary)            | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
-| Health `/_health`, `/admin`, `/backoffice/` | Script backoff                | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
-| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu` environment | Reviewer a GitHubon                                                                                       |
+| Lépés                                       | Automatizált                      | Manuális                                                                                                     |
+| ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `npm ci`, typecheck, tesztek, build         | CI / runner                       | —                                                                                                            |
+| FTPS feltöltés                              | Actions                           | Lokális `npm run deploy*`                                                                                    |
+| Passenger restart                           | FTP `tmp/restart.txt`             | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
+| `npm install` lockfile változáskor          | — (gate + summary)                | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
+| Health `/_health`, `/admin`, `/backoffice/` | Script backoff                    | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
+| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu` environment | Reviewer a GitHubon                                                                                          |
 
 ## Workflow kézi futtatása
 

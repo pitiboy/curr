@@ -21,7 +21,10 @@ export function memberIdentifierBase(name: string): string {
 }
 
 /** `base`, or `base-2`, `base-3`… if taken. */
-export function uniqueMemberIdentifier(base: string, taken: Iterable<string>): string {
+export function uniqueMemberIdentifier(
+  base: string,
+  taken: Iterable<string>,
+): string {
   const used = new Set(taken);
   if (!used.has(base)) {
     return base;

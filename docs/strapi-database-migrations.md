@@ -8,15 +8,15 @@ Verified against [Strapi 5 docs](https://docs.strapi.io/cms/database-migrations)
 
 ## Mechanism (verified)
 
-| Topic | Behavior |
-| --- | --- |
-| **Path** | `./database/migrations` (from app root, or **`dist/`** if `useTypescriptMigrations: true`) |
-| **Files** | `*.js`, `*.sql` only, non-recursive ([discover.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/discover.ts)) |
-| **Order** | Lexical filename sort; docs pattern `YYYY.MM.DDTHH.mm.ss.name.js` ([migrations doc](https://docs.strapi.io/cms/database-migrations)) |
-| **API** | `module.exports = { async up(knex, db) { … } }`; Knex is a transaction ([common.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/common.ts)). `.sql` → `knex.raw`. Official docs: no down migrations / no migration CLI ([migrations doc](https://docs.strapi.io/cms/database-migrations)) |
-| **Settings** | `runMigrations` (default true) toggles **user** files; internal migrations still run when pending ([database config](https://docs.strapi.io/cms/configurations/database), [users.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/users.ts)) |
-| **Tracking** | `strapi_migrations` / `strapi_migrations_internal`; name inserted only after successful `up` ([runner.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/runner.ts), [storage.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/storage.ts)) |
-| **Failure** | Rollback, bootstrap error, process exit; pending migration retries next boot |
+| Topic        | Behavior                                                                                                                                                                                                                                                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Path**     | `./database/migrations` (from app root, or **`dist/`** if `useTypescriptMigrations: true`)                                                                                                                                                                                                                                        |
+| **Files**    | `*.js`, `*.sql` only, non-recursive ([discover.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/discover.ts))                                                                                                                                                                              |
+| **Order**    | Lexical filename sort; docs pattern `YYYY.MM.DDTHH.mm.ss.name.js` ([migrations doc](https://docs.strapi.io/cms/database-migrations))                                                                                                                                                                                              |
+| **API**      | `module.exports = { async up(knex, db) { … } }`; Knex is a transaction ([common.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/common.ts)). `.sql` → `knex.raw`. Official docs: no down migrations / no migration CLI ([migrations doc](https://docs.strapi.io/cms/database-migrations)) |
+| **Settings** | `runMigrations` (default true) toggles **user** files; internal migrations still run when pending ([database config](https://docs.strapi.io/cms/configurations/database), [users.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/users.ts))                                               |
+| **Tracking** | `strapi_migrations` / `strapi_migrations_internal`; name inserted only after successful `up` ([runner.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/runner.ts), [storage.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/migrations/storage.ts))           |
+| **Failure**  | Rollback, bootstrap error, process exit; pending migration retries next boot                                                                                                                                                                                                                                                      |
 
 **Startup order.** `bootstrap()` → `db.init(models)` → `db.schema.sync()` ([Strapi.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/core/src/Strapi.ts)). In `sync()` ([schema/index.ts](https://github.com/strapi/strapi/blob/v5.58.0/packages/core/database/src/schema/index.ts)): if pending user **or** internal migrations → `migrations.up()` (user, then internal) → **always** `syncSchema()`; else sync when no stored schema or content-type hash changed. Docs match: load schema → migrations → sync → persist ([migrations doc](https://docs.strapi.io/cms/database-migrations)).
 
@@ -92,7 +92,8 @@ DDL from **sync**; data move in **migration**.
 'use strict';
 module.exports = {
   async up(knex) {
-    if (!(await knex.schema.hasColumn('transactions', 'legacy_vendor_id'))) return;
+    if (!(await knex.schema.hasColumn('transactions', 'legacy_vendor_id')))
+      return;
     await knex('transactions')
       .whereNotNull('legacy_vendor_id')
       .update({ vendor_id: knex.ref('legacy_vendor_id') });

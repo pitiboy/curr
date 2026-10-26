@@ -38,7 +38,9 @@ const autocompleteFrom = `const mergedTextFieldProps = {
                     }
                     : undefined;`;
 
-const autocompleteTo = (major) => `const { InputProps: paramsInputProps, inputProps: paramsHtmlInputProps, InputLabelProps: paramsInputLabelProps, slotProps: paramsSlotProps, ...textFieldParams } = params;
+const autocompleteTo = (
+  major,
+) => `const { InputProps: paramsInputProps, inputProps: paramsHtmlInputProps, InputLabelProps: paramsInputLabelProps, slotProps: paramsSlotProps, ...textFieldParams } = params;
                 const { InputProps: userInputProps, inputProps: userHtmlInputProps, InputLabelProps: userInputLabelProps, slotProps: userSlotProps, ...textFieldProps } = TextFieldProps ?? {};
                 const input = {
                     readOnly,
@@ -148,7 +150,10 @@ export function patchMui9TextFieldProps(distDir = dist) {
   return changed;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   const changed = patchMui9TextFieldProps();
   if (changed.length > 0) {
     console.log(`patched ra-ui-materialui for MUI 9 (${changed.length} edits)`);

@@ -10,10 +10,9 @@ import { registerPublishGuard } from './publish-guard';
 import path from 'node:path';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const backofficeFeatureSeed = require(path.join(
-  process.cwd(),
-  'database/seeders/backoffice-features.js',
-));
+const backofficeFeatureSeed = require(
+  path.join(process.cwd(), 'database/seeders/backoffice-features.js'),
+);
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
@@ -154,8 +153,12 @@ const LEGACY_EDITOR_ROLE_TYPE = 'qa';
 type StrapiLike = {
   db: {
     query: (uid: string) => {
-      findOne: (params: Record<string, unknown>) => Promise<{ id: number } | null>;
-      create: (params: { data: Record<string, unknown> }) => Promise<{ id: number }>;
+      findOne: (
+        params: Record<string, unknown>,
+      ) => Promise<{ id: number } | null>;
+      create: (params: {
+        data: Record<string, unknown>;
+      }) => Promise<{ id: number }>;
       update: (params: {
         where: { id: number };
         data: Record<string, unknown>;
@@ -164,7 +167,10 @@ type StrapiLike = {
   };
   plugin: (name: string) => {
     service: (name: string) => {
-      getActions: () => Record<string, { controllers?: Record<string, Record<string, unknown>> }>;
+      getActions: () => Record<
+        string,
+        { controllers?: Record<string, Record<string, unknown>> }
+      >;
       createRole: (params: Record<string, unknown>) => Promise<void>;
     };
   };
@@ -180,7 +186,10 @@ function parseActionId(actionId: string) {
 }
 
 function isActionInCatalog(
-  catalog: Record<string, { controllers?: Record<string, Record<string, unknown>> }>,
+  catalog: Record<
+    string,
+    { controllers?: Record<string, Record<string, unknown>> }
+  >,
   actionId: string,
 ) {
   const { typeName, controllerName, actionName } = parseActionId(actionId);
@@ -259,7 +268,9 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       });
       strapi.log.info(`Created users-permissions role "${roleDef.type}"`);
     } else if (!renamed) {
-      strapi.log.info(`Users-permissions role "${roleDef.type}" already exists`);
+      strapi.log.info(
+        `Users-permissions role "${roleDef.type}" already exists`,
+      );
     }
 
     if (!role) {
@@ -318,13 +329,15 @@ async function ensurePublicStaticPagePermissions(strapi: StrapiLike) {
 
 type GrantStore = Record<string, Record<string, unknown>>;
 
-async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
-  config: { get: (key: string) => unknown };
-  store: (params: { type: string; name: string }) => {
-    get: (params: { key: string }) => Promise<unknown>;
-    set: (params: { key: string; value: unknown }) => Promise<void>;
-  };
-}) {
+async function ensureGoogleOAuthGrant(
+  strapi: StrapiLike & {
+    config: { get: (key: string) => unknown };
+    store: (params: { type: string; name: string }) => {
+      get: (params: { key: string }) => Promise<unknown>;
+      set: (params: { key: string; value: unknown }) => Promise<void>;
+    };
+  },
+) {
   const pluginConfig = strapi.config.get('plugin::users-permissions') as {
     grant?: { google?: Record<string, unknown> };
   };

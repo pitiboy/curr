@@ -353,9 +353,9 @@ Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja
 
 Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Könyvelés soronként:
 
-| Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
-| --- | --- | --- | --- | --- | --- |
-| `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab | EGG | az adott tyúkól | `Átvezetés` |
+| Tartozik ←       | Követel                                            | Összeg | Pénznem | Szervezet       | Típus       |
+| ---------------- | -------------------------------------------------- | ------ | ------- | --------------- | ----------- |
+| `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab  | EGG     | az adott tyúkól | `Átvezetés` |
 
 Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A workflow kapcsoló a **Settings** collection `egg-daily-entry` sorában van (edizone seed: enabled; kor: disabled). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
 
@@ -365,12 +365,12 @@ A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ól
 
 A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
 
-| Szabály | Tartozik ← | Követel | Összeg | Pénznem | Szervezet | Típus |
-| --- | --- | --- | --- | --- | --- | --- |
-| `internal` | tag `1001` saját számla | `1300` Készletek | db | EGG | `Tyúktartás` | `Átvezetés` |
-| `sale` — tojás | tag `1001` saját számla | `1300` Készletek | db | EGG | ugyanaz | `Átvezetés` |
-| `sale` — kp befizetés | `1000` Készpénz | tag `1001` saját számla | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz | `Készpénz` |
-| `sale` — bevétel | `4000` Értékesítés bevétele | `1000` Készpénz | ugyanaz | HUF | ugyanaz | `Átvezetés` |
+| Szabály               | Tartozik ←                  | Követel                 | Összeg                | Pénznem                             | Szervezet    | Típus       |
+| --------------------- | --------------------------- | ----------------------- | --------------------- | ----------------------------------- | ------------ | ----------- |
+| `internal`            | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                 | `Tyúktartás` | `Átvezetés` |
+| `sale` — tojás        | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                 | ugyanaz      | `Átvezetés` |
+| `sale` — kp befizetés | `1000` Készpénz             | tag `1001` saját számla | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz      | `Készpénz`  |
+| `sale` — bevétel      | `4000` Értékesítés bevétele | `1000` Készpénz         | ugyanaz               | HUF                                 | ugyanaz      | `Átvezetés` |
 
 Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
 

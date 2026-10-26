@@ -9,8 +9,7 @@ const PUBLISH_FORBIDDEN =
   'Only the editor role can publish transactions and receipts';
 const DRAFT_ONLY =
   'Transactions and receipts are saved as drafts; publishing on create or update is disabled';
-const SAME_PERSON =
-  'The person who entered the document cannot publish it';
+const SAME_PERSON = 'The person who entered the document cannot publish it';
 
 /** Draft HTTP writes: Strapi skips schema `required`, middleware enforces these four. */
 export const TRANSACTION_DRAFT_REQUIRED_FIELDS = [
@@ -121,7 +120,9 @@ export type PublishGuardStrapi = {
   };
   db: {
     query: (uid: string) => {
-      findOne: (params: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+      findOne: (
+        params: Record<string, unknown>,
+      ) => Promise<Record<string, unknown> | null>;
       update: (params: {
         where: { id: number };
         data: Record<string, unknown>;
@@ -166,11 +167,7 @@ export function guardEffect(
     return { type: 'ignore' };
   }
 
-  if (
-    writing &&
-    status === 'published' &&
-    policy.defaultStatus === 'draft'
-  ) {
+  if (writing && status === 'published' && policy.defaultStatus === 'draft') {
     return { type: 'forbid', message: DRAFT_ONLY };
   }
 
@@ -226,7 +223,10 @@ export async function contentApiActor(
 
   const role = user?.role;
   const roleType =
-    role && typeof role === 'object' && 'type' in role && typeof role.type === 'string'
+    role &&
+    typeof role === 'object' &&
+    'type' in role &&
+    typeof role.type === 'string'
       ? role.type
       : '';
   const email = typeof user?.email === 'string' ? user.email : '';
@@ -298,7 +298,8 @@ function amountFilled(value: unknown): boolean {
 function relationFilled(value: unknown, action: 'create' | 'update'): boolean {
   if (typeof value === 'string') return value.trim().length > 0;
   if (typeof value === 'number') return Number.isFinite(value);
-  if (Array.isArray(value)) return value.some((item) => relationFilled(item, action));
+  if (Array.isArray(value))
+    return value.some((item) => relationFilled(item, action));
   if (!value || typeof value !== 'object') return false;
 
   const row = value as Record<string, unknown>;
@@ -308,7 +309,8 @@ function relationFilled(value: unknown, action: 'create' | 'update'): boolean {
     return action === 'update';
   }
   if ('disconnect' in row) return false;
-  if (typeof row.documentId === 'string') return row.documentId.trim().length > 0;
+  if (typeof row.documentId === 'string')
+    return row.documentId.trim().length > 0;
   if ('id' in row) return relationFilled(row.id, action);
   return false;
 }
@@ -350,7 +352,10 @@ async function writeDraftPublishedBy(
   });
 }
 
-async function publishLinkedReceipts(strapi: PublishGuardStrapi, documentId: string) {
+async function publishLinkedReceipts(
+  strapi: PublishGuardStrapi,
+  documentId: string,
+) {
   const rows = await strapi.documents(RECEIPT_UID).findMany({
     status: 'draft',
     filters: { transaction: { documentId: { $eq: documentId } } },
@@ -419,7 +424,12 @@ export function missingStoredPublishFields(
     return [...TRANSACTION_PUBLISH_REQUIRED_FIELDS];
   }
   return TRANSACTION_PUBLISH_REQUIRED_FIELDS.filter((field) => {
-    if (field === 'organization' || field === 'debit_account' || field === 'credit_account' || field === 'currency_type') {
+    if (
+      field === 'organization' ||
+      field === 'debit_account' ||
+      field === 'credit_account' ||
+      field === 'currency_type'
+    ) {
       return !storedRelationPresent(row[field]);
     }
     return !transactionFieldFilled(field, row[field], 'update');
@@ -481,11 +491,7 @@ export function registerPublishGuard(
       (context.action === 'publish' || (writing && status === 'published'));
     const enteredBy =
       needsCreator && context.action !== 'create'
-        ? await storedEnteredBy(
-            strapi,
-            context.uid,
-            context.params?.documentId,
-          )
+        ? await storedEnteredBy(strapi, context.uid, context.params?.documentId)
         : undefined;
     const effect = guardEffect(context.uid, context.action, status, actor, {
       policy,
