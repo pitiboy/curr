@@ -1,6 +1,7 @@
 import {
   BACKOFFICE_SETTING_KEYS,
   BACKOFFICE_SETTING_PREFIXES,
+  DEFAULT_APP_TITLE,
   DEFAULT_CREDIT_CODES_PATTERN,
   DEFAULT_DEBIT_CODES_PATTERN,
   DEFAULT_EGG_SALE_CURRENCY,
@@ -72,6 +73,7 @@ export function buildBackofficeConfigFromFeatures(
 
   const debitRow = map.get(BACKOFFICE_SETTING_KEYS.debitCodes);
   const creditRow = map.get(BACKOFFICE_SETTING_KEYS.creditCodes);
+  const titleRow = map.get(BACKOFFICE_SETTING_KEYS.appTitle);
   const eggRow = map.get(BACKOFFICE_SETTING_KEYS.eggSaleCurrency);
 
   const debitCodesPattern =
@@ -80,6 +82,8 @@ export function buildBackofficeConfigFromFeatures(
   const creditCodesPattern =
     configString(creditRow?.config ?? null, 'pattern') ??
     DEFAULT_CREDIT_CODES_PATTERN;
+  const appTitle =
+    configString(titleRow?.config ?? null, 'value') ?? DEFAULT_APP_TITLE;
   const eggSaleCurrency =
     configString(eggRow?.config ?? null, 'value') ?? DEFAULT_EGG_SALE_CURRENCY;
 
@@ -101,6 +105,7 @@ export function buildBackofficeConfigFromFeatures(
     publisherMustDiffer: policy.publisherMustDiffer,
     debitCodesPattern,
     creditCodesPattern,
+    appTitle,
     eggSaleCurrency,
     features,
   };

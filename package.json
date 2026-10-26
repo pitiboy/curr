@@ -43,7 +43,7 @@
     "predeploy:kor.fejlesztesek.hu": "npm run build",
     "deploy:kor.fejlesztesek.hu": "DEPLOY_LOG_COMMAND='deploy:kor.fejlesztesek.hu' bash scripts/ftp-deploy.sh .env.deploy:kor.fejlesztesek.hu",
     "build:f": "nx run content-backoffice:build",
-    "build:f:kor.fejlesztesek.hu": "VITE_STRAPI_URL=https://kor.fejlesztesek.hu VITE_APP_TITLE='KÖR' nx run content-backoffice:build",
+    "build:f:kor.fejlesztesek.hu": "nx run content-backoffice:build",
     "predeploy:backoffice:kor.fejlesztesek.hu": "npm run build:f:kor.fejlesztesek.hu",
     "deploy:backoffice:kor.fejlesztesek.hu": "DEPLOY_LOG_COMMAND='deploy:backoffice:kor.fejlesztesek.hu' bash scripts/ftp-deploy-backoffice.sh .env.deploy:kor.fejlesztesek.hu",
     "deploy:backoffice": "npm run deploy:backoffice:kor.fejlesztesek.hu",

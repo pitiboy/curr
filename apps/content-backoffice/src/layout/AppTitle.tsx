@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { useTranslate } from 'react-admin';
 
-import { APP_TITLE } from '../config';
+import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 
-/** `VITE_APP_TITLE » app.title`. An empty prefix leaves only the translated label. */
+/** `appTitle » app.title` from Settings. An empty brand leaves only the translated label. */
 export function useAppTitle() {
   const translate = useTranslate();
+  const { appTitle } = useBackofficeConfig();
   const label = translate('app.title');
-  const brand = APP_TITLE.trim();
+  const brand = appTitle.trim();
 
   return brand ? `${brand} » ${label}` : label;
 }

@@ -113,7 +113,7 @@ npm run seed:backoffice-features:edizone
 
 Optional boot-time upsert: set `BACKOFFICE_FEATURES_INSTANCE=kor` (or `edizone`) in `.env`.
 
-Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `key` is treated as a workflow id for the backoffice menu.
+Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `key` is treated as a workflow id for the backoffice menu. The SPA brand prefix is `app.title` (`config.value`, e.g. `KÖR`).
 
 ## HTTP seed (kor / edizone)
 

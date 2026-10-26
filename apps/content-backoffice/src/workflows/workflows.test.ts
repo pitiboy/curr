@@ -29,6 +29,7 @@ describe('buildBackofficeConfigFromRows', () => {
 describe('parseBackofficeConfig', () => {
   it('reads publisherMustDiffer and account patterns from the API body', () => {
     expect(parseBackofficeConfig(null).publisherMustDiffer).toBe(true);
+    expect(parseBackofficeConfig(null).appTitle).toBe('');
     expect(
       parseBackofficeConfig({
         enabled: ['egg-daily-entry'],
@@ -36,12 +37,14 @@ describe('parseBackofficeConfig', () => {
         publisherMustDiffer: false,
         debitCodesPattern: '/^6/',
         creditCodesPattern: '/^2/',
+        appTitle: 'KÖR',
         eggSaleCurrency: 'EUR',
         features: {},
       }),
     ).toMatchObject({
       publisherMustDiffer: false,
       debitCodesPattern: '/^6/',
+      appTitle: 'KÖR',
       eggSaleCurrency: 'EUR',
     });
   });

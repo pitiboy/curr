@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Content backoffice SPA
 
-Vite + TypeScript + React Admin 5 + `ra-strapi` + MUI. Env: `VITE_STRAPI_URL`. A Vite `base` értéke `/backoffice/`.
+Vite + TypeScript + React Admin 5 + `ra-strapi` + MUI. API origin: lokálon `http://localhost:1337`, élesen `window.location.origin`. A Vite `base` értéke `/backoffice/`.
 
 - A react-admin `id` a Strapi `documentId`. A numerikus `id` nem kerül URL-be.
 - Éles képernyőn nincs `ListGuesser`, `EditGuesser`, `ShowGuesser`.
