@@ -49,26 +49,18 @@ describe('parseCodeRegex', () => {
 describe('account code filters', () => {
   it('uses /^5/ for debit with default patterns', () => {
     expect(DEFAULT_ACCOUNT_CODE_PATTERNS.debit.source).toBe('^5');
-    expect(filterAccountsByProfile(accounts, 'debit').map((row) => row.code)).toEqual([
-      '5000',
-      '5100',
-      '5200',
-      '5400',
-      '5800',
-    ]);
+    expect(
+      filterAccountsByProfile(accounts, 'debit').map((row) => row.code),
+    ).toEqual(['5000', '5100', '5200', '5400', '5800']);
     expect(isDebitCode('4000')).toBe(false);
     expect(isDebitCode('1000')).toBe(false);
   });
 
   it('uses /^(1|3)/ for credit with default patterns', () => {
     expect(DEFAULT_ACCOUNT_CODE_PATTERNS.credit.source).toBe('^(1|3)');
-    expect(filterAccountsByProfile(accounts, 'credit').map((row) => row.code)).toEqual([
-      '1000',
-      '1100',
-      '1200',
-      '1300',
-      '3000',
-    ]);
+    expect(
+      filterAccountsByProfile(accounts, 'credit').map((row) => row.code),
+    ).toEqual(['1000', '1100', '1200', '1300', '3000']);
     expect(isCreditCode('2000')).toBe(false);
     expect(isCreditCode('4000')).toBe(false);
     expect(isCreditCode('5000')).toBe(false);
@@ -78,12 +70,14 @@ describe('account code filters', () => {
     expect(filterAccountsByProfile(accounts, 'debit', '')).toHaveLength(
       accounts.length,
     );
-    expect(filterAccountsByProfile(accounts, 'credit', '').map((row) => row.code)).toContain(
-      '4000',
-    );
-    expect(filterAccountsByProfile(accounts, 'credit', 'cost').map((row) => row.code)).not.toContain(
-      '4000',
-    );
+    expect(
+      filterAccountsByProfile(accounts, 'credit', '').map((row) => row.code),
+    ).toContain('4000');
+    expect(
+      filterAccountsByProfile(accounts, 'credit', 'cost').map(
+        (row) => row.code,
+      ),
+    ).not.toContain('4000');
   });
 
   it('keeps a selected account in the list when it is outside the profile', () => {
@@ -100,10 +94,7 @@ describe('account code filters', () => {
 
 describe('loadAllAccounts', () => {
   it('follows pages so later expense codes are not dropped', async () => {
-    const pages = [
-      accounts.slice(0, 4),
-      accounts.slice(4),
-    ];
+    const pages = [accounts.slice(0, 4), accounts.slice(4)];
     const getList: DataProvider['getList'] = async (_resource, params) => {
       const page = params.pagination?.page ?? 1;
       return {
@@ -114,12 +105,8 @@ describe('loadAllAccounts', () => {
 
     const loaded = await loadAllAccounts(getList);
     expect(loaded).toHaveLength(accounts.length);
-    expect(filterAccountsByProfile(loaded, 'debit').map((row) => row.code)).toEqual([
-      '5000',
-      '5100',
-      '5200',
-      '5400',
-      '5800',
-    ]);
+    expect(
+      filterAccountsByProfile(loaded, 'debit').map((row) => row.code),
+    ).toEqual(['5000', '5100', '5200', '5400', '5800']);
   });
 });

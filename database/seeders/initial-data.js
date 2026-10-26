@@ -23,7 +23,7 @@ module.exports = {
     // Only run seeding in development or when explicitly requested
     if (process.env.NODE_ENV === 'production' && !process.env.FORCE_SEED) {
       console.log(
-        '🌱 Skipping bootstrap seeding in production (set FORCE_SEED=true to override)'
+        '🌱 Skipping bootstrap seeding in production (set FORCE_SEED=true to override)',
       );
       return;
     }
@@ -77,7 +77,7 @@ module.exports = {
 
 async function seedTransactionTypes(strapi) {
   const existingTypes = await strapi.entityService.findMany(
-    'api::transaction-type.transaction-type'
+    'api::transaction-type.transaction-type',
   );
 
   if (existingTypes.length === 0) {
@@ -121,7 +121,7 @@ async function seedTransactionTypes(strapi) {
         'api::transaction-type.transaction-type',
         {
           data: type,
-        }
+        },
       );
     }
 
@@ -133,7 +133,7 @@ async function seedTransactionTypes(strapi) {
 
 async function seedAccountCategories(strapi) {
   const existingCategories = await strapi.entityService.findMany(
-    'api::account-category.account-category'
+    'api::account-category.account-category',
   );
 
   if (existingCategories.length === 0) {
@@ -177,7 +177,7 @@ async function seedAccountCategories(strapi) {
         'api::account-category.account-category',
         {
           data: category,
-        }
+        },
       );
     }
 
@@ -189,7 +189,7 @@ async function seedAccountCategories(strapi) {
 
 async function seedCurrencyCategories(strapi) {
   const existingCategories = await strapi.entityService.findMany(
-    'api::currency-category.currency-category'
+    'api::currency-category.currency-category',
   );
 
   if (existingCategories.length === 0) {
@@ -231,7 +231,7 @@ async function seedCurrencyCategories(strapi) {
         'api::currency-category.currency-category',
         {
           data: category,
-        }
+        },
       );
     }
 
@@ -243,7 +243,7 @@ async function seedCurrencyCategories(strapi) {
 
 async function seedCurrencyTypes(strapi) {
   const existingCurrencies = await strapi.entityService.findMany(
-    'api::currency-type.currency-type'
+    'api::currency-type.currency-type',
   );
 
   if (existingCurrencies.length === 0) {
@@ -252,11 +252,11 @@ async function seedCurrencyTypes(strapi) {
     // Get currency categories first
     const cashCategory = await strapi.entityService.findMany(
       'api::currency-category.currency-category',
-      { filters: { code: 'CASH' } }
+      { filters: { code: 'CASH' } },
     );
     const laborCategory = await strapi.entityService.findMany(
       'api::currency-category.currency-category',
-      { filters: { code: 'LABOUR' } }
+      { filters: { code: 'LABOUR' } },
     );
 
     const currencyTypes = [
@@ -294,7 +294,7 @@ async function seedCurrencyTypes(strapi) {
 
 async function seedMembershipTypes(strapi) {
   const existingTypes = await strapi.entityService.findMany(
-    'api::membership-type.membership-type'
+    'api::membership-type.membership-type',
   );
 
   if (existingTypes.length === 0) {
@@ -332,7 +332,7 @@ async function seedMembershipTypes(strapi) {
         'api::membership-type.membership-type',
         {
           data: type,
-        }
+        },
       );
     }
 

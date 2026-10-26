@@ -104,9 +104,7 @@ function ProfileAccountInput({
         choices={choices}
         fullWidth
         isLoading={isPending}
-        label={
-          <AccountFieldLabel kind={kind} required={requireAccounts} />
-        }
+        label={<AccountFieldLabel kind={kind} required={requireAccounts} />}
         source={source}
         translateChoice={false}
         validate={requireAccounts ? requiredMark : undefined}

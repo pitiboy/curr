@@ -20,11 +20,7 @@ import {
 } from '../workflows/bulk-quantity/eggDailyEntry.constants';
 
 /** Empty string = no profile filter (all loaded accounts). */
-export type AccountProfile =
-  | ''
-  | 'cost'
-  | 'revenue'
-  | EggGatedAccountProfile;
+export type AccountProfile = '' | 'cost' | 'revenue' | EggGatedAccountProfile;
 
 export { EGG_DAILY_ENTRY_WORKFLOW_ID };
 
@@ -43,7 +39,10 @@ const PROFILE_WORKFLOW: Record<EggGatedAccountProfile, string> =
     ]),
   ) as Record<EggGatedAccountProfile, string>;
 
-function codeInSet(code: string | null | undefined, allowed: Set<string>): boolean {
+function codeInSet(
+  code: string | null | undefined,
+  allowed: Set<string>,
+): boolean {
   return allowed.has(normalizeAccountCode(code));
 }
 

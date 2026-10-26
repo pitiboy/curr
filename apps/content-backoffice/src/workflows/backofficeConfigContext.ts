@@ -6,6 +6,5 @@ export type BackofficeConfigValue = BackofficeConfigResponse & {
   ready: boolean;
 };
 
-export const BackofficeConfigContext = createContext<BackofficeConfigValue | null>(
-  null,
-);
+export const BackofficeConfigContext =
+  createContext<BackofficeConfigValue | null>(null);

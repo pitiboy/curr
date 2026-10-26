@@ -267,16 +267,12 @@ function sortValue(row: TransactionRow, field: string): string | number {
   }
 }
 
-function accountSortKey(
-  account: TransactionRow['debit_account'],
-): string {
+function accountSortKey(account: TransactionRow['debit_account']): string {
   if (!account) return '';
   return [account.code, account.name].filter(Boolean).join(' ');
 }
 
-function currencySortKey(
-  currency: TransactionRow['currency_type'],
-): string {
+function currencySortKey(currency: TransactionRow['currency_type']): string {
   if (!currency) return '';
   return [currency.code, currency.name].filter(Boolean).join(' ');
 }
@@ -311,9 +307,7 @@ function asDateTimeBound(
 ): string | undefined {
   const date = asDate(value);
   if (!date) return undefined;
-  return edge === 'start'
-    ? `${date}T00:00:00.000Z`
-    : `${date}T23:59:59.999Z`;
+  return edge === 'start' ? `${date}T00:00:00.000Z` : `${date}T23:59:59.999Z`;
 }
 
 function appendQuery(
@@ -329,7 +323,9 @@ function appendQuery(
     return;
   }
   if (typeof value === 'object') {
-    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, child] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
       appendQuery(params, prefix ? `${prefix}[${key}]` : key, child);
     }
     return;

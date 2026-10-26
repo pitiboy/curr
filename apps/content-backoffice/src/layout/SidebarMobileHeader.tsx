@@ -8,7 +8,9 @@ import { useRaPageTitle } from './useRaPageTitle';
 
 /** Shown at the top of the drawer menu on small screens (titles removed from the app bar). */
 export function SidebarMobileHeader() {
-  const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('sm'),
+  );
   const appTitle = useAppTitle();
   const pageTitle = useRaPageTitle();
 
@@ -30,7 +32,12 @@ export function SidebarMobileHeader() {
         {appTitle}
       </Typography>
       {pageTitle ? (
-        <Typography color="text.secondary" component="p" sx={{ m: 0, mt: 0.5 }} variant="body2">
+        <Typography
+          color="text.secondary"
+          component="p"
+          sx={{ m: 0, mt: 0.5 }}
+          variant="body2"
+        >
           {pageTitle}
         </Typography>
       ) : null}

@@ -8,13 +8,17 @@ import {
 import { useBackofficeConfig } from './useBackofficeConfig';
 
 export function useAccountCodePatterns(): AccountCodePatterns {
-  const { debitCodesPattern, creditCodesPattern, ready } = useBackofficeConfig();
+  const { debitCodesPattern, creditCodesPattern, ready } =
+    useBackofficeConfig();
   return useMemo(() => {
     if (!ready) {
       return DEFAULT_ACCOUNT_CODE_PATTERNS;
     }
     return {
-      debit: parseCodeRegex(debitCodesPattern, DEFAULT_ACCOUNT_CODE_PATTERNS.debit),
+      debit: parseCodeRegex(
+        debitCodesPattern,
+        DEFAULT_ACCOUNT_CODE_PATTERNS.debit,
+      ),
       credit: parseCodeRegex(
         creditCodesPattern,
         DEFAULT_ACCOUNT_CODE_PATTERNS.credit,

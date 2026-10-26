@@ -114,8 +114,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_remaining: 'Still unallocated: %{count}',
       distribution_over_limit:
         'Distribution exceeds today’s production by %{count}. Overspending is allowed ( which will be deducted from earlier stock).',
-      distribution_rate:
-        'Rate (%{from} → %{to}): %{rate}, valid since %{date}',
+      distribution_rate: 'Rate (%{from} → %{to}): %{rate}, valid since %{date}',
       distribution_rate_missing:
         'No %{from} → %{to} rate for the selected day; sale rows cannot be saved.',
       distribution_no_members:
@@ -125,8 +124,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         egg: 'Daily eggs — %{organization}: %{amount}',
         egg_distribution_internal:
           'Egg distribution (internal) — %{member}: %{amount}',
-        egg_distribution_sale_egg:
-          'Egg sale (eggs) — %{member}: %{amount}',
+        egg_distribution_sale_egg: 'Egg sale (eggs) — %{member}: %{amount}',
         egg_distribution_cash:
           'Egg sale (cash payment) — %{member}: %{amount} → %{revenue}',
         egg_distribution_revenue:

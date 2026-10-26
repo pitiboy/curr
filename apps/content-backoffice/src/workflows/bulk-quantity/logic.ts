@@ -174,7 +174,9 @@ export function mergeRowResults(
   return [...byOrg.values()];
 }
 
-export function failedRowIds(results: readonly BulkQuantityRowResult[]): string[] {
+export function failedRowIds(
+  results: readonly BulkQuantityRowResult[],
+): string[] {
   return results
     .filter((row) => row.status === 'error')
     .map((row) => row.organizationId);

@@ -22,11 +22,16 @@ type StrapiDbLike = {
     config?: { connection?: { client?: string } };
     connection: { raw: (sql: string) => Promise<unknown> };
   };
-  log: { info: (message: string) => void; warn: (message: string) => void; error: (message: string) => void };
+  log: {
+    info: (message: string) => void;
+    warn: (message: string) => void;
+    error: (message: string) => void;
+  };
 };
 
 export async function ensureTransactionImportKeyIndex(strapi: StrapiDbLike) {
-  const client = strapi.db.dialect?.client || strapi.db.config?.connection?.client || '';
+  const client =
+    strapi.db.dialect?.client || strapi.db.config?.connection?.client || '';
   if (client !== 'postgres' && client !== 'sqlite') {
     strapi.log.warn(
       `Transaction import_key index skipped: partial unique index not supported on "${client}"`,

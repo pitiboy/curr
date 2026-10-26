@@ -22,9 +22,7 @@ describe('bulk quantity logic', () => {
     expect(
       rowsFromQuantities(houses, { 'org-a': 0, 'org-b': '', 'org-c': 12 }),
     ).toEqual([]);
-    expect(
-      rowsFromQuantities(houses, { 'org-a': 5, 'org-b': '3' }),
-    ).toEqual([
+    expect(rowsFromQuantities(houses, { 'org-a': 5, 'org-b': '3' })).toEqual([
       { organizationId: 'org-a', organizationName: '2024 alom', amount: 5 },
       { organizationId: 'org-b', organizationName: '2025 alom', amount: 3 },
     ]);
@@ -82,15 +80,11 @@ describe('bulk quantity logic', () => {
         existingAmount: 1,
       },
     ];
-    expect(
-      buildRowPlans(rows, duplicates, { 'org-a': 'insert' }),
-    ).toEqual([
+    expect(buildRowPlans(rows, duplicates, { 'org-a': 'insert' })).toEqual([
       { ...rows[0], action: 'insert' },
       { ...rows[1], action: 'insert' },
     ]);
-    expect(
-      buildRowPlans(rows, duplicates, { 'org-a': 'update' }),
-    ).toEqual([
+    expect(buildRowPlans(rows, duplicates, { 'org-a': 'update' })).toEqual([
       { ...rows[0], action: 'update', updateDocumentId: 'tx-a' },
       { ...rows[1], action: 'insert' },
     ]);
@@ -116,23 +110,25 @@ describe('bulk quantity logic', () => {
       ],
     );
     expect(merged).toHaveLength(2);
-    expect(plansForRetry(
-      [
-        {
-          organizationId: 'org-a',
-          organizationName: 'A',
-          amount: 1,
-          action: 'insert',
-        },
-        {
-          organizationId: 'org-b',
-          organizationName: 'B',
-          amount: 2,
-          action: 'insert',
-        },
-      ],
-      ['org-b'],
-    )).toHaveLength(1);
+    expect(
+      plansForRetry(
+        [
+          {
+            organizationId: 'org-a',
+            organizationName: 'A',
+            amount: 1,
+            action: 'insert',
+          },
+          {
+            organizationId: 'org-b',
+            organizationName: 'B',
+            amount: 2,
+            action: 'insert',
+          },
+        ],
+        ['org-b'],
+      ),
+    ).toHaveLength(1);
   });
 
   it('formats today as ISO date', () => {

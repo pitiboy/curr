@@ -7,7 +7,11 @@ import Tooltip from '@mui/material/Tooltip';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import { useLocaleState, useLocales, useTranslate } from 'react-admin';
-import { LoadingIndicator, LocalesMenuButton, ToggleThemeButton } from 'react-admin';
+import {
+  LoadingIndicator,
+  LocalesMenuButton,
+  ToggleThemeButton,
+} from 'react-admin';
 import { useState, type MouseEvent } from 'react';
 function CompactLocalesMenuButton() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -61,7 +65,9 @@ function CompactLocalesMenuButton() {
 
 /** App bar tools: compact locale control on phone-sized viewports. */
 export function BackofficeAppBarToolbar() {
-  const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('sm'),
+  );
   const locales = useLocales();
 
   return (
@@ -75,7 +81,11 @@ export function BackofficeAppBarToolbar() {
       }}
     >
       {locales && locales.length > 1 ? (
-        isMobile ? <CompactLocalesMenuButton /> : <LocalesMenuButton icon={<LanguageIcon />} />
+        isMobile ? (
+          <CompactLocalesMenuButton />
+        ) : (
+          <LocalesMenuButton icon={<LanguageIcon />} />
+        )
       ) : null}
       <ToggleThemeButton />
       <LoadingIndicator />

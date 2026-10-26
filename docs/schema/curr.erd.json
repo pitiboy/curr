@@ -19,15 +19,7 @@
     "bracketType": 2,
     "relationshipDataTypeSync": true,
     "relationshipOptimization": true,
-    "columnOrder": [
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64
-    ],
+    "columnOrder": [1, 2, 4, 8, 16, 32, 64],
     "maxWidthComment": 300,
     "ignoreSaveSettings": 0
   },
@@ -87,9 +79,7 @@
       "idx__transactions__document_id",
       "idx__transaction_types__document_id"
     ],
-    "memoIds": [
-      "memo__legend"
-    ]
+    "memoIds": ["memo__legend"]
   },
   "collections": {
     "tableEntities": {
@@ -2732,18 +2722,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__account_categories",
-          "columnIds": [
-            "col__account_categories__id"
-          ],
+          "columnIds": ["col__account_categories__id"],
           "x": 1125,
           "y": 597,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__category_id"
-          ],
+          "columnIds": ["col__accounts__category_id"],
           "x": 1215,
           "y": 623,
           "direction": 1
@@ -2760,18 +2746,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__organizations",
-          "columnIds": [
-            "col__organizations__id"
-          ],
+          "columnIds": ["col__organizations__id"],
           "x": 772,
           "y": 207,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__organization_id"
-          ],
+          "columnIds": ["col__accounts__organization_id"],
           "x": 1215,
           "y": 623,
           "direction": 1
@@ -2788,18 +2770,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__id"
-          ],
+          "columnIds": ["col__accounts__id"],
           "x": 1567,
           "y": 470,
           "direction": 4
         },
         "end": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__parent_id"
-          ],
+          "columnIds": ["col__accounts__parent_id"],
           "x": 1919,
           "y": 623,
           "direction": 2
@@ -2816,18 +2794,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__currency_types",
-          "columnIds": [
-            "col__currency_types__id"
-          ],
+          "columnIds": ["col__currency_types__id"],
           "x": 1554,
           "y": 1039,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__currency_rates",
-          "columnIds": [
-            "col__currency_rates__from_currency_type_id"
-          ],
+          "columnIds": ["col__currency_rates__from_currency_type_id"],
           "x": 1644,
           "y": 1052,
           "direction": 1
@@ -2844,18 +2818,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__currency_types",
-          "columnIds": [
-            "col__currency_types__id"
-          ],
+          "columnIds": ["col__currency_types__id"],
           "x": 1554,
           "y": 1039,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__currency_rates",
-          "columnIds": [
-            "col__currency_rates__to_currency_type_id"
-          ],
+          "columnIds": ["col__currency_rates__to_currency_type_id"],
           "x": 1644,
           "y": 1052,
           "direction": 1
@@ -2872,18 +2842,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__currency_categories",
-          "columnIds": [
-            "col__currency_categories__id"
-          ],
+          "columnIds": ["col__currency_categories__id"],
           "x": 772,
           "y": 1052,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__currency_types",
-          "columnIds": [
-            "col__currency_types__category_id"
-          ],
+          "columnIds": ["col__currency_types__category_id"],
           "x": 862,
           "y": 1039,
           "direction": 1
@@ -2900,18 +2866,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__id"
-          ],
+          "columnIds": ["col__accounts__id"],
           "x": 1919,
           "y": 623,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__members",
-          "columnIds": [
-            "col__members__account_id"
-          ],
+          "columnIds": ["col__members__account_id"],
           "x": 1703,
           "y": 207,
           "direction": 1
@@ -2928,18 +2890,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__organizations",
-          "columnIds": [
-            "col__organizations__id"
-          ],
+          "columnIds": ["col__organizations__id"],
           "x": 772,
           "y": 207,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__memberships",
-          "columnIds": [
-            "col__memberships__organization_id"
-          ],
+          "columnIds": ["col__memberships__organization_id"],
           "x": 862,
           "y": 220,
           "direction": 1
@@ -2956,18 +2914,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__members",
-          "columnIds": [
-            "col__members__id"
-          ],
+          "columnIds": ["col__members__id"],
           "x": 1703,
           "y": 207,
           "direction": 1
         },
         "end": {
           "tableId": "tbl__memberships",
-          "columnIds": [
-            "col__memberships__member_id"
-          ],
+          "columnIds": ["col__memberships__member_id"],
           "x": 1613,
           "y": 220,
           "direction": 2
@@ -2984,18 +2938,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__membership_types",
-          "columnIds": [
-            "col__membership_types__id"
-          ],
+          "columnIds": ["col__membership_types__id"],
           "x": 2485,
           "y": 194,
           "direction": 1
         },
         "end": {
           "tableId": "tbl__memberships",
-          "columnIds": [
-            "col__memberships__membership_type_id"
-          ],
+          "columnIds": ["col__memberships__membership_type_id"],
           "x": 1613,
           "y": 220,
           "direction": 2
@@ -3012,18 +2962,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__organizations",
-          "columnIds": [
-            "col__organizations__id"
-          ],
+          "columnIds": ["col__organizations__id"],
           "x": 426,
           "y": 80,
           "direction": 4
         },
         "end": {
           "tableId": "tbl__organizations",
-          "columnIds": [
-            "col__organizations__parent_id"
-          ],
+          "columnIds": ["col__organizations__parent_id"],
           "x": 772,
           "y": 207,
           "direction": 2
@@ -3040,18 +2986,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__id"
-          ],
+          "columnIds": ["col__accounts__id"],
           "x": 1919,
           "y": 623,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__debit_account_id"
-          ],
+          "columnIds": ["col__transactions__debit_account_id"],
           "x": 2519,
           "y": 1130,
           "direction": 1
@@ -3068,18 +3010,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__accounts",
-          "columnIds": [
-            "col__accounts__id"
-          ],
+          "columnIds": ["col__accounts__id"],
           "x": 1919,
           "y": 623,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__credit_account_id"
-          ],
+          "columnIds": ["col__transactions__credit_account_id"],
           "x": 2519,
           "y": 1130,
           "direction": 1
@@ -3096,18 +3034,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__transaction_types",
-          "columnIds": [
-            "col__transaction_types__id"
-          ],
+          "columnIds": ["col__transaction_types__id"],
           "x": 3237.5,
           "y": 698,
           "direction": 8
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__transaction_type_id"
-          ],
+          "columnIds": ["col__transactions__transaction_type_id"],
           "x": 2911,
           "y": 912,
           "direction": 4
@@ -3124,18 +3058,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__currency_types",
-          "columnIds": [
-            "col__currency_types__id"
-          ],
+          "columnIds": ["col__currency_types__id"],
           "x": 1554,
           "y": 1039,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__currency_type_id"
-          ],
+          "columnIds": ["col__transactions__currency_type_id"],
           "x": 2519,
           "y": 1130,
           "direction": 1
@@ -3152,18 +3082,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__id"
-          ],
+          "columnIds": ["col__transactions__id"],
           "x": 2911,
           "y": 912,
           "direction": 4
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__related_transaction_id"
-          ],
+          "columnIds": ["col__transactions__related_transaction_id"],
           "x": 3303,
           "y": 1130,
           "direction": 2
@@ -3180,18 +3106,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__organizations",
-          "columnIds": [
-            "col__organizations__id"
-          ],
+          "columnIds": ["col__organizations__id"],
           "x": 772,
           "y": 207,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__organization_id"
-          ],
+          "columnIds": ["col__transactions__organization_id"],
           "x": 2519,
           "y": 1130,
           "direction": 1
@@ -3208,18 +3130,14 @@
         "startRelationshipType": 1,
         "start": {
           "tableId": "tbl__receipts",
-          "columnIds": [
-            "col__receipts__id"
-          ],
+          "columnIds": ["col__receipts__id"],
           "x": 2709,
           "y": 636,
           "direction": 2
         },
         "end": {
           "tableId": "tbl__transactions",
-          "columnIds": [
-            "col__transactions__receipt_id"
-          ],
+          "columnIds": ["col__transactions__receipt_id"],
           "x": 2519,
           "y": 1130,
           "direction": 1
@@ -3235,12 +3153,8 @@
         "id": "idx__accounts__document_id",
         "name": "uq_accounts_document_id",
         "tableId": "tbl__accounts",
-        "indexColumnIds": [
-          "idxcol__accounts__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__accounts__document_id"
-        ],
+        "indexColumnIds": ["idxcol__accounts__document_id"],
+        "seqIndexColumnIds": ["idxcol__accounts__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3251,12 +3165,8 @@
         "id": "idx__account_categories__document_id",
         "name": "uq_account_categories_document_id",
         "tableId": "tbl__account_categories",
-        "indexColumnIds": [
-          "idxcol__account_categories__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__account_categories__document_id"
-        ],
+        "indexColumnIds": ["idxcol__account_categories__document_id"],
+        "seqIndexColumnIds": ["idxcol__account_categories__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3267,12 +3177,8 @@
         "id": "idx__currency_categories__document_id",
         "name": "uq_currency_categories_document_id",
         "tableId": "tbl__currency_categories",
-        "indexColumnIds": [
-          "idxcol__currency_categories__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__currency_categories__document_id"
-        ],
+        "indexColumnIds": ["idxcol__currency_categories__document_id"],
+        "seqIndexColumnIds": ["idxcol__currency_categories__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3283,12 +3189,8 @@
         "id": "idx__currency_categories__code",
         "name": "uq_currency_categories_code",
         "tableId": "tbl__currency_categories",
-        "indexColumnIds": [
-          "idxcol__currency_categories__code"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__currency_categories__code"
-        ],
+        "indexColumnIds": ["idxcol__currency_categories__code"],
+        "seqIndexColumnIds": ["idxcol__currency_categories__code"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3299,12 +3201,8 @@
         "id": "idx__currency_rates__document_id",
         "name": "uq_currency_rates_document_id",
         "tableId": "tbl__currency_rates",
-        "indexColumnIds": [
-          "idxcol__currency_rates__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__currency_rates__document_id"
-        ],
+        "indexColumnIds": ["idxcol__currency_rates__document_id"],
+        "seqIndexColumnIds": ["idxcol__currency_rates__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3315,12 +3213,8 @@
         "id": "idx__currency_types__document_id",
         "name": "uq_currency_types_document_id",
         "tableId": "tbl__currency_types",
-        "indexColumnIds": [
-          "idxcol__currency_types__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__currency_types__document_id"
-        ],
+        "indexColumnIds": ["idxcol__currency_types__document_id"],
+        "seqIndexColumnIds": ["idxcol__currency_types__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3331,12 +3225,8 @@
         "id": "idx__currency_types__code",
         "name": "uq_currency_types_code",
         "tableId": "tbl__currency_types",
-        "indexColumnIds": [
-          "idxcol__currency_types__code"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__currency_types__code"
-        ],
+        "indexColumnIds": ["idxcol__currency_types__code"],
+        "seqIndexColumnIds": ["idxcol__currency_types__code"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3347,12 +3237,8 @@
         "id": "idx__members__document_id",
         "name": "uq_members_document_id",
         "tableId": "tbl__members",
-        "indexColumnIds": [
-          "idxcol__members__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__members__document_id"
-        ],
+        "indexColumnIds": ["idxcol__members__document_id"],
+        "seqIndexColumnIds": ["idxcol__members__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3363,12 +3249,8 @@
         "id": "idx__members__account_id",
         "name": "uq_members_account_id",
         "tableId": "tbl__members",
-        "indexColumnIds": [
-          "idxcol__members__account_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__members__account_id"
-        ],
+        "indexColumnIds": ["idxcol__members__account_id"],
+        "seqIndexColumnIds": ["idxcol__members__account_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3379,12 +3261,8 @@
         "id": "idx__members__identifier",
         "name": "uq_members_identifier",
         "tableId": "tbl__members",
-        "indexColumnIds": [
-          "idxcol__members__identifier"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__members__identifier"
-        ],
+        "indexColumnIds": ["idxcol__members__identifier"],
+        "seqIndexColumnIds": ["idxcol__members__identifier"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3395,12 +3273,8 @@
         "id": "idx__members__email",
         "name": "uq_members_email",
         "tableId": "tbl__members",
-        "indexColumnIds": [
-          "idxcol__members__email"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__members__email"
-        ],
+        "indexColumnIds": ["idxcol__members__email"],
+        "seqIndexColumnIds": ["idxcol__members__email"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3411,12 +3285,8 @@
         "id": "idx__memberships__document_id",
         "name": "uq_memberships_document_id",
         "tableId": "tbl__memberships",
-        "indexColumnIds": [
-          "idxcol__memberships__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__memberships__document_id"
-        ],
+        "indexColumnIds": ["idxcol__memberships__document_id"],
+        "seqIndexColumnIds": ["idxcol__memberships__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3427,12 +3297,8 @@
         "id": "idx__membership_types__document_id",
         "name": "uq_membership_types_document_id",
         "tableId": "tbl__membership_types",
-        "indexColumnIds": [
-          "idxcol__membership_types__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__membership_types__document_id"
-        ],
+        "indexColumnIds": ["idxcol__membership_types__document_id"],
+        "seqIndexColumnIds": ["idxcol__membership_types__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3443,12 +3309,8 @@
         "id": "idx__membership_types__name",
         "name": "uq_membership_types_name",
         "tableId": "tbl__membership_types",
-        "indexColumnIds": [
-          "idxcol__membership_types__name"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__membership_types__name"
-        ],
+        "indexColumnIds": ["idxcol__membership_types__name"],
+        "seqIndexColumnIds": ["idxcol__membership_types__name"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3459,12 +3321,8 @@
         "id": "idx__organizations__document_id",
         "name": "uq_organizations_document_id",
         "tableId": "tbl__organizations",
-        "indexColumnIds": [
-          "idxcol__organizations__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__organizations__document_id"
-        ],
+        "indexColumnIds": ["idxcol__organizations__document_id"],
+        "seqIndexColumnIds": ["idxcol__organizations__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3475,12 +3333,8 @@
         "id": "idx__receipts__document_id",
         "name": "uq_receipts_document_id",
         "tableId": "tbl__receipts",
-        "indexColumnIds": [
-          "idxcol__receipts__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__receipts__document_id"
-        ],
+        "indexColumnIds": ["idxcol__receipts__document_id"],
+        "seqIndexColumnIds": ["idxcol__receipts__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3491,12 +3345,8 @@
         "id": "idx__receipts__reference",
         "name": "uq_receipts_reference",
         "tableId": "tbl__receipts",
-        "indexColumnIds": [
-          "idxcol__receipts__reference"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__receipts__reference"
-        ],
+        "indexColumnIds": ["idxcol__receipts__reference"],
+        "seqIndexColumnIds": ["idxcol__receipts__reference"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3507,12 +3357,8 @@
         "id": "idx__transactions__document_id",
         "name": "uq_transactions_document_id",
         "tableId": "tbl__transactions",
-        "indexColumnIds": [
-          "idxcol__transactions__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__transactions__document_id"
-        ],
+        "indexColumnIds": ["idxcol__transactions__document_id"],
+        "seqIndexColumnIds": ["idxcol__transactions__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,
@@ -3523,12 +3369,8 @@
         "id": "idx__transaction_types__document_id",
         "name": "uq_transaction_types_document_id",
         "tableId": "tbl__transaction_types",
-        "indexColumnIds": [
-          "idxcol__transaction_types__document_id"
-        ],
-        "seqIndexColumnIds": [
-          "idxcol__transaction_types__document_id"
-        ],
+        "indexColumnIds": ["idxcol__transaction_types__document_id"],
+        "seqIndexColumnIds": ["idxcol__transaction_types__document_id"],
         "unique": true,
         "meta": {
           "updateAt": 1790627879208,

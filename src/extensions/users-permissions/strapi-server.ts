@@ -30,7 +30,9 @@ type ProvidersStrapi = {
   };
   plugin: (name: string) => {
     service: (name: string) => {
-      run: (params: Record<string, unknown>) => Promise<{ email?: string } | null>;
+      run: (
+        params: Record<string, unknown>,
+      ) => Promise<{ email?: string } | null>;
     };
   };
   db: {
@@ -87,7 +89,9 @@ function upStore(strapi: ProvidersStrapi, key: string) {
  * email: reject or register, per Advanced Settings). The user row is not
  * written, so `provider: 'local'` and password login keep working.
  */
-function withExistingUserLink(originalFactory: ProvidersFactory): ProvidersFactory {
+function withExistingUserLink(
+  originalFactory: ProvidersFactory,
+): ProvidersFactory {
   return (deps) => {
     const service = originalFactory(deps);
     const stockConnect = service.connect;

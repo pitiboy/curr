@@ -17,6 +17,7 @@ Distribution lists memberships valid on the form date (`valid_from` / `valid_to`
 ## Add a new production-only workflow
 
 1. Create a config module under `configs/`, exporting a `BulkQuantityWorkflowConfig`:
+
    - `workflowId` — must match a **Settings** row with that `key` and `enabled: true` (seed per instance under `database/seeders/http/<instance>/data/backoffice-features.json`).
    - `parentOrganizationName` — exact name of the parent organization whose **direct children** are listed as quantity rows.
    - `currencyCode`, `debitAccountCode`, `creditAccountCode`, `transactionTypeName` — resolved from Strapi master data at runtime.

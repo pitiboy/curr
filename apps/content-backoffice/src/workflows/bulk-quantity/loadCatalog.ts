@@ -7,7 +7,11 @@ import type {
 } from './types';
 
 type ListResponse = {
-  data?: Array<{ documentId?: string; name?: string | null; code?: string | null }>;
+  data?: Array<{
+    documentId?: string;
+    name?: string | null;
+    code?: string | null;
+  }>;
 };
 
 async function fetchOneByFilter(
@@ -31,9 +35,14 @@ async function fetchHenHouses(
   strapiUrl: string,
   parentOrganizationName: string,
 ): Promise<BulkQuantityHenHouse[]> {
-  const parent = await fetchOneByFilter(httpClient, strapiUrl, 'organizations', {
-    name: { $eq: parentOrganizationName },
-  });
+  const parent = await fetchOneByFilter(
+    httpClient,
+    strapiUrl,
+    'organizations',
+    {
+      name: { $eq: parentOrganizationName },
+    },
+  );
   if (!parent?.documentId) {
     return [];
   }

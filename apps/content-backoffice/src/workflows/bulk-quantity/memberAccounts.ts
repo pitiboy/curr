@@ -28,7 +28,8 @@ export function memberAccountDocumentIdByCode(
   if (!field) {
     return null;
   }
-  const relation = field === 'account' ? member.account : member.private_account;
+  const relation =
+    field === 'account' ? member.account : member.private_account;
   const docId = relation?.documentId;
   return typeof docId === 'string' && docId ? docId : null;
 }

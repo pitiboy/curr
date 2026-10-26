@@ -41,15 +41,15 @@ REST interfészek ugyanebből a futásból: `documentId: string`, skalár mezők
 
 Egy `SchemaList`, `SchemaEdit` és `SchemaShow` olvassa a katalógust:
 
-| Strapi típus | react-admin |
-| --- | --- |
-| string, text, uid | Text |
-| email | Email |
-| decimal | Number |
-| date, datetime | Date |
-| enumeration | Select |
-| relation | Reference |
-| media | Image / fájl |
+| Strapi típus      | react-admin  |
+| ----------------- | ------------ |
+| string, text, uid | Text         |
+| email             | Email        |
+| decimal           | Number       |
+| date, datetime    | Date         |
+| enumeration       | Select       |
+| relation          | Reference    |
+| media             | Image / fájl |
 
 Későbbi egyedi képernyő resourceonként felülírja a generált nézetet. A katalógus a widgetektől független adat: a Material UI téma, a layout és az egyes List/Edit/Show komponensek cseréje nem írja újra a sémát.
 

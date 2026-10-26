@@ -73,9 +73,9 @@ describe('visibleWorkflowForms', () => {
   ];
 
   it('shows the intersection of the enabled list, the registry, and the role', () => {
-    expect(visibleWorkflowForms(forms, ['egg-daily-entry'], 'dataentry')).toEqual([
-      forms[0],
-    ]);
+    expect(
+      visibleWorkflowForms(forms, ['egg-daily-entry'], 'dataentry'),
+    ).toEqual([forms[0]]);
     expect(visibleWorkflowForms(forms, [], 'dataentry')).toEqual([]);
     expect(visibleWorkflowForms(forms, ['egg-daily-entry'], 'editor')).toEqual([
       forms[0],

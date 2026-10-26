@@ -56,7 +56,10 @@ export function remainingEggs(produced: number, distributed: number): number {
   return produced - distributed;
 }
 
-export function isOverDistributed(produced: number, distributed: number): boolean {
+export function isOverDistributed(
+  produced: number,
+  distributed: number,
+): boolean {
   return distributed > produced;
 }
 
@@ -138,8 +141,7 @@ export function distributionRowsFromQuantities(
     if (raw === '' || raw === null || raw === undefined) {
       continue;
     }
-    const amount =
-      typeof raw === 'number' ? raw : Number(String(raw).trim());
+    const amount = typeof raw === 'number' ? raw : Number(String(raw).trim());
     if (!Number.isFinite(amount) || amount <= 0 || !Number.isInteger(amount)) {
       continue;
     }
@@ -175,8 +177,7 @@ export function buildDistributionLegs(input: {
 }): DistributionTransactionLeg[] {
   const legs: DistributionTransactionLeg[] = [];
   for (const row of input.rows) {
-    const memberPrivateAccountId =
-      input.memberPrivateAccountIdForRow(row);
+    const memberPrivateAccountId = input.memberPrivateAccountIdForRow(row);
     if (!memberPrivateAccountId) {
       continue;
     }
@@ -192,7 +193,8 @@ export function buildDistributionLegs(input: {
         debitAccountId: memberPrivateAccountId,
         creditAccountId: input.inventoryAccountId,
         transactionTypeId: input.internalTransactionTypeId,
-        descriptionKey: 'app.bulk_quantity.description.egg_distribution_internal',
+        descriptionKey:
+          'app.bulk_quantity.description.egg_distribution_internal',
         descriptionParams: {
           member: row.memberName,
           amount: row.amount,

@@ -41,13 +41,21 @@ describe('publishTransactionDraft', () => {
 describe('samePersonPublishBlocked', () => {
   it('matches emails case-insensitively when policy is on', () => {
     expect(
-      samePersonPublishBlocked('Editor@Example.com', 'editor@example.com', true),
+      samePersonPublishBlocked(
+        'Editor@Example.com',
+        'editor@example.com',
+        true,
+      ),
     ).toBe(true);
     expect(
       samePersonPublishBlocked('other@example.com', 'editor@example.com', true),
     ).toBe(false);
     expect(
-      samePersonPublishBlocked('editor@example.com', 'editor@example.com', false),
+      samePersonPublishBlocked(
+        'editor@example.com',
+        'editor@example.com',
+        false,
+      ),
     ).toBe(false);
   });
 });

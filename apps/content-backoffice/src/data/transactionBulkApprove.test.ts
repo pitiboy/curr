@@ -22,7 +22,10 @@ const completeDraft: TransactionRow = {
 
 describe('classifyBulkApproveRows', () => {
   it('accepts a complete draft entered by someone else', () => {
-    const result = classifyBulkApproveRows([completeDraft], 'editor@example.com');
+    const result = classifyBulkApproveRows(
+      [completeDraft],
+      'editor@example.com',
+    );
     expect(result.ready).toHaveLength(1);
     expect(result.skipped).toHaveLength(0);
   });

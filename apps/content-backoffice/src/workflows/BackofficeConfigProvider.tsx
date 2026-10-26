@@ -15,7 +15,11 @@ const httpClient = strapiHttpClient({ storage: localStorage });
 
 const EMPTY_CONFIG: BackofficeConfigResponse = parseBackofficeConfig(null);
 
-export function BackofficeConfigProvider({ children }: { children: ReactNode }) {
+export function BackofficeConfigProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [server, setServer] = useState<BackofficeConfigResponse>(EMPTY_CONFIG);
   const [ready, setReady] = useState(false);
 

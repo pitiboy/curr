@@ -83,17 +83,21 @@ describe('currency rate pick', () => {
   ];
 
   it('picks the latest rate on or before the form date', () => {
-    expect(pickLatestCurrencyRate(rates, 'EGG', 'HUF', '2026-10-01')?.rate).toBe(
-      200,
-    );
-    expect(pickLatestCurrencyRate(rates, 'EGG', 'HUF', '2026-03-01')?.rate).toBe(
-      100,
-    );
-    expect(pickLatestCurrencyRate(rates, 'EGG', 'EUR', '2026-10-01')).toBeNull();
+    expect(
+      pickLatestCurrencyRate(rates, 'EGG', 'HUF', '2026-10-01')?.rate,
+    ).toBe(200);
+    expect(
+      pickLatestCurrencyRate(rates, 'EGG', 'HUF', '2026-03-01')?.rate,
+    ).toBe(100);
+    expect(
+      pickLatestCurrencyRate(rates, 'EGG', 'EUR', '2026-10-01'),
+    ).toBeNull();
   });
 
   it('uses 1 when currencies match', () => {
-    expect(pickLatestCurrencyRate([], 'HUF', 'HUF', '2026-10-01')?.rate).toBe(1);
+    expect(pickLatestCurrencyRate([], 'HUF', 'HUF', '2026-10-01')?.rate).toBe(
+      1,
+    );
   });
 });
 

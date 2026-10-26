@@ -47,7 +47,11 @@ describe('buildBackofficeConfigFromFeatures', () => {
         config: { value: 'KÖR' },
       },
       { key: 'member-fee', enabled: false, config: {} },
-      { key: 'egg-daily-entry', enabled: true, config: { saleCurrency: 'EUR' } },
+      {
+        key: 'egg-daily-entry',
+        enabled: true,
+        config: { saleCurrency: 'EUR' },
+      },
     ]);
 
     assert.deepEqual(config.enabled, ['egg-daily-entry']);

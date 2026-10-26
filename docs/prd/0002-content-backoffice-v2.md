@@ -88,7 +88,9 @@ A v1 a jogosultság betöltése alatt üresen hagyja a felületet. v2-ben az AJA
 
 ### 4.2 GitHub Actions skeleton (javaslat)
 
-v1 manuális deploy után v2-ben pipeline. Javasolt skeleton:
+**Implementáció (cPanel / kor.fejlesztesek.hu):** [`docs/ci/github-actions-cpanel.md`](../ci/github-actions-cpanel.md) — CI + deploy workflow, FTP, `tmp/restart.txt`, lockfile esetén manuális NPM Install gate (`KOR.fejlesztesek.hu` environment), Trello/email. Branch protection: [`docs/ci/branch-protection.md`](../ci/branch-protection.md).
+
+v1 manuális deploy után v2-ben pipeline. Javasolt skeleton (történeti váz — a fenti doc az éles megoldás):
 
 ```yaml
 # .github/workflows/content-backoffice.yml
@@ -162,7 +164,7 @@ A `main` branch protection GitHub-beállítás, nem kódbeli kapcsoló:
 - Merge előtt a branch legyen naprakész a `main`-nel.
 - Force-push és a `main` törlése tiltott.
 
-Ma a [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) `npm ci`, Strapi build és `typecheck`. Pre-commit hook és branch protection nincs.
+A [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) Prettier check, typecheck, Strapi tesztek + build, backoffice lint és vitest. Pre-commit: [`lefthook.yml`](../../lefthook.yml). Branch protection: [`docs/ci/branch-protection.md`](../ci/branch-protection.md).
 
 ### 4.4 Üzemeltetési alap
 

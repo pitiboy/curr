@@ -25,7 +25,10 @@ export type StaticPageLocale = (typeof STATIC_PAGE_LOCALES)[number];
 export const DEFAULT_STATIC_PAGE_LOCALE: StaticPageLocale = 'hu';
 
 /** i18n plugin locale rows the bootstrap makes sure exist. */
-export const I18N_LOCALE_DEFS: Record<StaticPageLocale, { code: StaticPageLocale; name: string }> = {
+export const I18N_LOCALE_DEFS: Record<
+  StaticPageLocale,
+  { code: StaticPageLocale; name: string }
+> = {
   hu: { code: 'hu', name: 'Hungarian (hu)' },
   en: { code: 'en', name: 'English (en)' },
 };
@@ -51,8 +54,10 @@ const UI: Record<StaticPageLocale, UiStrings> = {
     indexTitle: 'Statikus oldalak',
     indexEmpty: 'Még nincs feltöltött dokumentum.',
     notFoundTitle: 'Nem található',
-    notFoundBody: 'Ez a dokumentum még nincs feltöltve, vagy megváltozott a címe.',
-    fallbackNotice: 'Ez az oldal még nem érhető el magyarul, ezért az alapnyelvi változatot látod.',
+    notFoundBody:
+      'Ez a dokumentum még nincs feltöltve, vagy megváltozott a címe.',
+    fallbackNotice:
+      'Ez az oldal még nem érhető el magyarul, ezért az alapnyelvi változatot látod.',
     fallbackTitle: 'Statikus oldal',
     switchLabel: 'Nyelv',
   },
@@ -63,7 +68,8 @@ const UI: Record<StaticPageLocale, UiStrings> = {
     indexTitle: 'Static pages',
     indexEmpty: 'No documents have been published yet.',
     notFoundTitle: 'Not found',
-    notFoundBody: 'This document has not been published yet, or its address has changed.',
+    notFoundBody:
+      'This document has not been published yet, or its address has changed.',
     fallbackNotice:
       'This page is not available in English yet, so you are seeing the Hungarian version.',
     fallbackTitle: 'Static page',
@@ -94,7 +100,9 @@ export type StaticPageRecord = {
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export function isValidStaticPageSlug(slug: unknown): slug is string {
-  return typeof slug === 'string' && slug.length <= 128 && SLUG_PATTERN.test(slug);
+  return (
+    typeof slug === 'string' && slug.length <= 128 && SLUG_PATTERN.test(slug)
+  );
 }
 
 /** `?locale=en` → `en`; anything unknown or missing → the default (`hu`). */
@@ -142,9 +150,14 @@ export function formatStaticPageDate(
 }
 
 /** `/static/privacy-policy` for hu (stable Google URL), `…?locale=en` for en. */
-export function staticPagePath(slug?: string, locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE) {
+export function staticPagePath(
+  slug?: string,
+  locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE,
+) {
   const path = slug ? `${STATIC_PATH_PREFIX}/${slug}` : STATIC_PATH_PREFIX;
-  return locale === DEFAULT_STATIC_PAGE_LOCALE ? path : `${path}?locale=${locale}`;
+  return locale === DEFAULT_STATIC_PAGE_LOCALE
+    ? path
+    : `${path}?locale=${locale}`;
 }
 
 const STYLE = `
@@ -213,7 +226,12 @@ function renderFooterNav({ locale, nav }: RenderContext) {
   return `<nav>${links.join('')}</nav>`;
 }
 
-function renderDocument(title: string, content: string, ctx: RenderContext, contentLang?: string) {
+function renderDocument(
+  title: string,
+  content: string,
+  ctx: RenderContext,
+  contentLang?: string,
+) {
   const ui = UI[ctx.locale];
   const alternates = ctx.slug
     ? STATIC_PAGE_LOCALES.map(
@@ -221,7 +239,10 @@ function renderDocument(title: string, content: string, ctx: RenderContext, cont
           `<link rel="alternate" hreflang="${code}" href="${escapeHtml(staticPagePath(ctx.slug, code))}">`,
       ).join('\n')
     : '';
-  const mainLang = contentLang && contentLang !== ctx.locale ? ` lang="${escapeHtml(contentLang)}"` : '';
+  const mainLang =
+    contentLang && contentLang !== ctx.locale
+      ? ` lang="${escapeHtml(contentLang)}"`
+      : '';
   return `<!doctype html>
 <html lang="${ctx.locale}">
 <head>
@@ -252,8 +273,12 @@ export function renderStaticPageHtml(
   const pageLocale = resolveStaticPageLocale(page.locale ?? locale);
   const isFallback = pageLocale !== locale;
   const updated = formatStaticPageDate(page.updatedAt, locale);
-  const notice = isFallback ? `<p class="notice" lang="${locale}">${ui.fallbackNotice}</p>\n` : '';
-  const meta = updated ? `<p class="meta" lang="${locale}">${ui.updated}: ${escapeHtml(updated)}</p>` : '';
+  const notice = isFallback
+    ? `<p class="notice" lang="${locale}">${ui.fallbackNotice}</p>\n`
+    : '';
+  const meta = updated
+    ? `<p class="meta" lang="${locale}">${ui.updated}: ${escapeHtml(updated)}</p>`
+    : '';
   const slug = isValidStaticPageSlug(page.slug) ? page.slug : undefined;
   return renderDocument(
     title,
@@ -274,7 +299,9 @@ export function renderStaticPageIndexHtml(
       (page) =>
         `<li><a href="${escapeHtml(staticPagePath(page.slug as string, locale))}">${escapeHtml(page.title as string)}</a></li>`,
     );
-  const list = items.length ? `<ul>${items.join('')}</ul>` : `<p>${ui.indexEmpty}</p>`;
+  const list = items.length
+    ? `<ul>${items.join('')}</ul>`
+    : `<p>${ui.indexEmpty}</p>`;
   return renderDocument(ui.indexTitle, `<h1>${ui.indexTitle}</h1>\n${list}`, {
     locale,
     nav: pages,
@@ -286,15 +313,21 @@ export function renderStaticPageNotFoundHtml(
   locale: StaticPageLocale = DEFAULT_STATIC_PAGE_LOCALE,
 ) {
   const ui = UI[locale];
-  return renderDocument(ui.notFoundTitle, `<h1>${ui.notFoundTitle}</h1>\n<p>${ui.notFoundBody}</p>`, {
-    locale,
-    nav,
-  });
+  return renderDocument(
+    ui.notFoundTitle,
+    `<h1>${ui.notFoundTitle}</h1>\n<p>${ui.notFoundBody}</p>`,
+    {
+      locale,
+      nav,
+    },
+  );
 }
 
 type StaticPageDocuments = {
   findMany: (params?: Record<string, unknown>) => Promise<StaticPageRecord[]>;
-  findFirst: (params?: Record<string, unknown>) => Promise<StaticPageRecord | null>;
+  findFirst: (
+    params?: Record<string, unknown>,
+  ) => Promise<StaticPageRecord | null>;
 };
 
 export type StaticPagesStrapi = {
@@ -314,7 +347,9 @@ type HtmlContext = {
 
 /** Requested locale first, then the default; one entry per slug. */
 function localeChain(locale: StaticPageLocale): StaticPageLocale[] {
-  return locale === DEFAULT_STATIC_PAGE_LOCALE ? [locale] : [locale, DEFAULT_STATIC_PAGE_LOCALE];
+  return locale === DEFAULT_STATIC_PAGE_LOCALE
+    ? [locale]
+    : [locale, DEFAULT_STATIC_PAGE_LOCALE];
 }
 
 async function listForNav(strapi: StaticPagesStrapi, locale: StaticPageLocale) {
@@ -463,7 +498,12 @@ export function resolveHomeRedirect(value: unknown) {
     return null;
   }
   const path = value.trim();
-  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || path === '/') {
+  if (
+    !path.startsWith('/') ||
+    path.startsWith('//') ||
+    path.includes('\\') ||
+    path === '/'
+  ) {
     return null;
   }
   return path;
@@ -479,7 +519,9 @@ type RootContext = {
 export function createHomeRedirectMiddleware(target: string) {
   return async (ctx: RootContext, next: () => Promise<unknown>) => {
     if ((ctx.method === 'GET' || ctx.method === 'HEAD') && ctx.path === '/') {
-      const query = ctx.querystring ? `${target.includes('?') ? '&' : '?'}${ctx.querystring}` : '';
+      const query = ctx.querystring
+        ? `${target.includes('?') ? '&' : '?'}${ctx.querystring}`
+        : '';
       ctx.redirect(`${target}${query}`);
       return;
     }
@@ -497,7 +539,10 @@ export function resolveSiteHomeRedirectTarget(
 }
 
 export function registerHomeRedirect(
-  strapi: { server: { use: (fn: unknown) => unknown }; log?: { info: (m: string) => void } },
+  strapi: {
+    server: { use: (fn: unknown) => unknown };
+    log?: { info: (m: string) => void };
+  },
   value: unknown = process.env.PUBLIC_HOME_REDIRECT,
 ) {
   const target = resolveSiteHomeRedirectTarget(value);
@@ -529,7 +574,9 @@ export async function ensureStaticPageLocales(strapi: StaticPageLocalesStrapi) {
   const plugin = strapi.plugin('i18n');
   const locales = plugin?.service('locales') as LocalesService | undefined;
   if (!locales) {
-    strapi.log.warn('Static pages bootstrap: i18n plugin not available, locales skipped');
+    strapi.log.warn(
+      'Static pages bootstrap: i18n plugin not available, locales skipped',
+    );
     return;
   }
 
@@ -556,7 +603,10 @@ type SlugGuardContext = {
 type SlugGuardStrapi = {
   documents: ((uid: string) => StaticPageDocuments) & {
     use: (
-      middleware: (context: SlugGuardContext, next: () => Promise<unknown>) => Promise<unknown>,
+      middleware: (
+        context: SlugGuardContext,
+        next: () => Promise<unknown>,
+      ) => Promise<unknown>,
     ) => unknown;
   };
 };
@@ -579,18 +629,27 @@ export function registerStaticPageSlugGuard(strapi: SlugGuardStrapi) {
             'Slug: only lowercase letters, digits and single hyphens (e.g. privacy-policy)',
           );
         }
-        const existing = (await (strapi.documents(STATIC_PAGE_UID) as unknown as {
-          findMany: (params: unknown) => Promise<Array<{ documentId?: string }>>;
-        }).findMany({
-          filters: { slug: { $eq: slug } },
-          fields: ['slug'],
-          // Same slug in another locale is the same page (or its translation);
-          // only a second page with this slug in the same locale is a conflict.
-          locale: context.params?.locale ?? DEFAULT_STATIC_PAGE_LOCALE,
-        })) ?? [];
+        const existing =
+          (await (
+            strapi.documents(STATIC_PAGE_UID) as unknown as {
+              findMany: (
+                params: unknown,
+              ) => Promise<Array<{ documentId?: string }>>;
+            }
+          ).findMany({
+            filters: { slug: { $eq: slug } },
+            fields: ['slug'],
+            // Same slug in another locale is the same page (or its translation);
+            // only a second page with this slug in the same locale is a conflict.
+            locale: context.params?.locale ?? DEFAULT_STATIC_PAGE_LOCALE,
+          })) ?? [];
         const ownId = context.params?.documentId;
-        if (existing.some((row) => row.documentId && row.documentId !== ownId)) {
-          throw new errors.ValidationError(`Slug "${slug}" is already used by another static page in this language`);
+        if (
+          existing.some((row) => row.documentId && row.documentId !== ownId)
+        ) {
+          throw new errors.ValidationError(
+            `Slug "${slug}" is already used by another static page in this language`,
+          );
         }
       }
     }
@@ -626,7 +685,9 @@ export async function migrateLegalPagesToStaticPages(strapi: MigrateStrapi) {
     const hasNew = await schema.hasTable(STATIC_PAGES_TABLE);
     if (hasOld && !hasNew) {
       await schema.renameTable(LEGAL_PAGES_TABLE, STATIC_PAGES_TABLE);
-      strapi.log.info(`Renamed DB table ${LEGAL_PAGES_TABLE} → ${STATIC_PAGES_TABLE}`);
+      strapi.log.info(
+        `Renamed DB table ${LEGAL_PAGES_TABLE} → ${STATIC_PAGES_TABLE}`,
+      );
     }
     const linkOld = `${LEGAL_PAGES_TABLE}_localizations_lnk`;
     const linkNew = `${STATIC_PAGES_TABLE}_localizations_lnk`;
@@ -643,6 +704,8 @@ export async function migrateLegalPagesToStaticPages(strapi: MigrateStrapi) {
       "UPDATE up_permissions SET action = replace(action, 'api::legal-page.legal-page', 'api::static-page.static-page') WHERE action LIKE '%legal-page%'",
     );
   } catch (error) {
-    strapi.log.warn(`Static pages permission migration skipped: ${String(error)}`);
+    strapi.log.warn(
+      `Static pages permission migration skipped: ${String(error)}`,
+    );
   }
 }

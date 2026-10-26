@@ -4,4 +4,6 @@
 
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreService('api::account-category.account-category');
+export default factories.createCoreService(
+  'api::account-category.account-category',
+);

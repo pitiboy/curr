@@ -48,7 +48,10 @@ import {
   legPlansWithGlobalChoice,
   legToTransactionPayload,
 } from './distributionPlans';
-import { findDuplicateForRow, findDuplicateForTransaction } from './duplicateFetch';
+import {
+  findDuplicateForRow,
+  findDuplicateForTransaction,
+} from './duplicateFetch';
 import { loadBulkQuantityCatalog } from './loadCatalog';
 import {
   loadCurrencyRates,
@@ -155,11 +158,7 @@ function WizardToolbar({
         </>
       ) : null}
       {activeStep === 0 && !hasDistribution ? (
-        <Button
-          disabled={disabled || saving}
-          type="submit"
-          variant="contained"
-        >
+        <Button disabled={disabled || saving} type="submit" variant="contained">
           {translate('app.bulk_quantity.save')}
         </Button>
       ) : null}
@@ -464,12 +463,21 @@ export function BulkQuantityEntryPage({
         eggToSaleRate: rate,
       });
       const buildPayload = (leg: (typeof legs)[number]) => {
-        const description = translate(leg.descriptionKey, leg.descriptionParams);
+        const description = translate(
+          leg.descriptionKey,
+          leg.descriptionParams,
+        );
         return legToTransactionPayload(leg, date, description);
       };
       return { legs, buildPayload, distRows };
     },
-    [config.distribution, distributionMembers, distributionRefs, memberQuantities, translate],
+    [
+      config.distribution,
+      distributionMembers,
+      distributionRefs,
+      memberQuantities,
+      translate,
+    ],
   );
 
   const collectDuplicates = async (
@@ -781,7 +789,10 @@ export function BulkQuantityEntryPage({
             <Toolbar>
               <SaveButton
                 disabled={
-                  catalogPending || !refs || saving || productionRows.length === 0
+                  catalogPending ||
+                  !refs ||
+                  saving ||
+                  productionRows.length === 0
                 }
                 label="app.bulk_quantity.save"
               />
@@ -929,9 +940,7 @@ export function BulkQuantityEntryPage({
               severity={row.status === 'success' ? 'success' : 'error'}
             >
               {row.organizationName}
-              {row.status === 'error' && row.message
-                ? `: ${row.message}`
-                : ''}
+              {row.status === 'error' && row.message ? `: ${row.message}` : ''}
             </Alert>
           ))}
           {failedIds.length > 0 ? (
@@ -982,7 +991,10 @@ function PerRowConflictDialog({
   open: boolean;
   conflicts: BulkQuantityDuplicate[];
   choices: Record<string, BulkQuantityConflictChoice>;
-  onChange: (organizationId: string, choice: BulkQuantityConflictChoice) => void;
+  onChange: (
+    organizationId: string,
+    choice: BulkQuantityConflictChoice,
+  ) => void;
   onConfirm: () => void;
   onCancel: () => void;
 }) {

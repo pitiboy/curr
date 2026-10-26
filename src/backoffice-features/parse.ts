@@ -11,10 +11,7 @@ import type {
   BackofficeFeatureRow,
   BackofficeFeatureState,
 } from './types';
-import {
-  DEFAULT_PUBLISH_POLICY,
-  type PublishPolicy,
-} from '../publish-guard';
+import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-guard';
 
 export function isBackofficeSettingKey(key: string): boolean {
   return BACKOFFICE_SETTING_PREFIXES.some((prefix) => key.startsWith(prefix));
@@ -60,7 +57,9 @@ export function publishPolicyFromFeatures(
     statusRaw?.toLowerCase() === 'published' ? 'published' : 'draft';
 
   const publisherMustDiffer =
-    differRow == null ? DEFAULT_PUBLISH_POLICY.publisherMustDiffer : differRow.enabled;
+    differRow == null
+      ? DEFAULT_PUBLISH_POLICY.publisherMustDiffer
+      : differRow.enabled;
 
   return { defaultStatus, publisherMustDiffer };
 }
@@ -89,7 +88,9 @@ export function buildBackofficeConfigFromFeatures(
 
   const workflowRows = rows.filter((row) => !isBackofficeSettingKey(row.key));
   const available = workflowRows.map((row) => row.key);
-  const enabled = workflowRows.filter((row) => row.enabled).map((row) => row.key);
+  const enabled = workflowRows
+    .filter((row) => row.enabled)
+    .map((row) => row.key);
 
   const features: Record<string, BackofficeFeatureState> = {};
   for (const row of rows) {

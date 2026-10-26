@@ -86,7 +86,9 @@ export function parseBackofficeConfig(body: unknown): BackofficeConfigResponse {
   return {
     enabled: stringList(record.enabled).filter((id) => known.has(id)),
     available,
-    publisherMustDiffer: publisherMustDifferFromBody(record.publisherMustDiffer),
+    publisherMustDiffer: publisherMustDifferFromBody(
+      record.publisherMustDiffer,
+    ),
     debitCodesPattern: patternFromBody(
       record.debitCodesPattern,
       DEFAULT_DEBIT_PATTERN,
