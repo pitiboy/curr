@@ -116,7 +116,7 @@ A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBA
 | Passenger restart                           | FTP `tmp/restart.txt`         | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
 | `npm install` lockfile változáskor          | — (gate + summary)            | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
 | Health `/_health`, `/admin`, `/backoffice/` | Script backoff                | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
-| Deploy jóváhagyás manuális lépésnél         | `manual-cpanel` environment   | Reviewer a GitHubon                                                                                          |
+| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu` environment | Reviewer a GitHubon                                                                                       |
 
 ## Workflow kézi futtatása
 
