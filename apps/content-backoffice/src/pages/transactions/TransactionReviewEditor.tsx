@@ -368,10 +368,10 @@ function ReceiptAttachEditor({
     typeof values.description === 'string' ? values.description.trim() : '';
   const canSave = Boolean(
     pending.length > 0 &&
-      !pending.some((card) => receiptCardInvalid(card)) &&
-      formDescription &&
-      values.date &&
-      isFilled(values.amount),
+    !pending.some((card) => receiptCardInvalid(card)) &&
+    formDescription &&
+    values.date &&
+    isFilled(values.amount),
   );
 
   const saveReceipts = () => {
