@@ -22,7 +22,7 @@
   {
     "key": "app.title",
     "enabled": true,
-    "config": { "value": "edizone" }
+    "config": { "value": "EdiZone" }
   },
   {
     "key": "app.egg_sale_currency",

@@ -35,7 +35,7 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
 - `CLOUDINARY_NAME`, `CLOUDINARY_KEY`, `CLOUDINARY_SECRET`, `CLOUDINARY_UPLOAD_PRESET`
 - `CLOUDINARY_FOLDER` — az aliastól függő mappa, például `edizone`
 - `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok
-- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy instance seed: `npm run seed:backoffice-features:edizone`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-daily-entry` enabled).
+- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-daily-entry` enabled).
 - `BACKOFFICE_OAUTH_CALLBACK` — az SPA visszatérési URL záró perjellel, pl. `https://edizone.fejlesztesek.hu/backoffice/`. Ha hiányzik, a közös `.env` kor értéke marad, és a Google login *Invalid callback URL* hibát ad.
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — ugyanaz a Google OAuth kliens, mint a kornál (a közös `.env`-ből örökölhető). A Google Cloud Console **Authorised redirect URIs** listájába vedd fel az alias Strapi callbackjét is: `https://edizone.fejlesztesek.hu/api/connect/google/callback`.
 
