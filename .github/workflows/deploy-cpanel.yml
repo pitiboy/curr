@@ -87,6 +87,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.skip != 'true'
     runs-on: ubuntu-latest
+    outputs:
+      needs_approval: ${{ steps.gate.outputs.needs_approval }}
+      trello_card_id: ${{ steps.notify.outputs.trello_card_id }}
     steps:
       - uses: actions/checkout@v4
 
@@ -178,8 +181,19 @@ jobs:
             echo "6. **Restart** mindkét Node.js alkalmazáson (kor + edizone alias), ha van."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Resolve approval gate
+        id: gate
+        run: |
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+            echo "needs_approval=false" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ needs.changes.outputs.lockfile }}" == "true" || "${{ steps.health.outcome }}" == "failure" ]]; then
+            echo "needs_approval=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_approval=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Notify manual / failure
-        if: (needs.changes.outputs.lockfile == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
+        if: steps.gate.outputs.needs_approval == 'true'
         id: notify
         env:
           NOTIFY_ACTION: manual
@@ -187,6 +201,7 @@ jobs:
           NOTIFY_BODY: |
             Deploy run needs operator action (NPM Install and/or health check failed).
             See workflow job summary for cPanel click steps.
+            Approve the KOR.fejlesztesek.hu environment when done.
           TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
           TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
           TRELLO_LIST_ID: ${{ secrets.TRELLO_LIST_ID }}
@@ -198,25 +213,12 @@ jobs:
           SMTP_TO: ${{ secrets.SMTP_TO }}
         run: python3 scripts/deploy/notify.py
 
-      - name: Wait for operator approval
-        if: (needs.changes.outputs.lockfile == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
-        environment: KOR.fejlesztesek.hu
-        run: echo "KOR.fejlesztesek.hu environment approved; continuing deploy."
-
-      - name: Re-run health check after approval
-        if: (needs.changes.outputs.lockfile == 'true' || steps.health.outcome == 'failure') && github.event.inputs.dry_run != 'true'
-        env:
-          CHECK_BACKEND: ${{ needs.changes.outputs.backend == 'true' && '1' || '0' }}
-          CHECK_BACKOFFICE: ${{ needs.changes.outputs.backoffice == 'true' && '1' || '0' }}
-        run: bash scripts/deploy/health-check.sh
-
-      - name: Deploy success notification
-        if: success() && github.event.inputs.dry_run != 'true'
+      - name: Deploy success notification (no manual gate)
+        if: success() && steps.gate.outputs.needs_approval != 'true' && github.event.inputs.dry_run != 'true'
         env:
           NOTIFY_ACTION: success
           TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
           TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
-          TRELLO_CARD_ID: ${{ steps.notify.outputs.trello_card_id }}
           TRELLO_DONE_LIST_ID: ${{ secrets.TRELLO_DONE_LIST_ID }}
         run: python3 scripts/deploy/notify.py || true
 
@@ -226,6 +228,57 @@ jobs:
           NOTIFY_ACTION: failure
           NOTIFY_TITLE: 'Deploy kor.fejlesztesek.hu – FAILED'
           NOTIFY_BODY: 'A deploy workflow hibára futott. Nézd meg a GitHub Actions logot.'
+          TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
+          TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
+          TRELLO_LIST_ID: ${{ secrets.TRELLO_LIST_ID }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+        run: python3 scripts/deploy/notify.py || true
+
+  approve:
+    name: Wait for operator approval
+    needs: deploy
+    if: needs.deploy.outputs.needs_approval == 'true'
+    runs-on: ubuntu-latest
+    environment: KOR.fejlesztesek.hu
+    steps:
+      - name: Approved
+        run: echo "KOR.fejlesztesek.hu environment approved; continuing deploy."
+
+  verify:
+    name: Re-check health after approval
+    needs: [changes, deploy, approve]
+    if: needs.deploy.outputs.needs_approval == 'true' && needs.approve.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Re-run health check after approval
+        env:
+          CHECK_BACKEND: ${{ needs.changes.outputs.backend == 'true' && '1' || '0' }}
+          CHECK_BACKOFFICE: ${{ needs.changes.outputs.backoffice == 'true' && '1' || '0' }}
+        run: bash scripts/deploy/health-check.sh
+
+      - name: Deploy success notification
+        if: success()
+        env:
+          NOTIFY_ACTION: success
+          TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
+          TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
+          TRELLO_CARD_ID: ${{ needs.deploy.outputs.trello_card_id }}
+          TRELLO_DONE_LIST_ID: ${{ secrets.TRELLO_DONE_LIST_ID }}
+        run: python3 scripts/deploy/notify.py || true
+
+      - name: Deploy failure notification
+        if: failure()
+        env:
+          NOTIFY_ACTION: failure
+          NOTIFY_TITLE: 'Deploy kor.fejlesztesek.hu – FAILED'
+          NOTIFY_BODY: 'Health check failed after operator approval. Nézd meg a GitHub Actions logot.'
           TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
           TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
           TRELLO_LIST_ID: ${{ secrets.TRELLO_LIST_ID }}
