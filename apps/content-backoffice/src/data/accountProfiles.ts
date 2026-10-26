@@ -1,10 +1,11 @@
 import type { AccountChoice } from './accountCodes';
 import {
-  CREDIT_CODES,
+  DEFAULT_ACCOUNT_CODE_PATTERNS,
   isCreditCode,
   isDebitCode,
   normalizeAccountCode,
   sortAccountChoices,
+  type AccountCodePatterns,
 } from './accountCodes';
 import {
   EGG_DAILY_ENTRY_WORKFLOW_ID,
@@ -26,8 +27,6 @@ export { EGG_DAILY_ENTRY_WORKFLOW_ID };
 const EGG_SALE_DEBIT_CODES = new Set<string>(EGG_SALE_DEBIT_ACCOUNT_CODES);
 const EGG_SALE_CREDIT_CODES = new Set<string>(EGG_SALE_CREDIT_ACCOUNT_CODES);
 
-/** Bevétel profil tartozik oldalán mérleg-szerű (1/3) kódok, követel oldalán 4-es bevétel. */
-const revenueDebitPattern = CREDIT_CODES;
 const REVENUE_CREDIT = /^4/;
 
 type NonEmptyAccountProfile = Exclude<AccountProfile, ''>;
@@ -51,14 +50,17 @@ function accountMatchesProfile(
   account: AccountChoice,
   kind: 'debit' | 'credit',
   profile: NonEmptyAccountProfile,
+  patterns: AccountCodePatterns,
 ): boolean {
   const code = normalizeAccountCode(account.code);
   switch (profile) {
     case 'cost':
-      return kind === 'debit' ? isDebitCode(code) : isCreditCode(code);
+      return kind === 'debit'
+        ? isDebitCode(code, patterns.debit)
+        : isCreditCode(code, patterns.credit);
     case 'revenue':
       return kind === 'debit'
-        ? revenueDebitPattern.test(code)
+        ? patterns.credit.test(code)
         : REVENUE_CREDIT.test(code);
     case 'egg-production':
       return kind === 'debit'
@@ -81,12 +83,15 @@ export function filterAccountsByProfile(
   accounts: AccountChoice[],
   kind: 'debit' | 'credit',
   profile: AccountProfile = 'cost',
+  patterns: AccountCodePatterns = DEFAULT_ACCOUNT_CODE_PATTERNS,
 ): AccountChoice[] {
   if (profile === '') {
     return sortAccountChoices(accounts);
   }
   return sortAccountChoices(
-    accounts.filter((account) => accountMatchesProfile(account, kind, profile)),
+    accounts.filter((account) =>
+      accountMatchesProfile(account, kind, profile, patterns),
+    ),
   );
 }
 
@@ -96,8 +101,9 @@ export function accountChoicesForProfile(
   kind: 'debit' | 'credit',
   profile: AccountProfile,
   selectedId: unknown,
+  patterns: AccountCodePatterns = DEFAULT_ACCOUNT_CODE_PATTERNS,
 ): AccountChoice[] {
-  const filtered = filterAccountsByProfile(accounts, kind, profile);
+  const filtered = filterAccountsByProfile(accounts, kind, profile, patterns);
   if (selectedId === null || selectedId === undefined || selectedId === '') {
     return filtered;
   }
@@ -107,19 +113,19 @@ export function accountChoicesForProfile(
   return selected ? sortAccountChoices([...filtered, selected]) : filtered;
 }
 
-/** Non-empty profiles gated by `effective` workflow ids from BackofficeConfigContext. */
+/** Non-empty profiles gated by enabled workflow ids from BackofficeConfigContext. */
 export function selectableAccountProfiles(
-  effectiveWorkflowIds: readonly string[],
+  enabledWorkflowIds: readonly string[],
   configReady: boolean,
 ): NonEmptyAccountProfile[] {
-  const effective = new Set(effectiveWorkflowIds);
+  const enabled = new Set(enabledWorkflowIds);
   const profiles: NonEmptyAccountProfile[] = ['cost', 'revenue'];
   if (!configReady) {
     return profiles;
   }
   for (const profile of EGG_GATED_ACCOUNT_PROFILES) {
     const workflowId = PROFILE_WORKFLOW[profile];
-    if (effective.has(workflowId)) {
+    if (enabled.has(workflowId)) {
       profiles.push(profile);
     }
   }
@@ -127,8 +133,8 @@ export function selectableAccountProfiles(
 }
 
 export function selectableAccountProfilesWithAll(
-  effectiveWorkflowIds: readonly string[],
+  enabledWorkflowIds: readonly string[],
   configReady: boolean,
 ): AccountProfile[] {
-  return ['', ...selectableAccountProfiles(effectiveWorkflowIds, configReady)];
+  return ['', ...selectableAccountProfiles(enabledWorkflowIds, configReady)];
 }

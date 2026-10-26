@@ -125,7 +125,7 @@ sequenceDiagram
 ```
 
 1. **`startGoogleLogin()`** — `sessionStorage` jelzi a pending OAuth-ot; teljes oldalas redirect:  
-   `{VITE_STRAPI_URL}/api/connect/google?callback={encodeURIComponent(origin + /backoffice/)}`.
+   `{STRAPI_URL}/api/connect/google?callback={encodeURIComponent(origin + /backoffice/)}` (dev: `localhost:1337`, éles: page origin).
 2. Strapi végigviszi a Google flow-t, session cookie a **Strapi originen** marad.
 3. Visszaérkezés a login oldalra → **`completeGoogleLoginFromSession()`** — `GET /api/auth/google/callback`, `credentials: 'include'`.
 4. **`persistStrapiAuthSession(jwt, user)`** — ugyanoda, mint local login.
@@ -168,8 +168,4 @@ BACKOFFICE_OAUTH_CALLBACK=http://localhost:5173/backoffice/
 PUBLIC_URL=http://localhost:1337   # Google Console Strapi callback ehhez igazodik
 ```
 
-SPA (`apps/content-backoffice/.env`):
-
-```bash
-VITE_STRAPI_URL=http://localhost:1337
-```
+SPA: nincs Vite env; lokálon a Strapi origin fix `http://localhost:1337`, élesen a page origin.

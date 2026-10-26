@@ -148,14 +148,11 @@ describe('readPublishPolicy', () => {
     });
   });
 
-  it('reads the published default and turns off the different-person rule', () => {
-    assert.deepEqual(
-      readPublishPolicy({
-        CONTENT_DEFAULT_STATUS: 'published',
-        CONTENT_PUBLISHER_MUST_DIFFER: 'false',
-      }),
-      { defaultStatus: 'published', publisherMustDiffer: false },
-    );
+  it('returns defaults without env overrides', () => {
+    assert.deepEqual(readPublishPolicy(), {
+      defaultStatus: 'draft',
+      publisherMustDiffer: true,
+    });
   });
 });
 

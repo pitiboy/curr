@@ -1,6 +1,6 @@
 # Content backoffice — kor.fejlesztesek.hu
 
-A React Admin SPA statikus fájljai a Strapi ugyanazon hostján, a `/backoffice` útvonal alatt futnak. Az API ugyanaz az origin (`https://kor.fejlesztesek.hu`), path nélkül a `VITE_STRAPI_URL`-ben.
+A React Admin SPA statikus fájljai a Strapi ugyanazon hostján, a `/backoffice` útvonal alatt futnak. Az API hívások a böngésző originjére mennek (`window.location.origin`), path nélkül.
 
 CI pipeline nincs (v1). A feltöltés helyi FTPS-sel történik, a Strapi deploy mintájára.
 
@@ -8,7 +8,6 @@ CI pipeline nincs (v1). A feltöltés helyi FTPS-sel történik, a Strapi deploy
 
 1. A Strapi deployhoz ugyanaz a `.env.deploy:kor.fejlesztesek.hu` (lásd `.env.deploy.example`).
 2. Töltsd ki az `FTP_PASS` értékét (ugyanaz a cPanel FTP user, mint a Strapi deploynál).
-3. Ellenőrizd: `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` (nincs perjel a végén).
 
 A Vite `base` értéke `/backoffice/` (`apps/content-backoffice/vite.config.ts`). A build kimenete az `apps/content-backoffice/dist` mappa.
 

@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { DataProvider } from 'react-admin';
 
 import {
-  CREDIT_CODES,
-  DEBIT_CODES,
+  DEFAULT_ACCOUNT_CODE_PATTERNS,
   isCreditCode,
   isDebitCode,
   loadAllAccounts,
@@ -48,8 +47,8 @@ describe('parseCodeRegex', () => {
 });
 
 describe('account code filters', () => {
-  it('uses /^5/ for debit when VITE_DEBIT_CODES is unset', () => {
-    expect(DEBIT_CODES.source).toBe('^5');
+  it('uses /^5/ for debit with default patterns', () => {
+    expect(DEFAULT_ACCOUNT_CODE_PATTERNS.debit.source).toBe('^5');
     expect(
       filterAccountsByProfile(accounts, 'debit').map((row) => row.code),
     ).toEqual(['5000', '5100', '5200', '5400', '5800']);
@@ -57,8 +56,8 @@ describe('account code filters', () => {
     expect(isDebitCode('1000')).toBe(false);
   });
 
-  it('uses /^(1|3)/ for credit when VITE_CREDIT_CODES is unset', () => {
-    expect(CREDIT_CODES.source).toBe('^(1|3)');
+  it('uses /^(1|3)/ for credit with default patterns', () => {
+    expect(DEFAULT_ACCOUNT_CODE_PATTERNS.credit.source).toBe('^(1|3)');
     expect(
       filterAccountsByProfile(accounts, 'credit').map((row) => row.code),
     ).toEqual(['1000', '1100', '1200', '1300', '3000']);

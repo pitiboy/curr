@@ -30,7 +30,9 @@ import {
   useTranslate,
 } from 'react-admin';
 
-import { EGG_SALE_CURRENCY, STRAPI_URL } from '../../config';
+import { STRAPI_URL } from '../../config';
+import { eggSaleCurrencyForWorkflow } from '../parseBackofficeConfig';
+import { useBackofficeConfig } from '../useBackofficeConfig';
 import { bandedForm } from '../../theme';
 import {
   distributionRowsFromQuantities,
@@ -187,6 +189,11 @@ export function BulkQuantityEntryPage({
 }) {
   const translate = useTranslate();
   const dataProvider = useDataProvider();
+  const backofficeConfig = useBackofficeConfig();
+  const eggSaleCurrency = eggSaleCurrencyForWorkflow(
+    backofficeConfig,
+    config.workflowId,
+  );
   const hasDistribution = Boolean(config.distribution);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -255,6 +262,7 @@ export function BulkQuantityEntryPage({
           STRAPI_URL,
           distribution,
           config.currencyCode,
+          eggSaleCurrency,
         );
         if (!distRefs) {
           setCatalogError(translate('app.bulk_quantity.catalog_missing'));
@@ -277,7 +285,7 @@ export function BulkQuantityEntryPage({
     return () => {
       active = false;
     };
-  }, [config, translate]);
+  }, [config, eggSaleCurrency, translate]);
 
   const refreshDistributionContext = useCallback(
     async (isoDate: string) => {
@@ -299,7 +307,7 @@ export function BulkQuantityEntryPage({
         const rate = pickLatestCurrencyRate(
           rates,
           config.currencyCode,
-          EGG_SALE_CURRENCY,
+          eggSaleCurrency,
           isoDate,
         );
         if (memberNeedsSaleRate(members) && !rate) {
@@ -308,7 +316,7 @@ export function BulkQuantityEntryPage({
           setDistributionLoadError(
             translate('app.bulk_quantity.distribution_rate_missing', {
               from: config.currencyCode,
-              to: EGG_SALE_CURRENCY,
+              to: eggSaleCurrency,
             }),
           );
           return;
@@ -321,7 +329,13 @@ export function BulkQuantityEntryPage({
         );
       }
     },
-    [config.currencyCode, config.distribution, distributionRefs, translate],
+    [
+      config.currencyCode,
+      config.distribution,
+      distributionRefs,
+      eggSaleCurrency,
+      translate,
+    ],
   );
 
   useEffect(() => {
@@ -859,7 +873,7 @@ export function BulkQuantityEntryPage({
                 <Typography color="text.secondary" variant="body2">
                   {translate('app.bulk_quantity.distribution_rate', {
                     from: config.currencyCode,
-                    to: EGG_SALE_CURRENCY,
+                    to: eggSaleCurrency,
                     rate: eggToSaleRate,
                     date: rateValidFrom.slice(0, 10),
                   })}

@@ -1,6 +1,5 @@
 import { encodeStrapiQuery } from '../../data/transactionList';
 import type { ContentHttpClient } from '../../data/receiptDraft';
-import { EGG_SALE_CURRENCY } from '../../config';
 import type { CurrencyRateRow } from './distributionLogic';
 import { membershipValidOnDate } from './distributionLogic';
 import type {
@@ -149,6 +148,7 @@ export async function loadDistributionRefs(
   strapiUrl: string,
   config: BulkQuantityDistributionConfig,
   productionCurrencyCode: string,
+  saleCurrencyCode: string,
 ): Promise<DistributionResolvedRefs | null> {
   const [
     bookingOrg,
@@ -169,7 +169,7 @@ export async function loadDistributionRefs(
       code: { $eq: productionCurrencyCode },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'currency-types', {
-      code: { $eq: EGG_SALE_CURRENCY },
+      code: { $eq: saleCurrencyCode },
     }),
     fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
       code: { $eq: config.inventoryAccountCode },

@@ -6,31 +6,46 @@ export type AccountChoice = {
   name?: string | null;
 };
 
-const DEFAULT_DEBIT_CODES = /^5/;
-const DEFAULT_CREDIT_CODES = /^(1|3)/;
+export const DEFAULT_DEBIT_CODES = /^5/;
+export const DEFAULT_CREDIT_CODES = /^(1|3)/;
 
-/** `VITE_DEBIT_CODES`, or `/^5/` when that variable is absent. */
-export const DEBIT_CODES = parseCodeRegex(
-  import.meta.env.VITE_DEBIT_CODES,
-  DEFAULT_DEBIT_CODES,
-);
+export type AccountCodePatterns = {
+  debit: RegExp;
+  credit: RegExp;
+};
 
-/** `VITE_CREDIT_CODES`, or `/^(1|3)/` when that variable is absent. */
-export const CREDIT_CODES = parseCodeRegex(
-  import.meta.env.VITE_CREDIT_CODES,
-  DEFAULT_CREDIT_CODES,
-);
+export const DEFAULT_ACCOUNT_CODE_PATTERNS: AccountCodePatterns = {
+  debit: DEFAULT_DEBIT_CODES,
+  credit: DEFAULT_CREDIT_CODES,
+};
 
-export function isDebitCode(code: string | null | undefined): boolean {
-  return DEBIT_CODES.test(normalizeAccountCode(code));
+export function isDebitCode(
+  code: string | null | undefined,
+  pattern: RegExp = DEFAULT_DEBIT_CODES,
+): boolean {
+  return pattern.test(normalizeAccountCode(code));
 }
 
-export function isCreditCode(code: string | null | undefined): boolean {
-  return CREDIT_CODES.test(normalizeAccountCode(code));
+export function isCreditCode(
+  code: string | null | undefined,
+  pattern: RegExp = DEFAULT_CREDIT_CODES,
+): boolean {
+  return pattern.test(normalizeAccountCode(code));
 }
 
-export function normalizeAccountCode(code: string | null | undefined): string {
-  return typeof code === 'string' ? code.trim() : '';
+export function filterAccountChoices(
+  accounts: AccountChoice[],
+  kind: 'debit' | 'credit',
+  patterns: AccountCodePatterns = DEFAULT_ACCOUNT_CODE_PATTERNS,
+): AccountChoice[] {
+  const matches =
+    kind === 'debit'
+      ? (code: string | null | undefined) => isDebitCode(code, patterns.debit)
+      : (code: string | null | undefined) =>
+          isCreditCode(code, patterns.credit);
+  return sortAccountChoices(
+    accounts.filter((account) => matches(account.code)),
+  );
 }
 
 export function sortAccountChoices(accounts: AccountChoice[]): AccountChoice[] {
@@ -80,7 +95,7 @@ export async function loadAllAccounts(
 }
 
 /**
- * Env value is a JavaScript regex, either `/^5/` or `^5`.
+ * Pattern string from `/api/backoffice/config`, either `/^5/` or `^5`.
  * An empty value keeps the fallback. `g` and `y` are dropped so `.test()` stays stable.
  */
 export function parseCodeRegex(
@@ -95,4 +110,8 @@ export function parseCodeRegex(
     : new RegExp(source);
   const flags = pattern.flags.replace(/[gy]/g, '');
   return flags === pattern.flags ? pattern : new RegExp(pattern.source, flags);
+}
+
+export function normalizeAccountCode(code: string | null | undefined): string {
+  return typeof code === 'string' ? code.trim() : '';
 }

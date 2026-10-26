@@ -1,5 +1,4 @@
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import TuneIcon from '@mui/icons-material/Tune';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -27,7 +26,6 @@ import {
 import { Link } from 'react-router-dom';
 
 import { isContentRole } from '../auth/roles';
-import { userMenuEntries } from '../workflows/userMenuEntries';
 import { AppTitle } from './AppTitle';
 import { BackofficeAppBarToolbar } from './BackofficeAppBarToolbar';
 import { useRaPageTitle } from './useRaPageTitle';
@@ -60,28 +58,6 @@ const ProfileMenuItem = forwardRef<HTMLAnchorElement>(
   },
 );
 
-const FeatureFlagsMenuItem = forwardRef<HTMLAnchorElement>(
-  function FeatureFlagsMenuItem(props, ref) {
-    const translate = useTranslate();
-    const { onClose } = useUserMenu();
-
-    return (
-      <MenuItem
-        {...props}
-        component={Link}
-        onClick={onClose}
-        ref={ref}
-        to="/feature-flags"
-      >
-        <ListItemIcon>
-          <TuneIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText>{translate('app.feature_flags')}</ListItemText>
-      </MenuItem>
-    );
-  },
-);
-
 function UserAvatar({ alt, src }: { alt: string; src?: string }) {
   if (src) {
     return <Avatar alt={alt} src={src} sx={{ width: 24, height: 24 }} />;
@@ -91,7 +67,6 @@ function UserAvatar({ alt, src }: { alt: string; src?: string }) {
 
 function BackofficeUserMenu() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [showFeatureFlags, setShowFeatureFlags] = useState(false);
   const translate = useTranslate();
   const { isPending, identity } = useGetIdentity();
   const authProvider = useAuthProvider();
@@ -100,13 +75,9 @@ function BackofficeUserMenu() {
 
   const handleClose = useCallback(() => {
     setAnchorEl(null);
-    setShowFeatureFlags(false);
   }, []);
 
   const handleMenu = (event: MouseEvent<HTMLElement>) => {
-    setShowFeatureFlags(
-      userMenuEntries(event.metaKey).includes('feature-flags'),
-    );
     setAnchorEl(event.currentTarget);
   };
 
@@ -157,7 +128,6 @@ function BackofficeUserMenu() {
         >
           <ProfileMenuItem />
           <Logout />
-          {showFeatureFlags ? <FeatureFlagsMenuItem /> : null}
         </Menu>
       </UserMenuContextProvider>
     </>

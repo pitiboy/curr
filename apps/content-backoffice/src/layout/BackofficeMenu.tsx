@@ -17,10 +17,10 @@ import { workflowForms } from '../workflows/registry';
 export function BackofficeMenu() {
   const translate = useTranslate();
   const { permissions } = usePermissions();
-  const { effective } = useBackofficeConfig();
+  const { enabled } = useBackofficeConfig();
   const workflows = visibleWorkflowForms(
     workflowForms,
-    effective,
+    enabled,
     typeof permissions === 'string' ? permissions : '',
   );
 

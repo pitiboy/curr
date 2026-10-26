@@ -16,7 +16,7 @@ export function WorkflowFormGate({
   roles,
   children,
 }: WorkflowFormGateProps) {
-  const { effective, ready } = useBackofficeConfig();
+  const { enabled, ready } = useBackofficeConfig();
   const { permissions, isLoading } = usePermissions();
 
   if (!ready || isLoading) {
@@ -24,7 +24,7 @@ export function WorkflowFormGate({
   }
 
   if (
-    !effective.includes(workflowId) ||
+    !enabled.includes(workflowId) ||
     !roles.some((role) => role === permissions)
   ) {
     return <Navigate to="/transactions" replace />;
