@@ -37,14 +37,18 @@ function mountDocumentTitlePrefix() {
 
   const apply = () => {
     const nextPrefix = `${brand} | `;
+    // Already branded correctly — must not write title again, or the
+    // MutationObserver re-enters forever and the admin SPA never paints.
+    if (document.title.startsWith(nextPrefix)) {
+      appliedPrefix = nextPrefix;
+      return;
+    }
     let base = document.title;
     if (appliedPrefix && base.startsWith(appliedPrefix)) {
       base = base.slice(appliedPrefix.length);
     }
-    if (!base.startsWith(nextPrefix)) {
-      document.title = `${nextPrefix}${base}`;
-    }
     appliedPrefix = nextPrefix;
+    document.title = `${nextPrefix}${base}`;
   };
 
   apply();
