@@ -374,11 +374,37 @@ async function ensureGoogleOAuthGrant(
   strapi.log.info('Synced users-permissions Google grant from config');
 }
 
+const DEFAULT_ADMIN_APP_TITLE = 'KÖR';
+
+/** Public runtime brand for the Admin tab title (`ADMIN_APP_TITLE`). */
+function registerAdminAppConfigRoute(strapi: {
+  config: { get: (path: string, defaultValue?: string) => unknown };
+  server: { routes: (routes: unknown[]) => void };
+}) {
+  strapi.server.routes([
+    {
+      method: 'GET',
+      path: '/admin-app-config',
+      handler(ctx: { body: unknown }) {
+        const title = strapi.config.get('admin.appTitle', DEFAULT_ADMIN_APP_TITLE);
+        ctx.body = {
+          title:
+            typeof title === 'string' && title.trim()
+              ? title.trim()
+              : DEFAULT_ADMIN_APP_TITLE,
+        };
+      },
+      config: { auth: false },
+    },
+  ]);
+}
+
 export default {
   register({ strapi }) {
     registerPublishGuard(strapi, createPublishPolicyLoader(strapi));
     registerStaticPageRoutes(strapi);
     registerStaticPageSlugGuard(strapi);
+    registerAdminAppConfigRoute(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
     // socket is plain HTTP. The `cookies` package checks socket.encrypted and

@@ -18,11 +18,59 @@ const STATIC_PAGE_LINKS = {
 
 const STATIC_PAGE_FOOTER_ID = 'kor-static-page-footer';
 const BACKOFFICE_ENTRY_ID = 'kor-backoffice-entry';
+/** Fallback until `/admin-app-config` responds (see `ADMIN_APP_TITLE`). */
+const DEFAULT_ADMIN_APP_TITLE = 'KÖR';
 
 const BACKOFFICE_ENTRY_LABELS = {
   hu: 'Kezelő felület',
   en: 'Backoffice',
 } as const;
+
+/**
+ * Browser tab brand for the Admin SPA. Runtime env `ADMIN_APP_TITLE` (default
+ * KÖR) is read from `/admin-app-config` so kor and edizone can share one admin
+ * build and still differ per cPanel env — same idea as `FAVICON_PATH`.
+ */
+function mountDocumentTitlePrefix() {
+  let appliedPrefix = '';
+  let brand = DEFAULT_ADMIN_APP_TITLE;
+
+  const apply = () => {
+    const nextPrefix = `${brand} | `;
+    let base = document.title;
+    if (appliedPrefix && base.startsWith(appliedPrefix)) {
+      base = base.slice(appliedPrefix.length);
+    }
+    if (!base.startsWith(nextPrefix)) {
+      document.title = `${nextPrefix}${base}`;
+    }
+    appliedPrefix = nextPrefix;
+  };
+
+  apply();
+
+  const titleEl = document.querySelector('title');
+  if (titleEl) {
+    new MutationObserver(apply).observe(titleEl, { childList: true });
+  }
+
+  void fetch('/admin-app-config')
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data: { title?: unknown } | null) => {
+      const next =
+        typeof data?.title === 'string' && data.title.trim()
+          ? data.title.trim()
+          : DEFAULT_ADMIN_APP_TITLE;
+      if (next === brand) {
+        return;
+      }
+      brand = next;
+      apply();
+    })
+    .catch(() => {
+      /* keep default */
+    });
+}
 
 /**
  * The admin keeps its UI language on `<html lang>` (login dropdown and
@@ -267,22 +315,6 @@ export default {
   bootstrap(_app: StrapiApp) {
     mountBackofficeEntry();
     mountStaticPageFooter();
-
-    const titlePrefix = 'KÖR | ';
-
-    const prefixDocumentTitle = () => {
-      if (!document.title.startsWith(titlePrefix)) {
-        document.title = `${titlePrefix}${document.title}`;
-      }
-    };
-
-    prefixDocumentTitle();
-
-    const titleEl = document.querySelector('title');
-    if (titleEl) {
-      new MutationObserver(prefixDocumentTitle).observe(titleEl, {
-        childList: true,
-      });
-    }
+    mountDocumentTitlePrefix();
   },
 };
