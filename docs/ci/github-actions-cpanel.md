@@ -76,28 +76,30 @@ Ha a lockfile **nem** változott, de a health check elbukik, ugyanez a manuális
 
 ## GitHub Secrets és Variables
 
-| Név                                                                        | Kötelező    | Hol van / megjegyzés                                            |
-| -------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------- |
-| `FTP_HOST`                                                                 | deploy      | pl. `kor.fejlesztesek.hu`                                       |
-| `FTP_USER`                                                                 | deploy      | pl. `node@fejlesztesek.hu`                                      |
-| `FTP_PASS`                                                                 | deploy      | FTP jelszó                                                      |
-| `FTP_REMOTE_DIR`                                                           | deploy      | pl. `kor-szupatak` (relatív a home-hoz)                         |
-| `FTP_PORT`                                                                 | opcionális  | alap: `21`                                                      |
-| `CPANEL_APP_ROOT`                                                          | post-deploy | pl. `node/kor-szupatak` (`tmp/restart.txt` célja)               |
-| `TRELLO_KEY`                                                               | értesítés   | [Trello Power-Up / API Key](https://trello.com/power-ups/admin) |
-| `TRELLO_TOKEN`                                                             | értesítés   | OAuth token (read/write)                                        |
-| `TRELLO_LIST_ID`                                                           | értesítés   | Cél lista ID (URL-ben a board/list után)                        |
-| `TRELLO_DONE_LIST_ID`                                                      | opcionális  | Sikeres deploy után ide mozgatja a kártyát                      |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_TO` | opcionális  | Email fallback                                                  |
+A `deploy` (és szükség esetén az `approve`) job `environment: KOR.fejlesztesek.hu`-t használ — az Environment variable-ök csak így érhetők el.
 
-**Repository variables** (Settings → Secrets and variables → Actions → Variables):
+**Environment variables** (`KOR.fejlesztesek.hu`):
 
-| Név                         | Alapértelmezés      |
-| --------------------------- | ------------------- |
-| `FTP_OVERRIDE_POLICY`       | `only-newer`        |
-| `FTP_BACKOFFICE_REMOTE_DIR` | `public/backoffice` |
+| Név               | Példa                  |
+| ----------------- | ---------------------- |
+| `FTP_HOST`        | `kor.fejlesztesek.hu`  |
+| `FTP_USER`        | `node@fejlesztesek.hu` |
+| `FTP_REMOTE_DIR`  | `kor-szupatak`         |
+| `CPANEL_APP_ROOT` | `node/kor-szupatak`    |
 
-**Environment:** `KOR.fejlesztesek.hu` **Required reviewers**-rel (Settings → Environments → Configure).
+**Environment secrets:** `FTP_PASS` (kötelező a feltöltéshez).
+
+**Repository variables:**
+
+| Név                                              | Megjegyzés                       |
+| ------------------------------------------------ | -------------------------------- |
+| `FTP_OVERRIDE_POLICY`                            | alap a workflowban: `only-newer` |
+| `FTP_BACKOFFICE_REMOTE_DIR`                      | alap: `public/backoffice`        |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_TO` | email fallback (opcionális)      |
+
+**Repository secrets** (értesítés): `TRELLO_KEY`, `TRELLO_TOKEN`, `TRELLO_LIST_ID`, `TRELLO_DONE_LIST_ID` (opcionális), `SMTP_USER`, `SMTP_PASS` (ha SMTP auth kell).
+
+**Environment:** `KOR.fejlesztesek.hu` **Required reviewers**-rel. Ugyanaz az environment adja az FTP credentialöket is → a `deploy` job **minden** futáskor Approve-ra vár a feltöltés előtt; lockfile/health fail esetén az `approve` job **második** Approve-ot kér a manuális NPM / javítás után.
 
 A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBAPP_NAME` / `CPANEL_PASSENGER_APP_NAME` secretök és változók **nem kellenek** — törölhetők a repo settingsből.
 
