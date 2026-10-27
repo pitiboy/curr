@@ -55,8 +55,9 @@ Accept: application/json
   if (!parsed && response.body) {
     try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
   }
-  exports.toId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-  if (!fromId || !toId) {
+  const resolvedToId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+  exports.toId = resolvedToId;
+  if (!fromId || !resolvedToId) {
     rateFailed[rateKey] = true;
     exports.rateFailed = rateFailed;
     console.error(
@@ -66,7 +67,7 @@ Accept: application/json
     );
   } else {
     rateFromIds[rateKey] = fromId;
-    rateToIds[rateKey] = toId;
+    rateToIds[rateKey] = resolvedToId;
     exports.rateFromIds = rateFromIds;
     exports.rateToIds = rateToIds;
     exports.encodedValidFrom = encodeURIComponent(item.validFrom);
