@@ -80,22 +80,22 @@ A `deploy` (és szükség esetén az `approve`) job `environment: KOR.fejlesztes
 
 **Environment variables** (`KOR.fejlesztesek.hu`):
 
-| Név               | Példa                 |
-| ----------------- | --------------------- |
-| `FTP_HOST`        | `kor.fejlesztesek.hu` |
-| `FTP_USER`        | `node@fejlesztesek.hu`|
-| `FTP_REMOTE_DIR`  | `kor-szupatak`        |
-| `CPANEL_APP_ROOT` | `node/kor-szupatak`   |
+| Név               | Példa                  |
+| ----------------- | ---------------------- |
+| `FTP_HOST`        | `kor.fejlesztesek.hu`  |
+| `FTP_USER`        | `node@fejlesztesek.hu` |
+| `FTP_REMOTE_DIR`  | `kor-szupatak`         |
+| `CPANEL_APP_ROOT` | `node/kor-szupatak`    |
 
 **Environment secrets:** `FTP_PASS` (kötelező a feltöltéshez).
 
 **Repository variables:**
 
-| Név                         | Megjegyzés                          |
-| --------------------------- | ----------------------------------- |
-| `FTP_OVERRIDE_POLICY`       | alap a workflowban: `only-newer`    |
-| `FTP_BACKOFFICE_REMOTE_DIR` | alap: `public/backoffice`           |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_TO` | email fallback (opcionális) |
+| Név                                              | Megjegyzés                       |
+| ------------------------------------------------ | -------------------------------- |
+| `FTP_OVERRIDE_POLICY`                            | alap a workflowban: `only-newer` |
+| `FTP_BACKOFFICE_REMOTE_DIR`                      | alap: `public/backoffice`        |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_TO` | email fallback (opcionális)      |
 
 **Repository secrets** (értesítés): `TRELLO_KEY`, `TRELLO_TOKEN`, `TRELLO_LIST_ID`, `TRELLO_DONE_LIST_ID` (opcionális), `SMTP_USER`, `SMTP_PASS` (ha SMTP auth kell).
 
