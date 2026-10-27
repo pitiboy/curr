@@ -2,7 +2,7 @@ import type { LayoutProps } from 'react-admin';
 import { Layout } from 'react-admin';
 
 import { StaticFooter } from '../static/StaticLinks';
-import { DocumentTitle } from './AppTitle';
+import { DocumentFavicon, DocumentTitle } from './AppTitle';
 import { BackofficeMenu } from './BackofficeMenu';
 import { BackofficeAppBar } from './BackofficeUserMenu';
 import { FrameSidebar } from './FrameSidebar';
@@ -14,6 +14,7 @@ export function BackofficeLayout(props: LayoutProps) {
   return (
     <>
       <DocumentTitle />
+      <DocumentFavicon />
       <Layout
         {...props}
         appBar={BackofficeAppBar}
