@@ -6,13 +6,11 @@ import {
   registerStaticPageSlugGuard,
 } from './static-pages';
 import { createPublishPolicyLoader } from './backoffice-features/policy';
+import {
+  resolveBackofficeFeaturesSeedPath,
+  upsertBackofficeFeaturesFromFile,
+} from './backoffice-features/seed';
 import { registerPublishGuard } from './publish-guard';
-import path from 'node:path';
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const backofficeFeatureSeed = require(
-  path.join(process.cwd(), 'database/seeders/backoffice-features.js'),
-);
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
@@ -407,13 +405,9 @@ export default {
   async bootstrap({ strapi }) {
     const seedInstance = process.env.BACKOFFICE_FEATURES_INSTANCE?.trim();
     if (seedInstance) {
-      const seedPath =
-        backofficeFeatureSeed.resolveBackofficeFeaturesSeedPath(seedInstance);
+      const seedPath = resolveBackofficeFeaturesSeedPath(seedInstance);
       try {
-        await backofficeFeatureSeed.upsertBackofficeFeaturesFromFile(
-          strapi,
-          seedPath,
-        );
+        await upsertBackofficeFeaturesFromFile(strapi, seedPath);
       } catch (error) {
         strapi.log.warn(
           `Settings seed skipped for instance "${seedInstance}": ${error instanceof Error ? error.message : error}`,

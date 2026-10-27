@@ -113,7 +113,7 @@ npm run seed:http:edizone:backoffice-features:local
 npm run seed:http:kor:backoffice-features -- prod
 ```
 
-Optional boot-time upsert (Strapi documents API, not httpyac): set `BACKOFFICE_FEATURES_INSTANCE=kor` (or `edizone`) in `.env`.
+Optional boot-time upsert (Strapi documents API, not httpyac): set `BACKOFFICE_FEATURES_INSTANCE=kor` (or `edizone`) in `.env`. The upsert logic lives in `src/backoffice-features/seed.ts` (compiled into `dist`). The JSON files under `database/seeders/http/<instance>/data/` are uploaded with the backend deploy when boot seed is used.
 
 Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `key` is treated as a workflow id for the backoffice menu. The SPA brand prefix is `app.title` (`config.value`, e.g. `KÖR`).
 
