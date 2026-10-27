@@ -48,13 +48,14 @@ Biztonság:
 
 - `--delete` csak a **build mappákban** (`dist/build`, backoffice `dist`).
 - Kizárva: `.env`, rejtett fájlok, `public/uploads`.
-- Deploy előtt (backend): távoli `dist/build` másolat `_deploy_backups/<UTC-stamp>/dist/build` alá (ha a tárhely kvóta engedi).
+- **CI:** ha a `DEPLOY_SKIP_BACKUP` GitHub variable `1`, a workflow kihagyja a `dist/build` FTP backup round-tripet (~15–20 perc DotRollon). Rollback akkor: git revert + új deploy.
+- **Lokális** backend deploy: távoli `dist/build` másolat `_deploy_backups/<UTC-stamp>/dist/build` alá (ha a tárhely kvóta engedi). Kikapcsolás: `DEPLOY_SKIP_BACKUP=1`.
 
 ### Rollback
 
-1. cPanel Fájlkezelő: `kor-szupatak/_deploy_backups/<stamp>/dist/build` → visszamásolás `kor-szupatak/dist/build` alá (vagy lftp mirror fordítva).
-2. `tmp/restart.txt` frissítése az alkalmazás gyökerében, vagy Setup Node.js App **Restart**.
-3. Ha a hiba kód-oldali: git revert + merge `main` (új deploy), vagy lokális `npm run deploy` a régi commit buildjével.
+1. Preferált (CI): git revert + merge `main` (új deploy), vagy lokális `npm run deploy` a régi commit buildjével.
+2. Ha van helyi FTP backup: cPanel Fájlkezelő: `kor-szupatak/_deploy_backups/<stamp>/dist/build` → visszamásolás `kor-szupatak/dist/build` alá (vagy lftp mirror fordítva).
+3. `tmp/restart.txt` frissítése az alkalmazás gyökerében, vagy Setup Node.js App **Restart**.
 
 ## Post-deploy: restart és NPM
 
@@ -99,11 +100,12 @@ A `KOR.fejlesztesek.hu` environmenten **ne** legyen FTP secret/var — elég a R
 
 **Repository variables:**
 
-| Név                                              | Megjegyzés                       |
-| ------------------------------------------------ | -------------------------------- |
-| `FTP_OVERRIDE_POLICY`                            | alap a workflowban: `only-newer` |
-| `FTP_BACKOFFICE_REMOTE_DIR`                      | alap: `public/backoffice`        |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_TO` | email fallback (opcionális)      |
+| Név                                              | Megjegyzés                                                                 |
+| ------------------------------------------------ | -------------------------------------------------------------------------- |
+| `FTP_OVERRIDE_POLICY`                            | alap a workflowban: `only-newer`                                           |
+| `FTP_BACKOFFICE_REMOTE_DIR`                      | alap: `public/backoffice`                                                  |
+| `DEPLOY_SKIP_BACKUP`                             | `1` → CI kihagyja a `dist/build` FTP backupot (~15–20 perc); ajánlott: `1` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_TO` | email fallback (opcionális)                                                |
 
 **Repository secrets** (értesítés): `TRELLO_KEY`, `TRELLO_TOKEN`, `TRELLO_LIST_ID`, `TRELLO_DONE_LIST_ID` (opcionális), `SMTP_USER`, `SMTP_PASS` (ha SMTP auth kell).
 

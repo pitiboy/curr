@@ -12,6 +12,7 @@ initial_wait="${HEALTH_INITIAL_WAIT_SEC:-5}"
 
 paths=()
 if [[ "$check_backend" == "1" ]]; then
+  # Strapi /_health responds 204 No Content when the process is up.
   paths+=("/_health" "/admin")
 fi
 if [[ "$check_backoffice" == "1" ]]; then
@@ -25,14 +26,18 @@ for path in "${paths[@]}"; do
   wait="$initial_wait"
   ok=0
   while [[ "$attempt" -le "$max_attempts" ]]; do
-    code="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 30 -L "$url" 2>/dev/null || echo "000")"
-    # Strapi /_health responds 204 No Content when the process is up.
-    if [[ "$code" =~ ^(200|204|301|302|303|307|308)$ ]]; then
+    # No curl -f: it conflates transport failure with HTTP status, and with
+    # || echo 000 can produce codes like 204000 on timeout-after-headers.
+    code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -L "$url" || true)"
+    code="${code#"${code%%[![:space:]]*}"}"
+    code="${code%"${code##*[![:space:]]}"}"
+    # Accept any 2xx/3xx (Strapi /_health → 204).
+    if [[ "$code" =~ ^[23][0-9][0-9]$ ]]; then
       echo "OK ${url} → HTTP ${code} (attempt ${attempt})"
       ok=1
       break
     fi
-    echo "Várakozás ${url} (HTTP ${code}, attempt ${attempt}/${max_attempts}, ${wait}s)"
+    echo "Várakozás ${url} (HTTP ${code:-000}, attempt ${attempt}/${max_attempts}, ${wait}s)"
     sleep "$wait"
     wait=$((wait * 2))
     if [[ "$wait" -gt 120 ]]; then

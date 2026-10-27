@@ -61,7 +61,9 @@ upload_backend() {
   lftp --norc <<EOF
 $(lftp_open_settings)
 mirror -R -p -v $BUILD_POLICY --overwrite --delete --no-empty-dirs $dry -x '^index\.html\$' dist/build "$FTP_REMOTE_DIR/dist/build"
-mirror -R -p -v $MIRROR_POLICY --overwrite --delete --no-empty-dirs $dry -x '^build/' dist "$FTP_REMOTE_DIR/dist"
+mirror -R -p -v $MIRROR_POLICY --overwrite --delete --no-empty-dirs $dry \
+  -x '^build/' -x 'tsconfig\.tsbuildinfo\$' \
+  dist "$FTP_REMOTE_DIR/dist"
 mirror -R -p -v $MIRROR_POLICY --overwrite --no-empty-dirs $dry \
   -i '^(public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$|database/seeders/http/[^/]+/data/backoffice-features\.json\$)' \
   -x '(^|/)public/uploads(/|\$)' \

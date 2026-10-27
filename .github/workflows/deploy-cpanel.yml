@@ -137,6 +137,8 @@ jobs:
           FTP_PORT: ${{ vars.FTP_PORT || secrets.FTP_PORT }}
           FTP_OVERRIDE_POLICY: ${{ vars.FTP_OVERRIDE_POLICY || 'only-newer' }}
           FTP_BACKOFFICE_REMOTE_DIR: ${{ vars.FTP_BACKOFFICE_REMOTE_DIR || 'public/backoffice' }}
+          # Set repo/env var DEPLOY_SKIP_BACKUP=1 to skip the ~15–20 min dist/build FTP backup round-trip.
+          DEPLOY_SKIP_BACKUP: ${{ vars.DEPLOY_SKIP_BACKUP }}
         run: |
           set -euo pipefail
           dry=""

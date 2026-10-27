@@ -100,6 +100,9 @@ set ftp:passive-mode true
 set ssl:verify-certificate no
 set net:timeout 30
 set net:max-retries 2
+set net:connection-limit 4
+set mirror:parallel-transfer-count 4
+set mirror:use-pget-n 0
 open --env-password -u "$FTP_USER" -p "$FTP_PORT" "$FTP_HOST"
 EOF
 }
