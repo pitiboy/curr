@@ -87,10 +87,11 @@ Két Environment kell (egy environmenten a Required reviewers **minden** jobot m
 
 | Név               | Példa                  |
 | ----------------- | ---------------------- |
-| `FTP_HOST`        | `kor.fejlesztesek.hu`  |
-| `FTP_USER`        | `node@fejlesztesek.hu` |
-| `FTP_REMOTE_DIR`  | `kor-szupatak`         |
-| `CPANEL_APP_ROOT` | `node/kor-szupatak`    |
+| `FTP_HOST`       | `kor.fejlesztesek.hu`  |
+| `FTP_USER`       | `node@fejlesztesek.hu` |
+| `FTP_REMOTE_DIR` | `kor-szupatak`         |
+
+A Passenger `tmp/restart.txt` is az `FTP_REMOTE_DIR` alá kerül (pl. Fájlkezelő: `node/kor-szupatak/tmp/restart.txt`, ha az FTP home a `node` mappa). Külön `CPANEL_APP_ROOT` nem kell — ha még van a environmenten, töröld.
 
 **Environment secrets** (`KOR.fejlesztesek.hu`): `FTP_PASS`.
 

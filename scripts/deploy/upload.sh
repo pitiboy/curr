@@ -95,9 +95,12 @@ EOF
 }
 
 upload_passenger_restart_file() {
-  local app_root="${CPANEL_APP_ROOT:-$FTP_REMOTE_DIR}"
-  app_root="${app_root#/}"
-  echo "Passenger restart jel: tmp/restart.txt → ${app_root}/tmp/restart.txt"
+  # Same FTP-relative root as backend upload (FTP_REMOTE_DIR). Do not use a
+  # separate CPANEL_APP_ROOT — a different value writes restart.txt beside the
+  # real app tree, so Passenger never sees it.
+  local app_root="${FTP_REMOTE_DIR}"
+  local remote_restart="${app_root}/tmp/restart.txt"
+  echo "Passenger restart jel: tmp/restart.txt → ${remote_restart}"
   if [[ -n "$dry" ]]; then
     echo "[dry-run] restart.txt"
     return 0
@@ -109,7 +112,8 @@ upload_passenger_restart_file() {
   lftp --norc <<EOF
 $(lftp_open_settings)
 mkdir -p -f "$app_root/tmp"
-put "$tmp" -o "$app_root/tmp/restart.txt"
+put "$tmp" -o "$remote_restart"
+cls -l "$remote_restart"
 bye
 EOF
   local status=$?
