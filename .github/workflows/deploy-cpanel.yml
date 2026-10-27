@@ -26,9 +26,11 @@ concurrency:
 
 permissions:
   contents: read
+  deployments: write
 
 env:
   DEPLOY_BASE_URL: https://kor.fejlesztesek.hu
+  DEPLOY_GITHUB_ENVIRONMENT: KOR.fejlesztesek.hu
 
 jobs:
   changes:
@@ -218,6 +220,21 @@ jobs:
           SMTP_TO: ${{ vars.SMTP_TO }}
         run: python3 scripts/deploy/notify.py
 
+      - name: Book GitHub Deployment (success, no manual gate)
+        if: success() && steps.gate.outputs.needs_approval != 'true' && github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          targets="unknown"
+          if [[ "${{ needs.changes.outputs.backend }}" == "true" && "${{ needs.changes.outputs.backoffice }}" == "true" ]]; then
+            targets="both"
+          elif [[ "${{ needs.changes.outputs.backend }}" == "true" ]]; then
+            targets="backend"
+          elif [[ "${{ needs.changes.outputs.backoffice }}" == "true" ]]; then
+            targets="backoffice"
+          fi
+          bash scripts/deploy/record-github-deployment.sh success "$targets"
+
       - name: Deploy success notification (no manual gate)
         if: success() && steps.gate.outputs.needs_approval != 'true' && github.event.inputs.dry_run != 'true'
         env:
@@ -267,6 +284,21 @@ jobs:
           CHECK_BACKEND: ${{ needs.changes.outputs.backend == 'true' && '1' || '0' }}
           CHECK_BACKOFFICE: ${{ needs.changes.outputs.backoffice == 'true' && '1' || '0' }}
         run: bash scripts/deploy/health-check.sh
+
+      - name: Book GitHub Deployment (success after approval)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          targets="unknown"
+          if [[ "${{ needs.changes.outputs.backend }}" == "true" && "${{ needs.changes.outputs.backoffice }}" == "true" ]]; then
+            targets="both"
+          elif [[ "${{ needs.changes.outputs.backend }}" == "true" ]]; then
+            targets="backend"
+          elif [[ "${{ needs.changes.outputs.backoffice }}" == "true" ]]; then
+            targets="backoffice"
+          fi
+          bash scripts/deploy/record-github-deployment.sh success "$targets"
 
       - name: Deploy success notification
         if: success()

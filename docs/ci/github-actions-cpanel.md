@@ -28,13 +28,24 @@ flowchart TD
     I --> J
     J --> K[tmp/restart.txt FTP]
     K --> L[Health check]
-    L -->|OK, nincs lockfile| Q[Siker notify]
+    L -->|OK, nincs lockfile| Q[Siker notify + GitHub Deployment]
     L -->|lockfile vagy health fail| O[Job summary + Trello + email]
     O --> P[Approve: KOR.fejlesztesek.hu]
     P --> L2[Health újra]
     L2 --> Q
   end
 ```
+
+## Hol látod, mi ment ki sikeresen?
+
+A CI **nem** commitolja a `build-deploy.log`-ot. Sikeres deploy után GitHub **Deployment** rekordot ír az environmentre ([`record-github-deployment.sh`](../../scripts/deploy/record-github-deployment.sh)):
+
+- **Mikor:** health OK és nincs manuális gate; vagy a manuális approve utáni `verify` siker.
+- **Mit:** target (`backend` / `backoffice` / `both`), short SHA, Actions run URL, site URL.
+- **Hol:** repo → **Settings → Environments → `KOR.fejlesztesek.hu`**, vagy a repo **Deployments** nézete (ha elérhető). Leírás: `CI deploy success: both @ abc1234`.
+- **Nem könyvel:** `dry_run`, elbukott feltöltés / verify.
+
+A lokális `npm run deploy*` továbbra is a `build-deploy.log` + commit útvonalat használhatja; a CI ettől független.
 
 ## FTP feltöltés (lokal és CI)
 
@@ -126,7 +137,8 @@ A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBA
 | Passenger restart                           | FTP `tmp/restart.txt`             | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
 | `npm install` lockfile változáskor          | — (gate + summary)                | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
 | Health `/_health`, `/admin`, `/backoffice/` | Script backoff                    | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
-| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu` environment | Reviewer a GitHubon                                                                                          |
+| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu-manual-approval` | Reviewer a GitHubon                                                                                       |
+| Sikeres deploy könyvelés                    | GitHub Deployment (environment)   | —                                                                                                            |
 
 ## Workflow kézi futtatása
 
