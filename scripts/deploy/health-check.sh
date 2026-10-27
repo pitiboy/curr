@@ -26,7 +26,8 @@ for path in "${paths[@]}"; do
   ok=0
   while [[ "$attempt" -le "$max_attempts" ]]; do
     code="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 30 -L "$url" 2>/dev/null || echo "000")"
-    if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
+    # Strapi /_health responds 204 No Content when the process is up.
+    if [[ "$code" =~ ^(200|204|301|302|303|307|308)$ ]]; then
       echo "OK ${url} → HTTP ${code} (attempt ${attempt})"
       ok=1
       break
