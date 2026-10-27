@@ -28,11 +28,11 @@ flowchart TD
     I --> J
     J --> K[tmp/restart.txt FTP]
     K --> L[Health check]
-    L -->|lockfile változott| O[Job summary + Trello + email]
-    L -->|hiba| O
-    O --> P[Environment KOR.fejlesztesek.hu approval]
+    L -->|OK, nincs lockfile| Q[Siker notify]
+    L -->|lockfile vagy health fail| O[Job summary + Trello + email]
+    O --> P[Approve: KOR.fejlesztesek.hu]
     P --> L2[Health újra]
-    L2 --> Q[Siker: Trello zár / Done lista]
+    L2 --> Q
   end
 ```
 
@@ -76,9 +76,14 @@ Ha a lockfile **nem** változott, de a health check elbukik, ugyanez a manuális
 
 ## GitHub Secrets és Variables
 
-A `deploy` (és szükség esetén az `approve`) job `environment: KOR.fejlesztesek.hu`-t használ — az Environment variable-ök csak így érhetők el.
+Két Environment kell (egy environmenten a Required reviewers **minden** jobot megállít, ami azt használja — ezért a credential és az Approve szét van választva):
 
-**Environment variables** (`KOR.fejlesztesek.hu`):
+| Environment                           | Protection                         | Cél                                    |
+| ------------------------------------- | ---------------------------------- | -------------------------------------- |
+| `KOR.fejlesztesek.hu`                 | **nincs** Required reviewers       | FTP vars/secrets a `deploy` jobhoz     |
+| `KOR.fejlesztesek.hu-manual-approval` | **Required reviewers** (`pitiboy`) | csak az `approve` job (feltöltés után) |
+
+**Environment variables** (`KOR.fejlesztesek.hu` — másold át ide a korábbi FTP értékeket):
 
 | Név               | Példa                  |
 | ----------------- | ---------------------- |
@@ -87,7 +92,9 @@ A `deploy` (és szükség esetén az `approve`) job `environment: KOR.fejlesztes
 | `FTP_REMOTE_DIR`  | `kor-szupatak`         |
 | `CPANEL_APP_ROOT` | `node/kor-szupatak`    |
 
-**Environment secrets:** `FTP_PASS` (kötelező a feltöltéshez).
+**Environment secrets** (`KOR.fejlesztesek.hu`): `FTP_PASS`.
+
+A `KOR.fejlesztesek.hu` environmenten **ne** legyen FTP secret/var — elég a Required reviewers (és opcionálisan töröld róla a credentialöket, ha még ott vannak).
 
 **Repository variables:**
 
@@ -98,8 +105,6 @@ A `deploy` (és szükség esetén az `approve`) job `environment: KOR.fejlesztes
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_TO` | email fallback (opcionális)      |
 
 **Repository secrets** (értesítés): `TRELLO_KEY`, `TRELLO_TOKEN`, `TRELLO_LIST_ID`, `TRELLO_DONE_LIST_ID` (opcionális), `SMTP_USER`, `SMTP_PASS` (ha SMTP auth kell).
-
-**Environment:** `KOR.fejlesztesek.hu` **Required reviewers**-rel. Ugyanaz az environment adja az FTP credentialöket is → a `deploy` job **minden** futáskor Approve-ra vár a feltöltés előtt; lockfile/health fail esetén az `approve` job **második** Approve-ot kér a manuális NPM / javítás után.
 
 A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBAPP_NAME` / `CPANEL_PASSENGER_APP_NAME` secretök és változók **nem kellenek** — törölhetők a repo settingsből.
 

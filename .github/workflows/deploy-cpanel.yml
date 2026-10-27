@@ -87,8 +87,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.skip != 'true'
     runs-on: ubuntu-latest
-    # Environment secrets/vars only resolve on jobs that declare the environment.
-    # Required reviewers therefore pause this job before FTP (and again on `approve` if needed).
+    # FTP credentials only — NO Required reviewers on this environment.
+    # Manual gate after upload uses `KOR.fejlesztesek.hu` on the `approve` job.
     environment: KOR.fejlesztesek.hu
     outputs:
       needs_approval: ${{ steps.gate.outputs.needs_approval }}
@@ -249,7 +249,7 @@ jobs:
     needs: deploy
     if: needs.deploy.outputs.needs_approval == 'true'
     runs-on: ubuntu-latest
-    environment: KOR.fejlesztesek.hu
+    environment: KOR.fejlesztesek.hu-manual-approval
     steps:
       - name: Approved
         run: echo "KOR.fejlesztesek.hu environment approved; continuing deploy."
