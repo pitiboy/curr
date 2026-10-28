@@ -239,9 +239,19 @@ jobs:
         if: success() && steps.gate.outputs.needs_approval != 'true' && github.event.inputs.dry_run != 'true'
         env:
           NOTIFY_ACTION: success
+          NOTIFY_TITLE: 'Deploy kor.fejlesztesek.hu – SIKERES'
+          NOTIFY_BODY: |
+            A deploy sikeresen lefutott.
+            Health check OK, manuális lépés nem kellett.
           TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
           TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
           TRELLO_DONE_LIST_ID: ${{ vars.TRELLO_DONE_LIST_ID }}
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ vars.SMTP_FROM }}
+          SMTP_TO: ${{ vars.SMTP_TO }}
         run: python3 scripts/deploy/notify.py || true
 
       - name: Deploy failure notification
@@ -304,10 +314,20 @@ jobs:
         if: success()
         env:
           NOTIFY_ACTION: success
+          NOTIFY_TITLE: 'Deploy kor.fejlesztesek.hu – SIKERES'
+          NOTIFY_BODY: |
+            A deploy sikeresen lefutott (manuális jóváhagyás után).
+            Health check OK.
           TRELLO_KEY: ${{ secrets.TRELLO_KEY }}
           TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
           TRELLO_CARD_ID: ${{ needs.deploy.outputs.trello_card_id }}
           TRELLO_DONE_LIST_ID: ${{ vars.TRELLO_DONE_LIST_ID }}
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ vars.SMTP_FROM }}
+          SMTP_TO: ${{ vars.SMTP_TO }}
         run: python3 scripts/deploy/notify.py || true
 
       - name: Deploy failure notification

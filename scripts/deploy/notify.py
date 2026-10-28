@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Trello card + optional SMTP email for manual deploy steps."""
+"""Trello card + optional SMTP email for deploy notify (manual / failure / success)."""
 from __future__ import annotations
 
 import json
@@ -134,6 +134,7 @@ def main() -> int:
                     print("Trello card closed.")
                 except urllib.error.HTTPError:
                     pass
+        send_email(title, full_desc)
     else:
         print(f"Unknown NOTIFY_ACTION={action}", file=sys.stderr)
         return 1
