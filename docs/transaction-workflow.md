@@ -49,19 +49,25 @@ A tag által saját zsebből kifizetett szövetkezeti költség: tartozik a köl
 
 A könyvekben két főkönyv fut. A **Szövetkezet** a hivatalos rendszer: bank, pénztár, minden, ami a szövetkezet nevén van. A **Homály** a tagoknál lévő készpénz rendszere.
 
-Egy sor akkor Homály, ha valamelyik oldala egy tag `1001` saját számlája. Minden más sor Szövetkezet. A Homályba a [Bányászás](#ügylet-8--bányászás) visz át pénzt, Homályban a tag a `1001`-ről fizet.
+Egy sor akkor Homály, ha valamelyik oldala egy tag `1001` saját számlája. Minden más sor Szövetkezet. A Homályba a [Bányászás](#ügylet-8--bányászás) **forintban** visz át pénzt; Homályban a működési kiadás szintén **HUF**, korona nélkül. **KOR** a Homályban csak a [tagi állóeszköz-vételnél](#tagi-befizetés-és-terület-lekötése) jelenik meg (stróman, `1001` → `15xx`); a tényleges **korona-váltás / lekötés** utána, az eszköz HUF értékéből a `1900`-on keresztül.
 
 ```mermaid
 flowchart LR
   bank["Szovetkezet: 1100 Bankszamlak"]
   penztar["Szovetkezet: 1000 Keszpenz"]
   sajat["Homaly: 1001 sajat szamla"]
-  koltseg["5xxx koltseg vagy 15xx eszkoz"]
+  koltseg5["5xxx koltseg"]
+  eszkoz15["15xx alloeszkoz"]
+  atv["1900 lekotes"]
 
-  bank -- "Banyaszas" --> sajat
-  penztar -- "Banyaszas" --> sajat
-  sajat -- "Homaly kiadas" --> koltseg
-  bank -- "Szovetkezeti kiadas, forintban" --> koltseg
+  bank -->|"Banyaszas · HUF"| sajat
+  penztar -->|"Banyaszas · HUF"| sajat
+  sajat -->|"Homaly kiadas · HUF"| koltseg5
+  bank -->|"Szovetkezeti kiadas · HUF"| koltseg5
+  bank -->|"tagi stroman · KOR"| sajat
+  sajat -->|"telek vagy ingosag vasarlas · KOR"| eszkoz15
+  eszkoz15 -->|"fedezet · HUF"| atv
+  atv -->|"KOR marad az eszkoz projektjen"| eszkoz15
 ```
 
 ## Honnan jön a pénz
@@ -149,15 +155,16 @@ Pénzeszköz a forint lábon: `1000` Készpénz vagy `1100` Bankszámlák. A kor
 
 ```mermaid
 sequenceDiagram
-  participant Penz as Penzeszkoz 1100 vagy 1000 HUF
+  participant Fedezet as Penzeszkoz 1100 vagy 1000, vagy 15xx HUF ertek
   participant Atv as Atvezeto 1900
   participant Kincstar as Penztar 1000 KOR kincstar
-  participant Nyilv as Cél nyilvántartás KOR
+  participant Nyilv as Eszkoz projekt nyilvantartas
 
-  Penz->>Atv: 1. HUF fedezet, kincstar
-  Atv->>Kincstar: 2. KOR kibocsatas
+  Note over Fedezet,Nyilv: KOR csak itt — kifizetes elado/NAV/szallito HUF marad
+  Fedezet->>Atv: 1. HUF fedezet
+  Atv->>Kincstar: 2. KOR kibocsatas, kincstar
   Kincstar->>Atv: 3. KOR le a kincstarrol
-  Atv->>Nyilv: 4. KOR a nyilvántartásra
+  Atv->>Nyilv: 4. KOR a nyilvantartasra
   Note over Nyilv: KOR marad, nincs azonnali visszaváltás
 ```
 
@@ -308,7 +315,7 @@ sequenceDiagram
   Toke->>Tag: eloiras, 10 000 HUF
   Tag->>Bank: befizetes a tag sajat bankjabol, 10 000 HUF
   Bank->>Penztar: keszpenzfelvetel, 10 000 HUF
-  Penztar->>Koltseg: anyagkoltseg forintban, korona nelkul
+  Penztar->>Koltseg: anyagkoltseg HUF
 ```
 
 Zárás után a `1101` nulla, a kincstári készpénz forintban nulla, a `5000` tartozik egyenlege 10 000 Ft, a `3000` követel egyenlege 10 000 Ft. A projekt nyilvántartásán **nincs** koronaegyenleg, mert nem történt lekötés.
@@ -338,12 +345,14 @@ sequenceDiagram
   participant Keszlet as Keszletek 1300, Tojool
   participant Vevo as Vevo
   participant Penztar as Penztar 1000
+  participant Atv as Atvezeto 1900
   participant Bevetel as Ertekesites 4000
   participant Ert as Ertekesitesi koltseg 5600
 
   Allomany->>Keszlet: keletkezes, 30 EGG
-  Vevo-->>Penztar: 6 000 Ft keszpenz
-  Penztar->>Bevetel: forint bevetel, korona nelkul
+  Vevo-->>Penztar: 6 000 Ft keszpenz HUF
+  Penztar->>Atv: bevetel beerkezes HUF
+  Atv->>Bevetel: vegleges bevetel HUF
   Keszlet->>Ert: keszletcsokkenes, 30 EGG
 ```
 
@@ -388,12 +397,14 @@ sequenceDiagram
   participant Keszlet as Keszletek 1300, gyumolcsfaliget
   participant Piac as Piaci vevo
   participant Penztar as Penztar 1000
+  participant Atv as Atvezeto 1900
   participant Bevetel as Ertekesites 4000
   participant Ert as Ertekesitesi koltseg 5600
 
   Allomany->>Keszlet: szuret, 80 kg FRUIT
-  Piac-->>Penztar: 25 000 Ft keszpenz
-  Penztar->>Bevetel: forint bevetel
+  Piac-->>Penztar: 25 000 Ft keszpenz HUF
+  Penztar->>Atv: bevetel beerkezes HUF
+  Atv->>Bevetel: vegleges bevetel HUF
   Keszlet->>Ert: keszletcsokkenes, 50 kg FRUIT
   Note over Keszlet: raktaron marad 30 kg
 ```
@@ -417,24 +428,28 @@ Minta: 2 000 000 Ft foglaló, 8 000 000 Ft fennmaradó rész. Összesen 10 000 0
 | Foglaló kifizetés  | `1400` Előlegek                             | `1100`           | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
 | Fennmaradó vételár | `1530` Lakóépületek                         | `1100`           | 8 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
 | Beszámítás         | `1530` Lakóépületek                         | `1400` Előlegek  | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Átvezetés |
-| Lekötés blokk      | a [lekötés blokk](#lekötés-blokk) négy sora | (fedezet `1100`) | 10 000 000 / 100 000 | HUF + KOR | kincstár → Lakóterületek | Átvezetés |
+| Lekötés blokk      | a [lekötés blokk](#lekötés-blokk) négy sora | fedezet `1530` HUF érték | 10 000 000 / 100 000 | HUF + KOR | kincstár → Lakóterületek | Átvezetés |
 
 ```mermaid
 sequenceDiagram
   participant Bank as Bank 1100
   participant Eloleg as Elolegek 1400
-  participant Haz as Lakoepuletek 1530
-  participant Lekotes as Lekotes blokk KOR
+  participant Haz as Lakoepuletek 1530 HUF
+  participant Atv as Atvezeto 1900
+  participant Kt as Penztar 1000 KOR kincstar
   participant Nyilv as Lakoteruletek nyilvantartas
   participant Elado as Elado
 
+  Note over Bank,Elado: elado mindig HUF
   Bank->>Eloleg: foglalo, 2 000 000 HUF
-  Bank-->>Elado: utalas
+  Bank-->>Elado: utalas HUF
   Bank->>Haz: fennmarado vetelar, 8 000 000 HUF
-  Bank-->>Elado: utalas
+  Bank-->>Elado: utalas HUF
   Eloleg->>Haz: beszamitas, 2 000 000 HUF
-  Bank->>Lekotes: fedezet 10 000 000 HUF
-  Lekotes->>Nyilv: 100 000 KOR marad a nyilvantartason
+  Haz->>Atv: 1. lekotes fedezet HUF az eszkozbol
+  Atv->>Kt: 2. KOR kibocsatas
+  Kt->>Atv: 3. KOR le a kincstarrol
+  Atv->>Nyilv: 4. 100 000 KOR marad a nyilvantartason
 ```
 
 A `1530` egyenlege 10 000 000 Ft HUF-ban. A Lakóterületek nyilvántartásán 100 000 KOR marad. Az `1400` nullázódik. Hitelből vett ingatlannál a fennmaradó rész követelje a `2200` Hosszú lejáratú kötelezettségek lenne. Ez az ügylet bankos vétel.
@@ -453,20 +468,24 @@ Minta: 1 500 000 Ft (15 000 korona lekötés, 1 korona = 100 Ft). Szervezet: `I/
 | ------------- | ------------------------------------ | --------------------------- | ------------------ | ------- | -------------------------- | --------- |
 | Aktiválás     | `1500` Tárgyi eszközök               | `2000` Szállítói tartozások | 1 500 000          | HUF     | I/4.12.1.2 Állattenyésztés | Átvezetés |
 | Utalás        | `2000` Szállítói tartozások          | `1100` Bankszámlák          | 1 500 000          | HUF     | I/4.12.1.2 Állattenyésztés | Utalás    |
-| Lekötés blokk | lásd [lekötés blokk](#lekötés-blokk) | fedezet `1100`              | 1 500 000 / 15 000 | HUF+KOR | kincstár → projekt         | Átvezetés |
+| Lekötés blokk | lásd [lekötés blokk](#lekötés-blokk) | fedezet `1500` HUF érték    | 1 500 000 / 15 000 | HUF+KOR | kincstár → projekt         | Átvezetés |
 
 ```mermaid
 sequenceDiagram
   participant Bank as Bank 1100
   participant Szallito as Szallito 2000
-  participant Eszkoz as Targyi eszkozok 1500
-  participant Lekotes as Lekotes blokk
-  participant Projekt as Projekt nyilvantartas KOR
+  participant Eszkoz as Targyi eszkozok 1500 HUF
+  participant Atv as Atvezeto 1900
+  participant Kt as Penztar 1000 KOR kincstar
+  participant Projekt as Projekt nyilvantartas
 
   Szallito->>Eszkoz: aktivalas HUF
-  Bank->>Szallito: utalas forintban
-  Bank->>Lekotes: fedezet
-  Lekotes->>Projekt: 15 000 KOR marad
+  Bank->>Szallito: utalas HUF
+  Eszkoz->>Atv: 1. lekotes fedezet HUF
+  Atv->>Kt: 2. KOR kibocsatas
+  Kt->>Atv: 3. KOR le a kincstarrol
+  Atv->>Projekt: 4. 15 000 KOR marad
+  Note over Bank,Szallito: karbantartas 5460 HUF nelkul lekotes blokk
 ```
 
 Zárás után a `1500` 1 500 000 Ft-tal nő, a `2000` nulla, a bank csökken, a projekt nyilvántartásán 15 000 KOR. A `5300` Értékcsökkenés későbbi, időszakos sor.
@@ -497,10 +516,12 @@ sequenceDiagram
   participant Kovetel as Kovetelesek 1200
   participant Kincstar as Allamkincstar
   participant Bank as Bank 1100
+  participant Atv as Atvezeto 1900
 
   Bevetel->>Kovetel: megiteles, 400 000 HUF, Termoteruletek
-  Kincstar-->>Bank: jovairas a bankszamlan
-  Bank->>Kovetel: kovetel zarasa forintban, korona nelkul
+  Kincstar-->>Bank: jovairas HUF a bankszamlan
+  Bank->>Atv: bevetel beerkezes HUF
+  Atv->>Kovetel: kovetel zarasa HUF
 ```
 
 Zárás:
@@ -541,7 +562,7 @@ sequenceDiagram
   participant Koltseg as Konyvelesi dij 5440
 
   Szallito->>Koltseg: konyveloi szamla, 80 000 HUF
-  Bank->>Szallito: utalas, szabad forint poolbol
+  Bank->>Szallito: utalas HUF, szabad pool
 ```
 
 Hatósági díj ugyanígy könyvelődik, a számla tartozikja a `5800` Egyéb költségek. A banki díj nem kap szállítói számlát: a bank levonja, a sor `5700` ← `1100`. A kidolgozott ügylet a könyvelői számla.
@@ -589,39 +610,47 @@ Egy tag részjegyet fizet be a saját bankjából. A részjegy a `1101` tagi sz�
 
 Egyszerűsített mezők: dátum, tag, befizetett összeg, vételár, illeték, leírás.
 
-Minta: `kovács.erika` 2 080 000 Ft részjegyet fizet. A telek vételára 2 000 000 Ft (20 000 korona), a vagyonszerzési illeték 80 000 Ft (800 korona). Számla: `1520` Belterületi földterületek, mert a lakótelek belterületi föld. Szervezet: `I/4.11.1.1 Lakóterületek`. Pénzeszköz: `1100`.
+Minta: `kovács.erika` 2 080 000 Ft részjegyet fizet. A telek vételára 2 000 000 Ft (20 000 korona lekötés), a vagyonszerzési illeték 80 000 Ft (800 korona lekötés az aktivált értékre). Számla: `1520` Belterületi földterületek, mert a lakótelek belterületi föld. Szervezet: `I/4.11.1.1 Lakóterületek`. Befizetés és NAV: `1100` HUF; telek vásárlás Homályban KOR a `1001`-en keresztül.
 
-A vételár és az illeték **forintban** fizetendő (`1520` ← `1100`, majd `2300` ← `1100`). A tag teljes befizetése lekötésre kerül: [lekötés blokk](#lekötés-blokk) a vételárra és az illeték aktivált értékére (összesen 20 800 KOR a Lakóterületek nyilvántartásán, 1 korona = 100 Ft). Az illeték aktiválása: `1520` ← `2300`.
+A NAV felé az illeték **forintban** megy (`2300` ← `1100`). A telek vételár a [tagi területi mintával](#tagi-befizetés-és-terület-lekötése) egyezően **Homályban KOR** (`1100` → `1001` stróman, `1001` → `1520` telek). A **korona lekötés** csak utána: a `1520` HUF értékéből kétszer [lekötés blokk](#lekötés-blokk) (vételár, majd aktivált illeték) — összesen 20 800 KOR a Lakóterületek nyilvántartásán (1 korona = 100 Ft).
 
 | #   | Lépés              | Tartozik ←                        | Követel                           | Összeg             | Pénznem | Szervezet                 | Típus     |
 | --- | ------------------ | --------------------------------- | --------------------------------- | ------------------ | ------- | ------------------------- | --------- |
 | 1   | Részjegy előírása  | `1101` kovács.erika - tagi számla | `3000` Alaptőke                   | 2 080 000          | HUF     | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 2   | Bejövő tagi utalás | `1100` Bankszámlák                | `1101` kovács.erika - tagi számla | 2 080 000          | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
-| 3   | Telek vételár      | `1520` Belterületi földterületek  | `1100` Bankszámlák                | 2 000 000          | HUF     | I/4.11.1.1 Lakóterületek  | Utalás    |
-| 4   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)   | fedezet `1100`                    | 2 000 000 / 20 000 | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
-| 5   | Illeték aktiválása | `1520` Belterületi földterületek  | `2300` Adótartozások              | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Átvezetés |
-| 6   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)   | fedezet `1100`                    | 80 000 / 800       | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
-| 7   | Illeték utalása    | `2300` Adótartozások              | `1100` Bankszámlák                | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Utalás    |
+| 3   | Stróman            | `1001` kovács.erika - saját számla | `1100` Bankszámlák                | 2 080 000          | KOR     | I/3. Pénzügyi Igazgatóság | Bányászás |
+| 4   | Telek vételár      | `1520` Belterületi földterületek  | `1001` kovács.erika - saját számla | 2 000 000          | KOR     | I/4.11.1.1 Lakóterületek  | Készpénz  |
+| 5   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)   | fedezet `1520` HUF érték          | 2 000 000 / 20 000 | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
+| 6   | Illeték aktiválása | `1520` Belterületi földterületek  | `2300` Adótartozások              | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Átvezetés |
+| 7   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)   | fedezet `1520` HUF érték          | 80 000 / 800       | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
+| 8   | Illeték utalása    | `2300` Adótartozások              | `1100` Bankszámlák                | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Utalás    |
 
 ```mermaid
 sequenceDiagram
   participant Toke as Alaptoke 3000
   participant Tag as Tag 1101 tagi szamla
-  participant Bank as Bank 1100
-  participant Lekotes as Lekotes blokk
-  participant Nyilv as Lakoteruletek KOR nyilvantartas
-  participant Telek as Belteruleti foldterulet 1520 HUF
+  participant Bank as Bank 1100 HUF
+  participant Sajat as Tag 1001 sajat szamla Homaly
+  participant Telek as Belteruleti fold 1520
+  participant Atv as Atvezeto 1900
+  participant Kt as Penztar 1000 KOR kincstar
+  participant Nyilv as Lakoteruletek nyilvantartas
   participant Ado as Adotartozasok 2300
 
-  Toke->>Tag: reszjegy eloirasa, 2 080 000 HUF
-  Tag->>Bank: befizetes
-  Bank->>Telek: vetelar utalas HUF
-  Bank->>Lekotes: fedezet vételárhoz
-  Lekotes->>Nyilv: 20 000 KOR marad
-  Ado->>Telek: illetek HUF az eszközbe
-  Bank->>Lekotes: fedezet illetékhez
-  Lekotes->>Nyilv: 800 KOR marad
-  Bank->>Ado: illetek utalasa NAV-nak
+  Toke->>Tag: reszjegy eloirasa HUF
+  Tag->>Bank: befizetes HUF
+  Bank->>Sajat: stroman KOR
+  Sajat->>Telek: telek vasarlas KOR
+  Telek->>Atv: lekotes fedezet vételár HUF
+  Atv->>Kt: KOR kibocsatas
+  Kt->>Atv: KOR le kincstarrol
+  Atv->>Nyilv: 20 000 KOR marad
+  Ado->>Telek: illetek HUF az eszkozbe
+  Telek->>Atv: lekotes fedezet illetek HUF
+  Atv->>Kt: KOR kibocsatas
+  Kt->>Atv: KOR le kincstarrol
+  Atv->>Nyilv: 800 KOR marad
+  Bank->>Ado: illetek utalasa NAV-nak HUF
 ```
 
 Zárás:
@@ -755,11 +784,11 @@ A `korona-lekotes` egy admin-lépés, a könyvekben négy tranzakció. A bontás
 
 ```mermaid
 flowchart TD
-  egy["korona-lekotes: penzeszkoz, cel nyilvantartas, osszeg HUF"]
-  egy --> a1["HUF: 1900 ← penzeszkoz, kincstar"]
+  egy["korona-lekotes: fedezet forras, cel nyilvantartas · KOR csak itt"]
+  egy --> a1["HUF: 1900 ← penzeszkoz vagy 15xx eszkoz ertek"]
   a1 --> a2["KOR: 1000 ← 1900, kincstar"]
   a2 --> a3["KOR: 1900 ← 1000, kincstar"]
-  a3 --> a4["KOR: 1000 ← 1900, cel nyilvantartas — marad"]
+  a3 --> a4["KOR: 1000 ← 1900, eszkoz projektje — marad"]
 ```
 
 A `bevetel-forint` két sor: beérkezés, majd végleges bevétel/követelés. Az 1. ügyletben ilyen blokk nincs.
