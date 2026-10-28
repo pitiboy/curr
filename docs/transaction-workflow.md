@@ -209,6 +209,14 @@ A kincstár pénzeszközei: **`1000` Készpénz**, **`1100` Bankszámlák** (see
 
 ## Ügylet 1 — tagi befizetés ingatlan vásárlásra
 
+**Egyszerű, egysoros (v1 űrlap):** a backoffice ma egy kézi sort ment; a teljes ügylet több lépésből áll (lásd alább).
+
+| Tartozik ←                       | Követel                           | Összeg (minta) | Pénznem | Szervezet                |
+| -------------------------------- | --------------------------------- | -------------- | ------- | ------------------------ |
+| `1520` Belterületi földterületek | `1101` kovács.erika - tagi számla | 2 080 000      | HUF     | I/4.11.1.1 Lakóterületek |
+
+Mezőgazdasági földnél a tartozik `1510` Mezőgazdasági földterületek, szervezet `I/4.11.1.2 Termőterületek`. Az összeg a befizetett részjegy; a bontás (előírás, bank, Homály KOR, lekötés, illeték) későbbi ügylet-űrlap / resolver feladata.
+
 Egy tag részjegyet fizet be a saját bankjából. A részjegy a `1101` tagi számlán megy át: előírás, majd befizetés a **`1100` Bankszámlák**-ra. A területvásárlás jellemzően **bankon keresztül** történik: stróman **KOR** a `1100`-ról a tag `1001` Homály számlájára **csak a vételár összegéig**, onnan KOR vétel az ingatlan `15xx` számlára. A befizetett részjegy **vételáron felüli** része (a mintában az illeték 80 000 Ft) **nem megy stróman KOR-ként a `1001`-re**: végig **`1100` HUF** marad, amíg az illeték aktiválása és a NAV felé utalás le nem vonja. A **korona lekötés** csak utána, az eszköz HUF értékéből ([lekötés blokk](#lekötés-blokk)). Ha a `1001`-en a vételár felett KOR vagy HUF maradna (hibás stróman), a felesleg **bányászás** (`1100` → `1001` HUF), nem további ingatlan-KOR.
 
 Egyszerűsített mezők: dátum, tag, befizetett összeg, vételár, illeték, ingatlan számla (`1510` / `1520` / `1530`), leírás.
