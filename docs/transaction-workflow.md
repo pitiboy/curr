@@ -197,13 +197,13 @@ A [2.](#ügylet-2--tojás-keletkezése-és-eladása), [3.](#ügylet-3--gyümölc
 | 3000 Részjegytőke             | 1101 XY - tagi számla            | HUF    | előírás                        |
 | 1101 XY - Tagi számla         | 1000 Bankszámla                  | HUF    | befizetés                      |
 | -                             | -                                | -      | -                              |
-| 1000 Bankszámla               | 1900 KOR Kincstár                | HUF    | forint fedezetbe               |
-| 1900 KOR Kincstár             | 1000 Bankszámla                  | KOR    | korona kibocsátárs             |
-| -                             | -                                | -      | -                              |
 | 1000 Bankszámla               | 1001 XY - saját számla           | KOR    | stróman                        |
 | 1001 XY - saját számla        | 1510 Mezőgazdasági földterületek | KOR    | telek vásárlás                 |
 | -                             | -                                | -      | -                              |
-|  2300 Adótartozások           | 1510 Mezőgazdasági földterületek | HUF    | illeték előírás telek értékébe |
+| 1510 Mezőgazdasági földterületek | 1900 KOR Kincstár                | HUF    | forint (földterület) fedezetbe               |
+| 1900 KOR Kincstár             | 1510 Mezőgazdasági földterületek | KOR    | korona kibocsátárs             |
+| -                             | -                                | -      | -                              |
+| 2300 Adótartozások           | 1510 Mezőgazdasági földterületek | HUF    | illeték előírás telek értékébe |
 | 1100 Bankszámlák              | 2300 Adótartozások               | HUF    | illeték utalása a NAV-nak      |
 
 ```mermaid
@@ -242,59 +242,7 @@ sequenceDiagram
   Nav->>Ado: illetek utalasa a NAV-nak
 ```
 
-#### Bányászás
-
-★ Egyszerű, egysoros:
-
-| credit →        | debit                  |
-| --------------- | ---------------------- |
-| 1000 Bankszámla | 1001 XY - saját számla |
-
-#### Szintetikus :
-
-A végleges számla a blokk után kerül követelre. Az első forint pár (beérkezés, majd átváltás) a visszaváltás előtt összeadva nulláz. A korona közben a projekten van. Nettó: a pénzeszköz nő, a végleges számla követel oldala nő.
-
-| Lépés                             | Tartozik ← | Követel                | Pénznem | Szervezet |
-| --------------------------------- | ---------- | ---------------------- | ------- | --------- |
-| 1. Beérkezés                      | pénzeszköz | `1900`                 | HUF     | kincstár  |
-| 2. Forint a tartalékba            | `1900`     | pénzeszköz             | HUF     | kincstár  |
-| 3. Korona kibocsátás              | `1000`     | `1900`                 | KOR     | kincstár  |
-| 4. Korona le a kincstárról        | `1900`     | `1000`                 | KOR     | kincstár  |
-| 5. Korona a projektre             | `1000`     | `1900`                 | KOR     | projekt   |
-| 6. Korona visszaváltása           | `1900`     | `1000`                 | KOR     | projekt   |
-| 7. Forint a projekt pénzeszközére | pénzeszköz | `1900`                 | HUF     | projekt   |
-| 8. Végleges sor                   | `1900`     | bevétel vagy követelés | HUF     | projekt   |
-
-```mermaid
-sequenceDiagram
-  participant Kulso as Kulso fizeto
-  participant Penz as Penzeszkoz 1000 vagy 1100
-  participant Atv as Atvezeto 1900
-  participant Kincstar as Penztar 1000 KOR, kincstar
-  participant Projekt as Penztar 1000 KOR, projekt
-  participant Vegleges as Bevetel vagy kovetel
-
-  Kulso-->>Penz: penz erkezik, a konyvben nincs sora
-  Atv->>Penz: 1. beerkezes, HUF, kincstar
-  Penz->>Atv: 2. HUF a tartalekba
-  Atv->>Kincstar: 3. KOR kibocsatas
-  Kincstar->>Atv: 4. KOR le a kincstarrol
-  Atv->>Projekt: 5. KOR a projektre
-  Projekt->>Atv: 6. KOR visszavaltasa
-  Atv->>Penz: 7. HUF a projekt penzeszkozere
-  Vegleges->>Atv: 8. vegleges sor, HUF, projekt
-```
-
 ★ Egyszerűsített összefoglaló: befizetés forintban, vétel forintban, lekötés koronában a birtok nyilvántartásán.
-
-| credit / követel →   | debit / tartozik   | valuta    | magyarázat                      |
-| -------------------- | ------------------ | --------- | ------------------------------- |
-| `3000` Alaptőke      | `1101` tagi számla | HUF       | előírás                         |
-| `1101` tagi számla   | `1100` Bankszámlák | HUF       | befizetés                       |
-| `1520` / `1510`      | `1100`             | HUF       | telek vételár kifizetése        |
-| lekötés blokk 1–4    | (lásd fent)        | HUF + KOR | korona a birtok nyilvántartásán |
-| `2300` Adótartozások | `1520` / `1510`    | HUF       | illeték az eszköz értékébe      |
-| `1100`               | `2300`             | HUF       | illeték utalása                 |
 
 ```mermaid
 sequenceDiagram
