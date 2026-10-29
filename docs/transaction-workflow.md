@@ -4,17 +4,17 @@
 **Számlatükör:** [database/seeders/http/kor/data/accounts.json](../database/seeders/http/kor/data/accounts.json)  
 **Sor séma:** [src/api/transaction/content-types/transaction/schema.json](../src/api/transaction/content-types/transaction/schema.json)  
 **Tagi számlák:** [src/member-accounts.ts](../src/member-accounts.ts)  
-**Kapcsolódó:** [docs/readme.md](./readme.md), [v1 PRD](./prd/0001-content-backoffice-v1.md)
+**Kapcsolódó:** [docs/readme.md](./readme.md), [v1 PRD](./prd/0001-content-backoffice-v1.md), [implementation plan](./plans/0002-transaction-workflow-content-type.md)
 
-Ez a fájl a kétlábas könyvelés ügyleteit írja le a meglévő számlatükörre. Kód, séma, seed és a mostani backoffice-feliratok nem változnak tőle. A v1 űrlap továbbra is egy kézi tartozik/követel sor.
+Ez a fájl a kétlábas könyvelés ügyleteit írja le a meglévő számlatükörre. A v1 űrlap továbbra is egy kézi tartozik/követel sor. A több soros bontást a [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) sablon és a későbbi konverziós API végzi (lásd [Ügylet konfigurálása Strapi-ban](#ügylet-konfigurálása-strapi-ban)).
 
 ## Szókincs
 
-Az **ügylet** a teljes gazdasági esemény. Egy kitöltésből több sor születik, `related_transaction` láncon. A fejezetek neve ügylet. A későbbi egyszerűsített űrlap felirata magyarul Ügylet / Ügyletek, angolul Deal / Deals. A katalógusban és a felületen ez a két szó jelenik meg.
+Az **ügylet** a teljes gazdasági esemény. A fejezetek neve ügylet. Adminban a sablon collection neve `transaction-workflow`; a felhasználói felirat később lehet Ügylet / Deal.
 
 A **tranzakció** egy sor: egy tartozik, egy követel, egy összeg, egy pénznem. A mostani felület ezt mutatja: `Tranzakció` / `Tranzakciók` a [hu.ts](../apps/content-backoffice/src/i18n/hu.ts)-ben, `Transaction` / `Transactions` az [en.ts](../apps/content-backoffice/src/i18n/en.ts)-ben. Ezek a képernyők egy sort szerkesztenek, a feliratuk tranzakció marad.
 
-A belső collection neve lehet `posting-workflow`. A felhasználó az Ügylet szót látja.
+A **konverzió** egy már létező, még nem átalakított (`converted_to_workflow = false`) egysoros tranzakciót a sablon `step` listája szerint több sorra bont. A sorok `related_transaction` kapcsolattal maradnak egy ügyletben.
 
 ## Mit rögzít egy sor
 
@@ -209,17 +209,15 @@ A kincstár pénzeszközei: **`1000` Készpénz**, **`1100` Bankszámlák** (see
 
 ## Ügylet 1 — tagi befizetés ingatlan vásárlásra
 
-**Egyszerű, egysoros (v1 űrlap):** a backoffice ma egy kézi sort ment; a teljes ügylet több lépésből áll (lásd alább).
+**Egysoros (v1 űrlap / match forrás):** a backoffice ma egy kézi sort ment. A `transaction-workflow` fejléc ezen a T←K páron matchel; a bontás a sablon `step` listája + konverziós API (lásd [alább](#ügylet-konfigurálása-strapi-ban) és a [0002 plan](./plans/0002-transaction-workflow-content-type.md)).
 
 | Tartozik ←                       | Követel                           | Összeg (minta) | Pénznem | Szervezet                |
 | -------------------------------- | --------------------------------- | -------------- | ------- | ------------------------ |
 | `1520` Belterületi földterületek | `1101` kovács.erika - tagi számla | 2 080 000      | HUF     | I/4.11.1.1 Lakóterületek |
 
-Mezőgazdasági földnél a tartozik `1510` Mezőgazdasági földterületek, szervezet `I/4.11.1.2 Termőterületek`. Az összeg a befizetett részjegy; a bontás (előírás, bank, Homály KOR, lekötés, illeték) későbbi ügylet-űrlap / resolver feladata.
+Mezőgazdasági földnél a tartozik `1510` Mezőgazdasági földterületek, szervezet `I/4.11.1.2 Termőterületek`. Az összeg a befizetett részjegy; a bontás (előírás, bank, Homály KOR, lekötés, illeték) a sablon lépései.
 
 Egy tag részjegyet fizet be a saját bankjából. A részjegy a `1101` tagi számlán megy át: előírás, majd befizetés a **`1100` Bankszámlák**-ra. A területvásárlás jellemzően **bankon keresztül** történik: stróman **KOR** a `1100`-ról a tag `1001` Homály számlájára **csak a vételár összegéig**, onnan KOR vétel az ingatlan `15xx` számlára. A befizetett részjegy **vételáron felüli** része (a mintában az illeték 80 000 Ft) **nem megy stróman KOR-ként a `1001`-re**: végig **`1100` HUF** marad, amíg az illeték aktiválása és a NAV felé utalás le nem vonja. A **korona lekötés** csak utána, az eszköz HUF értékéből ([lekötés blokk](#lekötés-blokk)). Ha a `1001`-en a vételár felett KOR vagy HUF maradna (hibás stróman), a felesleg **bányászás** (`1100` → `1001` HUF), nem további ingatlan-KOR.
-
-Egyszerűsített mezők: dátum, tag, befizetett összeg, vételár, illeték, ingatlan számla (`1510` / `1520` / `1530`), leírás.
 
 Minta: `kovács.erika` 2 080 000 Ft részjegy. Telek vételár 2 000 000 Ft (20 000 korona lekötés), illeték 80 000 Ft (800 korona lekötés). Számla: `1520` Belterületi földterületek. Szervezet: `I/4.11.1.1 Lakóterületek`. (Mezőgazdasági földnél `1510`, szervezet `I/4.11.1.2 Termőterületek`.)
 
@@ -290,7 +288,7 @@ Seedből hiányzik: `1900`.
 
 A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ingatlant — tagi részjegy és Homály **nélkül**. A vételár HUF készpénz; a vagyonszerzési illeték aktiválódik az eszközbe, a NAV felé az illeték **`1100`-ról** megy (a kincstár bankszámlájáról).
 
-Egyszerűsített mezők: dátum, vételár, illeték, leírás.
+**Egysoros match forrás (v1):** `1520` ← `1000`, összeg a vételár (minta 800 000 HUF). A teljes bontás (lekötés, illeték) a sablon `step` listája.
 
 Minta: belterületi telek 800 000 Ft + illeték 32 000 Ft. Számla: `1520`. Szervezet: `I/4.11.1.1 Lakóterületek`. Lekötés: 8 000 + 320 = 8 320 KOR (1 korona = 100 Ft).
 
@@ -333,7 +331,7 @@ Seedből hiányzik: `1900`.
 
 Tojás jelenik meg egy ólban, készletre kerül, majd eladáskor a darab kimegy a készletből, a forint pedig közvetlenül értékesítési bevétel lesz (korona nélkül).
 
-Egyszerűsített mezők: dátum, ól (szervezet), darabszám, eladási forint, leírás.
+**Egysoros match forrás (v1):** a keletkezés sora `1300` ← `4500` (EGG). A teljes eladási folyamat (forint bevétel + készletcsökkenés) a sablon `step` listája; a Napi tojás űrlap csak a keletkezést írja (lásd alább).
 
 A szervezet az `I/4.12.1.2 Állattenyésztés` gyereke. A seedben ilyen ól még nincs; a juhnyáj mutatja a fa mintáját. A minta szervezete: Tojóól.
 
@@ -385,7 +383,7 @@ Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` p
 
 A gyümölcsfaligetben leszüretelt mennyiség készletre kerül. A piacra vitt rész kimegy a készletből, a befolyt forint közvetlenül a `4000`-re kerül. A raktáron hagyott kiló a `1300`-on marad.
 
-Egyszerűsített mezők: dátum, leszüretelt kg, eladott kg, forint bevétel, leírás.
+**Egysoros match forrás (v1):** a szüret sora `1300` ← `4500` (FRUIT). A piaci eladás és készletcsökkenés a sablon `step` listája.
 
 Szervezet: `I/4.12.1.1.1 Szávai Márton gyümölcsfaliget`. Mértékegység: kg (`FRUIT`).
 
@@ -424,7 +422,7 @@ Seedből hiányzik: `FRUIT`, `4500`, `1900`.
 
 Telek vagy épület vásárlása foglalóval, majd a fennmaradó vételár bankból. A kifizetések **forintban** mennek (`1400`, `1530` ← `1100`). A vételár forint értékére **lekötés blokk** kerül a lakóingatlan / birtok nyilvántartására (korona a nyilvántartáson marad). A foglaló beszámítása a vételárba pénzmozgás nélküli sor.
 
-Egyszerűsített mezők: dátum, foglaló, fennmaradó vételár, ingatlan számla, leírás.
+**Egysoros match forrás (v1):** tipikusan a foglaló `1400` ← `1100`, vagy a seed a teljes vételárhoz igazított fejlécet használ (`1530` ← `1100`, minta 10 000 000 HUF), ha a `percent` 0–100 korlát miatt a foglalóösszeg nem arányosítja a többi lépést — lásd [0002 seed 8.5](./plans/0002-transaction-workflow-content-type.md#85-ügylet-5--ingatlan-szerzése).
 
 Az ingatlan számla a fajta szerint: `1510` Mezőgazdasági földterületek, `1520` Belterületi földterületek, `1530` Lakóépületek. A minta egy lakóház, `1530`. Szervezet: `I/4.11.1.1 Lakóterületek`. Pénzeszköz: `1100` Bankszámlák. A vagyonszerzési illeték az ingatlan értékébe kerül, az [1.](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) vagy [2.](#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás) ügylet illeték lépései szerint.
 
@@ -467,7 +465,7 @@ Seedből hiányzik: `1900`.
 
 Értéknövelő felújítás: a kivitelezés az épület értékébe kerül. A szállító **forintban** kap utalást. Az értéknövelés összege **lekötés blokk** a projekt vagy lakóingatlan nyilvántartására (korona marad). Karbantartásnál csak forint költség sor, lekötés nélkül.
 
-Egyszerűsített mezők: dátum, hely (szervezet), kivitelezői összeg, leírás.
+**Egysoros match forrás (v1):** az aktiválás sora `1500` ← `2000` (minta 1 500 000 HUF). Az utalás és a lekötés a sablon `step` listája.
 
 Minta: 1 500 000 Ft (15 000 korona lekötés, 1 korona = 100 Ft). Szervezet: `I/4.12.1.2 Állattenyésztés`, egy ól felújítása. Pénzeszköz: `1100`. Lakóháznál a tartozik a `1530` Lakóépületek, a lekötés célja a lakó projekt nyilvántartása.
 
@@ -505,7 +503,7 @@ Seedből hiányzik: `1900`.
 
 Működési, területalapú támogatás egy támogatott földterületre. A megítéléskor keletkezik az egyéb bevétel és a követelés. A kincstári jóváírás a bankra érkezik **forintban**, a [forint bevétel](#forint-bevétel-korona-nélkül) lépésein, és a követelést zárja. A `4200` a jóváíráskor nem ismétlődik. Értékesítés nincs, a `4000` kimarad. A támogatás összegének birtok nyilvántartásra történő lekötése külön, önkéntes ügylet.
 
-Egyszerűsített mezők: dátum, támogatott terület (szervezet), megítélt összeg, leírás.
+**Egysoros match forrás (v1):** a megítélés sora `1200` ← `4200` (minta 400 000 HUF). A kincstári jóváírás / követelés zárása a sablon `step` listája.
 
 A seedben nincs külön támogatási bevétel számla, ezért a bevétel a `4200` Egyéb bevételek. Szervezet: `I/4.11.1.2 Termőterületek`, a támogatott földterület projektje. Pénzeszköz: `1100`.
 
@@ -551,7 +549,7 @@ Seedből hiányzik: `1900`.
 
 Külső könyvelői vagy ügyintézői számla. **Közös költség forintban**, korona és lekötés nélkül: szállítói számla, majd utalás a szabad poolból.
 
-Egyszerűsített mezők: dátum, összeg, leírás.
+**Egysoros match forrás (v1):** a számla sora `5440` ← `2000` (minta 80 000 HUF). Az utalás a sablon `step` listája.
 
 Szervezet: `I/3. Pénzügyi Igazgatóság`. Pénzeszköz: `1100`. A `5440` Könyvelési és szakértői díjak a seedben is ezen a szervezeten ül.
 
@@ -580,7 +578,7 @@ Seedből hiányzik: `1900`.
 
 A bányászás a hivatalos Szövetkezet rendszerből, a `1100` bankról vagy a `1000` pénztárból készpénzt visz át a Homály rendszerbe, egy tag `1001` saját számlájára. Kiadásnak látszik, mert a pénz kimegy a szövetkezet számláiról, de nem költség: két főkönyv közötti átvezetés. A bányászás sorában nincs `5xxx` számla. A költség később, Homályban keletkezik, amikor a tag a `1001`-ről fizet.
 
-Egyszerűsített mezők: dátum, tag, összeg, honnan (`1100` vagy `1000`), leírás.
+**Egysoros match forrás (v1):** `1001` ← `1100` (vagy `1000`), típus `Bányászás`. A lenti Homály kiadások **külön** egysoros tranzakciók, nem ennek a sablonnak a része.
 
 A tranzakciótípus `Bányászás`. A sor Homály, mert az egyik oldala `1001`. Mivel két pénzeszköz között mozog, nem érinti a lekötést, ugyanúgy, mint a készpénzfelvétel.
 
@@ -613,107 +611,80 @@ Seedből hiányzik: semmi. A `1001` tagonként automatikusan jön létre, a `Bá
 
 ## Ügylet konfigurálása Strapi-ban
 
-Ez javaslat a későbbi egyszerűsített űrlaphoz. A collection és a resolver még nincs a kódban. A v1 képernyő ettől nem változik, és a `dataentry` továbbra sem publikál.
+A sablon collection: [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json). A lépés komponens: [`workflow.step`](../src/components/workflow/step.json). A v1 kézi tranzakció űrlap ettől nem változik. Seed és Convert API utasítások: [0002 plan](./plans/0002-transaction-workflow-content-type.md).
 
-A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A lépéssort egy külön collection írja le, kódban szállítva, draft nélkül. A belső neve `posting-workflow`. A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
+A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás).
 
 ### Ki mit csinál
 
-A könyvelő az ügyletet egyszer állítja össze a Strapi Adminban. A rögzítő utána már csak a rövid űrlapot látja. A resolver a mentett lépésekből draft tranzakciókat ír. Az `editor` a láncot ellenőrzi és publikálja.
+A könyvelő a Strapi Adminban összeállítja a sablont (fejléc match + `step` lista). A rögzítő továbbra is egysoros v1 tranzakciót ment. Egy Convert API hívás a még nem átalakított sorokat a sablon szerint kibontja. A generált sorok státuszát a sablon `steps_published` mezője adja (default published); a Convert híváskor felülírható.
 
 ```mermaid
 sequenceDiagram
   participant Admin as Strapi Admin
-  participant Ugylet as Ugylet rekord
-  participant Form as Rovid urlap
-  participant Resolver as Resolver
-  participant Api as Transaction API
-  participant Editor as editor
+  participant Wf as transaction-workflow
+  participant Entry as dataentry v1 form
+  participant Tx as transaction
+  participant Api as Convert API
 
-  Admin->>Ugylet: mezok es lepesek mentese
-  Form->>Ugylet: aktiv ugyletek listaja
-  Form->>Resolver: kitoltott mezok
-  Resolver->>Ugylet: lepesek olvasasa
-  Resolver->>Api: draft sorok egy keresben
-  Editor->>Api: a lanc publisha
+  Admin->>Wf: sablon mentese publish
+  Entry->>Tx: egysoros draft
+  Api->>Wf: published sablonok
+  Api->>Tx: match converted_to_workflow false
+  Api->>Tx: storno vagy torles plusz step sorok
 ```
 
-### Mit tárol egy ügylet
+### Mit tárol egy sablon
 
-Egy rekord azonosítóból, névből, aktív jelzőből, beviteli mezőkből és lépésekből áll. A számla, a pénznem, a tranzakciótípus és a szervezet mind meglévő rekord, legördülőből. Az összegnek két módja van: a beviteli mező másolata, vagy átváltás a `currency-rate` szerint a bizonylat napján. Szabad képlet nincs.
+| Mező | Szerep |
+| ---- | ------ |
+| `name` | Admin címke (pl. ügylet neve) |
+| `debit_account_code` / `credit_account_code` | Kötelező match: a forrás `transaction` számláinak `code` értéke (integer 1000–9999 ↔ string kód). Általános: minden tag `1101`/`1001` példánya matchelhető, nincs fix tag-reláció a matchben. |
+| `currency_type` / `transaction_type` | Opcionális; ha ki van töltve, a match ezekre is szűr |
+| `keep_original` | Default `true` — storno + megtartás; `false` — eredeti törlése |
+| `steps_published` | Default `true` — generált step (és storno) sorok published; `false` → draft. Convert API/UI felülírhatja. |
+| `configuration` | JSON, **fenntartott**, nincs implementáció |
+| `step` | Dynamic zone, csak `workflow.step`; sorrend = kifejtés sorrendje; séma `min: 1` |
 
-A beviteli mezők ismétlődő komponens, `posting.input`: kulcs, címke, fajta. Minden mező ugyanazt az alakot követi, ezért ide nem dynamic zone kell.
+Nincs `workflow_key`, `inputs`, `active`, `sort_order`. A `draftAndPublish` a sablonon **be** van kapcsolva: a Convert csak **published** sablonokat használ.
 
-A lépések dynamic zone, a Strapi 5.58 blokklistája. A szerkesztő az „Add a component” listából tesz fel blokkot, és húzással rendezi. Három komponens van, bármilyen sorrendben, többször is:
+Egy `workflow.step`:
 
-- `posting.line`: egy tartozik/követel sor. A számla lehet rögzített rekord, a beviteli mező kulcsa, vagy egy tag mező `1101`-es tagi, illetve `1001`-es saját számlája. Mellette az összeg módja, a pénznem, a szervezet és a tranzakciótípus.
-- `posting.korona-lekotes`: a [lekötés blokk](#lekötés-blokk). Az admin a forint fedezet forrását (pénzeszköz vagy eszköz HUF értéke) és a cél nyilvántartást választja (a `15xx` állóeszköz projekt szervezete). A korona összeget az árfolyam adja; a blokk után a KOR a cél szervezeten marad.
-- `posting.bevetel-forint`: a [forint bevétel](#forint-bevétel-korona-nélkül) két technikai sora. Az admin a pénzeszközt és a végleges követel számlát választja.
+| Mező | Szerep |
+| ---- | ------ |
+| `description` | Generált sor leírása; default `{1}` — placeholder a forrás mezőkre (implementációkor rögzítendő) |
+| `percent` | 0–100 (tört megengedett); `amount = forrás.amount * percent / 100` |
+| `debit_account` / `credit_account` | Sablon számlák; `1101`/`1001` kódnál a Convert a **forrás trx** azonos kódú `debit_account` / `credit_account` példányát használja (nem a seed fix relációját) |
+| `currency_type` | Kötelező a stepen |
+| `transaction_type` | Opcionális |
+| `organization` | Kötelező a stepen |
+| `copy_receipt` | Default `false`; `true` esetén a forrás `receipts` a generált sorra is rákerül (ha volt); ha nem volt, üres |
 
-A `1900`-as sorok nem külön admin-blokk. A resolver a blokk `__component` értékét olvassa, és a lekötés / bevétel lépéseit a fenti táblákból bontja ki.
+A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad. A sablonrétegben **nincs** külön komponens és nincs implicit `1900` kibontás: mind a négy (ill. két) könyvelési sor külön `workflow.step`.
 
-Új ügylet a meglévő három blokkból admin adat. Negyedik blokkfajta új komponens, tehát kódváltozás, ugyanazon a határon, mint amikor az összeg sem másolat, sem árfolyam.
+### Konverzió
 
-Példa adminrekord: a [9. ügylet (bányászás)](#ügylet-9--bányászás) egyetlen `posting.line` blokk. Az [1. ügylet (tagi ingatlan)](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) több `posting.line`, két `posting.korona-lekotes` és vegyes pénznem — külön admin sablon.
+Csak `converted_to_workflow = false` tranzakciók. Match: `debit_account.code` és `credit_account.code` egyezik a fejléc kódokkal; ha a sablonon van `currency_type` és/vagy `transaction_type`, azokra is. A match **kód alapú**, ezért ugyanaz a sablon minden tag `1101`/`1001` sorára alkalmazható.
 
-Beviteli mezők (bányászás):
+**`keep_original: true`:** az eredeti megmarad; beszúrás egy storno sor (`amount * -1`, ugyanazok a mezők) + a `step` szerinti új sorok. A storno és az új sorok `related_transaction` → eredeti. `converted_to_workflow: true` az **eredetin és a storno soron**.
 
-| Kulcs         | Címke az űrlapon | Fajta                                 |
-| ------------- | ---------------- | ------------------------------------- |
-| `date`        | Dátum            | dátum                                 |
-| `member`      | Tag              | tag                                   |
-| `amount`      | Összeg forintban | szám                                  |
-| `source`      | Honnan           | számla (`1100` vagy `1000`)           |
-| `description` | Leírás           | szöveg                                |
+**`keep_original: false`:** az eredeti törlődik; csak az új step-sorok; egymás között `related_transaction` lánc.
 
-Lépés:
-
-| Sorrend | Komponens                                 | Tartozik ←              | Követel       | Összeg   | Pénznem | Típus     |
-| ------- | ----------------------------------------- | ----------------------- | ------------- | -------- | ------- | --------- |
-| 1       | `posting.line`                            | `member` → `1001`       | `source`      | `amount` | HUF     | Bányászás |
-
-### Mit lát a rögzítő
-
-Az űrlap a beviteli mezőkből készül. A bányászás mintánál:
-
-```text
-Ügylet: Bányászás
-
-Dátum            2026-10-14
-Tag              kovács.erika
-Összeg forintban 50 000
-Honnan           1100 Bankszámlák
-Leírás           készpénz a taghoz
-```
-
-A feliratok a két katalógusba kerülnek: hu `Ügylet |||| Ügyletek`, en `Deal |||| Deals`. Az új ügylet gomb magyarul Új ügylet, angolul New deal. A mostani tranzakció-képernyők szövege változatlan, azok továbbra is egy sort szerkesztenek.
-
-### Hogyan lesznek belőle sorok
-
-A resolver minden ügyletre ugyanaz a kód. A kitöltött mezőket és a mentett lépéseket olvassa, az árfolyamot a bizonylat napjára kéri, majd egy kérésben draft tranzakciókat ír. Minden sor `related_transaction` mezője az előző sorra mutat, így a lánc egy ügylet marad.
-
-```mermaid
-flowchart LR
-  formNode["Urlap: kovacs.erika, 50 000 Ft, 1100"]
-  banyaszas["1. Banyaszas"]
-  sor0["1001 kovacs.erika ← 1100, 50 000 HUF"]
-
-  formNode --> banyaszas --> sor0
-```
-
-A bányászás mintánál a resolver egy sort ír: `1001` ← `1100`, típus Bányászás, HUF. A [1. ügylet](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) lépéslistáját a resolver ugyanígy sorban követi.
-
-A `korona-lekotes` egy admin-lépés, a könyvekben négy tranzakció. A bontás a [lekötés blokk](#lekötés-blokk) táblája szerint megy; a fedezet pénzeszköze és a cél nyilvántartás a lépés paramétere:
+A generált sorok `entered_key` mezője idempotenciához (pl. `{originalDocumentId}:storno` / `{originalDocumentId}:step:{i}`). A Convert Strapi route/controller a `transaction-workflow` API alatt.
 
 ```mermaid
 flowchart TD
-  egy["korona-lekotes: fedezet forras, cel nyilvantartas · KOR csak itt"]
-  egy --> a1["HUF: 1900 ← penzeszkoz vagy 15xx eszkoz ertek"]
-  a1 --> a2["KOR: 1000 ← 1900, kincstar"]
-  a2 --> a3["KOR: 1900 ← 1000, kincstar"]
-  a3 --> a4["KOR: 1000 ← 1900, eszkoz projektje — marad"]
+  api["Convert API"]
+  loadWf["Published sablonok"]
+  findTx["Match: kodok plusz nem converted"]
+  expand["step: amount = orig * percent / 100"]
+  keep{"keep_original?"}
+  storno["Storno amount*-1"]
+  mark["converted_to_workflow true eredeti es storno"]
+  linkKeep["Uj sorok related_transaction eredeti"]
+  del["Eredeti torlese"]
+  linkChain["Uj sorok related_transaction lanc"]
+  api --> loadWf --> findTx --> expand --> keep
+  keep -->|true| storno --> mark --> linkKeep
+  keep -->|false| del --> linkChain
 ```
-
-A `bevetel-forint` két sor: beérkezés, majd végleges bevétel/követelés. A [3.](#ügylet-3--tojás-keletkezése-és-eladása), [4.](#ügylet-4--gyümölcs-szürete-és-piaci-eladása) és [7.](#ügylet-7--területalapú-agrár-támogatás) ügyletnél használatos.
-
-Új ügyletfajta, például a könyvelői számla, admin adat: új `posting.input` mezők és a három meglévő blokk új sorrendje. Negyedik blokk, vagy olyan összeg, amit sem másolni, sem árfolyammal váltani nem lehet, már kódváltozás.

@@ -100,7 +100,7 @@ A korábban kikommentezett őr nem futott, és nem írta az audit mezőket. A RE
 
 ## 6. Új tranzakció, receipt nélkül
 
-A 6–8. lépés a kézi tranzakció képernyő marad. A feature flag és a `docs/transaction-workflow.md` ügylet (több sor, `related_transaction`, `5800`, korona) nem váltja ki: a `workflowForms` regiszter üres marad, a create route `/transactions/create`. A 3. lépés külön review listáját a 8. lépés cseréli.
+A 6–8. lépés a kézi tranzakció képernyő marad. A `docs/transaction-workflow.md` ügylet-bontás Strapi oldalon **konverzió** (meglévő egysoros trx → `transaction-workflow` `step` lista), nem rövid Deal űrlap / `workflowForms` driver: a regiszter üres marad, a create route `/transactions/create`. A 3. lépés külön review listáját a 8. lépés cseréli. Részletek: [0002](./0002-transaction-workflow-content-type.md).
 
 - [x] Create űrlap a `dataentry` route-on: `date`, `amount`, `description`, `organization`, `debit_account`, `credit_account`
 - [x] Debit választó: `VITE_DEBIT_CODES` regex, alapból `/^5/`. Credit választó: `VITE_CREDIT_CODES` regex, alapból `/^(1|3)/`

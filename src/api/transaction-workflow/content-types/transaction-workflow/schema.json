@@ -42,16 +42,19 @@
       "required": false,
       "default": true
     },
+    "steps_published": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    },
     "configuration": {
       "type": "json"
     },
     "step": {
       "type": "dynamiczone",
-      "components": [
-        "workflow.step"
-      ],
+      "components": ["workflow.step"],
       "required": true,
-      "min": 2
+      "min": 1
     }
   }
 }

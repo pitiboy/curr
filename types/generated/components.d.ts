@@ -7,6 +7,7 @@ export interface WorkflowStep extends Struct.ComponentSchema {
     icon: 'bulletList';
   };
   attributes: {
+    copy_receipt: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     credit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'

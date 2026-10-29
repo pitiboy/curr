@@ -1118,10 +1118,12 @@ export interface ApiTransactionWorkflowTransactionWorkflow
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
         {
-          min: 2;
+          min: 1;
         },
         number
       >;
+    steps_published: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
     transaction_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::transaction-type.transaction-type'
