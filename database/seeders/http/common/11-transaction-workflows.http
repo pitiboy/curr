@@ -1,0 +1,17 @@
+# Transaction-workflow sablonok (Ügylet 1–9)
+# A rekordok a dataDir/transaction-workflows/*.json fájlokból jönnek.
+# A Strapi boot seed ugyanezt tölti, ha TRANSACTION_WORKFLOWS_INSTANCE=kor (vagy edizone).
+#
+# Előfeltétel: 01–07 seed (számlák, szervezetek, pénznemek, tranzakciótípusok), köztük
+# 1900, 4500, EGG, FRUIT és a Tojóól szervezet a kor/data fájlokban.
+#
+# Helyi futtatás (Admin Full access token):
+#   TRANSACTION_WORKFLOWS_INSTANCE=kor npm run develop
+# vagy Strapi console:
+#   const { upsertKorTransactionWorkflowSeeds } = require('./dist/src/transaction-workflow/seed');
+#   await upsertKorTransactionWorkflowSeeds(strapi);
+
+###
+GET {{baseUrl}}/api/transaction-workflows?pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json

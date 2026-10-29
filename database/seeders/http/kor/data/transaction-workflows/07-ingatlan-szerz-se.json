@@ -1,0 +1,70 @@
+{
+  "name": "Ingatlan szerzése",
+  "debit_account_code": 1530,
+  "credit_account_code": 1100,
+  "steps": [
+    {
+      "description": "Foglaló",
+      "percent": 20,
+      "debit_code": "1400",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "Fennmaradó",
+      "percent": 80,
+      "debit_code": "1530",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "Beszámítás",
+      "percent": 20,
+      "debit_code": "1530",
+      "credit_code": "1400",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 1 HUF fedezet",
+      "percent": 100,
+      "debit_code": "1900",
+      "credit_code": "1530",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 2 KOR kibocsátás",
+      "percent": 1,
+      "debit_code": "1000",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 3 KOR le",
+      "percent": 1,
+      "debit_code": "1900",
+      "credit_code": "1000",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 4 KOR cél",
+      "percent": 1,
+      "debit_code": "1000",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

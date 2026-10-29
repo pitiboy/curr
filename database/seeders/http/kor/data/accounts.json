@@ -194,8 +194,15 @@
       "name": "Előfizetések és tagsági díjak",
       "code": "4400",
       "description": "Előfizetések és tagsági díjak számla",
-      "categoryType": "equity",
+      "categoryType": "revenue",
       "organizationName": "I/3.7 Bevételi központ"
+    },
+    {
+      "name": "Saját termelésű készletek állományváltozása",
+      "code": "4500",
+      "description": "Saját termelésű készletek állományváltozása",
+      "categoryType": "revenue",
+      "organizationName": "I/4. Termelési Igazgatóság"
     },
     {
       "name": "Anyagköltség",

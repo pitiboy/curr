@@ -1,0 +1,133 @@
+{
+  "name": "Tagi befizetés ingatlan vásárlásra",
+  "debit_account_code": 1520,
+  "credit_account_code": 1101,
+  "steps": [
+    {
+      "description": "Részjegy előírása",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "3000",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Bejövő tagi utalás",
+      "percent": 100,
+      "debit_code": "1100",
+      "credit_code": "1101",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "Stróman (vételár)",
+      "percent": 96.153846,
+      "debit_code": "1001",
+      "credit_code": "1100",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Telek vételár",
+      "percent": 96.153846,
+      "debit_code": "1520",
+      "credit_code": "1001",
+      "currency": "KOR",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 1 HUF fedezet",
+      "percent": 96.153846,
+      "debit_code": "1900",
+      "credit_code": "1520",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 2 KOR kibocsátás",
+      "percent": 0.961538,
+      "debit_code": "1000",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 3 KOR le",
+      "percent": 0.961538,
+      "debit_code": "1900",
+      "credit_code": "1000",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 4 KOR cél",
+      "percent": 0.961538,
+      "debit_code": "1000",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Illeték aktiválása",
+      "percent": 3.846154,
+      "debit_code": "1520",
+      "credit_code": "2300",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés illeték 1",
+      "percent": 3.846154,
+      "debit_code": "1900",
+      "credit_code": "1520",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés illeték 2",
+      "percent": 0.038462,
+      "debit_code": "1000",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés illeték 3",
+      "percent": 0.038462,
+      "debit_code": "1900",
+      "credit_code": "1000",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés illeték 4",
+      "percent": 0.038462,
+      "debit_code": "1000",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Illeték utalása",
+      "percent": 3.846154,
+      "debit_code": "2300",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Utalás"
+    }
+  ]
+}

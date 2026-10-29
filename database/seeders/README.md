@@ -125,8 +125,19 @@ A `database/seeders/http/common/01`–`10` fájlok futnak az `npm run seed:http:
 | ----- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
 | 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`      |
 | 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json` |
+| 11    | `common/11-transaction-workflows.http` (docs; boot seed)                                                | `data/transaction-workflows/*.json` |
 
 Előfeltétel a 09-hez: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
+
+### Transaction-workflow sablonok (kor)
+
+A kilenc ügylet sablonja a `database/seeders/http/kor/data/transaction-workflows/` JSON fájlokban van (a `docs/plans/0002-transaction-workflow-content-type.md` 8. fejezete szerint). Boot-time upsert:
+
+```bash
+TRANSACTION_WORKFLOWS_INSTANCE=kor npm run develop
+```
+
+Insert-only: meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
 
 ## Transaction import (kor)
 

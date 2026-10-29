@@ -1,0 +1,25 @@
+{
+  "name": "Adminisztráció",
+  "debit_account_code": 5440,
+  "credit_account_code": 2000,
+  "steps": [
+    {
+      "description": "Számla",
+      "percent": 100,
+      "debit_code": "5440",
+      "credit_code": "2000",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Utalás",
+      "percent": 100,
+      "debit_code": "2000",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    }
+  ]
+}
