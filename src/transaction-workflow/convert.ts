@@ -1,5 +1,9 @@
-import { MEMBER_ACCOUNT_KINDS } from '../member-accounts';
-
+/**
+ * Convert üzleti logika (Strapi nélkül, tesztelhető).
+ * Match: published sablon fejléc kódok + opcionális pénznem/típus, converted_to_workflow === false.
+ * Expand: step percent → összeg, {1} leírás, 1101/1001 a forrás trx / testvér számlából.
+ * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat).
+ */
 export class TransactionWorkflowError extends Error {
   status: number;
 
@@ -14,9 +18,8 @@ export const TRANSACTION_UID = 'api::transaction.transaction';
 export const WORKFLOW_UID = 'api::transaction-workflow.transaction-workflow';
 export const MEMBER_UID = 'api::member.member';
 
-const MEMBER_CODES = new Set(
-  MEMBER_ACCOUNT_KINDS.map((kind) => kind.code),
-);
+/** Tagi / Homály számlák — ugyanaz a kód-készlet, mint a member-accounts modulban. */
+const MEMBER_CODES = new Set(['1101', '1001']);
 
 export type AccountRef = {
   documentId: string;
@@ -123,7 +126,7 @@ export function expandDescription(
 ): string {
   const pattern = template?.trim() || '{1}';
   if (pattern.includes('{1}')) {
-    return pattern.replaceAll('{1}', sourceDescription?.trim() || '');
+    return pattern.split('{1}').join(sourceDescription?.trim() || '');
   }
   return pattern;
 }

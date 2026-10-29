@@ -1,3 +1,9 @@
+/**
+ * transaction-workflow sablonok idempotens seedje (insert-only).
+ * JSON a database/seeders/http/<instance>/data/transaction-workflows/ alól, vagy kor built-in lista.
+ * Lookup: account code, org név, currency code, transaction-type név → documentId; utána publish.
+ * Boot: TRANSACTION_WORKFLOWS_INSTANCE=kor (src/index.ts bootstrap).
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 

@@ -1,3 +1,6 @@
+/**
+ * convert.ts unit tesztek: match, expand, tagi 1101/1001, ügylet 8/9 minták, 409 több sablon.
+ */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {

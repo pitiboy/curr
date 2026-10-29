@@ -15,7 +15,7 @@
     "strapi": "strapi develop",
     "local": "strapi develop",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test 'src/**/*.test.ts'",
+    "test": "node --experimental-strip-types --test src/*.test.ts src/transaction-workflow/convert.test.ts",
     "format": "prettier --write \"apps/content-backoffice/**/*.{ts,tsx,json,md,css,html}\" \".github/**/*.{yml,yaml}\" \"docs/ci/**/*.md\" \"docs/prd/0002-content-backoffice-v2.md\" \"lefthook.yml\" \"package.json\"",
     "format:check": "prettier --check \"apps/content-backoffice/**/*.{ts,tsx,json,md,css,html}\" \".github/**/*.{yml,yaml}\" \"docs/ci/**/*.md\" \"docs/prd/0002-content-backoffice-v2.md\" \"lefthook.yml\" \"package.json\"",
     "format:check:ci": "npm run format:check",

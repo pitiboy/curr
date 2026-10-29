@@ -1,3 +1,8 @@
+/**
+ * Convert API Strapi réteg: sablonok és tranzakciók betöltése, expand, majd create/publish/delete.
+ * keep_original: storno + step sorok, related_transaction → eredeti; converted_to_workflow jelölés.
+ * keep_original false: eredeti törlése, step lánc; receipt csak copy_receipt stepnél.
+ */
 import {
   MEMBER_UID,
   TRANSACTION_UID,
@@ -12,7 +17,7 @@ import {
   type ExpandedStepRow,
   type SourceTransaction,
   type WorkflowTemplate,
-} from './convert.ts';
+} from './convert';
 
 type DocumentsApi = {
   findMany: (params?: Record<string, unknown>) => Promise<unknown[]>;
@@ -37,7 +42,7 @@ export type ConvertResultItem = {
 };
 
 export type ConvertStrapi = {
-  documents: (uid: string) => DocumentsApi;
+  documents: (uid: string) => unknown;
   db: {
     query: (uid: string) => {
       findOne: (params: Record<string, unknown>) => Promise<unknown | null>;
@@ -45,6 +50,10 @@ export type ConvertStrapi = {
   };
   log: { warn: (message: string) => void };
 };
+
+function documentsApi(strapi: ConvertStrapi, uid: string): DocumentsApi {
+  return strapi.documents(uid) as DocumentsApi;
+}
 
 const workflowPopulate = {
   step: {
@@ -81,7 +90,7 @@ async function loadPublishedWorkflows(
   strapi: ConvertStrapi,
   workflowDocumentId?: string,
 ): Promise<WorkflowTemplate[]> {
-  const api = strapi.documents(WORKFLOW_UID);
+  const api = documentsApi(strapi, WORKFLOW_UID);
   if (workflowDocumentId) {
     const row = await api.findOne({
       documentId: workflowDocumentId,
@@ -101,7 +110,7 @@ async function loadTransactions(
   strapi: ConvertStrapi,
   transactionDocumentId?: string,
 ): Promise<SourceTransaction[]> {
-  const api = strapi.documents(TRANSACTION_UID);
+  const api = documentsApi(strapi, TRANSACTION_UID);
   if (transactionDocumentId) {
     const row = await api.findOne({
       documentId: transactionDocumentId,
@@ -172,7 +181,7 @@ async function createTransactionRow(
   data: Record<string, unknown>,
   published: boolean,
 ): Promise<string> {
-  const api = strapi.documents(TRANSACTION_UID);
+  const api = documentsApi(strapi, TRANSACTION_UID);
   const created = await api.create({
     data,
     ...(published ? {} : { status: 'draft' }),
@@ -187,7 +196,7 @@ async function markConverted(
   strapi: ConvertStrapi,
   documentId: string,
 ): Promise<void> {
-  await strapi.documents(TRANSACTION_UID).update({
+  await documentsApi(strapi, TRANSACTION_UID).update({
     documentId,
     data: { converted_to_workflow: true },
   });
@@ -296,7 +305,7 @@ export async function convertTransactions(
         previousRelated = documentId;
         createdDocumentIds.push(documentId);
       }
-      await strapi.documents(TRANSACTION_UID).delete({
+      await documentsApi(strapi, TRANSACTION_UID).delete({
         documentId: transaction.documentId,
       });
     }

@@ -4,7 +4,10 @@
 
 import { factories } from '@strapi/strapi';
 
-import { convertTransactions } from '../../../transaction-workflow/convert-service';
+import {
+  convertTransactions,
+  type ConvertStrapi,
+} from '../../../transaction-workflow/convert-service';
 import { TransactionWorkflowError } from '../../../transaction-workflow/convert';
 
 export default factories.createCoreController(
@@ -18,7 +21,7 @@ export default factories.createCoreController(
       };
 
       try {
-        const results = await convertTransactions(strapi, {
+        const results = await convertTransactions(strapi as unknown as ConvertStrapi, {
           workflowDocumentId:
             typeof body.workflowDocumentId === 'string'
               ? body.workflowDocumentId.trim()

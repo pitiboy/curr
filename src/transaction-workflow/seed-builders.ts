@@ -1,3 +1,8 @@
+/**
+ * Kor ügylet 1–9 sablon definíciók (docs/plans/0002 §8).
+ * lekotesSteps / forintRevenueSteps: explicit workflow.step sorok (nincs implicit 1900 bontás).
+ * korTransactionWorkflowSeeds(): forrás a JSON exportnak és fallback, ha nincs fájl a seed mappában.
+ */
 export type SeedStep = {
   description: string;
   percent: number;
