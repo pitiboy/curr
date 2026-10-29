@@ -53,10 +53,10 @@ Reports API with only those IDs
 You only need "status" if you are processing the /users or /projects API response. You generally should not include it in the report request.
 
 curl -X POST \
- "https://reports.api.clockify.me/v1/workspaces/6a56be5190be884d3913429d/reports/detailed" \
- -H "X-Api-Key: \_\_\_" \
- -H "Content-Type: application/json" \
- -d '{
+"https://reports.api.clockify.me/v1/workspaces/6a56be5190be884d3913429d/reports/detailed" \
+-H "X-Api-Key: \_\_\_" \
+-H "Content-Type: application/json" \
+-d '{
 "dateRangeStart": "2026-01-01T00:00:00.000Z",
 "dateRangeEnd": "2026-01-31T23:59:59.999Z","detailedFilter": {
 "page": 1,
@@ -126,7 +126,7 @@ To verify the exact schema your Clockify account accepts, the quickest test is t
 Also note: since your date range is January 2026, make sure there are actually time entries in that period; otherwise the report can legitimately return empty results.
 
 -H "Content-Type: application/json" \
- -d '{
+-d '{
 "dateRangeStart": "2026-01-01T00:00:00.000Z",
 "dateRangeEnd": "2026-01-31T23:59:59.999Z",
 "detailedFilter": {
@@ -149,10 +149,10 @@ The second ] does not have a matching opening [.
 Use:
 
 curl -X POST \
- "https://reports.api.clockify.me/v1/workspaces/6a56be5190be884d3913429d/reports/detailed" \
- -H "X-Api-Key: \_\_\_" \
- -H "Content-Type: application/json" \
- -d '{
+"https://reports.api.clockify.me/v1/workspaces/6a56be5190be884d3913429d/reports/detailed" \
+-H "X-Api-Key: \_\_\_" \
+-H "Content-Type: application/json" \
+-d '{
 "dateRangeStart": "2026-01-01T00:00:00.000Z",
 "dateRangeEnd": "2026-01-31T23:59:59.999Z",
 "detailedFilter": {

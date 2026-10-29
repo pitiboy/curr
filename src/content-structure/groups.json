@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "sections": {
+    "collectionTypes": {
+      "groups": [
+        {
+          "parent": null,
+          "name": "Activities daily",
+          "id": "grp_44168546b01b40bbacd8fe97",
+          "children": [
+            {
+              "uid": "api::transaction.transaction",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::receipt.receipt",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::currency-rate.currency-rate",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Configuration",
+          "id": "grp_10773687a67f47e0a6e9c923",
+          "children": [
+            {
+              "uid": "api::static-page.static-page",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::member.member",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::membership.membership",
+              "type": "contentType"
+            },
+            {
+              "uid": "plugin::users-permissions.user",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "System",
+          "id": "grp_3cd0c094ced64caea7ce5364",
+          "children": [
+            {
+              "uid": "api::account.account",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::account-category.account-category",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::currency-category.currency-category",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::currency-type.currency-type",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::membership-type.membership-type",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::organization.organization",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::receipt-type.receipt-type",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::transaction-type.transaction-type",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::transaction-workflow.transaction-workflow",
+              "type": "contentType"
+            }
+          ]
+        }
+      ]
+    },
+    "singleTypes": {
+      "groups": []
+    }
+  }
+}

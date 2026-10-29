@@ -35,7 +35,11 @@ export function parseSeedFile(filePath: string): SeedEntry[] {
   }
 
   return parsed.map((entry, index) => {
-    if (!entry || typeof entry !== 'object' || typeof (entry as { key?: unknown }).key !== 'string') {
+    if (
+      !entry ||
+      typeof entry !== 'object' ||
+      typeof (entry as { key?: unknown }).key !== 'string'
+    ) {
       throw new Error(`Invalid seed row at index ${index} in ${filePath}`);
     }
     const row = entry as {

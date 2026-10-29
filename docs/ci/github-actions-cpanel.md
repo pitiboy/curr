@@ -97,8 +97,8 @@ Két Environment kell (egy environmenten a Required reviewers **minden** jobot m
 
 **Environment variables** (`KOR.fejlesztesek.hu` — másold át ide a korábbi FTP értékeket):
 
-| Név               | Példa                  |
-| ----------------- | ---------------------- |
+| Név              | Példa                  |
+| ---------------- | ---------------------- |
 | `FTP_HOST`       | `kor.fejlesztesek.hu`  |
 | `FTP_USER`       | `node@fejlesztesek.hu` |
 | `FTP_REMOTE_DIR` | `kor-szupatak`         |
@@ -130,15 +130,15 @@ A korábbi `CPANEL_HOST` / `CPANEL_USERNAME` / `CPANEL_API_TOKEN` / `CPANEL_WEBA
 
 ## Automatizált vs manuális
 
-| Lépés                                       | Automatizált                      | Manuális                                                                                                     |
-| ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `npm ci`, typecheck, tesztek, build         | CI / runner                       | —                                                                                                            |
-| FTPS feltöltés                              | Actions                           | Lokális `npm run deploy*`                                                                                    |
-| Passenger restart                           | FTP `tmp/restart.txt`             | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
-| `npm install` lockfile változáskor          | — (gate + summary)                | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
-| Health `/_health`, `/admin`, `/backoffice/` | Script backoff                    | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
-| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu-manual-approval` | Reviewer a GitHubon                                                                                       |
-| Sikeres deploy könyvelés                    | GitHub Deployment (environment)   | —                                                                                                            |
+| Lépés                                       | Automatizált                          | Manuális                                                                                                     |
+| ------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `npm ci`, typecheck, tesztek, build         | CI / runner                           | —                                                                                                            |
+| FTPS feltöltés                              | Actions                               | Lokális `npm run deploy*`                                                                                    |
+| Passenger restart                           | FTP `tmp/restart.txt`                 | cPanel Setup Node.js App **Restart** (aliasok is), ha a restart.txt nem elég                                 |
+| `npm install` lockfile változáskor          | — (gate + summary)                    | **Run NPM Install** + `nodevenv/.../node_modules` törlés ([npm-install.md](../deploy/cpanel/npm-install.md)) |
+| Health `/_health`, `/admin`, `/backoffice/` | Script backoff                        | Ha tartós hiba: env review, Neon, Cloudinary                                                                 |
+| Deploy jóváhagyás manuális lépésnél         | `KOR.fejlesztesek.hu-manual-approval` | Reviewer a GitHubon                                                                                          |
+| Sikeres deploy könyvelés                    | GitHub Deployment (environment)       | —                                                                                                            |
 
 ## Workflow kézi futtatása
 

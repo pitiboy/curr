@@ -140,7 +140,7 @@ npm run seed:http:kor:transactions -- prod
 ```
 
 `transactions-reset.http` deletes only those imported documents, draft and
-published. A row matches when `import_key` starts with `excel:` (including a
+published. A row matches when `entered_key` starts with `excel:` (including a
 stale key from an earlier field list) or `entered_by` still has the file's
 `keyPrefix` (`excel:Pénzmozgások#`). Manual transactions stay. Receipts stay;
 a receipt that pointed at a deleted transaction keeps the receipt and loses
@@ -191,17 +191,17 @@ identifier and uses the linked account. An unknown member or a missing account
 leaves the relation empty, with one log line per reference and the number of
 rows it affects.
 
-### Duplicate protection: `import_key`
+### Duplicate protection: `entered_key`
 
-Every row in the JSON carries an `import_key`, computed from the fields listed
-in the top-level `import_key_fields` array of `transactions.json`:
+Every row in the JSON carries an `entered_key`, computed from the fields listed
+in the top-level `entered_key_fields` array of `transactions.json`:
 
 ```json
-"import_key_fields": ["currency", "date", "amount", "payer", "payee", "project"]
+"entered_key_fields": ["currency", "date", "amount", "payer", "payee", "project"]
 ```
 
 ```
-excel:<first 20 hex of sha256(the values of import_key_fields, in that order)>
+excel:<first 20 hex of sha256(the values of entered_key_fields, in that order)>
 ```
 
 `payee` is the sheet column Kinek fizettük, `project` is Organization/Projekt.
@@ -215,9 +215,9 @@ name must be a column that every row has, otherwise the key script stops with an
 error. Strings are trimmed and whitespace-collapsed, the amount is formatted
 with two decimals. The Excel row number is never part of the key. Rows with the
 same key get `#2`, `#3`... in file order, so both still import (three pairs: rows 81/84, 127/128, 151/152). The seeder looks up each row by
-`import_key`. When that draft exists, it PUTs the current JSON onto it: date,
+`entered_key`. When that draft exists, it PUTs the current JSON onto it: date,
 amount, description, currency, accounts, transaction type, organization,
-`entered_by`, and `import_key`. A relation the JSON no longer resolves is
+`entered_by`, and `entered_key`. A relation the JSON no longer resolves is
 cleared. Receipts and related transactions are not sent. A second run therefore
 updates every matching draft and creates only keys that are not in the database
 yet. The published copy stays as it was; publish the draft again after the
@@ -234,9 +234,9 @@ update.
   amount, payer, payee or project and regenerate the keys, the row imports as a
   _new_ transaction and the old one stays in Strapi. Reset the imported drafts
   before re-running when that old row should go.
-- **Do not change `import_key_fields` once rows are imported** on an
+- **Do not change `entered_key_fields` once rows are imported** on an
   environment. It changes every key, so the next run would import all rows
-  again. If it must change, the existing `import_key` values in that database
+  again. If it must change, the existing `entered_key` values in that database
   have to be rewritten (backfilled) to the new keys first.
 - After changing `transactions.json`, regenerate the keys (the seeder refuses
   rows without a key or with a duplicate key):
@@ -247,16 +247,16 @@ update.
   ```
 
 `entered_by` still holds `excel:Pénzmozgások#<row>`, but only as a readable
-marker. Rows created by the earlier seeder (before `import_key` existed) have
-that marker and an empty `import_key`; the seeder finds them by the marker,
+marker. Rows created by the earlier seeder (before `entered_key` existed) have
+that marker and an empty `entered_key`; the seeder finds them by the marker,
 writes the key, then updates the rest of the draft from the JSON instead of
 creating a duplicate. Run it once after deploying the schema change, before the
 Excel rows are reordered.
 
 In the database, `src/transaction-import-key.ts` creates a partial unique index
-on the draft rows (`transactions_import_key_draft_uq`, Postgres and SQLite) on
+on the draft rows (`transactions_entered_key_draft_uq`, Postgres and SQLite) on
 every boot. Strapi's own `unique: true` is not checked for drafts, and a plain
 unique index would clash with the published copy of the same document. With the
 index, a concurrent second run cannot insert the same key; the seeder finds
 that draft and updates it from the JSON. Manual transactions leave
-`import_key` empty and are not affected.
+`entered_key` empty and are not affected.

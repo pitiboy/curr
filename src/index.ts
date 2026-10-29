@@ -386,7 +386,10 @@ function registerAdminAppConfigRoute(strapi: {
       method: 'GET',
       path: '/admin-app-config',
       handler(ctx: { body: unknown }) {
-        const title = strapi.config.get('admin.appTitle', DEFAULT_ADMIN_APP_TITLE);
+        const title = strapi.config.get(
+          'admin.appTitle',
+          DEFAULT_ADMIN_APP_TITLE,
+        );
         ctx.body = {
           title:
             typeof title === 'string' && title.trim()

@@ -73,7 +73,7 @@ Read the repo before ranking. Do not invent a different domain.
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `organization`                                          | Collective; has accounts, memberships                                                           |
 | `member`                                                | Individual; **oneToOne** `account`; UID `identifier`; unique email                              |
-| `membership` / `membership-type`                        | Member ↔ organization role (tag, bentlakó, szimpatizáns, …)                                    |
+| `membership` / `membership-type`                        | Member ↔ organization role (tag, bentlakó, szimpatizáns, …)                                     |
 | `account` / `account-category`                          | Chart of accounts; **parent/children** tree; org-scoped                                         |
 | `transaction` / `transaction-type`                      | Double-entry: required `amount`, `debit_account`, `credit_account`; **`draftAndPublish`: true** |
 | `receipt`                                               | Linked to transactions; **`draftAndPublish`: true**; media                                      |

@@ -137,7 +137,7 @@
     {
       "name": "Részjegytőke",
       "code": "3000",
-      "description": "Jegyzett tőke számla",
+      "description": "Részjegytőke számla",
       "categoryType": "equity",
       "organizationName": "I/3. Pénzügyi Igazgatóság"
     },

@@ -44,7 +44,7 @@ const source = {
   expenseDebitAccounts: { Anyag: 'Anyagköltség' },
   placeTransactionTypes: { kp: 'Készpénz', 'K&H': 'Utalás' },
   operationTransactionTypes: { Bányászás: 'Bányászás' },
-  import_key_fields: [
+  entered_key_fields: [
     'currency',
     'date',
     'amount',
@@ -177,7 +177,7 @@ describe('buildTransactions', () => {
     assert.equal(built.transactions[0].debit_account, 'Szolgáltatások');
     assert.equal(built.transactions[0].organization, 'I/4.11.1 Birtokkezelés');
     assert.equal(built.transactions[0].transaction_type, 'Készpénz');
-    assert.match(built.transactions[0].import_key, /^excel:[0-9a-f]{20}$/);
+    assert.match(built.transactions[0].entered_key, /^excel:[0-9a-f]{20}$/);
     const again = buildTransactions(
       { ...source, transactions: built.transactions },
       { accountNames: accounts, orgNames: orgs, typeNames: types },
@@ -208,7 +208,7 @@ describe('buildTransactions', () => {
     assert.equal(built.transactions[0].credit_account, 'Bankszámlák');
     assert.equal(built.transactions[0].debit_account, 'saját:péter');
     assert.match(
-      built.transactions[0].import_key,
+      built.transactions[0].entered_key,
       /^excel:e3f5095a5a0c95f8f0cf$/,
     );
   });

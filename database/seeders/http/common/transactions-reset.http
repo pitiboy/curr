@@ -1,10 +1,10 @@
 # Az Excel pénzmozgás-import tranzakcióinak törlése.
 # Csak azokat a dokumentumokat törli (piszkozat és publikált), amelyeket a
 # transactions.http hozott létre:
-#   import_key excel: előtaggal (a fájlban lévő és a korábbi kulcsú sorok is),
+#   entered_key excel: előtaggal (a fájlban lévő és a korábbi kulcsú sorok is),
 #   vagy entered_by = a transactions.json keyPrefix mezője + sorszám
-#     (excel:Pénzmozgások#…), ha még nincs import_key.
-# A kézi tranzakció (üres import_key, e-mail entered_by), a nyugta, a törzsadat
+#     (excel:Pénzmozgások#…), ha még nincs entered_key.
+# A kézi tranzakció (üres entered_key, e-mail entered_by), a nyugta, a törzsadat
 # és a felhasználó megmarad. A nyugta, ami ilyen tranzakcióra mutat, törléskor
 # a mezője kiürül; a nyugta maga megmarad.
 #
@@ -33,7 +33,7 @@
   const importPrefix = "excel:";
 
   function isImported(row) {
-    const key = typeof row.import_key === "string" ? row.import_key : "";
+    const key = typeof row.entered_key === "string" ? row.entered_key : "";
     const entered = typeof row.entered_by === "string" ? row.entered_by : "";
     return key.indexOf(importPrefix) === 0 || entered.indexOf(keyPrefix) === 0;
   }
@@ -53,9 +53,9 @@
 
   function listUrl(status, page) {
     return baseUrl + "/api/transactions?status=" + encodeURIComponent(status) +
-      "&filters[$or][0][import_key][$startsWith]=" + encodeURIComponent(importPrefix) +
+      "&filters[$or][0][entered_key][$startsWith]=" + encodeURIComponent(importPrefix) +
       "&filters[$or][1][entered_by][$startsWith]=" + encodeURIComponent(keyPrefix) +
-      "&fields[0]=import_key&fields[1]=entered_by" +
+      "&fields[0]=entered_key&fields[1]=entered_by" +
       "&pagination[page]=" + page + "&pagination[pageSize]=100";
   }
 
@@ -125,7 +125,7 @@
 
   exports.reset = resetImported();
 }}
-GET {{baseUrl}}/api/transactions?status=draft&filters[import_key][$startsWith]=excel:&fields[0]=import_key&pagination[pageSize]=1
+GET {{baseUrl}}/api/transactions?status=draft&filters[entered_key][$startsWith]=excel:&fields[0]=entered_key&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 X-Reset: {{reset}}
 Accept: application/json
