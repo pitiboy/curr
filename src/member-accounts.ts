@@ -70,7 +70,7 @@ export function missingMemberAccounts(
 ): MemberAccountKind[] {
   return MEMBER_ACCOUNT_KINDS.filter((kind) => {
     if (payloadHasRelationTarget(payload[kind.field])) return false;
-    if (existing && existing[kind.field]) return false;
+    if (existing && payloadHasRelationTarget(existing[kind.field])) return false;
     return true;
   });
 }
