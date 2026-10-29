@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-29T08:57:41.909Z"
+    "x-generation-date": "2026-10-29T09:18:03.306Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -12397,6 +12397,9 @@
                   "example": "string or id"
                 }
               },
+              "converted_to_workflow": {
+                "type": "boolean"
+              },
               "entered_key": {
                 "type": "string"
               },
@@ -12527,6 +12530,9 @@
             "items": {
               "$ref": "#/components/schemas/Receipt"
             }
+          },
+          "converted_to_workflow": {
+            "type": "boolean"
           },
           "entered_key": {
             "type": "string"
@@ -12823,8 +12829,8 @@
           "data": {
             "required": [
               "name",
-              "credit_account",
-              "debit_account",
+              "credit_account_code",
+              "debit_account_code",
               "step"
             ],
             "type": "object",
@@ -12832,27 +12838,11 @@
               "name": {
                 "type": "string"
               },
-              "credit_account": {
-                "oneOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ],
-                "example": "string or id"
+              "credit_account_code": {
+                "type": "integer"
               },
-              "debit_account": {
-                "oneOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ],
-                "example": "string or id"
+              "debit_account_code": {
+                "type": "integer"
               },
               "transaction_type": {
                 "oneOf": [
@@ -12956,8 +12946,8 @@
         "type": "object",
         "required": [
           "name",
-          "credit_account",
-          "debit_account",
+          "credit_account_code",
+          "debit_account_code",
           "step"
         ],
         "properties": {
@@ -12977,11 +12967,11 @@
           "name": {
             "type": "string"
           },
-          "credit_account": {
-            "$ref": "#/components/schemas/Account"
+          "credit_account_code": {
+            "type": "integer"
           },
-          "debit_account": {
-            "$ref": "#/components/schemas/Account"
+          "debit_account_code": {
+            "type": "integer"
           },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType"

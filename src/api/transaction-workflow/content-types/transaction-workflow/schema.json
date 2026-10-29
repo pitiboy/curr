@@ -15,17 +15,17 @@
       "type": "string",
       "required": true
     },
-    "credit_account": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::account.account",
-      "required": true
+    "credit_account_code": {
+      "type": "integer",
+      "required": true,
+      "min": 1000,
+      "max": 9999
     },
-    "debit_account": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::account.account",
-      "required": true
+    "debit_account_code": {
+      "type": "integer",
+      "required": true,
+      "min": 1000,
+      "max": 9999
     },
     "transaction_type": {
       "type": "relation",

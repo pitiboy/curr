@@ -1083,20 +1083,28 @@ export interface ApiTransactionWorkflowTransactionWorkflow
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    credit_account: Schema.Attribute.Relation<
-      'oneToOne',
-      'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    credit_account_code: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 9999;
+          min: 1000;
+        },
+        number
+      >;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::currency-type.currency-type'
     >;
-    debit_account: Schema.Attribute.Relation<
-      'oneToOne',
-      'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    debit_account_code: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 9999;
+          min: 1000;
+        },
+        number
+      >;
     keep_original: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1137,6 +1145,8 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
   };
   attributes: {
     amount: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    converted_to_workflow: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
