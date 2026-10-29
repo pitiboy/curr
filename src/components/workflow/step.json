@@ -1,7 +1,7 @@
 {
   "collectionName": "components_workflow_steps",
   "info": {
-    "displayName": "Step",
+    "displayName": "Step with Related accounts",
     "icon": "bulletList"
   },
   "options": {},

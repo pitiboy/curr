@@ -4,7 +4,7 @@
 **Date:** 2026-10-29  
 **Üzleti modell:** [Ügyletek](../transaction-workflow.md)  
 **Backoffice v1:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md) — a Convert API **v1 utáni**  
-**Séma:** [transaction-workflow](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json), [workflow.step](../../src/components/workflow/step.json), [transaction](../../src/api/transaction/content-types/transaction/schema.json)
+**Séma:** [transaction-workflow](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json), [workflow.step](../../src/components/workflow/step.json) (Related), [workflow.step-member-debit](../../src/components/workflow/step-member-debit.json), [workflow.step-member-credit](../../src/components/workflow/step-member-credit.json), [transaction](../../src/api/transaction/content-types/transaction/schema.json)
 
 Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** automáció, valamint a [transaction-workflow.md](../transaction-workflow.md) **Ügylet 1–9** seedelési utasításai. Fizikai seed JSON / httpyac ebben a planben **nincs**; az implementáló a 8. fejezet tábláiból építi a fájlokat.
 
@@ -14,7 +14,7 @@ Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** a
 
 ### Cél
 
-1. **Katalógus** `api::transaction-workflow.transaction-workflow`: fejléc match mezők + `step` dynamic zone (`workflow.step`).
+1. **Katalógus** `api::transaction-workflow.transaction-workflow`: fejléc match mezők + `step` dynamic zone (`workflow.step` | `workflow.step-member-debit` | `workflow.step-member-credit`).
 2. **Seed** mind a kilenc mintaügyletre a [transaction-workflow.md](../transaction-workflow.md) alapján (lásd [8. Seed utasítások](#8-seed-utasítások-ügylet-1–9)).
 3. **Convert** Strapi route/controller: még nem átalakított `transaction` sorok → sablon szerinti új sorok (`keep_original` storno vagy törlés).
 
@@ -84,25 +84,23 @@ flowchart LR
 | `keep_original` | boolean | nem, default `true` | Lásd 6. |
 | `steps_published` | boolean | nem, default **`true`** | Generált step (+ storno) sorok `published` vs draft; Convert body felülírhatja |
 | `configuration` | json | nem | Fenntartott |
-| `step` | dynamic zone [`workflow.step`] | igen, **min 1** | Sorrend = kifejtés sorrendje |
+| `step` | dynamic zone (három komponens, lásd 3.2) | igen, **min 1** | Sorrend = kifejtés sorrendje |
 
 **Jogosultság (javaslat):** sablon szerkesztés Strapi Admin; Content API `find`/`findOne` `dataentry`+`editor`; create/update/delete Content API-n tilos. Convert endpoint: külön jog (pl. `editor` vagy admin token).
 
-### 3.2 `workflow.step`
+### 3.2 Step komponensek (dynamic zone)
 
-| Mező | Típus | Kötelező |
-| ---- | ----- | -------- |
-| `description` | string, default `{1}` | igen |
-| `percent` | decimal **0–100** (tört OK), default 100 | igen |
-| `debit_account` / `credit_account` | relation → account | igen |
-| `currency_type` | relation → currency-type | igen |
-| `transaction_type` | relation → transaction-type | nem |
-| `organization` | relation → organization | igen |
-| `copy_receipt` | boolean, default `false` | nem | `true` → forrás `receipts` a generált sorra (ha volt) |
+Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`.
 
-Generált összeg: `amount = source.amount * percent / 100` (százalék; tört `percent` megengedett, pl. `3.846154`).
+| Komponens UID | Admin név | Számlák |
+| ---- | ---- | ---- |
+| `workflow.step` | Step with Related accounts | `debit_account` + `credit_account` reláció (**required**) |
+| `workflow.step-member-debit` | Step with Member as Debit | `member_account_code` (`1101`/`1001`) + `credit_account` reláció |
+| `workflow.step-member-credit` | Step with Member as Credit | `member_account_code` (`1101`/`1001`) + `debit_account` reláció |
 
-**`1101` / `1001` számlafeloldás:** a match és a generált sor **nem** a seed fix account relációját használja személyre. A forrás trx `debit_account` / `credit_account` példányát kell venni, ha a step (vagy a fejléc) kódja `1101` vagy `1001`. Így ugyanaz a sablon minden tag saját `1101`/`1001` sorára működik. Ha a step a forráson nem szereplő testvérkódot kér (pl. forrás `1101`, step `1001`), a Convert a forrás tagi számlájából a [member-accounts](../../src/member-accounts.ts) testvér számlát oldja fel — **nem** fix seed documentId-t.
+Generált összeg: `amount = source.amount * percent / 100`.
+
+**Tagi feloldás:** member komponensnél a Convert a forrás trx azonos kódú oldalát (vagy a [member-accounts](../../src/member-accounts.ts) testvért) használja — **nem** seed documentId-t. Fix oldalon a relation `documentId` megy a generált sorra.
 
 **`description` placeholder:** default `{1}` → forrás `description` másolása. Seedben lépésnév szöveg is megengedett.
 
@@ -141,7 +139,7 @@ Minden `step` sorrendben:
 - **státusz:** `steps_published` a sablonról, kivéve ha a Convert request body felülírja (`steps_published?: boolean`)  
 - **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres  
 
-A [lekötés](../transaction-workflow.md#lekötés-blokk) négy könyvelési sora és a [forint bevétel](../transaction-workflow.md#forint-bevétel-korona-nélkül) két sora **külön** `workflow.step` elemek a seedben — nincs implicit kibontás.
+A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora és a [forint bevétel](../transaction-workflow.md#forint-bevétel-korona-nélkül) két sora **külön** `workflow.step` elemek a seedben — nincs implicit kibontás.
 
 ---
 
@@ -196,26 +194,27 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 ### 8.0 Általános szabályok
 
 **Normatív forrás:** [docs/transaction-workflow.md](../transaction-workflow.md) Ügylet 1–9.  
-**Cél CT:** `api::transaction-workflow.transaction-workflow` + `workflow.step`.
+**Cél CT:** `api::transaction-workflow.transaction-workflow` + három step komponens.
 
 1. Egy ügylet = **egy** published sablon rekord (**első PR: mind a 9 ügylet** seedelve). Ahol a percent 0–100 mellett más pénznemű / nagyobb összegű lépés kell (3, 4), **második** sablon is megengedett (lásd 8.3–8.4).  
 2. Fejléc kódok = a doc **egysoros match** T←K párja (fejezetenként rögzítve alább).  
 3. `keep_original: true`, `steps_published: true`, `configuration: null` default a speceknél.  
 4. Opcionális fejléc `currency_type` / `transaction_type`: csak ha a matchot szűkíteni kell (alább jelezve).  
-5. Minden könyvelési kimeneti sor → `__component: "workflow.step"`; `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
-6. Lekötés blokk → **4** step; forint bevétel → **2** step.  
+5. Minden könyvelési kimeneti sor → megfelelő step `__component` (related / member-debit / member-credit); `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
+6. Lekötés blokk → **2** step; forint bevétel → **2** step.  
 7. `percent` ∈ [0, 100], tört OK = `minta_lépés_összeg / minta_forrás_összeg * 100`. KOR lépésnél a minta **korona** összeg a számláló. Seed ≥ 6 tizedes.  
-8. Relation mezők seednél: lookup `account.code` / org név / currency kód / type név. A `1101`/`1001` seed reláció **sablonjelölő** (bármely azonos kódú account); Convert futáskor a forrás trx példányát használja.  
+8. Seed JSON `debit_code`/`credit_code`: ha az egyik tagi (`1101`/`1001`) → member-debit vagy member-credit + `member_account_code`; ha egyik sem → related mindkét account lookup. Org / currency / type név/kód lookup.  
 9. `step.min` = **1** (séma). Ügylet 9 egy steppel seedelhető.
 
-**Szállítás (implementációs fázis, később):**
+**Szállítás:**
 
 | Elem | Utasítás |
 | ---- | -------- |
-| Mappa | `database/seeders/http/kor/data/transaction-workflows/` (pl. `01-member-property-deposit.json` …) |
-| Upsert kulcs | `name` **vagy** (`debit_account_code`,`credit_account_code`, opcionális type/currency) |
+| Mappa | `database/seeders/http/kor/data/transaction-workflows/` |
+| HttpYac | `common/11-transaction-workflows.http` — `npm run seed:http:kor:transaction-workflows:local` |
+| Upsert kulcs | `name` + `debit_account_code` + `credit_account_code` (insert-only) |
 | Előfeltétel | [Számlatükör-rések](../transaction-workflow.md#számlatükör-rések): `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org, stb. |
-| Publish | Seed után `published` állapot |
+| Publish | `POST …?status=published` |
 
 ---
 
@@ -225,28 +224,20 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 **name:** `Tagi befizetés ingatlan vásárlásra`  
 **Match:** `debit_account_code: 1520`, `credit_account_code: 1101`  
 **Fejléc currency/type:** üres (HUF egysoros)  
-**Forrás mintaösszeg:** 2 080 000  
+**Forrás mintaösszeg:** 2 000 000  
 
-Lekötés vételár (4 step) és illeték (4 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`).
+Lekötés vételár (2 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`), majd KOR vissza az eszközre (`1520` ← `1900`).
 
 | # | description | percent (≈) | Tartozik | Követel | Pénznem | Szervezet | Típus |
 | - | ----------- | ----------- | -------- | ------- | ------- | --------- | ----- |
 | 1 | Részjegy előírása | 100 | 1101 tag | 3000 | HUF | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 2 | Bejövő tagi utalás | 100 | 1100 | 1101 tag | HUF | I/3. Pénzügyi Igazgatóság | Utalás |
-| 3 | Stróman (vételár) | 96.153846 | 1001 tag | 1100 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 4 | Telek vételár | 96.153846 | 1520 | 1001 tag | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 5 | Lekötés vételár 1 HUF fedezet | 96.153846 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 6 | Lekötés vételár 2 KOR kibocsátás | 0.961538 | 1000 | 1900 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 7 | Lekötés vételár 3 KOR le | 0.961538 | 1900 | 1000 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 8 | Lekötés vételár 4 KOR cél | 0.961538 | 1000 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 9 | Illeték aktiválása | 3.846154 | 1520 | 2300 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 10 | Lekötés illeték 1 | 3.846154 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 11 | Lekötés illeték 2 | 0.038462 | 1000 | 1900 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 12 | Lekötés illeték 3 | 0.038462 | 1900 | 1000 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 13 | Lekötés illeték 4 | 0.038462 | 1000 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 14 | Illeték utalása | 3.846154 | 2300 | 1100 | HUF | I/4.11.1.1 Lakóterületek | Utalás |
+| 3 | Stróman (vételár) | 100 | 1001 tag | 1100 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 4 | Telek vételár | 100 | 1520 | 1001 tag | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 5 | Lekötés 1 HUF fedezet | 100 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 6 | Lekötés 2 KOR | 1 | 1520 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
-Percent ellenőrzés (HUF lábak): 2 000 000/2 080 000×100; 80 000/2 080 000×100. KOR: 20 000 ill. 800 / 2 080 000×100.
+Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 
 ---
 
@@ -260,10 +251,8 @@ Percent ellenőrzés (HUF lábak): 2 000 000/2 080 000×100; 80 000/2�
 | # | description | percent | Tartozik | Követel | Pénznem | Szervezet | Típus |
 | - | ----------- | ------- | -------- | ------- | ------- | --------- | ----- |
 | 1 | Telek vételár | 100 | 1520 | 1000 | HUF | Lakóterületek | Készpénz |
-| 2–5 | Lekötés vételár (4) | 100 HUF / 1 KOR (8000/800000×100) | lásd lekötés; fedezet 1520 | | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 6 | Illeték aktiválása | 4 | 1520 | 2300 | HUF | Lakóterületek | Átvezetés |
-| 7–10 | Lekötés illeték (4) | 4 HUF / 0.04 KOR (320/800000×100) | lekötés | | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 11 | Illeték utalása | 4 | 2300 | 1100 | HUF | Lakóterületek | Utalás |
+| 2 | Lekötés 1 HUF fedezet | 100 | 1900 | 1520 | HUF | Lakóterületek | Átvezetés |
+| 3 | Lekötés 2 KOR | 1 | 1520 | 1900 | KOR | Lakóterületek | Átvezetés |
 
 ---
 
@@ -322,7 +311,8 @@ Steps:
 | 1 | Foglaló | 20 | 1400 | 1100 | HUF | Lakóterületek | Utalás |
 | 2 | Fennmaradó | 80 | 1530 | 1100 | HUF | Lakóterületek | Utalás |
 | 3 | Beszámítás | 20 | 1530 | 1400 | HUF | Lakóterületek | Átvezetés |
-| 4–7 | Lekötés (4) | 100 HUF / 1 KOR (100000/10000000×100) | lekötés; fedezet 1530 | | | kincstár → Lakóterületek | Átvezetés |
+| 4 | Lekötés 1 HUF fedezet | 100 | 1900 | 1530 | HUF | Lakóterületek | Átvezetés |
+| 5 | Lekötés 2 KOR | 1 | 1530 | 1900 | KOR | Lakóterületek | Átvezetés |
 
 ---
 
@@ -337,7 +327,8 @@ Steps:
 | - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
 | 1 | Aktiválás | 100 | 1500 | 2000 | HUF | Állattenyésztés | Átvezetés |
 | 2 | Utalás | 100 | 2000 | 1100 | HUF | Állattenyésztés | Utalás |
-| 3–6 | Lekötés (4) | 100 HUF / 1 KOR | lekötés; fedezet 1500 | | | kincstár → projekt | Átvezetés |
+| 3 | Lekötés 1 HUF fedezet | 100 | 1900 | 1500 | HUF | Állattenyésztés | Átvezetés |
+| 4 | Lekötés 2 KOR | 1 | 1500 | 1900 | KOR | Állattenyésztés | Átvezetés |
 
 ---
 
@@ -406,7 +397,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | ------ | ------ |
 | `percent.max` | **100** marad; tört percent OK |
 | `step.min` | **1** |
-| Tagi `1101`/`1001` | Match + expand **kód + forrás trx példány** (testvér: member-accounts); nincs fix tag seed |
+| Tagi `1101`/`1001` | Member-debit / member-credit komponens + `member_account_code`; expand **forrás trx / member testvér** |
 | Kimenet státusz | Sablon `steps_published` default `true`; Convert body override |
 | Első PR scope | **Mind a 9 ügylet** seed + Convert API |
 | Receipt | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra |
@@ -427,7 +418,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | **B** | Seed JSON **1–9** (+ szükség szerint 3/4 második HUF sablon) + `1900`/EGG/FRUIT pótlás + publish |
 | **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101) |
 | **D** | Content API jogok |
-| **E** | (Opcionális) Convert UI + `steps_published` override |
+| **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél) |
 
 ### Checklist
 
@@ -444,6 +435,9 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | Útvonal | Szerep |
 | ------- | ------ |
 | [docs/transaction-workflow.md](../transaction-workflow.md) | Üzleti norma + Strapi konverzió |
+| [0003-transaction-workflow-backoffice.md](./0003-transaction-workflow-backoffice.md) | Backoffice Convert gombok (editor + match) |
 | [transaction-workflow/schema.json](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) | Sablon CT |
-| [workflow/step.json](../../src/components/workflow/step.json) | Step komponens |
+| [workflow/step.json](../../src/components/workflow/step.json) | Related accounts step |
+| [workflow/step-member-debit.json](../../src/components/workflow/step-member-debit.json) | Member as Debit |
+| [workflow/step-member-credit.json](../../src/components/workflow/step-member-credit.json) | Member as Credit |
 | [transaction/schema.json](../../src/api/transaction/content-types/transaction/schema.json) | `converted_to_workflow`, `entered_key` |

@@ -1,0 +1,43 @@
+{
+  "name": "Felújítás",
+  "debit_account_code": 1500,
+  "credit_account_code": 2000,
+  "steps": [
+    {
+      "description": "Aktiválás",
+      "percent": 100,
+      "debit_code": "1500",
+      "credit_code": "2000",
+      "currency": "HUF",
+      "organization": "I/4.12.1.2 Állattenyésztés",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Utalás",
+      "percent": 100,
+      "debit_code": "2000",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/4.12.1.2 Állattenyésztés",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "Lekötés 1 HUF fedezet",
+      "percent": 100,
+      "debit_code": "1900",
+      "credit_code": "1500",
+      "currency": "HUF",
+      "organization": "I/4.12.1.2 Állattenyésztés",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Lekötés 2 KOR",
+      "percent": 1,
+      "debit_code": "1500",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/4.12.1.2 Állattenyésztés",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

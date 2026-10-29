@@ -1,0 +1,56 @@
+{
+  "collectionName": "components_workflow_step_member_debits",
+  "info": {
+    "displayName": "Step with Member as Debit",
+    "icon": "user"
+  },
+  "options": {},
+  "attributes": {
+    "description": {
+      "type": "string",
+      "default": "{1}",
+      "required": true
+    },
+    "percent": {
+      "type": "decimal",
+      "required": true,
+      "default": 100,
+      "min": 0,
+      "max": 100
+    },
+    "member_account_code": {
+      "type": "string",
+      "required": true,
+      "maxLength": 10
+    },
+    "credit_account": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::account.account",
+      "required": true
+    },
+    "transaction_type": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::transaction-type.transaction-type"
+    },
+    "currency_type": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::currency-type.currency-type",
+      "required": true
+    },
+    "organization": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::organization.organization",
+      "required": true
+    },
+    "copy_receipt": {
+      "type": "boolean",
+      "required": false,
+      "default": false
+    }
+  },
+  "config": {}
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Tojás keletkezése és eladása",
+  "debit_account_code": 1300,
+  "credit_account_code": 4500,
+  "currency": "EGG",
+  "steps": [
+    {
+      "description": "Keletkezés",
+      "percent": 100,
+      "debit_code": "1300",
+      "credit_code": "4500",
+      "currency": "EGG",
+      "organization": "Tojóól",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Készletcsökkenés",
+      "percent": 100,
+      "debit_code": "5600",
+      "credit_code": "1300",
+      "currency": "EGG",
+      "organization": "Tojóól",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

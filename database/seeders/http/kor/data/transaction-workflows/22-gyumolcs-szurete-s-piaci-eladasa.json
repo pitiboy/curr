@@ -1,0 +1,26 @@
+{
+  "name": "Gyümölcs szürete és piaci eladása",
+  "debit_account_code": 1300,
+  "credit_account_code": 4500,
+  "currency": "FRUIT",
+  "steps": [
+    {
+      "description": "Szüret",
+      "percent": 100,
+      "debit_code": "1300",
+      "credit_code": "4500",
+      "currency": "FRUIT",
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Készletcsökkenés",
+      "percent": 62.5,
+      "debit_code": "5600",
+      "credit_code": "1300",
+      "currency": "FRUIT",
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}
