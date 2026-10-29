@@ -88,7 +88,7 @@
     {
       "name": "KOR Kincstár",
       "code": "1900",
-      "description": "Korona váltás és kibocsátás",
+      "description": "Forint–korona váltás és kibocsátás",
       "categoryType": "asset",
       "organizationName": "I/4. Termelési Igazgatóság"
     },

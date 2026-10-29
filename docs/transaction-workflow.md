@@ -24,11 +24,11 @@ A tartozik a „mire ment”. A követel a „honnan”. A táblák fejlécében
 
 Több lépés azért lánc, mert egy sornak egy tartozikja, egy követelje, egy összege és egy pénzneme van. Két szervezet közötti mozgás két sor: mindkettő a `1900` átvezetőn keresztül, külön `organization` értékkel.
 
-A korona pénznem (`currency-type`, kód `KOR`), önálló főkönyvi számla nélkül. A `1000` Készpénz forintban és koronában is vihet egyenleget, de **koronaegyenleg csak lekötött nyilvántartásokon** maradhat (lásd [Korona és lekötés](#korona-és-lekötés)). Az ól a szervezeti fa egy csomópontja, ugyanúgy, ahogy a seedben a `I/4.12.1.2.1 Roger Milla Kameruni juh nyáj`. Külön hely entitás a [readme](./readme.md) szerint későbbi tétel.
+A korona pénznem (`currency-type`, kód `KOR`), önálló főkönyvi számla nélkül. A `1000` Készpénz forintban és koronában is vihet egyenleget (pl. Homály stróman), de **tartós koronaegyenleg csak lekötött állóeszközön** (`15xx` / `1500`) maradhat (lásd [Korona és lekötés](#korona-és-lekötés)). Az ól a szervezeti fa egy csomópontja, ugyanúgy, ahogy a seedben a `I/4.12.1.2.1 Roger Milla Kameruni juh nyáj`. Külön hely entitás a [readme](./readme.md) szerint későbbi tétel.
 
-A szövetkezeti főkönyvben a **forint** mozog a kincstár pénzeszközein (`1100`, `1000`), a költség- és bevételszámlákon, valamint az eszközökön. A mennyiség (tojás, kiló) koronára váltás nélkül könyvelődik. A pénzmozgás nélküli sor (megítélt követelés, előírás, foglaló beszámítása) közvetlenül könyvelődik. A két pénzeszköz közötti átvezetés (készpénzfelvétel, bányászás) szintén közvetlen forint sor. **Korona kibocsátás és áthelyezés csak lekötéskor** történik: amikor befizetett vagy szabad forintot egy projekthez kötött állóeszközhöz (ingatlan `1510`–`1530`, ingóság `1500` stb.) kötünk, a kincstár a lekötött forintnak megfelelő koronát az eszköz nyilvántartására helyezi — külső fizetés (eladó, NAV, szállító) és közös költség **nem** vált koronát.
+A szövetkezeti főkönyvben a **forint** mozog a kincstár pénzeszközein (`1100`, `1000`), a költség- és bevételszámlákon, valamint az eszközökön. A mennyiség (tojás, kiló) koronára váltás nélkül könyvelődik. A pénzmozgás nélküli sor (megítélt követelés, előírás, foglaló beszámítása) közvetlenül könyvelődik. A két pénzeszköz közötti átvezetés (készpénzfelvétel, bányászás) szintén közvetlen forint sor. **Korona lekötés csak állóeszközhöz** történik: a [lekötés blokk](#lekötés-blokk) HUF fedezettel és egy KOR tükörsorral az eszközre (`15xx` / `1500`) — külső fizetés (eladó, szállító) és közös költség **nem** vált koronát.
 
-A **szabadon felhasználható** forint a kincstárban és a tagi egyenlegekben van; ebből mehet közös és projektköltség forintban. Ez csökkenti a még le nem kötött poolt. Amikor a tag később leköt, az arányos része ennél a kisebb poolból számolódik. A lekötés összege a bizonylat napján érvényes `currency-rate` szerint koronában is könyvelhető a cél nyilvántartásra (a forint eszköz- vagy tőke tétele külön sorban marad).
+A **szabadon felhasználható** forint a kincstárban és a tagi egyenlegekben van; ebből mehet közös és projektköltség forintban. Ez csökkenti a még le nem kötött poolt. Amikor a tag később leköt, az arányos része ennél a kisebb poolból számolódik. A lekötés összege a bizonylat napján érvényes `currency-rate` szerint koronában is könyvelhető az eszközre (a forint fedezet a `1900`-on keresztül).
 
 A minták árfolyama stabil: 1 korona = 100 Ft. Eltérő visszaváltási árfolyamnál a különbözet a `5700` Pénzügyi költségek vagy a `4300` Pénzügyi bevételek.
 
@@ -67,7 +67,7 @@ flowchart LR
   bank -->|"tagi stroman · KOR"| sajat
   sajat -->|"telek vagy ingosag vasarlas · KOR"| eszkoz15
   eszkoz15 -->|"fedezet · HUF"| atv
-  atv -->|"KOR marad az eszkoz projektjen"| eszkoz15
+  atv -->|"lekotes · KOR"| eszkoz15
 ```
 
 ## Honnan jön a pénz
@@ -122,51 +122,43 @@ A kincstár a mintákban az `I/3. Pénzügyi Igazgatóság`: a `1000` és a `110
 
 ## Korona és lekötés
 
-A korona **nem** köztes lépés minden kiadásnál és bevételnél. Csak **lekötéskor** jelenik meg: amikor forintot a tag vagy a szövetkezet egy adott **projekthez kötött állóeszközhöz** (ingatlan, ingóság / tárgyi eszköz) köt, a kincstár (`I/3. Pénzügyi Igazgatóság`) kibocsátja a koronát, és az az eszköz **szervezeti nyilvántartásán** marad. A lekötés forint összege és korona összege a bizonylat napján érvényes `currency-rate` alapján együtt értelmezhető; a korona a nyilvántartás „könyvelt értékének” belső mértékegysége.
+A korona **nem** köztes lépés minden kiadásnál és bevételnél. Csak **lekötéskor** jelenik meg: amikor forintot a tag vagy a szövetkezet egy adott **projekthez kötött állóeszközhöz** (ingatlan, ingóság / tárgyi eszköz) köt, a KOR az eszközszámlán (`15xx` / `1500`) marad. A lekötés forint összege és korona összege a bizonylat napján érvényes `currency-rate` alapján együtt értelmezhető; a korona a lekötött eszköz „könyvelt értékének” belső mértékegysége.
 
 ### Hol lehet koronaegyenleg
 
-Korona (`1000` KOR egyenleg) **csak** olyan szervezeti nyilvántartáson maradhat, amelyhez **projekthez tartozó fix eszköz** (állóeszköz) kötődik — ingatlan vagy ingóság, nem forgóeszköz (készlet, pénzeszköz, követelés).
+Korona **csak** állóeszköz-számlán maradhat — ingatlan vagy ingóság, nem forgóeszköz (készlet, pénzeszköz, követelés). A sor `organization` mezője az eszköz projektje.
 
-| Mit köt le                                                        | Eszközfőkönyvi számla (HUF)        | Szervezeti nyilvántartás (példa a seedben)                                                                            |
+| Mit köt le                                                        | Eszközszámla (HUF + KOR)           | Szervezet (példa a seedben)                                                                                           |
 | ----------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | mezőgazdasági föld, termőterület                                  | `1510` Mezőgazdasági földterületek | `I/4.11.1.2 Termőterületek`, vagy a konkrét termő projekt csomópontja                                                 |
 | lakótelek, belterületi föld                                       | `1520` Belterületi földterületek   | `I/4.11.1.1 Lakóterületek`                                                                                            |
 | lakóépület                                                        | `1530` Lakóépületek                | lakó projekt / lakóterület csomópont                                                                                  |
 | projekt ingóság, beruházás (ól, gép, juhnyáj infrastruktúra stb.) | `1500` Tárgyi eszközök             | a projekt csomópontja, pl. `I/4.12.1.1.1 Szávai Márton gyümölcsfaliget`, `I/4.12.1.2.1 Roger Milla Kameruni juh nyáj` |
-| tagi részjegyhez tartozó lakó rész                                | `1520` vagy `1530`                 | ugyanannak a lakóingatlannak a projekt nyilvántartása                                                                 |
+| tagi részjegyhez tartozó lakó rész                                | `1520` vagy `1530`                 | ugyanannak a lakóingatlannak a projekt szervezete                                                                     |
 
-A birtok fa (`I/4.11.1.x`) és a termelési projekt fa (`I/4.12.x.x.x`) csomópontjai ilyen célnyilvántartások. A készlet (`1300`), a költség- és bevételszámlák, valamint a kincstár pénzeszközei **nem** tartanak tartós KOR egyenleget: a kincstár kibocsát és átvezet, a cél nyilvántartás (az eszköz `organization` mezője szerint) tartja.
+A készlet (`1300`), a költség- és bevételszámlák, valamint a kincstár pénzeszközei **nem** tartanak tartós KOR egyenleget.
 
 ### Lekötés blokk
 
-A lekötés **nem** fizeti ki vele az eladót vagy a szállítót. A külső fizetés külön, tiszta forint sor. A blokk csak azt rögzíti, hogy mennyi érték került koronában a cél nyilvántartásra. A forint fedezet forrása lehet a kincstár pénzeszköze (`1100`, `1000`), vagy — tagi befizetésnél — a már beérkezett forint, amit eszközre (`1510`, `1520`, `1530`) is könyvelünk HUF-ban.
+A lekötés **nem** fizeti ki vele az eladót vagy a szállítót. A külső fizetés külön, tiszta forint sor. A blokk két sor: HUF fedezet az átvezetőre, majd ugyanannyi érték KOR-ban vissza az eszközre. A forint fedezet forrása az eszköz HUF értéke (`1510`, `1520`, `1530`, `1500`).
 
-Pénzeszköz a forint lábon: `1000` Készpénz vagy `1100` Bankszámlák. A korona a `1000`-en jelenik meg, szervezetenként külön sor, mert egy tranzakciónak egy `organization` értéke van.
-
-| Lépés                           | Tartozik ← | Követel                                  | Pénznem | Szervezet                          |
-| ------------------------------- | ---------- | ---------------------------------------- | ------- | ---------------------------------- |
-| 1. Forint fedezet a lekötéshez  | `1900`     | pénzeszköz vagy `15xx` eszköz HUF értéke | HUF     | kincstár, vagy eszköz szervezete   |
-| 2. Korona kibocsátás (kincstár) | `1000`     | `1900`                                   | KOR     | kincstár                           |
-| 3. Korona le a kincstárról      | `1900`     | `1000`                                   | KOR     | kincstár                           |
-| 4. Korona a cél nyilvántartásra | `1000`     | `1900`                                   | KOR     | eszköz projektje (15xx szervezete) |
+| Lépés                  | Tartozik ← | Követel              | Pénznem | Szervezet            |
+| ---------------------- | ---------- | -------------------- | ------- | -------------------- |
+| 1. Forint fedezet      | `1900`     | `15xx` / `1500` HUF  | HUF     | eszköz szervezete    |
+| 2. Korona az eszközre  | `15xx` / `1500` | `1900`          | KOR     | eszköz szervezete    |
 
 ```mermaid
 sequenceDiagram
-  participant Fedezet as Penzeszkoz 1100 vagy 1000, vagy 15xx HUF ertek
+  participant Eszkoz as 15xx vagy 1500
   participant Atv as Atvezeto 1900
-  participant Kincstar as Penztar 1000 KOR kincstar
-  participant Nyilv as Eszkoz projekt nyilvantartas
 
-  Note over Fedezet,Nyilv: KOR csak itt — kifizetes elado/NAV/szallito HUF marad
-  Fedezet->>Atv: 1. HUF fedezet
-  Atv->>Kincstar: 2. KOR kibocsatas, kincstar
-  Kincstar->>Atv: 3. KOR le a kincstarrol
-  Atv->>Nyilv: 4. KOR a nyilvantartasra
-  Note over Nyilv: KOR marad, nincs azonnali visszaváltás
+  Note over Eszkoz,Atv: KOR csak itt — kifizetes elado/szallito HUF marad
+  Eszkoz->>Atv: 1. HUF fedezet
+  Atv->>Eszkoz: 2. KOR az eszkozre
+  Note over Eszkoz: KOR marad, nincs azonnali visszaváltás
 ```
 
-Az [1.](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra), [2.](#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás), [5.](#ügylet-5--ingatlan-szerzése) (szövetkezeti bankos vétel), [6.](#ügylet-6--felújítás) (értéknövelő eszköz) ügylet ezt a négy lépést használja. **Tagi** úton ([1.](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra)) a fedezet forrása az eszköz HUF értéke (pl. `1510` → `1900`), a vétel Homályban KOR (`1001` → `15xx`). **Szövetkezeti** úton a külső kifizetés HUF (`1520` ← `1100` vagy `1000`), a lekötés fedezete az eszköz HUF egyenlege.
+Az [1.](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra), [2.](#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás), [5.](#ügylet-5--ingatlan-szerzése) (szövetkezeti bankos vétel), [6.](#ügylet-6--felújítás) (értéknövelő eszköz) ügylet ezt a két lépést használja. **Tagi** úton ([1.](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra)) a fedezet forrása az eszköz HUF értéke (pl. `1520` → `1900`), a vétel Homályban KOR (`1001` → `15xx`). **Szövetkezeti** úton a külső kifizetés HUF (`1520` ← `1100` vagy `1000`), a lekötés fedezete az eszköz HUF egyenlege.
 
 ### Szabad forint és közös költség
 
@@ -187,7 +179,7 @@ Bevétel és támogatás a pénzeszközre érkezik, a végleges sor közvetlen f
 | 1. Beérkezés    | pénzeszköz | `1900`                 | HUF     | kincstár vagy projekt |
 | 2. Végleges sor | `1900`     | bevétel vagy követelés | HUF     | projekt               |
 
-A [3.](#ügylet-3--tojás-keletkezése-és-eladása), [4.](#ügylet-4--gyümölcs-szürete-és-piaci-eladása) és [7.](#ügylet-7--területalapú-agrár-támogatás) ügylet ezt a két lépést használja (a megítélés sor külön, pénzmozgás nélkül). Opcionálisan a bevétel egy része később külön ügylettel leköthető a projekt nyilvántartására; addig forint marad.
+A [3.](#ügylet-3--tojás-keletkezése-és-eladása), [4.](#ügylet-4--gyümölcs-szürete-és-piaci-eladása) és [7.](#ügylet-7--területalapú-agrár-támogatás) ügylet ezt a két lépést használja (a megítélés sor külön, pénzmozgás nélkül). Opcionálisan a bevétel egy része később külön ügylettel leköthető a projekt állóeszközére; addig forint marad.
 
 ## Minta ügyletek
 
@@ -225,7 +217,7 @@ Minta: `kovács.erika` 2 000 000 Ft részjegy / telek vételár (20 000 korona l
 | 2   | Bejövő tagi utalás | `1100` Bankszámlák                 | `1101` kovács.erika - tagi számla  | 2 000 000          | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
 | 3   | Stróman (vételár)  | `1001` kovács.erika - saját számla | `1100` Bankszámlák                 | 2 000 000          | KOR     | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 4   | Telek vételár      | `1520` Belterületi földterületek   | `1001` kovács.erika - saját számla | 2 000 000          | KOR     | I/4.11.1.1 Lakóterületek  | Átvezetés |
-| 5   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)    | fedezet `1520` HUF érték           | 2 000 000 / 20 000 | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
+| 5   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)    | fedezet `1520` HUF érték           | 2 000 000 / 20 000 | HUF+KOR | I/4.11.1.1 Lakóterületek  | Átvezetés |
 
 ```mermaid
 flowchart LR
@@ -252,26 +244,22 @@ sequenceDiagram
   participant Sajat as 1001 sajat szamla Homaly
   participant Ingatlan as 1520 HUF es KOR
   participant Atv as 1900
-  participant Kt as 1000 KOR kincstar
-  participant Nyilv as Lakoteruletek nyilvantartas
 
   Toke->>Tag: eloiras HUF
   Tag->>Bank: befizetes HUF
   Bank->>Sajat: stroman vetelar KOR
   Sajat->>Ingatlan: vetelar KOR
-  Ingatlan->>Atv: lekotes fedezet vetelar HUF
-  Atv->>Kt: KOR kibocsatas
-  Kt->>Atv: KOR le kincstarrol
-  Atv->>Nyilv: 20 000 KOR marad
+  Ingatlan->>Atv: lekotes fedezet HUF
+  Atv->>Ingatlan: lekotes KOR
 ```
 
-Zárás: `3000` követel 2 000 000 Ft, `1101` és `1100` nulla, `1520` tartozik 2 000 000 Ft HUF, Lakóterületek nyilvántartás 20 000 KOR lekötve.
+Zárás: `3000` követel 2 000 000 Ft, `1101` és `1100` nulla, `1520` tartozik 2 000 000 Ft HUF + 20 000 KOR lekötve.
 
 Seedből hiányzik: `1900`.
 
 ## Ügylet 2 — készpénzes belterületi ingatlan vásárlás
 
-A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ingatlant — tagi részjegy és Homály **nélkül**. A vételár HUF készpénz; utána [lekötés blokk](#lekötés-blokk) a lakóterület nyilvántartására.
+A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ingatlant — tagi részjegy és Homály **nélkül**. A vételár HUF készpénz; utána [lekötés blokk](#lekötés-blokk) a `1520`-ra.
 
 **Egysoros match forrás (v1):** `1520` ← `1000`, összeg a vételár (minta 800 000 HUF). A teljes bontás (lekötés) a sablon `step` listája.
 
@@ -280,24 +268,20 @@ Minta: belterületi telek 800 000 Ft. Számla: `1520`. Szervezet: `I/4.11.1.1 La
 | #   | Lépés              | Tartozik ←                       | Követel         | Összeg          | Pénznem | Szervezet                | Típus     |
 | --- | ------------------ | -------------------------------- | --------------- | --------------- | ------- | ------------------------ | --------- |
 | 1   | Telek vételár      | `1520` Belterületi földterületek | `1000` Készpénz | 800 000         | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
-| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`  | 800 000 / 8 000 | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
+| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`  | 800 000 / 8 000 | HUF+KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
 ```mermaid
 sequenceDiagram
   participant Penztar as 1000 Keszpenz
   participant Telek as 1520 belteruleti fold
   participant Atv as 1900
-  participant Kt as 1000 KOR kincstar
-  participant Nyilv as Lakoteruletek nyilvantartas
 
   Penztar->>Telek: vetelar HUF készpénz az eladonak
-  Telek->>Atv: lekotes fedezet vetelar HUF
-  Atv->>Kt: KOR kibocsatas
-  Kt->>Atv: KOR le kincstarrol
-  Atv->>Nyilv: 8 000 KOR marad
+  Telek->>Atv: lekotes fedezet HUF
+  Atv->>Telek: lekotes KOR
 ```
 
-Zárás: `1520` tartozik 800 000 Ft HUF, Lakóterületek nyilvántartás 8 000 KOR, `1000` csökken 800 000 Ft-tal.
+Zárás: `1520` tartozik 800 000 Ft HUF + 8 000 KOR, `1000` csökken 800 000 Ft-tal.
 
 Seedből hiányzik: `1900`.
 
@@ -428,13 +412,13 @@ sequenceDiagram
   Note over Keszlet: raktaron marad 30 kg
 ```
 
-A `4000` követel, szervezet a gyümölcsfaliget. A `1300` egyenlege ennél a szervezetnél 30 kg. Forint önköltség nincs. A bevétel koronára történő lekötése külön, önkéntes lépés lenne a projekt nyilvántartásán.
+A `4000` követel, szervezet a gyümölcsfaliget. A `1300` egyenlege ennél a szervezetnél 30 kg. Forint önköltség nincs. A bevétel koronára történő lekötése külön, önkéntes lépés lenne a projekt állóeszközén.
 
 Seedből hiányzik: `FRUIT`, `4500`, `1900`.
 
 ## Ügylet 5 — ingatlan szerzése
 
-Telek vagy épület vásárlása foglalóval, majd a fennmaradó vételár bankból. A kifizetések **forintban** mennek (`1400`, `1530` ← `1100`). A vételár forint értékére **lekötés blokk** kerül a lakóingatlan / birtok nyilvántartására (korona a nyilvántartáson marad). A foglaló beszámítása a vételárba pénzmozgás nélküli sor.
+Telek vagy épület vásárlása foglalóval, majd a fennmaradó vételár bankból. A kifizetések **forintban** mennek (`1400`, `1530` ← `1100`). A vételár forint értékére **lekötés blokk** kerül az eszközre (KOR a `1530`-on marad). A foglaló beszámítása a vételárba pénzmozgás nélküli sor.
 
 **Egysoros match forrás (v1):** tipikusan a foglaló `1400` ← `1100`, vagy a seed a teljes vételárhoz igazított fejlécet használ (`1530` ← `1100`, minta 10 000 000 HUF), ha a `percent` 0–100 korlát miatt a foglalóösszeg nem arányosítja a többi lépést — lásd [0002 seed 8.5](./plans/0002-transaction-workflow-content-type.md#85-ügylet-5--ingatlan-szerzése).
 
@@ -447,16 +431,14 @@ Minta: 2 000 000 Ft foglaló, 8 000 000 Ft fennmaradó rész. Összesen 10 000 0
 | Foglaló kifizetés  | `1400` Előlegek                             | `1100`                   | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
 | Fennmaradó vételár | `1530` Lakóépületek                         | `1100`                   | 8 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
 | Beszámítás         | `1530` Lakóépületek                         | `1400` Előlegek          | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Átvezetés |
-| Lekötés blokk      | a [lekötés blokk](#lekötés-blokk) négy sora | fedezet `1530` HUF érték | 10 000 000 / 100 000 | HUF + KOR | kincstár → Lakóterületek | Átvezetés |
+| Lekötés blokk      | a [lekötés blokk](#lekötés-blokk) két sora | fedezet `1530` HUF érték | 10 000 000 / 100 000 | HUF + KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
 ```mermaid
 sequenceDiagram
   participant Bank as Bank 1100
   participant Eloleg as Elolegek 1400
-  participant Haz as Lakoepuletek 1530 HUF
+  participant Haz as Lakoepuletek 1530
   participant Atv as Atvezeto 1900
-  participant Kt as Penztar 1000 KOR kincstar
-  participant Nyilv as Lakoteruletek nyilvantartas
   participant Elado as Elado
 
   Note over Bank,Elado: elado mindig HUF
@@ -465,57 +447,51 @@ sequenceDiagram
   Bank->>Haz: fennmarado vetelar, 8 000 000 HUF
   Bank-->>Elado: utalas HUF
   Eloleg->>Haz: beszamitas, 2 000 000 HUF
-  Haz->>Atv: 1. lekotes fedezet HUF az eszkozbol
-  Atv->>Kt: 2. KOR kibocsatas
-  Kt->>Atv: 3. KOR le a kincstarrol
-  Atv->>Nyilv: 4. 100 000 KOR marad a nyilvantartason
+  Haz->>Atv: 1. lekotes fedezet HUF
+  Atv->>Haz: 2. lekotes KOR
 ```
 
-A `1530` egyenlege 10 000 000 Ft HUF-ban. A Lakóterületek nyilvántartásán 100 000 KOR marad. Az `1400` nullázódik. Hitelből vett ingatlannál a fennmaradó rész követelje a `2200` Hosszú lejáratú kötelezettségek lenne. Ez az ügylet bankos vétel.
+A `1530` egyenlege 10 000 000 Ft HUF + 100 000 KOR. Az `1400` nullázódik. Hitelből vett ingatlannál a fennmaradó rész követelje a `2200` Hosszú lejáratú kötelezettségek lenne. Ez az ügylet bankos vétel.
 
 Seedből hiányzik: `1900`.
 
 ## Ügylet 6 — felújítás
 
-Értéknövelő felújítás: a kivitelezés az épület értékébe kerül. A szállító **forintban** kap utalást. Az értéknövelés összege **lekötés blokk** a projekt vagy lakóingatlan nyilvántartására (korona marad). Karbantartásnál csak forint költség sor, lekötés nélkül.
+Értéknövelő felújítás: a kivitelezés az épület értékébe kerül. A szállító **forintban** kap utalást. Az értéknövelés összege **lekötés blokk** az eszközre (KOR a `1500`-on / `1530`-on marad). Karbantartásnál csak forint költség sor, lekötés nélkül.
 
 **Egysoros match forrás (v1):** az aktiválás sora `1500` ← `2000` (minta 1 500 000 HUF). Az utalás és a lekötés a sablon `step` listája.
 
-Minta: 1 500 000 Ft (15 000 korona lekötés, 1 korona = 100 Ft). Szervezet: `I/4.12.1.2 Állattenyésztés`, egy ól felújítása. Pénzeszköz: `1100`. Lakóháznál a tartozik a `1530` Lakóépületek, a lekötés célja a lakó projekt nyilvántartása.
+Minta: 1 500 000 Ft (15 000 korona lekötés, 1 korona = 100 Ft). Szervezet: `I/4.12.1.2 Állattenyésztés`, egy ól felújítása. Pénzeszköz: `1100`. Lakóháznál a tartozik a `1530` Lakóépületek.
 
 | Lépés         | Tartozik ←                           | Követel                     | Összeg             | Pénznem | Szervezet                  | Típus     |
 | ------------- | ------------------------------------ | --------------------------- | ------------------ | ------- | -------------------------- | --------- |
 | Aktiválás     | `1500` Tárgyi eszközök               | `2000` Szállítói tartozások | 1 500 000          | HUF     | I/4.12.1.2 Állattenyésztés | Átvezetés |
 | Utalás        | `2000` Szállítói tartozások          | `1100` Bankszámlák          | 1 500 000          | HUF     | I/4.12.1.2 Állattenyésztés | Utalás    |
-| Lekötés blokk | lásd [lekötés blokk](#lekötés-blokk) | fedezet `1500` HUF érték    | 1 500 000 / 15 000 | HUF+KOR | kincstár → projekt         | Átvezetés |
+| Lekötés blokk | lásd [lekötés blokk](#lekötés-blokk) | fedezet `1500` HUF érték    | 1 500 000 / 15 000 | HUF+KOR | I/4.12.1.2 Állattenyésztés | Átvezetés |
 
 ```mermaid
 sequenceDiagram
   participant Bank as Bank 1100
   participant Szallito as Szallito 2000
-  participant Eszkoz as Targyi eszkozok 1500 HUF
+  participant Eszkoz as Targyi eszkozok 1500
   participant Atv as Atvezeto 1900
-  participant Kt as Penztar 1000 KOR kincstar
-  participant Projekt as Projekt nyilvantartas
 
   Szallito->>Eszkoz: aktivalas HUF
   Bank->>Szallito: utalas HUF
   Eszkoz->>Atv: 1. lekotes fedezet HUF
-  Atv->>Kt: 2. KOR kibocsatas
-  Kt->>Atv: 3. KOR le a kincstarrol
-  Atv->>Projekt: 4. 15 000 KOR marad
+  Atv->>Eszkoz: 2. lekotes KOR
   Note over Bank,Szallito: karbantartas 5460 HUF nelkul lekotes blokk
 ```
 
-Zárás után a `1500` 1 500 000 Ft-tal nő, a `2000` nulla, a bank csökken, a projekt nyilvántartásán 15 000 KOR. A `5300` Értékcsökkenés későbbi, időszakos sor.
+Zárás után a `1500` 1 500 000 Ft HUF + 15 000 KOR-ral nő, a `2000` nulla, a bank csökken. A `5300` Értékcsökkenés későbbi, időszakos sor.
 
-Karbantartásnál: `5460` ← `1100` vagy tagi `1101`, lekötés nélkül. Ha a javítás beépül az ingatlanba és értéket növel, aktiválás HUF-ban és lekötés blokk a lakóingatlan nyilvántartására.
+Karbantartásnál: `5460` ← `1100` vagy tagi `1101`, lekötés nélkül. Ha a javítás beépül az ingatlanba és értéket növel, aktiválás HUF-ban és lekötés blokk az eszközre.
 
 Seedből hiányzik: `1900`.
 
 ## Ügylet 7 — területalapú agrár támogatás
 
-Működési, területalapú támogatás egy támogatott földterületre. A megítéléskor keletkezik az egyéb bevétel és a követelés. A kincstári jóváírás a bankra érkezik **forintban**, a [forint bevétel](#forint-bevétel-korona-nélkül) lépésein, és a követelést zárja. A `4200` a jóváíráskor nem ismétlődik. Értékesítés nincs, a `4000` kimarad. A támogatás összegének birtok nyilvántartásra történő lekötése külön, önkéntes ügylet.
+Működési, területalapú támogatás egy támogatott földterületre. A megítéléskor keletkezik az egyéb bevétel és a követelés. A kincstári jóváírás a bankra érkezik **forintban**, a [forint bevétel](#forint-bevétel-korona-nélkül) lépésein, és a követelést zárja. A `4200` a jóváíráskor nem ismétlődik. Értékesítés nincs, a `4000` kimarad. A támogatás összegének termőföld eszközre történő lekötése külön, önkéntes ügylet.
 
 **Egysoros match forrás (v1):** a megítélés sora `1200` ← `4200` (minta 400 000 HUF). A kincstári jóváírás / követelés zárása a sablon `step` listája.
 
@@ -551,7 +527,7 @@ Zárás:
 | `1200` Követelések     | 0                   |
 | `4200` Egyéb bevételek | 400 000 Ft követel  |
 
-A bank 400 000 Ft-tal nő, a `4200` követel egyenlege 400 000 Ft, a `1200` nulla. Korona csak külön lekötés ügylettel kerülhet a Termőterületek birtok nyilvántartására.
+A bank 400 000 Ft-tal nő, a `4200` követel egyenlege 400 000 Ft, a `1200` nulla. Korona csak külön lekötés ügylettel kerülhet a `1510`-re.
 
 Ha a támogatás előzetes megítélés nélkül érkezik, a megítélés sora elmarad, és a záró sor követelje közvetlenül a `4200`: `1900` ← `4200`. A bank és a `4200` egyenlege ugyanaz.
 
@@ -672,7 +648,7 @@ Step komponensek:
 
 Közös: `description` (default `{1}`), `percent` (0–100), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
 
-A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad: mind a négy (ill. két) könyvelési sor külön step a dynamic zone-ban (nincs implicit `1900` kibontás).
+A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad: mindkét könyvelési sor külön step a dynamic zone-ban (nincs implicit `1900` kibontás).
 
 ### Konverzió
 

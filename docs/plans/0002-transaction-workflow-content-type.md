@@ -139,7 +139,7 @@ Minden `step` sorrendben:
 - **státusz:** `steps_published` a sablonról, kivéve ha a Convert request body felülírja (`steps_published?: boolean`)  
 - **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres  
 
-A [lekötés](../transaction-workflow.md#lekötés-blokk) négy könyvelési sora és a [forint bevétel](../transaction-workflow.md#forint-bevétel-korona-nélkül) két sora **külön** `workflow.step` elemek a seedben — nincs implicit kibontás.
+A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora és a [forint bevétel](../transaction-workflow.md#forint-bevétel-korona-nélkül) két sora **külön** `workflow.step` elemek a seedben — nincs implicit kibontás.
 
 ---
 
@@ -201,7 +201,7 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 3. `keep_original: true`, `steps_published: true`, `configuration: null` default a speceknél.  
 4. Opcionális fejléc `currency_type` / `transaction_type`: csak ha a matchot szűkíteni kell (alább jelezve).  
 5. Minden könyvelési kimeneti sor → megfelelő step `__component` (related / member-debit / member-credit); `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
-6. Lekötés blokk → **4** step; forint bevétel → **2** step.  
+6. Lekötés blokk → **2** step; forint bevétel → **2** step.  
 7. `percent` ∈ [0, 100], tört OK = `minta_lépés_összeg / minta_forrás_összeg * 100`. KOR lépésnél a minta **korona** összeg a számláló. Seed ≥ 6 tizedes.  
 8. Seed JSON `debit_code`/`credit_code`: ha az egyik tagi (`1101`/`1001`) → member-debit vagy member-credit + `member_account_code`; ha egyik sem → related mindkét account lookup. Org / currency / type név/kód lookup.  
 9. `step.min` = **1** (séma). Ügylet 9 egy steppel seedelhető.
@@ -226,7 +226,7 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 **Fejléc currency/type:** üres (HUF egysoros)  
 **Forrás mintaösszeg:** 2 000 000  
 
-Lekötés vételár (4 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`).
+Lekötés vételár (2 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`), majd KOR vissza az eszközre (`1520` ← `1900`).
 
 | # | description | percent (≈) | Tartozik | Követel | Pénznem | Szervezet | Típus |
 | - | ----------- | ----------- | -------- | ------- | ------- | --------- | ----- |
@@ -234,10 +234,8 @@ Lekötés vételár (4 step) a [lekötés blokk](../transaction-workflow.md#lek�
 | 2 | Bejövő tagi utalás | 100 | 1100 | 1101 tag | HUF | I/3. Pénzügyi Igazgatóság | Utalás |
 | 3 | Stróman (vételár) | 100 | 1001 tag | 1100 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 4 | Telek vételár | 100 | 1520 | 1001 tag | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 5 | Lekötés vételár 1 HUF fedezet | 100 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 6 | Lekötés vételár 2 KOR kibocsátás | 1 | 1000 | 1900 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 7 | Lekötés vételár 3 KOR le | 1 | 1900 | 1000 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 8 | Lekötés vételár 4 KOR cél | 1 | 1000 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 5 | Lekötés 1 HUF fedezet | 100 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 6 | Lekötés 2 KOR | 1 | 1520 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
 Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 
@@ -253,7 +251,8 @@ Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 | # | description | percent | Tartozik | Követel | Pénznem | Szervezet | Típus |
 | - | ----------- | ------- | -------- | ------- | ------- | --------- | ----- |
 | 1 | Telek vételár | 100 | 1520 | 1000 | HUF | Lakóterületek | Készpénz |
-| 2–5 | Lekötés vételár (4) | 100 HUF / 1 KOR (8000/800000×100) | lásd lekötés; fedezet 1520 | | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
+| 2 | Lekötés 1 HUF fedezet | 100 | 1900 | 1520 | HUF | Lakóterületek | Átvezetés |
+| 3 | Lekötés 2 KOR | 1 | 1520 | 1900 | KOR | Lakóterületek | Átvezetés |
 
 ---
 
@@ -312,7 +311,8 @@ Steps:
 | 1 | Foglaló | 20 | 1400 | 1100 | HUF | Lakóterületek | Utalás |
 | 2 | Fennmaradó | 80 | 1530 | 1100 | HUF | Lakóterületek | Utalás |
 | 3 | Beszámítás | 20 | 1530 | 1400 | HUF | Lakóterületek | Átvezetés |
-| 4–7 | Lekötés (4) | 100 HUF / 1 KOR (100000/10000000×100) | lekötés; fedezet 1530 | | | kincstár → Lakóterületek | Átvezetés |
+| 4 | Lekötés 1 HUF fedezet | 100 | 1900 | 1530 | HUF | Lakóterületek | Átvezetés |
+| 5 | Lekötés 2 KOR | 1 | 1530 | 1900 | KOR | Lakóterületek | Átvezetés |
 
 ---
 
@@ -327,7 +327,8 @@ Steps:
 | - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
 | 1 | Aktiválás | 100 | 1500 | 2000 | HUF | Állattenyésztés | Átvezetés |
 | 2 | Utalás | 100 | 2000 | 1100 | HUF | Állattenyésztés | Utalás |
-| 3–6 | Lekötés (4) | 100 HUF / 1 KOR | lekötés; fedezet 1500 | | | kincstár → projekt | Átvezetés |
+| 3 | Lekötés 1 HUF fedezet | 100 | 1900 | 1500 | HUF | Állattenyésztés | Átvezetés |
+| 4 | Lekötés 2 KOR | 1 | 1500 | 1900 | KOR | Állattenyésztés | Átvezetés |
 
 ---
 
