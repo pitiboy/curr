@@ -79,11 +79,7 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
-      "mappedBy": "organization",
-      "metadatas": {
-        "label": "Tranzakciók",
-        "description": "A szervezethez tartozó tranzakciók"
-      }
+      "mappedBy": "organization"
     }
   }
 }

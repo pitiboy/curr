@@ -102,17 +102,17 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::receipt.receipt",
-      "mappedBy": "transaction",
       "metadatas": {
         "label": "Bizonylatok",
         "description": "A tranzakcióhoz tartozó bizonylatok"
-      }
+      },
+      "mappedBy": "transaction"
     },
-    "import_key": {
+    "entered_key": {
       "type": "string",
-      "unique": true,
+      "maxLength": 64,
       "required": false,
-      "maxLength": 64
+      "unique": true
     },
     "entered_by": {
       "type": "string",

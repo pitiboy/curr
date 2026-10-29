@@ -1067,6 +1067,63 @@ export interface ApiTransactionTypeTransactionType
   };
 }
 
+export interface ApiTransactionWorkflowTransactionWorkflow
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'transaction_workflows';
+  info: {
+    displayName: 'Transaction-workflow';
+    pluralName: 'transaction-workflows';
+    singularName: 'transaction-workflow';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    configuration: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    credit_account: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::account.account'
+    > &
+      Schema.Attribute.Required;
+    currency_type: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::currency-type.currency-type'
+    >;
+    debit_account: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::account.account'
+    > &
+      Schema.Attribute.Required;
+    keep_original: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaction-workflow.transaction-workflow'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    step: Schema.Attribute.DynamicZone<['workflow.step']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 2;
+        },
+        number
+      >;
+    transaction_type: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::transaction-type.transaction-type'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
   collectionName: 'transactions';
   info: {
@@ -1101,7 +1158,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required;
     description: Schema.Attribute.Text & Schema.Attribute.Required;
     entered_by: Schema.Attribute.String;
-    import_key: Schema.Attribute.String &
+    entered_key: Schema.Attribute.String &
       Schema.Attribute.Unique &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 64;
@@ -1662,6 +1719,7 @@ declare module '@strapi/strapi' {
       'api::receipt.receipt': ApiReceiptReceipt;
       'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
+      'api::transaction-workflow.transaction-workflow': ApiTransactionWorkflowTransactionWorkflow;
       'api::transaction.transaction': ApiTransactionTransaction;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
