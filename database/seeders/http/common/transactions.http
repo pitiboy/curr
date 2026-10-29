@@ -45,10 +45,10 @@
 #                       <!-- Művelet: … -->
 #                       <!-- Hely: … -->
 #                       <!-- /excel -->
-#   import_key      = a sor import_key mezője, ez a természetes kulcs (egyedi)
+#   entered_key      = a sor entered_key mezője, ez a természetes kulcs (egyedi)
 #   entered_by      = keyPrefix + row, csak olvasható jelölés
 #
-# import_key: excel:<sha256 20 hex> a JSON import_key_fields listájában lévő
+# entered_key: excel:<sha256 20 hex> a JSON entered_key_fields listájában lévő
 # mezőkből (most: pénznem, dátum, összeg, forrás, jogosult, projekt), azonos
 # kulcsnál #2, #3. A sorszám nincs benne, így az Excel sorrendje szabadon
 # változhat; ha a hat mező valamelyike változik, új kulcsot kap, és új
@@ -67,13 +67,13 @@
 # Ha a dataDir-ben nincs transactions.json, nem csinál semmit.
 # Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.
-# Ha az import_key már létezik, a seeder PUT-tal felülírja a piszkozatot a
+# Ha az entered_key már létezik, a seeder PUT-tal felülírja a piszkozatot a
 # JSON aktuális mezőivel (dátum, összeg, leírás, pénznem, számlák, típus,
-# szervezet, entered_by, import_key). A fel nem oldott reláció nullára áll,
+# szervezet, entered_by, entered_key). A fel nem oldott reláció nullára áll,
 # a régi kapcsolat törlődik. A bizonylat és a kapcsolódó tranzakció kimarad.
 # A publikált példány nem változik; a javított piszkozatot újra kell publikálni.
-# Az import_key előtti futásból maradt sorokat (entered_by = keyPrefix + row,
-# import_key üres) a seeder megtalálja, beírja a kulcsukat, majd ugyanígy
+# Az entered_key előtti futásból maradt sorokat (entered_by = keyPrefix + row,
+# entered_key üres) a seeder megtalálja, beírja a kulcsukat, majd ugyanígy
 # frissíti, nem duplikál.
 # Az adatbázisban részleges unique index véd (src/transaction-import-key.ts),
 # így párhuzamos futásnál a második POST elbukik; a seeder megkeresi a sort
@@ -122,13 +122,13 @@
     const items = source.transactions || [];
     const seenKeys = new Set();
     items.forEach((item) => {
-      if (!item.import_key) {
-        throw new Error("row " + item.row + " has no import_key, run: npm run seed:kor:transactions:keys");
+      if (!item.entered_key) {
+        throw new Error("row " + item.row + " has no entered_key, run: npm run seed:kor:transactions:keys");
       }
-      if (seenKeys.has(item.import_key)) {
-        throw new Error("duplicate import_key " + item.import_key + " (row " + item.row + ")");
+      if (seenKeys.has(item.entered_key)) {
+        throw new Error("duplicate entered_key " + item.entered_key + " (row " + item.row + ")");
       }
-      seenKeys.add(item.import_key);
+      seenKeys.add(item.entered_key);
     });
 
     // tag:<identifier> -> member.account (1101), saját:<identifier> -> member.private_account (1001)
@@ -159,7 +159,7 @@
         pick(source.partyAccounts, item.payee));
       if (debit && debit === credit) debit = null;
       return {
-        key: item.import_key,
+        key: item.entered_key,
         legacyKey: source.keyPrefix + item.row,
         date: item.date,
         amount: item.amount,
@@ -210,7 +210,7 @@
         description: item.description,
         currency_type: maps.currencyId,
         entered_by: item.legacyKey,
-        import_key: item.key,
+        entered_key: item.key,
       };
       const relations = {
         credit_account: (item.creditAccount && maps.accountIds[item.creditAccount]) || null,
@@ -376,13 +376,13 @@ Accept: application/json
 ###
 # @name lookup-transaction
 # @loop for item of trxRows
-# Matches by import_key. A row imported before import_key existed is found by
-# its legacy entered_by marker (no import_key yet) and gets backfilled below.
+# Matches by entered_key. A row imported before entered_key existed is found by
+# its legacy entered_by marker (no entered_key yet) and gets backfilled below.
 {{
   exports.encodedKey = encodeURIComponent(item.key);
   exports.encodedLegacy = encodeURIComponent(item.legacyKey);
 }}
-GET {{baseUrl}}/api/transactions?status=draft&filters[$or][0][import_key][$eq]={{encodedKey}}&filters[$or][1][entered_by][$eq]={{encodedLegacy}}&fields[0]=import_key&fields[1]=entered_by&pagination[pageSize]=10
+GET {{baseUrl}}/api/transactions?status=draft&filters[$or][0][entered_key][$eq]={{encodedKey}}&filters[$or][1][entered_by][$eq]={{encodedLegacy}}&fields[0]=entered_key&fields[1]=entered_by&pagination[pageSize]=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -397,8 +397,8 @@ Accept: application/json
     console.error("lookup failed: " + item.key, response.statusCode, response.body);
   } else {
     const found = (parsed && parsed.data) || [];
-    const same = found.find((entry) => entry.import_key === item.key);
-    const legacy = found.filter((entry) => !entry.import_key && entry.entered_by === item.legacyKey);
+    const same = found.find((entry) => entry.entered_key === item.key);
+    const legacy = found.filter((entry) => !entry.entered_key && entry.entered_by === item.legacyKey);
     if (same) {
       trxIds[item.key] = same.documentId;
       exports.trxIds = trxIds;
@@ -415,16 +415,16 @@ Accept: application/json
 }}
 
 ###
-# @name backfill-import-key
+# @name backfill-entered-key
 # @loop for item of trxRows
-# Sets import_key on rows the previous seeder created. status=draft keeps the
+# Sets entered_key on rows the previous seeder created. status=draft keeps the
 # draft validation (incomplete relations are allowed, nothing is published).
 {{
   if (!trxBackfill[item.key] || trxIds[item.key] || trxFailed[item.key]) {
     exports.$cancel = true;
   } else {
     exports.backfillId = trxBackfill[item.key];
-    exports.trxPayload = JSON.stringify({ data: { import_key: item.key } });
+    exports.trxPayload = JSON.stringify({ data: { entered_key: item.key } });
   }
 }}
 PUT {{baseUrl}}/api/transactions/{{backfillId}}?status=draft
@@ -442,14 +442,14 @@ Content-Type: application/json
   } else {
     trxIds[item.key] = trxBackfill[item.key];
     exports.trxIds = trxIds;
-    console.info("backfilled import_key: " + item.legacyKey + " -> " + item.key);
+    console.info("backfilled entered_key: " + item.legacyKey + " -> " + item.key);
   }
 }}
 
 ###
 # @name update-transaction
 # @loop for item of trxRows
-# Rewrites the draft that already has this import_key. Receipts stay.
+# Rewrites the draft that already has this entered_key. Receipts stay.
 {{
   const currencyId = trxCurrencyIds[trxCurrencyCode];
   if (!trxIds[item.key] || trxFailed[item.key]) {
@@ -545,7 +545,7 @@ Content-Type: application/json
     exports.encodedKey = encodeURIComponent(item.key);
   }
 }}
-GET {{baseUrl}}/api/transactions?status=draft&filters[import_key][$eq]={{encodedKey}}&fields[0]=import_key&pagination[pageSize]=1
+GET {{baseUrl}}/api/transactions?status=draft&filters[entered_key][$eq]={{encodedKey}}&fields[0]=entered_key&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
 

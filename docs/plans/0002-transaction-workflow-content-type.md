@@ -299,7 +299,7 @@ Minden generált sor:
 - `amount`, `currency_type`, `debit_account`, `credit_account`, `organization`, `transaction_type`
 - `description` ← sablon + ügylet leírás
 - `related_transaction` ← lánc (lásd 6. fejezet)
-- `import_key` opcionális: `{workflow_key}:{uuid}:{step_index}` idempotenciához
+- `entered_key` opcionális: `{workflow_key}:{uuid}:{step_index}` idempotenciához
 
 ---
 
@@ -537,7 +537,7 @@ Javasolt mappa (adatforrás, bootstrap olvassa): `database/seeders/http/kor/data
 ### 9.3 Nyitott kérdések
 
 - Bulk publish egy `related_transaction` láncra egy kattintással?
-- `import_key` generálás expand-nél kötelező-e az újraküldés ellen?
+- `entered_key` generálás expand-nél kötelező-e az újraküldés ellen?
 - Ügylet 7: három külön `tw.line` vs. `tw.bevetel-forint` 1200 zárással — seednél választani.
 - Admin-only sablon szerkesztés vs. `editor` is módosíthatja?
 

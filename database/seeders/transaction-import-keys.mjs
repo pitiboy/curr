@@ -8,7 +8,7 @@
 //   credit_account, debit_account  — chart account name, or tag:<id> / saját:<id>
 //   organization                    — an organizations.json name
 //   transaction_type                — when operation or place maps to one
-//   import_key                      — excel:<20 hex of sha256(import_key_fields)>
+//   entered_key                      — excel:<20 hex of sha256(entered_key_fields)>
 //
 // Account labels come from the sheet columns credit_Account and Debit_account.
 // A label that is a chart name is kept. "Név - Tagi számla" / "Név - Saját számla"
@@ -21,11 +21,11 @@
 // projectOrganizations applies (Zöld Élet Program → the main organization).
 // operationTransactionTypes wins over placeTransactionTypes (Bányászás).
 //
-// import_key_fields is a top-level array in the JSON. `currency` means the
+// entered_key_fields is a top-level array in the JSON. `currency` means the
 // row's currency, or the file's currencyCode. Identical keys get #2, #3… in
 // file order. The Excel row number is not part of the key.
 // Negative Excel amounts are stored as |amount|; követel/tartozik labels stay as in the sheet.
-// import_key uses the stored (positive) amount; regen when amount or other key fields change.
+// entered_key uses the stored (positive) amount; regen when amount or other key fields change.
 // --check recomputes keys and booking and exits 1 if the file is stale.
 // --xlsx reads the workbook and replaces the rows; with --check it only compares.
 import { createHash } from 'node:crypto';
@@ -66,7 +66,7 @@ const COL = {
 
 const ROW_FIELDS = [
   'row',
-  'import_key',
+  'entered_key',
   'date',
   'payer',
   'payee',
@@ -114,34 +114,34 @@ function normalize(field, value) {
   return fold(value);
 }
 
-/** Validates import_key_fields against the rows; throws with a clear message. */
+/** Validates entered_key_fields against the rows; throws with a clear message. */
 export function keyFields(source) {
-  const fields = source.import_key_fields;
+  const fields = source.entered_key_fields;
   if (!Array.isArray(fields) || fields.length === 0) {
-    throw new Error('import_key_fields is missing or empty in transactions.json');
+    throw new Error('entered_key_fields is missing or empty in transactions.json');
   }
   const rows = source.transactions || [];
   const seen = new Set();
   for (const field of fields) {
     if (typeof field !== 'string' || !field.trim()) {
-      throw new Error(`import_key_fields contains an invalid name: ${JSON.stringify(field)}`);
+      throw new Error(`entered_key_fields contains an invalid name: ${JSON.stringify(field)}`);
     }
-    if (seen.has(field)) throw new Error(`import_key_fields lists "${field}" twice`);
+    if (seen.has(field)) throw new Error(`entered_key_fields lists "${field}" twice`);
     seen.add(field);
-    if (field === 'import_key' || field === 'row') {
-      throw new Error(`import_key_fields must not contain "${field}"`);
+    if (field === 'entered_key' || field === 'row') {
+      throw new Error(`entered_key_fields must not contain "${field}"`);
     }
     if (field === CURRENCY) {
       const missing = rows.filter((row) => !(CURRENCY in row) && !source.currencyCode);
       if (missing.length) {
-        throw new Error('import_key_fields uses "currency" but there is no currencyCode and rows have no currency');
+        throw new Error('entered_key_fields uses "currency" but there is no currencyCode and rows have no currency');
       }
       continue;
     }
     const missing = rows.filter((row) => !(field in row));
     if (missing.length) {
       throw new Error(
-        `import_key_fields names "${field}", but ${missing.length} rows do not have it (first: row ${missing[0].row})`,
+        `entered_key_fields names "${field}", but ${missing.length} rows do not have it (first: row ${missing[0].row})`,
       );
     }
   }
@@ -319,7 +319,7 @@ export function buildTransactions(source, ctx, sheetRows) {
     transactions: rawRows.map((row) => bookRow(row, source, ctx)),
   };
   const keys = importKeys(next);
-  next.transactions = next.transactions.map((row, index) => ordered({ ...row, import_key: keys[index] }));
+  next.transactions = next.transactions.map((row, index) => ordered({ ...row, entered_key: keys[index] }));
   return next;
 }
 
@@ -559,7 +559,7 @@ function main(argv) {
   const current = source.transactions || [];
   const stale = next.transactions.filter((row, index) => !current[index] || !sameBooking(current[index], row));
   const drifted = stale.length > 0 || current.length !== next.transactions.length;
-  const fields = source.import_key_fields.join(', ');
+  const fields = source.entered_key_fields.join(', ');
   if (args.check) {
     if (drifted) {
       console.error(
@@ -592,12 +592,12 @@ function main(argv) {
     const nxt = next.transactions[index];
     if (!cur) continue;
     if (Number(cur.amount) !== Number(nxt.amount)) amountUpdates += 1;
-    if (cur.import_key !== nxt.import_key) keyUpdates += 1;
+    if (cur.entered_key !== nxt.entered_key) keyUpdates += 1;
   }
   console.log(
     `${next.transactions.length} rows, ${stale.length} booking drift (fields: ${fields}) in ${file}`,
   );
-  console.log(`${amountUpdates} amounts, ${keyUpdates} import_keys updated`);
+  console.log(`${amountUpdates} amounts, ${keyUpdates} entered_keys updated`);
   console.log(`aliases: ${aliasText}`);
 }
 
