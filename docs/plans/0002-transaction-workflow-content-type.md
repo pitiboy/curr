@@ -418,7 +418,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | **B** | Seed JSON **1–9** (+ szükség szerint 3/4 második HUF sablon) + `1900`/EGG/FRUIT pótlás + publish |
 | **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101) |
 | **D** | Content API jogok |
-| **E** | (Opcionális) Convert UI + `steps_published` override |
+| **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél) |
 
 ### Checklist
 
@@ -435,6 +435,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | Útvonal | Szerep |
 | ------- | ------ |
 | [docs/transaction-workflow.md](../transaction-workflow.md) | Üzleti norma + Strapi konverzió |
+| [0003-transaction-workflow-backoffice.md](./0003-transaction-workflow-backoffice.md) | Backoffice Convert gombok (editor + match) |
 | [transaction-workflow/schema.json](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) | Sablon CT |
 | [workflow/step.json](../../src/components/workflow/step.json) | Related accounts step |
 | [workflow/step-member-debit.json](../../src/components/workflow/step-member-debit.json) | Member as Debit |

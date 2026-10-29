@@ -4,9 +4,9 @@
 **Számlatükör:** [database/seeders/http/kor/data/accounts.json](../database/seeders/http/kor/data/accounts.json)  
 **Sor séma:** [src/api/transaction/content-types/transaction/schema.json](../src/api/transaction/content-types/transaction/schema.json)  
 **Tagi számlák:** [src/member-accounts.ts](../src/member-accounts.ts)  
-**Kapcsolódó:** [docs/readme.md](./readme.md), [v1 PRD](./prd/0001-content-backoffice-v1.md), [implementation plan](./plans/0002-transaction-workflow-content-type.md)
+**Kapcsolódó:** [docs/readme.md](./readme.md), [v1 PRD](./prd/0001-content-backoffice-v1.md), [implementation plan 0002](./plans/0002-transaction-workflow-content-type.md) (katalógus + Convert API), [implementation plan 0003](./plans/0003-transaction-workflow-backoffice.md) (backoffice Convert UI)
 
-Ez a fájl a kétlábas könyvelés ügyleteit írja le a meglévő számlatükörre. A v1 űrlap továbbra is egy kézi tartozik/követel sor. A több soros bontást a [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) sablon és a későbbi konverziós API végzi (lásd [Ügylet konfigurálása Strapi-ban](#ügylet-konfigurálása-strapi-ban)).
+Ez a fájl a kétlábas könyvelés ügyleteit írja le a meglévő számlatükörre. A v1 űrlap továbbra is egy kézi tartozik/követel sor. A több soros bontást a [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) sablon és a konverziós API végzi (lásd [Ügylet konfigurálása Strapi-ban](#ügylet-konfigurálása-strapi-ban); backoffice gombok: [0003](./plans/0003-transaction-workflow-backoffice.md)).
 
 ## Szókincs
 
@@ -601,7 +601,7 @@ Seedből hiányzik: semmi. A `1001` tagonként automatikusan jön létre, a `Bá
 
 ## Ügylet konfigurálása Strapi-ban
 
-A sablon collection: [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json). A lépések dynamic zone: [`workflow.step`](../src/components/workflow/step.json) (Related accounts), [`workflow.step-member-debit`](../src/components/workflow/step-member-debit.json), [`workflow.step-member-credit`](../src/components/workflow/step-member-credit.json). A v1 kézi tranzakció űrlap ettől nem változik. Seed és Convert API: [0002 plan](./plans/0002-transaction-workflow-content-type.md).
+A sablon collection: [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json). A lépések dynamic zone: [`workflow.step`](../src/components/workflow/step.json) (Related accounts), [`workflow.step-member-debit`](../src/components/workflow/step-member-debit.json), [`workflow.step-member-credit`](../src/components/workflow/step-member-credit.json). A v1 kézi tranzakció űrlap ettől nem változik. Seed és Convert API: [0002 plan](./plans/0002-transaction-workflow-content-type.md). Backoffice Convert gombok (editor, match után): [0003 plan](./plans/0003-transaction-workflow-backoffice.md).
 
 A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
 
