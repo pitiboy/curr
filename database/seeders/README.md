@@ -138,7 +138,7 @@ npm run seed:http:kor:transaction-workflows:local
 npm run seed:http:kor:transaction-workflows -- prod
 ```
 
-Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
+Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A tagi `1101`/`1001` step csak kód (nincs account a DB-ben). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
 
 ## Transaction import (kor)
 

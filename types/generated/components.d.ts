@@ -11,8 +11,12 @@ export interface WorkflowStep extends Struct.ComponentSchema {
     credit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    >;
+    credit_account_code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 10;
+      }>;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::currency-type.currency-type'
@@ -21,8 +25,12 @@ export interface WorkflowStep extends Struct.ComponentSchema {
     debit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    >;
+    debit_account_code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 10;
+      }>;
     description: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'{1}'>;

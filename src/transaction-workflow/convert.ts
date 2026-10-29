@@ -19,7 +19,7 @@ export const WORKFLOW_UID = 'api::transaction-workflow.transaction-workflow';
 export const MEMBER_UID = 'api::member.member';
 
 /** Tagi / Homály számlák — ugyanaz a kód-készlet, mint a member-accounts modulban. */
-const MEMBER_CODES = new Set(['1101', '1001']);
+export const MEMBER_ACCOUNT_CODES = new Set(['1101', '1001']);
 
 export type AccountRef = {
   documentId: string;
@@ -29,6 +29,10 @@ export type AccountRef = {
 export type WorkflowStep = {
   description?: string | null;
   percent?: number | string | null;
+  /** Normatív számla kód; tagi 1101/1001-nél nincs kötelező relation. */
+  debit_account_code?: string | number | null;
+  credit_account_code?: string | number | null;
+  /** Fix számlákhoz; tagi kódoknál Convert a forrás trx példányát használja. */
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
   currency_type?: { documentId: string } | null;
@@ -146,6 +150,27 @@ export function stepAmount(
   return (base * ratio) / 100;
 }
 
+export function isMemberAccountCode(
+  code: string | number | null | undefined,
+): boolean {
+  const normalized = parseAccountCode(code);
+  return normalized !== null && MEMBER_ACCOUNT_CODES.has(String(normalized));
+}
+
+/** Step számla kód: mező elsőbbség, fallback a relation `code`-jára (régi seed). */
+export function stepAccountCode(
+  step: WorkflowStep,
+  side: 'debit' | 'credit',
+): string | null {
+  const fromField =
+    side === 'debit' ? step.debit_account_code : step.credit_account_code;
+  const parsedField = parseAccountCode(fromField);
+  if (parsedField !== null) return String(parsedField);
+  const fromRelation =
+    side === 'debit' ? step.debit_account : step.credit_account;
+  return accountCodeString(fromRelation);
+}
+
 function memberAccountOnSource(
   transaction: SourceTransaction,
 ): AccountRef | null {
@@ -154,43 +179,47 @@ function memberAccountOnSource(
     transaction.credit_account,
   ] as const) {
     const code = accountCodeString(side);
-    if (code && MEMBER_CODES.has(code)) return side ?? null;
+    if (code && MEMBER_ACCOUNT_CODES.has(code)) return side ?? null;
   }
   return null;
 }
 
 export function resolveStepAccount(
+  wantedCode: string | null,
   stepAccount: AccountRef | null | undefined,
   transaction: SourceTransaction,
   siblingByCode: ReadonlyMap<string, AccountRef>,
 ): AccountRef {
-  const wanted = accountCodeString(stepAccount);
-  if (!wanted || !MEMBER_CODES.has(wanted)) {
-    if (!stepAccount?.documentId) {
-      throw new TransactionWorkflowError(
-        'Step account relation is missing',
-        422,
-      );
-    }
-    return stepAccount;
+  if (!wantedCode) {
+    throw new TransactionWorkflowError('Step account code is missing', 422);
   }
 
-  for (const side of [
-    transaction.debit_account,
-    transaction.credit_account,
-  ] as const) {
-    if (accountCodeString(side) === wanted && side?.documentId) {
-      return side;
+  if (MEMBER_ACCOUNT_CODES.has(wantedCode)) {
+    for (const side of [
+      transaction.debit_account,
+      transaction.credit_account,
+    ] as const) {
+      if (accountCodeString(side) === wantedCode && side?.documentId) {
+        return side;
+      }
     }
+
+    const sibling = siblingByCode.get(wantedCode);
+    if (sibling?.documentId) return sibling;
+
+    throw new TransactionWorkflowError(
+      `Could not resolve member account code ${wantedCode} from source transaction`,
+      422,
+    );
   }
 
-  const sibling = siblingByCode.get(wanted);
-  if (sibling?.documentId) return sibling;
-
-  throw new TransactionWorkflowError(
-    `Could not resolve member account code ${wanted} from source transaction`,
-    422,
-  );
+  if (!stepAccount?.documentId) {
+    throw new TransactionWorkflowError(
+      `Step account relation missing for code ${wantedCode}`,
+      422,
+    );
+  }
+  return stepAccount;
 }
 
 export type ExpandedStepRow = {
@@ -231,11 +260,13 @@ export function expandWorkflowSteps(
       description: expandDescription(step.description, transaction.description),
       amount: stepAmount(transaction.amount, step.percent ?? 100),
       debit_account: resolveStepAccount(
+        stepAccountCode(step, 'debit'),
         step.debit_account,
         transaction,
         siblingByCode,
       ),
       credit_account: resolveStepAccount(
+        stepAccountCode(step, 'credit'),
         step.credit_account,
         transaction,
         siblingByCode,

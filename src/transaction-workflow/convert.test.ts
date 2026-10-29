@@ -37,6 +37,8 @@ const workflowAdmin: WorkflowTemplate = {
     {
       description: 'Számla',
       percent: 100,
+      debit_account_code: '5440',
+      credit_account_code: '2000',
       debit_account: account('5440'),
       credit_account: account('2000'),
       currency_type: huf,
@@ -46,6 +48,8 @@ const workflowAdmin: WorkflowTemplate = {
     {
       description: 'Utalás',
       percent: 100,
+      debit_account_code: '2000',
+      credit_account_code: '1100',
       debit_account: account('2000'),
       credit_account: account('1100'),
       currency_type: huf,
@@ -102,7 +106,8 @@ describe('workflowMatchesTransaction', () => {
         {
           description: 'Bányászás',
           percent: 100,
-          debit_account: account('1001'),
+          debit_account_code: '1001',
+          credit_account_code: '1100',
           credit_account: account('1100'),
           currency_type: huf,
           transaction_type: typeMining,
@@ -168,7 +173,7 @@ describe('expandWorkflowSteps', () => {
     assert.equal(rows[1]?.entered_key, 'tx-8:step:1');
   });
 
-  it('resolves tag 1101/1001 from the source transaction and sibling map', () => {
+  it('resolves tag 1101/1001 from codes without step relations', () => {
     const tag1101 = account('1101', 'acc-erika-1101');
     const tag1001 = account('1001', 'acc-erika-1001');
     const wf: WorkflowTemplate = {
@@ -179,7 +184,8 @@ describe('expandWorkflowSteps', () => {
         {
           description: '{1}',
           percent: 100,
-          debit_account: account('1101'),
+          debit_account_code: '1101',
+          credit_account_code: '3000',
           credit_account: account('3000'),
           currency_type: huf,
           organization: treasury,
@@ -187,7 +193,8 @@ describe('expandWorkflowSteps', () => {
         {
           description: 'Stróman',
           percent: 96.153846,
-          debit_account: account('1001'),
+          debit_account_code: '1001',
+          credit_account_code: '1100',
           credit_account: account('1100'),
           currency_type: kor,
           organization: treasury,

@@ -694,7 +694,8 @@ Egy `workflow.step`:
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `description`                      | Generált sor leírása; default `{1}` — placeholder a forrás mezőkre (implementációkor rögzítendő)                                                               |
 | `percent`                          | 0–100 (tört megengedett); `amount = forrás.amount * percent / 100`                                                                                             |
-| `debit_account` / `credit_account` | Sablon számlák; `1101`/`1001` kódnál a Convert a **forrás trx** azonos kódú `debit_account` / `credit_account` példányát használja (nem a seed fix relációját) |
+| `debit_account_code` / `credit_account_code` | Kötelező kódok; `1101`/`1001` tagi slot — Convert a **forrás trx** / member testvér példányát használja                                         |
+| `debit_account` / `credit_account` | Opcionális; fix számláknál seed tölti; tagi kódnál üres                                                                                                         |
 | `currency_type`                    | Kötelező a stepen                                                                                                                                              |
 | `transaction_type`                 | Opcionális                                                                                                                                                     |
 | `organization`                     | Kötelező a stepen                                                                                                                                              |

@@ -94,7 +94,8 @@ flowchart LR
 | ---- | ----- | -------- |
 | `description` | string, default `{1}` | igen |
 | `percent` | decimal **0–100** (tört OK), default 100 | igen |
-| `debit_account` / `credit_account` | relation → account | igen |
+| `debit_account_code` / `credit_account_code` | string (account.code) | igen |
+| `debit_account` / `credit_account` | relation → account | nem (fix kódoknál seed tölti; `1101`/`1001` üres) |
 | `currency_type` | relation → currency-type | igen |
 | `transaction_type` | relation → transaction-type | nem |
 | `organization` | relation → organization | igen |
@@ -102,7 +103,7 @@ flowchart LR
 
 Generált összeg: `amount = source.amount * percent / 100` (százalék; tört `percent` megengedett, pl. `3.846154`).
 
-**`1101` / `1001` számlafeloldás:** a match és a generált sor **nem** a seed fix account relációját használja személyre. A forrás trx `debit_account` / `credit_account` példányát kell venni, ha a step (vagy a fejléc) kódja `1101` vagy `1001`. Így ugyanaz a sablon minden tag saját `1101`/`1001` sorára működik. Ha a step a forráson nem szereplő testvérkódot kér (pl. forrás `1101`, step `1001`), a Convert a forrás tagi számlájából a [member-accounts](../../src/member-accounts.ts) testvér számlát oldja fel — **nem** fix seed documentId-t.
+**`1101` / `1001` számlafeloldás:** a step `debit_account_code` / `credit_account_code` mezője a norma; a account reláció tagi kódnál üres maradhat. A match és a generált sor a forrás trx `debit_account` / `credit_account` példányát veszi, ha a kód `1101` vagy `1001`. Így ugyanaz a sablon minden tag saját számlájára működik. Ha a step a forráson nem szereplő testvérkódot kér (pl. forrás `1101`, step `1001`), a Convert a [member-accounts](../../src/member-accounts.ts) testvér számlát oldja fel.
 
 **`description` placeholder:** default `{1}` → forrás `description` másolása. Seedben lépésnév szöveg is megengedett.
 
@@ -205,7 +206,7 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 5. Minden könyvelési kimeneti sor → `__component: "workflow.step"`; `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
 6. Lekötés blokk → **4** step; forint bevétel → **2** step.  
 7. `percent` ∈ [0, 100], tört OK = `minta_lépés_összeg / minta_forrás_összeg * 100`. KOR lépésnél a minta **korona** összeg a számláló. Seed ≥ 6 tizedes.  
-8. Relation mezők seednél: lookup `account.code` / org név / currency kód / type név. A `1101`/`1001` seed reláció **sablonjelölő** (bármely azonos kódú account); Convert futáskor a forrás trx példányát használja.  
+8. Step: kötelező `debit_account_code` / `credit_account_code`; account reláció opcionális. Fix kódoknál seed lookup `account.code` → reláció. A `1101`/`1001` **csak kód** (nincs tag-kötött seed account); Convert a forrás trx / member testvér példányát használja. Org / currency / type továbbra is név/kód lookup.  
 9. `step.min` = **1** (séma). Ügylet 9 egy steppel seedelhető.
 
 **Szállítás:**
@@ -407,7 +408,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | ------ | ------ |
 | `percent.max` | **100** marad; tört percent OK |
 | `step.min` | **1** |
-| Tagi `1101`/`1001` | Match + expand **kód + forrás trx példány** (testvér: member-accounts); nincs fix tag seed |
+| Tagi `1101`/`1001` | Step mezőn kód; expand **forrás trx / member testvér**; nincs seed account relation |
 | Kimenet státusz | Sablon `steps_published` default `true`; Convert body override |
 | Első PR scope | **Mind a 9 ügylet** seed + Convert API |
 | Receipt | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra |

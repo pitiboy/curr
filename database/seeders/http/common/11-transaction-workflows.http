@@ -9,6 +9,7 @@
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Előfeltétel: 01–07 seed (számlák, szervezetek, pénznemek, tranzakciótípusok),
 # köztük 1900, 4500, EGG, FRUIT és a Tojóól szervezet a kor/data fájlokban.
+# Tagi 1101/1001: csak kód a stepen, nincs account lookup (Convert a forrás trx-ből oldja).
 # Ha a name + fejléc kód páros már létezik, a POST nem fut le.
 
 {{
@@ -29,6 +30,8 @@
     exports.wfItems = files.map((name) =>
       JSON.parse(fs.readFileSync(path.join(dir, name), "utf8"))
     );
+    // Tömb, ne Set — az exports blokkok között a Set nem marad meg megbízhatóan.
+    exports.wfMemberCodes = ["1101", "1001"];
     const accountCodes = new Set();
     const organizationNames = new Set();
     const currencyCodes = new Set();
@@ -37,8 +40,10 @@
       if (item.currency) currencyCodes.add(String(item.currency));
       if (item.transaction_type) typeNames.add(item.transaction_type);
       for (const step of item.steps || []) {
-        accountCodes.add(String(step.debit_code));
-        accountCodes.add(String(step.credit_code));
+        const debit = String(step.debit_code);
+        const credit = String(step.credit_code);
+        if (!exports.wfMemberCodes.includes(debit)) accountCodes.add(debit);
+        if (!exports.wfMemberCodes.includes(credit)) accountCodes.add(credit);
         organizationNames.add(step.organization);
         currencyCodes.add(String(step.currency));
         if (step.transaction_type) typeNames.add(step.transaction_type);
@@ -173,7 +178,7 @@ Accept: application/json
 # @name lookup-workflow
 # @loop for item of wfItems
 {{
-  exports.wfKey = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
+  // Kulcs mindig az item-ből (ne exports.wfKey — a loop válaszban elcsúszhat).
   exports.encodedName = encodeURIComponent(item.name);
   exports.debitCode = item.debit_account_code;
   exports.creditCode = item.credit_account_code;
@@ -183,18 +188,19 @@ Authorization: Bearer {{token}}
 Accept: application/json
 
 {{
+  const key = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
   let parsed = response.parsedBody;
   if (!parsed && response.body) {
     try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
   }
   if (response.statusCode !== 200) {
-    wfFailed[wfKey] = true;
+    wfFailed[key] = true;
     exports.wfFailed = wfFailed;
-    console.error("lookup failed: " + wfKey, response.statusCode, response.body);
+    console.error("lookup failed: " + key, response.statusCode, response.body);
   } else {
     const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
     if (found) {
-      wfExists[wfKey] = found;
+      wfExists[key] = found;
       exports.wfExists = wfExists;
     }
   }
@@ -204,29 +210,40 @@ Accept: application/json
 # @name create-workflow
 # @loop for item of wfItems
 {{
-  exports.wfKey = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
+  const key = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
   exports.wfPayload = null;
-  if (wfExists[wfKey] || wfFailed[wfKey]) {
+  exports.$cancel = false;
+  if (wfExists[key] || wfFailed[key]) {
+    console.error("create skipped (exists): " + item.name);
     exports.$cancel = true;
   } else {
     const steps = [];
     let skipReason = null;
     for (const step of item.steps || []) {
-      const debitId = wfAccountIds[String(step.debit_code)];
-      const creditId = wfAccountIds[String(step.credit_code)];
+      const debitCode = String(step.debit_code);
+      const creditCode = String(step.credit_code);
+      const debitIsMember = wfMemberCodes.includes(debitCode);
+      const creditIsMember = wfMemberCodes.includes(creditCode);
+      const debitId = debitIsMember ? null : wfAccountIds[debitCode];
+      const creditId = creditIsMember ? null : wfAccountIds[creditCode];
       const orgId = wfOrganizationIds[step.organization];
       const currencyId = wfCurrencyIds[String(step.currency)];
       const typeId = step.transaction_type
         ? wfTypeIds[step.transaction_type]
         : undefined;
-      if (!debitId || !creditId || !orgId || !currencyId) {
+      if (
+        (!debitIsMember && !debitId) ||
+        (!creditIsMember && !creditId) ||
+        !orgId ||
+        !currencyId
+      ) {
         skipReason =
           "missing lookup for step \"" +
           step.description +
           "\" (debit " +
-          step.debit_code +
+          debitCode +
           ", credit " +
-          step.credit_code +
+          creditCode +
           ", org " +
           step.organization +
           ", currency " +
@@ -247,11 +264,13 @@ Accept: application/json
         __component: "workflow.step",
         description: step.description,
         percent: step.percent,
-        debit_account: debitId,
-        credit_account: creditId,
+        debit_account_code: debitCode,
+        credit_account_code: creditCode,
         currency_type: currencyId,
         organization: orgId,
       };
+      if (debitId) row.debit_account = debitId;
+      if (creditId) row.credit_account = creditId;
       if (typeId) row.transaction_type = typeId;
       if (step.copy_receipt) row.copy_receipt = true;
       steps.push(row);
@@ -271,7 +290,7 @@ Accept: application/json
     }
     if (skipReason) {
       console.error("create skipped: " + item.name + " → " + skipReason);
-      wfFailed[wfKey] = true;
+      wfFailed[key] = true;
       exports.wfFailed = wfFailed;
       exports.$cancel = true;
     } else {
@@ -298,6 +317,7 @@ Content-Type: application/json
 {{wfPayload}}
 
 {{
+  const key = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
   if (wfPayload) {
     let parsed = response.parsedBody;
     if (!parsed && response.body) {
@@ -308,7 +328,7 @@ Content-Type: application/json
     } else {
       const created = parsed && parsed.data && parsed.data.documentId;
       if (created) {
-        wfExists[wfKey] = created;
+        wfExists[key] = created;
         exports.wfExists = wfExists;
       }
     }
