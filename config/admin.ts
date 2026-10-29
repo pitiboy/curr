@@ -17,5 +17,8 @@ export default ({ env }) => ({
     nps: env.bool('FLAG_NPS', true),
     promoteEE: env.bool('FLAG_PROMOTE_EE', true),
   },
+  // Browser tab brand for /admin (runtime; shared admin build). Like FAVICON_PATH:
+  // set per alias in cPanel, not in the shared .env. Default: KÖR.
+  appTitle: env('ADMIN_APP_TITLE', 'KÖR'),
   watchIgnoreFiles: ['**/apps', '**/docs', '**/apps/**', '**/docs/**'],
 });

@@ -13,7 +13,10 @@ import {
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
 import { publishTransactionDraft } from './transactionPublish';
-import { createTransactionDraft, updateTransactionDraft } from './transactionDraft';
+import {
+  createTransactionDraft,
+  updateTransactionDraft,
+} from './transactionDraft';
 import { withDocumentId } from './withDocumentId';
 
 const httpClient = strapiHttpClient();
@@ -58,7 +61,9 @@ const strapiProvider = strapiDataProvider({
 });
 
 async function getTransactionList(params: GetListParams) {
-  const { status, strapiFilters } = buildTransactionFilters(params.filter ?? {});
+  const { status, strapiFilters } = buildTransactionFilters(
+    params.filter ?? {},
+  );
   const [drafts, published] = await Promise.all([
     status === 'published'
       ? Promise.resolve([])

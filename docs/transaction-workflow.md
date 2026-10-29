@@ -14,7 +14,7 @@ Az **ügylet** a teljes gazdasági esemény. A fejezetek neve ügylet. Adminban 
 
 A **tranzakció** egy sor: egy tartozik, egy követel, egy összeg, egy pénznem. A mostani felület ezt mutatja: `Tranzakció` / `Tranzakciók` a [hu.ts](../apps/content-backoffice/src/i18n/hu.ts)-ben, `Transaction` / `Transactions` az [en.ts](../apps/content-backoffice/src/i18n/en.ts)-ben. Ezek a képernyők egy sort szerkesztenek, a feliratuk tranzakció marad.
 
-A **konverzió** egy már létező, még nem átalakított (`converted_to_workflow = false`) egysoros tranzakciót a sablon `step` listája szerint több sorra bont. A sorok `related_transaction` kapcsolattal maradnak egy ügyletben.
+A **konverzió** egy már létező, még nem átalakított (`converted_to_workflow = false`) egysoros tranzakciót a sablon `step` listája szerint több sorra bont. A sorok `related_transaction` kapcsolattal maradnak egy ügyletben. A belső collection neve `transaction-workflow`; a felhasználó az Ügylet szót látja.
 
 ## Mit rögzít egy sor
 
@@ -74,12 +74,12 @@ flowchart LR
 
 Kívülről érkező pénz mindig egy 1-es osztályú eszközszámlára érkezik, tartozik oldalra. Ez többnyire a `1100` Bankszámlák vagy a `1000` Készpénz. A követel oldal mondja meg, miért jött:
 
-| Követel            | Mit jelent                                                    |
-| ------------------ | ------------------------------------------------------------- |
-| `4000`–`4300`      | bevétel: értékesítés, szolgáltatás, támogatás, kamat          |
+| Követel             | Mit jelent                                                    |
+| ------------------- | ------------------------------------------------------------- |
+| `4000`–`4300`       | bevétel: értékesítés, szolgáltatás, támogatás, kamat          |
 | `3000` Részjegytőke | részjegy, tőke                                                |
-| `1101` tagi számla | a tag rendezi, amivel tartozott, például az előírt részjegyet |
-| `1200` Követelések | korábban megítélt követelés kiegyenlítése                     |
+| `1101` tagi számla  | a tag rendezi, amivel tartozott, például az előírt részjegyet |
+| `1200` Követelések  | korábban megítélt követelés kiegyenlítése                     |
 
 A külső bank, a tag saját bankja a könyvekben nem szerepel.
 
@@ -130,13 +130,13 @@ A korona **nem** köztes lépés minden kiadásnál és bevételnél. Csak **lek
 
 Korona (`1000` KOR egyenleg) **csak** olyan szervezeti nyilvántartáson maradhat, amelyhez **projekthez tartozó fix eszköz** (állóeszköz) kötődik — ingatlan vagy ingóság, nem forgóeszköz (készlet, pénzeszköz, követelés).
 
-| Mit köt le | Eszközfőkönyvi számla (HUF) | Szervezeti nyilvántartás (példa a seedben) |
-| ---------- | --------------------------- | ------------------------------------------- |
-| mezőgazdasági föld, termőterület | `1510` Mezőgazdasági földterületek | `I/4.11.1.2 Termőterületek`, vagy a konkrét termő projekt csomópontja |
-| lakótelek, belterületi föld | `1520` Belterületi földterületek | `I/4.11.1.1 Lakóterületek` |
-| lakóépület | `1530` Lakóépületek | lakó projekt / lakóterület csomópont |
-| projekt ingóság, beruházás (ól, gép, juhnyáj infrastruktúra stb.) | `1500` Tárgyi eszközök | a projekt csomópontja, pl. `I/4.12.1.1.1 Szávai Márton gyümölcsfaliget`, `I/4.12.1.2.1 Roger Milla Kameruni juh nyáj` |
-| tagi részjegyhez tartozó lakó rész | `1520` vagy `1530` | ugyanannak a lakóingatlannak a projekt nyilvántartása |
+| Mit köt le                                                        | Eszközfőkönyvi számla (HUF)        | Szervezeti nyilvántartás (példa a seedben)                                                                            |
+| ----------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| mezőgazdasági föld, termőterület                                  | `1510` Mezőgazdasági földterületek | `I/4.11.1.2 Termőterületek`, vagy a konkrét termő projekt csomópontja                                                 |
+| lakótelek, belterületi föld                                       | `1520` Belterületi földterületek   | `I/4.11.1.1 Lakóterületek`                                                                                            |
+| lakóépület                                                        | `1530` Lakóépületek                | lakó projekt / lakóterület csomópont                                                                                  |
+| projekt ingóság, beruházás (ól, gép, juhnyáj infrastruktúra stb.) | `1500` Tárgyi eszközök             | a projekt csomópontja, pl. `I/4.12.1.1.1 Szávai Márton gyümölcsfaliget`, `I/4.12.1.2.1 Roger Milla Kameruni juh nyáj` |
+| tagi részjegyhez tartozó lakó rész                                | `1520` vagy `1530`                 | ugyanannak a lakóingatlannak a projekt nyilvántartása                                                                 |
 
 A birtok fa (`I/4.11.1.x`) és a termelési projekt fa (`I/4.12.x.x.x`) csomópontjai ilyen célnyilvántartások. A készlet (`1300`), a költség- és bevételszámlák, valamint a kincstár pénzeszközei **nem** tartanak tartós KOR egyenleget: a kincstár kibocsát és átvezet, a cél nyilvántartás (az eszköz `organization` mezője szerint) tartja.
 
@@ -146,12 +146,12 @@ A lekötés **nem** fizeti ki vele az eladót vagy a szállítót. A külső fiz
 
 Pénzeszköz a forint lábon: `1000` Készpénz vagy `1100` Bankszámlák. A korona a `1000`-en jelenik meg, szervezetenként külön sor, mert egy tranzakciónak egy `organization` értéke van.
 
-| Lépés                           | Tartozik ← | Követel    | Pénznem | Szervezet                    |
-| ------------------------------- | ---------- | ---------- | ------- | ---------------------------- |
-| 1. Forint fedezet a lekötéshez  | `1900`     | pénzeszköz vagy `15xx` eszköz HUF értéke | HUF     | kincstár, vagy eszköz szervezete |
-| 2. Korona kibocsátás (kincstár) | `1000`     | `1900`     | KOR     | kincstár                     |
-| 3. Korona le a kincstárról      | `1900`     | `1000`     | KOR     | kincstár                     |
-| 4. Korona a cél nyilvántartásra | `1000`     | `1900`     | KOR     | eszköz projektje (15xx szervezete) |
+| Lépés                           | Tartozik ← | Követel                                  | Pénznem | Szervezet                          |
+| ------------------------------- | ---------- | ---------------------------------------- | ------- | ---------------------------------- |
+| 1. Forint fedezet a lekötéshez  | `1900`     | pénzeszköz vagy `15xx` eszköz HUF értéke | HUF     | kincstár, vagy eszköz szervezete   |
+| 2. Korona kibocsátás (kincstár) | `1000`     | `1900`                                   | KOR     | kincstár                           |
+| 3. Korona le a kincstárról      | `1900`     | `1000`                                   | KOR     | kincstár                           |
+| 4. Korona a cél nyilvántartásra | `1000`     | `1900`                                   | KOR     | eszköz projektje (15xx szervezete) |
 
 ```mermaid
 sequenceDiagram
@@ -193,17 +193,17 @@ A [3.](#ügylet-3--tojás-keletkezése-és-eladása), [4.](#ügylet-4--gyümölc
 
 ## Minta ügyletek
 
-| #   | Ügylet | Rövid leírás |
-| --- | ------ | -------------- |
-| 1   | [Tagi befizetés ingatlan vásárlásra](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) | részjegy `1100`-on, vétel Homály KOR, lekötés |
-| 2   | [Készpénzes belterületi ingatlan vásárlás](#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás) | `1000` → `1520`, szövetkezeti kp |
-| 3   | [Tojás](#ügylet-3--tojás-keletkezése-és-eladása) | készlet + eladás HUF |
-| 4   | [Gyümölcs](#ügylet-4--gyümölcs-szürete-és-piaci-eladása) | szüret, piac HUF |
-| 5   | [Ingatlan szerzése](#ügylet-5--ingatlan-szerzése) | foglaló + bankos vétel, szövetkezet |
-| 6   | [Felújítás](#ügylet-6--felújítás) | értéknövelés + lekötés |
-| 7   | [Agrár támogatás](#ügylet-7--területalapú-agrár-támogatás) | megítélés + jóváírás HUF |
-| 8   | [Adminisztráció](#ügylet-8--adminisztráció) | közös költség HUF |
-| 9   | [Bányászás](#ügylet-9--bányászás) | `1100`/`1000` → tag `1001` HUF |
+| #   | Ügylet                                                                                          | Rövid leírás                                  |
+| --- | ----------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| 1   | [Tagi befizetés ingatlan vásárlásra](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra)             | részjegy `1100`-on, vétel Homály KOR, lekötés |
+| 2   | [Készpénzes belterületi ingatlan vásárlás](#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás) | `1000` → `1520`, szövetkezeti kp              |
+| 3   | [Tojás](#ügylet-3--tojás-keletkezése-és-eladása)                                                | készlet + eladás HUF                          |
+| 4   | [Gyümölcs](#ügylet-4--gyümölcs-szürete-és-piaci-eladása)                                        | szüret, piac HUF                              |
+| 5   | [Ingatlan szerzése](#ügylet-5--ingatlan-szerzése)                                               | foglaló + bankos vétel, szövetkezet           |
+| 6   | [Felújítás](#ügylet-6--felújítás)                                                               | értéknövelés + lekötés                        |
+| 7   | [Agrár támogatás](#ügylet-7--területalapú-agrár-támogatás)                                      | megítélés + jóváírás HUF                      |
+| 8   | [Adminisztráció](#ügylet-8--adminisztráció)                                                     | közös költség HUF                             |
+| 9   | [Bányászás](#ügylet-9--bányászás)                                                               | `1100`/`1000` → tag `1001` HUF                |
 
 A kincstár pénzeszközei: **`1000` Készpénz**, **`1100` Bankszámlák** (seed szerint).
 
@@ -226,7 +226,7 @@ Minta: `kovács.erika` 2 080 000 Ft részjegy. Telek vételár 2 000 000 Ft (20 
 | 1   | Részjegy előírása  | `1101` kovács.erika - tagi számla  | `3000` Részjegytőke                | 2 080 000          | HUF     | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 2   | Bejövő tagi utalás | `1100` Bankszámlák                 | `1101` kovács.erika - tagi számla  | 2 080 000          | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
 | 3   | Stróman (vételár)  | `1001` kovács.erika - saját számla | `1100` Bankszámlák                 | 2 000 000          | KOR     | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 4   | Telek vételár      | `1520` Belterületi földterületek  | `1001` kovács.erika - saját számla | 2 000 000          | KOR     | I/4.11.1.1 Lakóterületek  | Átvezetés |
+| 4   | Telek vételár      | `1520` Belterületi földterületek   | `1001` kovács.erika - saját számla | 2 000 000          | KOR     | I/4.11.1.1 Lakóterületek  | Átvezetés |
 | 5   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)    | fedezet `1520` HUF érték           | 2 000 000 / 20 000 | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
 | 6   | Illeték aktiválása | `1520` Belterületi földterületek   | `2300` Adótartozások               | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Átvezetés |
 | 7   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)    | fedezet `1520` HUF érték           | 80 000 / 800       | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
@@ -292,13 +292,13 @@ A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ing
 
 Minta: belterületi telek 800 000 Ft + illeték 32 000 Ft. Számla: `1520`. Szervezet: `I/4.11.1.1 Lakóterületek`. Lekötés: 8 000 + 320 = 8 320 KOR (1 korona = 100 Ft).
 
-| #   | Lépés              | Tartozik ←                       | Követel          | Összeg           | Pénznem | Szervezet                | Típus     |
-| --- | ------------------ | -------------------------------- | ---------------- | ---------------- | ------- | ------------------------ | --------- |
-| 1   | Telek vételár      | `1520` Belterületi földterületek | `1000` Készpénz  | 800 000          | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
-| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`   | 800 000 / 8 000  | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 3   | Illeték aktiválása | `1520` Belterületi földterületek | `2300` Adótartozások | 32 000       | HUF     | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 4   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`   | 32 000 / 320     | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 5   | Illeték utalása    | `2300` Adótartozások             | `1100` Bankszámlák | 32 000         | HUF     | I/4.11.1.1 Lakóterületek | Utalás    |
+| #   | Lépés              | Tartozik ←                       | Követel              | Összeg          | Pénznem | Szervezet                | Típus     |
+| --- | ------------------ | -------------------------------- | -------------------- | --------------- | ------- | ------------------------ | --------- |
+| 1   | Telek vételár      | `1520` Belterületi földterületek | `1000` Készpénz      | 800 000         | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
+| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`       | 800 000 / 8 000 | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
+| 3   | Illeték aktiválása | `1520` Belterületi földterületek | `2300` Adótartozások | 32 000          | HUF     | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 4   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`       | 32 000 / 320    | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
+| 5   | Illeték utalása    | `2300` Adótartozások             | `1100` Bankszámlák   | 32 000          | HUF     | I/4.11.1.1 Lakóterületek | Utalás    |
 
 ```mermaid
 sequenceDiagram
@@ -369,7 +369,7 @@ Seedből hiányzik: `EGG`, `4500`, `1900`, és a Tojóól szervezeti csomópont.
 
 ### Napi tojás rögzítés (edizone backoffice)
 
-Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `I/4.12.1.2.1 Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
+Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
 
 Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Könyvelés soronként:
 
@@ -377,7 +377,47 @@ Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként,
 | ---------------- | -------------------------------------------------- | ------ | ------- | --------------- | ----------- |
 | `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab  | EGG     | az adott tyúkól | `Átvezetés` |
 
-Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A feature flag az edizone szerver `BACKOFFICE_WORKFLOWS` env-jében alapból engedélyezett; más példányon rejtett. Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
+Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A workflow kapcsoló a **Settings** collection `egg-daily-entry` sorában van (edizone seed: enabled; kor: disabled). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
+
+### Napi tojás továbbosztás (edizone backoffice, 2. lépés)
+
+A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.member` → tag, `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
+
+A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói piszkozatként jönnek létre, ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
+
+| Szabály               | Tartozik ←                  | Követel                 | Összeg                | Pénznem                             | Szervezet    | Típus       |
+| --------------------- | --------------------------- | ----------------------- | --------------------- | ----------------------------------- | ------------ | ----------- |
+| `internal`            | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                 | `Tyúktartás` | `Átvezetés` |
+| `sale` — tojás        | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                 | ugyanaz      | `Átvezetés` |
+| `sale` — kp befizetés | `1000` Készpénz             | tag `1001` saját számla | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz      | `Készpénz`  |
+| `sale` — bevétel      | `4000` Értékesítés bevétele | `1000` Készpénz         | ugyanaz               | HUF                                 | ugyanaz      | `Átvezetés` |
+
+Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
+
+Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár (termelés és továbbosztás ugyanígy). Ha bármelyik lépéshez talál meglévő sort, egy párbeszéd kínál **új sor** vagy **meglévő frissítése** választást; a választás **minden** érintett sorra vonatkozik (termelés + továbbosztás).
+
+```mermaid
+sequenceDiagram
+  participant BO as Backoffice (2 lepes)
+  participant Ol as Tyukol (termelés)
+  participant Keszlet as 1300 Keszletek
+  participant Tag as 1001 sajat szamla
+  participant Penztar as 1000 Keszpenz
+  participant Ert as 4000 Bevetel
+
+  BO->>Ol: 1. lepes — termelés sorok (1300 ← 4500)
+  BO->>BO: 2. lepes — tagonkénti db
+  alt bentlakó / társult (internal)
+    Keszlet->>Tag: EGG atvezetés (1001 ← 1300)
+  else értékesítési típus (sale)
+    Keszlet->>Tag: tojás (1001 ← 1300), EGG
+    Tag->>Penztar: kp befizetés (1000 ← 1001), HUF
+    Penztar->>Ert: bevétel (1000 → 4000), HUF, árfolyam + ratio
+  end
+  Note over Keszlet: kiosztatlan db a 1300-on marad
+```
+
+**Későbbi riport:** tervezett készletkimutatás (termelt vs. kiosztott vs. `1300` maradvány); a tranzakciós adatok erre lekérdezhetők (dátum, `1300`/`4500`/`1000`/`4000`, szervezet, EGG/HUF).
 
 ## Ügylet 4 — gyümölcs szürete és piaci eladása
 
@@ -428,11 +468,11 @@ Az ingatlan számla a fajta szerint: `1510` Mezőgazdasági földterületek, `15
 
 Minta: 2 000 000 Ft foglaló, 8 000 000 Ft fennmaradó rész. Összesen 10 000 000 Ft eszköz; lekötés 100 000 korona (1 korona = 100 Ft).
 
-| Lépés              | Tartozik ←                                  | Követel          | Összeg               | Pénznem   | Szervezet                | Típus     |
-| ------------------ | ------------------------------------------- | ---------------- | -------------------- | --------- | ------------------------ | --------- |
-| Foglaló kifizetés  | `1400` Előlegek                             | `1100`           | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
-| Fennmaradó vételár | `1530` Lakóépületek                         | `1100`           | 8 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
-| Beszámítás         | `1530` Lakóépületek                         | `1400` Előlegek  | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Átvezetés |
+| Lépés              | Tartozik ←                                  | Követel                  | Összeg               | Pénznem   | Szervezet                | Típus     |
+| ------------------ | ------------------------------------------- | ------------------------ | -------------------- | --------- | ------------------------ | --------- |
+| Foglaló kifizetés  | `1400` Előlegek                             | `1100`                   | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
+| Fennmaradó vételár | `1530` Lakóépületek                         | `1100`                   | 8 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
+| Beszámítás         | `1530` Lakóépületek                         | `1400` Előlegek          | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Átvezetés |
 | Lekötés blokk      | a [lekötés blokk](#lekötés-blokk) négy sora | fedezet `1530` HUF érték | 10 000 000 / 100 000 | HUF + KOR | kincstár → Lakóterületek | Átvezetés |
 
 ```mermaid
@@ -613,7 +653,7 @@ Seedből hiányzik: semmi. A `1001` tagonként automatikusan jön létre, a `Bá
 
 A sablon collection: [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json). A lépés komponens: [`workflow.step`](../src/components/workflow/step.json). A v1 kézi tranzakció űrlap ettől nem változik. Seed és Convert API utasítások: [0002 plan](./plans/0002-transaction-workflow-content-type.md).
 
-A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás).
+A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
 
 ### Ki mit csinál
 
@@ -636,29 +676,29 @@ sequenceDiagram
 
 ### Mit tárol egy sablon
 
-| Mező | Szerep |
-| ---- | ------ |
-| `name` | Admin címke (pl. ügylet neve) |
+| Mező                                         | Szerep                                                                                                                                                                                        |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                                       | Admin címke (pl. ügylet neve)                                                                                                                                                                 |
 | `debit_account_code` / `credit_account_code` | Kötelező match: a forrás `transaction` számláinak `code` értéke (integer 1000–9999 ↔ string kód). Általános: minden tag `1101`/`1001` példánya matchelhető, nincs fix tag-reláció a matchben. |
-| `currency_type` / `transaction_type` | Opcionális; ha ki van töltve, a match ezekre is szűr |
-| `keep_original` | Default `true` — storno + megtartás; `false` — eredeti törlése |
-| `steps_published` | Default `true` — generált step (és storno) sorok published; `false` → draft. Convert API/UI felülírhatja. |
-| `configuration` | JSON, **fenntartott**, nincs implementáció |
-| `step` | Dynamic zone, csak `workflow.step`; sorrend = kifejtés sorrendje; séma `min: 1` |
+| `currency_type` / `transaction_type`         | Opcionális; ha ki van töltve, a match ezekre is szűr                                                                                                                                          |
+| `keep_original`                              | Default `true` — storno + megtartás; `false` — eredeti törlése                                                                                                                                |
+| `steps_published`                            | Default `true` — generált step (és storno) sorok published; `false` → draft. Convert API/UI felülírhatja.                                                                                     |
+| `configuration`                              | JSON, **fenntartott**, nincs implementáció                                                                                                                                                    |
+| `step`                                       | Dynamic zone, csak `workflow.step`; sorrend = kifejtés sorrendje; séma `min: 1`                                                                                                               |
 
 Nincs `workflow_key`, `inputs`, `active`, `sort_order`. A `draftAndPublish` a sablonon **be** van kapcsolva: a Convert csak **published** sablonokat használ.
 
 Egy `workflow.step`:
 
-| Mező | Szerep |
-| ---- | ------ |
-| `description` | Generált sor leírása; default `{1}` — placeholder a forrás mezőkre (implementációkor rögzítendő) |
-| `percent` | 0–100 (tört megengedett); `amount = forrás.amount * percent / 100` |
+| Mező                               | Szerep                                                                                                                                                         |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `description`                      | Generált sor leírása; default `{1}` — placeholder a forrás mezőkre (implementációkor rögzítendő)                                                               |
+| `percent`                          | 0–100 (tört megengedett); `amount = forrás.amount * percent / 100`                                                                                             |
 | `debit_account` / `credit_account` | Sablon számlák; `1101`/`1001` kódnál a Convert a **forrás trx** azonos kódú `debit_account` / `credit_account` példányát használja (nem a seed fix relációját) |
-| `currency_type` | Kötelező a stepen |
-| `transaction_type` | Opcionális |
-| `organization` | Kötelező a stepen |
-| `copy_receipt` | Default `false`; `true` esetén a forrás `receipts` a generált sorra is rákerül (ha volt); ha nem volt, üres |
+| `currency_type`                    | Kötelező a stepen                                                                                                                                              |
+| `transaction_type`                 | Opcionális                                                                                                                                                     |
+| `organization`                     | Kötelező a stepen                                                                                                                                              |
+| `copy_receipt`                     | Default `false`; `true` esetén a forrás `receipts` a generált sorra is rákerül (ha volt); ha nem volt, üres                                                    |
 
 A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad. A sablonrétegben **nincs** külön komponens és nincs implicit `1900` kibontás: mind a négy (ill. két) könyvelési sor külön `workflow.step`.
 

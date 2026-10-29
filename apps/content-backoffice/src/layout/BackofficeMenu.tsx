@@ -17,10 +17,10 @@ import { workflowForms } from '../workflows/registry';
 export function BackofficeMenu() {
   const translate = useTranslate();
   const { permissions } = usePermissions();
-  const { effective } = useBackofficeConfig();
+  const { enabled } = useBackofficeConfig();
   const workflows = visibleWorkflowForms(
     workflowForms,
-    effective,
+    enabled,
     typeof permissions === 'string' ? permissions : '',
   );
 
@@ -67,7 +67,8 @@ function TransactionListMenuItem({
   mode: TransactionListMode;
 }) {
   const location = useLocation();
-  const active = transactionListMode(location.pathname, location.search) === mode;
+  const active =
+    transactionListMode(location.pathname, location.search) === mode;
   return (
     <Menu.Item
       leftIcon={icon}

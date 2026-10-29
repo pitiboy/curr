@@ -7,7 +7,10 @@ type DateFieldFormat = Pick<DateFieldProps, 'locales' | 'options' | 'showTime'>;
  * Hungarian `hu-HU` always prints a period separator (`26. 10. 17.`).
  * `sv-SE` keeps year-month-day order and uses a hyphen instead.
  */
-export function dateFieldProps(locale: string, showTime = false): DateFieldFormat {
+export function dateFieldProps(
+  locale: string,
+  showTime = false,
+): DateFieldFormat {
   return {
     locales: locale === 'en' ? 'en' : 'sv-SE',
     showTime,

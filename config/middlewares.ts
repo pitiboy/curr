@@ -3,10 +3,10 @@ export default ({ env }) => {
   const origins = [
     env('PUBLIC_URL'),
     env('RENDER_EXTERNAL_URL'),
-    ...(env('CORS_ORIGINS', '')
+    ...env('CORS_ORIGINS', '')
       .split(',')
       .map((origin: string) => origin.trim())
-      .filter(Boolean)),
+      .filter(Boolean),
   ].filter(Boolean);
 
   return [

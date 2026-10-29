@@ -53,31 +53,31 @@ Do **not** re-rank hosting. Treat Fly + Neon as given for Path 1. Mention cost/o
 
 Read the repo before ranking. Do not invent a different domain.
 
-| Fact | Source / detail |
-| --- | --- |
-| App | Strapi **5.27** (`package.json` name `backend-strapi`) at the **repository root** |
-| Runtime | Node `>=20.0.0 <=22.x.x`, npm `>=10` |
-| Start / build | `npm start` → `strapi start`; `npm run build` → `strapi build` |
-| Admin / API | `/admin`, `/api`, `/_health` |
-| HTTP API today | **REST only.** `@strapi/plugin-graphql` is **not** in [`package.json`](../package.json). Path 1 GraphQL is extra work, not a given. |
-| Auth | `@strapi/plugin-users-permissions` (JWT; Admin vs Authenticated vs Public; per-content-type CRUD) |
-| Uploads | `@strapi/provider-upload-cloudinary` — already wired |
-| Database today | Postgres locally ([`docker-compose.yaml`](../docker-compose.yaml), Postgres 16) and on Render; [`config/database.ts`](../config/database.ts) forces **postgres** when `DATABASE_URL` is set |
-| Hosting already chosen for Path 1 | Neon Free FRA + Fly `fra` (CI-built image, autostop). See [`cloud-provider-comparison.md`](./cloud-provider-comparison.md). Render Free **cannot** finish `strapi build`. |
-| Sidecar UIs | `apps/frontend-appsmith/` exists. **Out of scope** except as “an existing API consumer that would be remapped.” Do not size either path around hosting Appsmith. |
-| Domain write-up | [`docs/readme.md`](./readme.md) — community resource accounting, **double-entry**, multi-currency (money, time, food, goods) |
+| Fact                              | Source / detail                                                                                                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App                               | Strapi **5.27** (`package.json` name `backend-strapi`) at the **repository root**                                                                                                           |
+| Runtime                           | Node `>=20.0.0 <=22.x.x`, npm `>=10`                                                                                                                                                        |
+| Start / build                     | `npm start` → `strapi start`; `npm run build` → `strapi build`                                                                                                                              |
+| Admin / API                       | `/admin`, `/api`, `/_health`                                                                                                                                                                |
+| HTTP API today                    | **REST only.** `@strapi/plugin-graphql` is **not** in [`package.json`](../package.json). Path 1 GraphQL is extra work, not a given.                                                         |
+| Auth                              | `@strapi/plugin-users-permissions` (JWT; Admin vs Authenticated vs Public; per-content-type CRUD)                                                                                           |
+| Uploads                           | `@strapi/provider-upload-cloudinary` — already wired                                                                                                                                        |
+| Database today                    | Postgres locally ([`docker-compose.yaml`](../docker-compose.yaml), Postgres 16) and on Render; [`config/database.ts`](../config/database.ts) forces **postgres** when `DATABASE_URL` is set |
+| Hosting already chosen for Path 1 | Neon Free FRA + Fly `fra` (CI-built image, autostop). See [`cloud-provider-comparison.md`](./cloud-provider-comparison.md). Render Free **cannot** finish `strapi build`.                   |
+| Sidecar UIs                       | `apps/frontend-appsmith/` exists. **Out of scope** except as “an existing API consumer that would be remapped.” Do not size either path around hosting Appsmith.                            |
+| Domain write-up                   | [`docs/readme.md`](./readme.md) — community resource accounting, **double-entry**, multi-currency (money, time, food, goods)                                                                |
 
 ### Content-types (source of truth: [`src/api/`](../src/api/))
 
-| Type | Notes the comparison must honour |
-| --- | --- |
-| `organization` | Collective; has accounts, memberships |
-| `member` | Individual; **oneToOne** `account`; UID `identifier`; unique email |
-| `membership` / `membership-type` | Member ↔ organization role (tag, bentlakó, szimpatizáns, …) |
-| `account` / `account-category` | Chart of accounts; **parent/children** tree; org-scoped |
-| `transaction` / `transaction-type` | Double-entry: required `amount`, `debit_account`, `credit_account`; **`draftAndPublish`: true** |
-| `receipt` | Linked to transactions; **`draftAndPublish`: true**; media |
-| `currency-type` / `currency-category` / `currency-rate` | Multi-currency / resource types |
+| Type                                                    | Notes the comparison must honour                                                                |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `organization`                                          | Collective; has accounts, memberships                                                           |
+| `member`                                                | Individual; **oneToOne** `account`; UID `identifier`; unique email                              |
+| `membership` / `membership-type`                        | Member ↔ organization role (tag, bentlakó, szimpatizáns, …)                                     |
+| `account` / `account-category`                          | Chart of accounts; **parent/children** tree; org-scoped                                         |
+| `transaction` / `transaction-type`                      | Double-entry: required `amount`, `debit_account`, `credit_account`; **`draftAndPublish`: true** |
+| `receipt`                                               | Linked to transactions; **`draftAndPublish`: true**; media                                      |
+| `currency-type` / `currency-category` / `currency-rate` | Multi-currency / resource types                                                                 |
 
 **Lifecycle already in code:** [`src/api/member/content-types/member/lifecycles.ts`](../src/api/member/content-types/member/lifecycles.ts) — creating a member **creates an account** on the first organization if none is supplied. Path 2 must say how that rule lives (trigger, RPC, edge function) on day 1, not “the custom client will do it later.”
 
@@ -118,13 +118,13 @@ Score this explicitly. Admin must not look like a free forever product.
 
 What the custom app would call:
 
-| Topic | Path 1 | Path 2 |
-| --- | --- | --- |
-| Shape | Strapi REST document API (`data` / `attributes` / populate); GraphQL **not** installed | PostgREST table JSON and/or vendor GraphQL |
-| Auth | Strapi JWT / users-permissions | Vendor Auth + RLS (`auth.uid()`), service role danger |
-| Filters / pagination | Strapi query params | Querystring / GQL |
-| Aggregates (balances, project reports in [`docs/readme.md`](./readme.md)) | Not generated; custom controller or client-side | SQL views / RPCs the client can call |
-| `draftAndPublish` | First-class on transactions/receipts | You must model status yourself |
+| Topic                                                                     | Path 1                                                                                 | Path 2                                                |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Shape                                                                     | Strapi REST document API (`data` / `attributes` / populate); GraphQL **not** installed | PostgREST table JSON and/or vendor GraphQL            |
+| Auth                                                                      | Strapi JWT / users-permissions                                                         | Vendor Auth + RLS (`auth.uid()`), service role danger |
+| Filters / pagination                                                      | Strapi query params                                                                    | Querystring / GQL                                     |
+| Aggregates (balances, project reports in [`docs/readme.md`](./readme.md)) | Not generated; custom controller or client-side                                        | SQL views / RPCs the client can call                  |
+| `draftAndPublish`                                                         | First-class on transactions/receipts                                                   | You must model status yourself                        |
 
 Say whether Path 1 forces the client to fight CMS payload shape, and whether Path 2 forces the team to **own RLS and ledger RPCs before the UI is nice**.
 
@@ -171,13 +171,13 @@ Path 1 already has Cloudinary. Path 2: vendor storage vs keep Cloudinary. Receip
 
 ### 10. 12-month application-layer TCO (not a hosting bake-off)
 
-| Path 1 | Path 2 |
-| --- | --- |
+| Path 1                                                                                                                                                                                            | Path 2                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Fly-class compute (cite hosting doc: about **$0–8/month** autostop 1 GB, or more if always-on) + **$0** Neon Free + Strapi upgrades + `node_modules` **~1.1 GB** + denormalized tables + CI build | Usually API+DB bundled; often **€0** free tier with pause/backup caveats; **no** Node API to patch; SQL/RLS skill pulled **forward**; Studio is not a treasurer UI |
 
 Do **not** reopen Render vs Hetzner. Footnote year-2 vendor cliffs (Supabase Pro **$25**, Neon limits, pause deleting **compute** vs **data**).
 
-### 11. Rewrite cost of *this* schema (keep vs replace)
+### 11. Rewrite cost of _this_ schema (keep vs replace)
 
 Path 1: keep content-types; remaining work is deploy + permissions + maybe a few lifecycles for debit/credit.  
 Path 2: re-model ~12 collection types as SQL, rewrite member-account rule, re-seed, throw away Strapi Admin/REST, teach operators Studio. **Appsmith remap** is a footnote, not a driver.
@@ -210,23 +210,23 @@ If no vendor beats Supabase on **year-1 operator story** or **ledger RPCs**, say
 
 Fill one row per path (and extra rows only for Path 2 vendors that could change the pick).
 
-| Dimension | What to put |
-| --- | --- |
-| Year-1 operator story | Treasurer posts a transaction on day 1; non-dev or not |
-| Time to first real transaction | Days/weeks of work from this repo’s current state |
-| Ledger integrity | How debit/credit, trees, member→account are enforced |
-| Authz vs org/membership | Roles vs RLS; year-1 honest scope (superuser vs row security) |
-| Schema ownership / SQL | Who owns tables; inspectability; migrations |
-| Auto API | REST/GQL completeness for this domain |
-| Future client contract | Payload shape, aggregates, draft/publish, auth |
-| Dual-surface tax | Admin/Studio now + custom client later |
-| Local DX / seeds | develop loop; seed rewrite |
-| Uploads | Cloudinary vs vendor storage |
-| App-layer TCO year 1 / year 2 | Euros + ops hours, not a PaaS matrix |
-| Rewrite cost now | Keep Strapi vs remodel SQL |
-| Year-2 exit cost | Pain if the pick was wrong |
-| Data residency | HU / EU / US |
-| Verdict | Winner / runner-up; **one** 12-month pick |
+| Dimension                      | What to put                                                   |
+| ------------------------------ | ------------------------------------------------------------- |
+| Year-1 operator story          | Treasurer posts a transaction on day 1; non-dev or not        |
+| Time to first real transaction | Days/weeks of work from this repo’s current state             |
+| Ledger integrity               | How debit/credit, trees, member→account are enforced          |
+| Authz vs org/membership        | Roles vs RLS; year-1 honest scope (superuser vs row security) |
+| Schema ownership / SQL         | Who owns tables; inspectability; migrations                   |
+| Auto API                       | REST/GQL completeness for this domain                         |
+| Future client contract         | Payload shape, aggregates, draft/publish, auth                |
+| Dual-surface tax               | Admin/Studio now + custom client later                        |
+| Local DX / seeds               | develop loop; seed rewrite                                    |
+| Uploads                        | Cloudinary vs vendor storage                                  |
+| App-layer TCO year 1 / year 2  | Euros + ops hours, not a PaaS matrix                          |
+| Rewrite cost now               | Keep Strapi vs remodel SQL                                    |
+| Year-2 exit cost               | Pain if the pick was wrong                                    |
+| Data residency                 | HU / EU / US                                                  |
+| Verdict                        | Winner / runner-up; **one** 12-month pick                     |
 
 ---
 

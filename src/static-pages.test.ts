@@ -28,10 +28,22 @@ const hu: StaticPageRecord[] = [
     footer_order: 1,
     updatedAt: '2026-10-16T08:00:00.000Z',
   },
-  { title: 'Felhasználási feltételek', slug: 'terms-of-service', locale: 'hu', body: 'x', footer_order: 2 },
+  {
+    title: 'Felhasználási feltételek',
+    slug: 'terms-of-service',
+    locale: 'hu',
+    body: 'x',
+    footer_order: 2,
+  },
 ];
 const en: StaticPageRecord[] = [
-  { title: 'Privacy Policy', slug: 'privacy-policy', locale: 'en', body: '## 1. Intro', footer_order: 1 },
+  {
+    title: 'Privacy Policy',
+    slug: 'privacy-policy',
+    locale: 'en',
+    body: '## 1. Intro',
+    footer_order: 1,
+  },
 ];
 
 function fakeStrapi() {
@@ -41,10 +53,18 @@ function fakeStrapi() {
     documents(uid) {
       assert.equal(uid, STATIC_PAGE_UID);
       return {
-        findMany: async (params) => byLocale[(params as { locale: string }).locale] ?? [],
+        findMany: async (params) =>
+          byLocale[(params as { locale: string }).locale] ?? [],
         findFirst: async (params) => {
-          const p = params as { locale: string; filters: { slug: { $eq: string } } };
-          return (byLocale[p.locale] ?? []).find((page) => page.slug === p.filters.slug.$eq) ?? null;
+          const p = params as {
+            locale: string;
+            filters: { slug: { $eq: string } };
+          };
+          return (
+            (byLocale[p.locale] ?? []).find(
+              (page) => page.slug === p.filters.slug.$eq,
+            ) ?? null
+          );
         },
       };
     },
@@ -57,7 +77,10 @@ function fakeStrapi() {
   return { strapi, routes };
 }
 
-function fakeCtx(params: Record<string, string> = {}, query: Record<string, unknown> = {}) {
+function fakeCtx(
+  params: Record<string, string> = {},
+  query: Record<string, unknown> = {},
+) {
   const headers: Record<string, string> = {};
   return {
     params,
@@ -91,18 +114,30 @@ describe('static pages', () => {
 
   it('keeps the hu URL stable and adds ?locale for en', () => {
     assert.equal(staticPagePath('privacy-policy'), '/static/privacy-policy');
-    assert.equal(staticPagePath('privacy-policy', 'en'), '/static/privacy-policy?locale=en');
+    assert.equal(
+      staticPagePath('privacy-policy', 'en'),
+      '/static/privacy-policy?locale=en',
+    );
     assert.equal(staticPagePath(undefined, 'en'), '/static?locale=en');
   });
 
   it('formats dates per locale', () => {
-    assert.equal(formatStaticPageDate('2026-10-16T08:00:00.000Z', 'hu'), '2026. 10. 16.');
-    assert.equal(formatStaticPageDate('2026-10-16T08:00:00.000Z', 'en'), '2026-10-16');
+    assert.equal(
+      formatStaticPageDate('2026-10-16T08:00:00.000Z', 'hu'),
+      '2026. 10. 16.',
+    );
+    assert.equal(
+      formatStaticPageDate('2026-10-16T08:00:00.000Z', 'en'),
+      '2026-10-16',
+    );
     assert.equal(formatStaticPageDate('nope'), '');
   });
 
   it('renders markdown (headings, bold, lists, tables) and escapes raw HTML', () => {
-    const html = renderStaticPageHtml({ ...hu[0], body: `${hu[0].body}\n<script>alert(1)</script>\n` });
+    const html = renderStaticPageHtml({
+      ...hu[0],
+      body: `${hu[0].body}\n<script>alert(1)</script>\n`,
+    });
     assert.match(html, /<html lang="hu">/);
     assert.match(html, /<h1>Adatkezelési tájékoztató<\/h1>/);
     assert.match(html, /<h2>1\. Bevezetés<\/h2>/);
@@ -110,7 +145,10 @@ describe('static pages', () => {
     assert.match(html, /<li>egy<\/li>/);
     assert.match(html, /<table>/);
     assert.match(html, /Utolsó módosítás: 2026\. 10\. 16\./);
-    assert.match(html, /<strong lang="hu">HU<\/strong><a href="\/static\/privacy-policy\?locale=en"/);
+    assert.match(
+      html,
+      /<strong lang="hu">HU<\/strong><a href="\/static\/privacy-policy\?locale=en"/,
+    );
     assert.equal(html.includes('<script>'), false);
     assert.match(html, /&lt;script&gt;/);
   });
@@ -149,7 +187,10 @@ describe('static pages', () => {
     assert.match(String(enCtx.body), /<html lang="en">/);
     assert.match(String(enCtx.body), /<h1>Privacy Policy<\/h1>/);
     // nav: en title where it exists, hu fallback otherwise, links stay in en
-    assert.match(String(enCtx.body), /href="\/static\/terms-of-service\?locale=en">Felhasználási feltételek/);
+    assert.match(
+      String(enCtx.body),
+      /href="\/static\/terms-of-service\?locale=en">Felhasználási feltételek/,
+    );
 
     const fallback = fakeCtx({ slug: 'terms-of-service' }, { locale: 'en' });
     await handlers.show(fallback);
@@ -168,7 +209,10 @@ describe('static pages', () => {
     const index = fakeCtx({}, { locale: 'en' });
     await handlers.index(index);
     assert.equal(index.status, 200);
-    assert.match(String(index.body), /href="\/static\/privacy-policy\?locale=en">Privacy Policy/);
+    assert.match(
+      String(index.body),
+      /href="\/static\/privacy-policy\?locale=en">Privacy Policy/,
+    );
   });
 
   it('creates missing locales and makes hu default only when it creates hu', async () => {
@@ -177,7 +221,8 @@ describe('static pages', () => {
     const strapi = {
       plugin: () => ({
         service: () => ({
-          findByCode: async (code: string) => (existing.has(code) ? { id: 1, code } : null),
+          findByCode: async (code: string) =>
+            existing.has(code) ? { id: 1, code } : null,
           create: async ({ code }: { code: string }) => {
             existing.add(code);
             calls.push(`create:${code}`);
@@ -213,20 +258,37 @@ describe('static pages', () => {
 
   it('redirects only GET / and keeps the query', async () => {
     const used: unknown[] = [];
-    assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, undefined), false);
+    assert.equal(
+      registerHomeRedirect(
+        { server: { use: (fn) => used.push(fn) } },
+        undefined,
+      ),
+      false,
+    );
     assert.equal(used.length, 0);
     assert.equal(
-      registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, '/backoffice/'),
+      registerHomeRedirect(
+        { server: { use: (fn) => used.push(fn) } },
+        '/backoffice/',
+      ),
       true,
     );
     assert.equal(used.length, 1);
-    assert.equal(registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, ''), false);
+    assert.equal(
+      registerHomeRedirect({ server: { use: (fn) => used.push(fn) } }, ''),
+      false,
+    );
 
     const mw = createHomeRedirectMiddleware('/static/about');
     let redirected = '';
     let nextCalled = false;
     await mw(
-      { method: 'GET', path: '/', querystring: 'locale=en', redirect: (u) => (redirected = u) },
+      {
+        method: 'GET',
+        path: '/',
+        querystring: 'locale=en',
+        redirect: (u) => (redirected = u),
+      },
       async () => {
         nextCalled = true;
       },
@@ -234,9 +296,12 @@ describe('static pages', () => {
     assert.equal(redirected, '/static/about?locale=en');
     assert.equal(nextCalled, false);
 
-    await mw({ method: 'GET', path: '/admin', redirect: () => assert.fail() }, async () => {
-      nextCalled = true;
-    });
+    await mw(
+      { method: 'GET', path: '/admin', redirect: () => assert.fail() },
+      async () => {
+        nextCalled = true;
+      },
+    );
     assert.equal(nextCalled, true);
   });
 });

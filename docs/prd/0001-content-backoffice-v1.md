@@ -38,11 +38,11 @@ Lásd [§8 Out of scope](#8-out-of-scope-v1) és a [v2 PRD](./0002-content-backo
 
 Csak **Users & Permissions** (Content API). Strapi Admin JWT **nem** része az SPA autentikációnak. Dual Admin + Content login **out of scope**.
 
-| Role id | Ki | Jogok az SPA-ban | Backend elvárás |
-| --- | --- | --- | --- |
-| `dataentry` | Adatrögzítő | Új tranzakció; readonly lista; megtekintés; profil | `transaction` / `receipt` create & update **csak draft**; nincs publish |
-| `editor` | Szerkesztő | Readonly lista; Ellenőrzés menü draft szűrővel; megtekintés, drafton bizonylat csatolása és Véglegesít; profil | Draft olvasás; `status=published` írás engedélyezett |
-| Strapi Admin | Fejlesztő / üzemeltető | SPA-n kívül | Content user kézi létrehozás + invite; Google provider config |
+| Role id      | Ki                     | Jogok az SPA-ban                                                                                               | Backend elvárás                                                         |
+| ------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `dataentry`  | Adatrögzítő            | Új tranzakció; readonly lista; megtekintés; profil                                                             | `transaction` / `receipt` create & update **csak draft**; nincs publish |
+| `editor`     | Szerkesztő             | Readonly lista; Ellenőrzés menü draft szűrővel; megtekintés, drafton bizonylat csatolása és Véglegesít; profil | Draft olvasás; `status=published` írás engedélyezett                    |
+| Strapi Admin | Fejlesztő / üzemeltető | SPA-n kívül                                                                                                    | Content user kézi létrehozás + invite; Google provider config           |
 
 ### Felhasználókezelés
 
@@ -57,11 +57,11 @@ Csak **Users & Permissions** (Content API). Strapi Admin JWT **nem** része az S
 
 ## 4. Autentikáció
 
-| Mód | Endpoint / mechanizmus | v1 |
-| --- | --- | --- |
-| Email + jelszó | `/api/auth/local` | kötelező |
-| Google | Users & Permissions `google` provider | kötelező |
-| Strapi Admin login | `/admin/login` | tilos az SPA-ban |
+| Mód                | Endpoint / mechanizmus                | v1               |
+| ------------------ | ------------------------------------- | ---------------- |
+| Email + jelszó     | `/api/auth/local`                     | kötelező         |
+| Google             | Users & Permissions `google` provider | kötelező         |
+| Strapi Admin login | `/admin/login`                        | tilos az SPA-ban |
 
 Az SPA: `ra-strapi` auth provider + Google OAuth redirect/callback a Content user modellre. JWT a Content API hívásokhoz.
 
@@ -69,27 +69,27 @@ Az SPA: `ra-strapi` auth provider + Google OAuth redirect/callback a Content use
 
 A menü v1-ben **csak a tranzakció-domain**. Nincs külön Organizations / Members / Accounts / Currencies menüpont.
 
-| Oldal | Javasolt route | Szerep | Viselkedés |
-| --- | --- | --- | --- |
-| **Új tranzakció felvitele** | `/transactions/create` | `dataentry` | Create űrlap; mentés mindig **draft**; Publish gomb nincs |
-| **Tranzakciók (readonly lista)** | `/transactions` | `dataentry` és `editor` | Draft **és** published; receipt oszlop; szűrés statusra és mezőkre; **Szűrők törlése**; nincs sor-kattintás, create, edit, publish. A státusz oszlop után egy gomb: `editor` + draft soron „Ellenőrzés”, egyébként „Megtekintés”. Az `editor` Ellenőrzés menüje ezt a listát `status=draft` szűrővel nyitja; a tranzakciók menü szűrő nélkül. A két menüpont nem hagyja rajta a másik szűrőjét. A `dataentry` az Ellenőrzés menüt nem látja |
-| **Megtekintés** | `/transactions/:id/show` | `dataentry` és `editor` | Readonly, azonosító a `documentId`. Tranzakciómezők, bizonylatlinkek, audit. `editor` + draft: bizonylat csatolható, az adatok után **Véglegesít**. Más esetben nincs csatolás és nincs Véglegesít |
-| Bejelentkezés | `/login` | vendég | Email/jelszó + Google |
-| Profil | `/profile` | mindkét szerep | Név, email, jelszócsere (local usereknél) |
+| Oldal                            | Javasolt route           | Szerep                  | Viselkedés                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------- | ------------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Új tranzakció felvitele**      | `/transactions/create`   | `dataentry`             | Create űrlap; mentés mindig **draft**; Publish gomb nincs                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Tranzakciók (readonly lista)** | `/transactions`          | `dataentry` és `editor` | Draft **és** published; receipt oszlop; szűrés statusra és mezőkre; **Szűrők törlése**; nincs sor-kattintás, create, edit, publish. A státusz oszlop után egy gomb: `editor` + draft soron „Ellenőrzés”, egyébként „Megtekintés”. Az `editor` Ellenőrzés menüje ezt a listát `status=draft` szűrővel nyitja; a tranzakciók menü szűrő nélkül. A két menüpont nem hagyja rajta a másik szűrőjét. A `dataentry` az Ellenőrzés menüt nem látja |
+| **Megtekintés**                  | `/transactions/:id/show` | `dataentry` és `editor` | Readonly, azonosító a `documentId`. Tranzakciómezők, bizonylatlinkek, audit. `editor` + draft: bizonylat csatolható, az adatok után **Véglegesít**. Más esetben nincs csatolás és nincs Véglegesít                                                                                                                                                                                                                                          |
+| Bejelentkezés                    | `/login`                 | vendég                  | Email/jelszó + Google                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Profil                           | `/profile`               | mindkét szerep          | Név, email, jelszócsere (local usereknél)                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ### 5.1 Új tranzakció (`dataentry`)
 
 Kötelező / választható mezők:
 
-| Mező | Forrás | Megjegyzés |
-| --- | --- | --- |
-| `date` | transaction | kötelező |
-| `amount` | transaction | kötelező |
-| `description` | transaction | opcionális |
-| `organization` | relation | kötelező — a szervezeti fa csomópontja (projekt) |
-| `debit_account` | relation | kötelező — SPA szűrés: `code` ∈ `{5000, 5100, 5400}` |
-| `credit_account` | relation | kötelező — SPA szűrés / javaslat: `1xxx` (pl. `1000` Készpénz, `1100` Bankszámlák) |
-| `receipt` | relation | **opcionális** — egy tranzakcióhoz több bizonylat (1:N). A bizonylattípus kötelező, közös törzs |
+| Mező             | Forrás      | Megjegyzés                                                                                      |
+| ---------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `date`           | transaction | kötelező                                                                                        |
+| `amount`         | transaction | kötelező                                                                                        |
+| `description`    | transaction | opcionális                                                                                      |
+| `organization`   | relation    | kötelező — a szervezeti fa csomópontja (projekt)                                                |
+| `debit_account`  | relation    | kötelező — SPA szűrés: `code` ∈ `{5000, 5100, 5400}`                                            |
+| `credit_account` | relation    | kötelező — SPA szűrés / javaslat: `1xxx` (pl. `1000` Készpénz, `1100` Bankszámlák)              |
+| `receipt`        | relation    | **opcionális** — egy tranzakcióhoz több bizonylat (1:N). A bizonylattípus kötelező, közös törzs |
 
 Receipt (ha a felhasználó csatol):
 
@@ -134,24 +134,24 @@ Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
 
 A seed közös számlatükröt hoz létre ([`database/seeders/org-initializer.js`](../../database/seeders/org-initializer.js)). v1-ben a szűrés **kliens oldali** `account.code` allowlist:
 
-| Szerep a formon | Engedélyezett kódok | Példa seed név |
-| --- | --- | --- |
-| `debit_account` (költség) | `5000`, `5100`, `5400` | Anyagköltség, Bérköltség, Szolgáltatások |
-| `credit_account` (kifizető) | `1xxx` javasolt allowlist (legalább `1000`, `1100`) | Készpénz, Bankszámlák |
+| Szerep a formon             | Engedélyezett kódok                                 | Példa seed név                           |
+| --------------------------- | --------------------------------------------------- | ---------------------------------------- |
+| `debit_account` (költség)   | `5000`, `5100`, `5400`                              | Anyagköltség, Bérköltség, Szolgáltatások |
+| `credit_account` (kifizető) | `1xxx` javasolt allowlist (legalább `1000`, `1100`) | Készpénz, Bankszámlák                    |
 
 Konfigurálható / szerveroldali allowlist → v2.
 
 ## 7. Technikai keret
 
-| Elem | Döntés |
-| --- | --- |
-| App helye | `apps/content-backoffice` (Nx `appsDir`) |
-| Stack | TypeScript + Vite + React Admin 5 + `ra-strapi` + Material UI |
-| API | Strapi 5 REST, ugyanaz a host (`kor.fejlesztesek.hu`) |
-| Azonosító | react-admin `id` = Strapi `documentId` (ADR wrapper ha kell) |
-| i18n | default `hu`; `en` katalogus is (RA i18nProvider / react-i18next) |
-| Deploy v1 | Manuális `vite build` + static feltöltés a cPanel `/backoffice` pathra |
-| Env | `VITE_STRAPI_URL` (ugyanaz a origin / API gyökér) |
+| Elem       | Döntés                                                                            |
+| ---------- | --------------------------------------------------------------------------------- |
+| App helye  | `apps/content-backoffice` (Nx `appsDir`)                                          |
+| Stack      | TypeScript + Vite + React Admin 5 + `ra-strapi` + Material UI                     |
+| API        | Strapi 5 REST, ugyanaz a host (`kor.fejlesztesek.hu`)                             |
+| Azonosító  | react-admin `id` = Strapi `documentId` (ADR wrapper ha kell)                      |
+| i18n       | default `hu`; `en` katalogus is (RA i18nProvider / react-i18next)                 |
+| Deploy v1  | Manuális `vite build` + static feltöltés a cPanel `/backoffice` pathra            |
+| API origin | Élesen `window.location.origin` (ugyanaz a host); lokálon `http://localhost:1337` |
 
 ```mermaid
 flowchart LR
@@ -220,10 +220,10 @@ Custom feltöltési útvonal a receipt `document` mezőhöz (Cloudinary provider
 
 A Strapi `createdBy` / `updatedBy` admin usert jelent, a Content API-n nem a belépett `dataentry` vagy `editor` user. A v1 ezért saját mezőt ír a `transaction` és a `receipt` sémába. Users & Permissions user `find` jog továbbra sincs, ezért a mező szöveg, nem reláció: a szerver a belépett user e-mailjét menti, a kliens nem tud userlistát olvasni.
 
-| Mező | Típus | Ki írja |
-| --- | --- | --- |
-| `entered_by` | string | Szerver, create-kor, a Content user e-mailje. Ügyfélpayload nem írja felül. |
-| `published_by` | string | Szerver, publish-kor, az `editor` user e-mailje. Unpublish-kor üres. |
+| Mező           | Típus  | Ki írja                                                                     |
+| -------------- | ------ | --------------------------------------------------------------------------- |
+| `entered_by`   | string | Szerver, create-kor, a Content user e-mailje. Ügyfélpayload nem írja felül. |
+| `published_by` | string | Szerver, publish-kor, az `editor` user e-mailje. Unpublish-kor üres.        |
 
 A „mikor” a dokumentum saját `createdAt` és `publishedAt` mezője. Külön datetime mező nem kell.
 
@@ -263,15 +263,15 @@ A create és az update űrlapon ezek a mezők nincsenek. A megtekintés és a re
 
 ## 11. Kockázatok
 
-| Kockázat | Hatás | Mitigáció |
-| --- | --- | --- |
-| Google OAuth callback / redirect misconfig | Belépés sikertelen | Provider + SPA URL dokumentálása a deploy checklistben |
-| `ra-strapi` média gap | Receipt feltöltés elakad | Custom upload a v1 scope része |
-| Publish csak UI-n van tiltva | dataentry API-val publisholhat | Szerveroldali policy kötelező ([§9.2](#92-draft--publish-policy)) |
-| `vendor` required marad | Opcionális receipt flow törik | Séma módosítás a v1 előtt ([§9.1](#91-receipt-séma)) |
-| Seed kódok hiányoznak a környezetben | Üres debit/credit select | Seed / smoke check a deploy előtt |
-| Draft+published Strapi 5 document párok | Lista / szűrés zavaros | Status filter és `documentId` konzisztens kezelés (ADR) |
-| A kliens küldi az `entered_by` / `published_by` értéket | Hamis audit | A middleware felülírja create-kor és publish-kor, update payloadból eldobja ([§9.5](#95-audit-mezők)) |
+| Kockázat                                                | Hatás                          | Mitigáció                                                                                             |
+| ------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Google OAuth callback / redirect misconfig              | Belépés sikertelen             | Provider + SPA URL dokumentálása a deploy checklistben                                                |
+| `ra-strapi` média gap                                   | Receipt feltöltés elakad       | Custom upload a v1 scope része                                                                        |
+| Publish csak UI-n van tiltva                            | dataentry API-val publisholhat | Szerveroldali policy kötelező ([§9.2](#92-draft--publish-policy))                                     |
+| `vendor` required marad                                 | Opcionális receipt flow törik  | Séma módosítás a v1 előtt ([§9.1](#91-receipt-séma))                                                  |
+| Seed kódok hiányoznak a környezetben                    | Üres debit/credit select       | Seed / smoke check a deploy előtt                                                                     |
+| Draft+published Strapi 5 document párok                 | Lista / szűrés zavaros         | Status filter és `documentId` konzisztens kezelés (ADR)                                               |
+| A kliens küldi az `entered_by` / `published_by` értéket | Hamis audit                    | A middleware felülírja create-kor és publish-kor, update payloadból eldobja ([§9.5](#95-audit-mezők)) |
 
 ## 12. Sikerkritérium (Definition of Done)
 

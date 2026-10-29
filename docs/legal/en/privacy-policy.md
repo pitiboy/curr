@@ -1,13 +1,13 @@
 ## 1. Data controller
 
-| Item | Value |
-| --- | --- |
-| Name | Zöldforrások Szövetkezet |
+| Item                        | Value                                                   |
+| --------------------------- | ------------------------------------------------------- |
+| Name                        | Zöldforrások Szövetkezet                                |
 | Registered office / address | 1078 Budapest, Hernád utca 56. A. lház. alagsor 2. ajtó |
-| Tax number | 32714269-1-42 |
-| Representative | Valenczi Pál |
-| Contact email | szupatak@zoldeletprogram.hu |
-| Data protection officer | Péter Horváth |
+| Tax number                  | 32714269-1-42                                           |
+| Representative              | Valenczi Pál                                            |
+| Contact email               | szupatak@zoldeletprogram.hu                             |
+| Data protection officer     | Péter Horváth                                           |
 
 Hereinafter: the **Operator**, **we** or **us**.
 
@@ -59,13 +59,13 @@ The hosting servers keep technical logs of requests (IP address, time, requested
 
 ## 4. Purposes and legal bases
 
-| Purpose | Data | Legal basis (GDPR Art. 6(1)) |
-| --- | --- | --- |
-| Sign-in and access control | 3.1, 3.2, 3.3 | (f) legitimate interest: only authorised people may use the system |
-| Financial records and retention of documents | 3.4 transactions and documents | (c) legal obligation and (f) legitimate interest |
-| Who entered and finalised what (accountability, auditability) | entering and finalising user, timestamps | (f) legitimate interest: integrity of the records |
-| Member register | 3.4 member register | (b) performance of the membership relationship |
-| Operational security, abuse prevention | 3.5 | (f) legitimate interest |
+| Purpose                                                       | Data                                     | Legal basis (GDPR Art. 6(1))                                       |
+| ------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| Sign-in and access control                                    | 3.1, 3.2, 3.3                            | (f) legitimate interest: only authorised people may use the system |
+| Financial records and retention of documents                  | 3.4 transactions and documents           | (c) legal obligation and (f) legitimate interest                   |
+| Who entered and finalised what (accountability, auditability) | entering and finalising user, timestamps | (f) legitimate interest: integrity of the records                  |
+| Member register                                               | 3.4 member register                      | (b) performance of the membership relationship                     |
+| Operational security, abuse prevention                        | 3.5                                      | (f) legitimate interest                                            |
 
 You may object at any time to processing based on legitimate interest (see section 9).
 
@@ -81,11 +81,11 @@ The use and transfer of information received from Google APIs to any other app w
 - **Users of the system** – according to their role, they see transactions, documents and the names of the users who entered and finalised them.
 - **Processors:**
 
-| Processor | Task | Location |
-| --- | --- | --- |
-| DotRoll Kft, 1148 Budapest, Fogarasi ut 3-5 | running the server and website, server logs | Hungary |
-| Neon Inc. (USA) | database storage | Germany (EU) |
-| Cloudinary ([cloudinary.com](https://cloudinary.com)) | storage of uploaded document files | USA |
+| Processor                                             | Task                                        | Location     |
+| ----------------------------------------------------- | ------------------------------------------- | ------------ |
+| DotRoll Kft, 1148 Budapest, Fogarasi ut 3-5           | running the server and website, server logs | Hungary      |
+| Neon Inc. (USA)                                       | database storage                            | Germany (EU) |
+| Cloudinary ([cloudinary.com](https://cloudinary.com)) | storage of uploaded document files          | USA          |
 
 - **Google** acts as an independent controller during Google sign-in; see [Google's Privacy Policy](https://policies.google.com/privacy).
 
@@ -93,13 +93,13 @@ We do not sell personal data and do not share it for advertising.
 
 ## 7. How long we keep the data
 
-| Data | Retention period |
-| --- | --- |
-| User account | until access ends |
+| Data                                                  | Retention period                                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| User account                                          | until access ends                                                                                 |
 | Transactions, documents, entering and finalising user | **at least 8 years**, as required for accounting documents (Hungarian Act C of 2000, section 169) |
-| Member register | after the membership ends |
-| Server logs | 30 days |
-| Data stored in the browser | until you sign out or clear it from your browser |
+| Member register                                       | after the membership ends                                                                         |
+| Server logs                                           | 30 days                                                                                           |
+| Data stored in the browser                            | until you sign out or clear it from your browser                                                  |
 
 ## 8. Security
 

@@ -8,17 +8,17 @@ The first deploy failed because Root Directory was `apps/backend-strapi` and the
 
 Open [curr-zep-strapi → Settings](https://dashboard.render.com) and save:
 
-| Field | Set to |
-| --- | --- |
-| **Branch** | `feat/strapi-monorepo` |
-| **Root Directory** | **empty** — click Edit and delete `apps/backend-strapi` |
-| **Install Command** | `npm ci` (required — Render skipped install and failed with `strapi: not found`) |
-| **Build Command** | `npm run build` |
-| **Start Command** | `npm start` |
-| **Pre-Deploy Command** | empty |
-| **Health Check Path** | `/_health` |
+| Field                  | Set to                                                                           |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| **Branch**             | `feat/strapi-monorepo`                                                           |
+| **Root Directory**     | **empty** — click Edit and delete `apps/backend-strapi`                          |
+| **Install Command**    | `npm ci` (required — Render skipped install and failed with `strapi: not found`) |
+| **Build Command**      | `npm run build`                                                                  |
+| **Start Command**      | `npm start`                                                                      |
+| **Pre-Deploy Command** | empty                                                                            |
+| **Health Check Path**  | `/_health`                                                                       |
 
-After you clear Root Directory, the prompt should look like `$ npm run build`, not `apps/backend-strapi/ $ npm run build`. If there is no Install Command field, set **Build Command** to `npm ci && npm run build`. A good deploy log shows **Installing dependencies** (or `npm ci`) *before* `strapi build`, and takes minutes, not ~7 seconds.
+After you clear Root Directory, the prompt should look like `$ npm run build`, not `apps/backend-strapi/ $ npm run build`. If there is no Install Command field, set **Build Command** to `npm ci && npm run build`. A good deploy log shows **Installing dependencies** (or `npm ci`) _before_ `strapi build`, and takes minutes, not ~7 seconds.
 
 Do **not** create a new Web Service and do **not** apply `render.yaml` (that would create a second app and database).
 

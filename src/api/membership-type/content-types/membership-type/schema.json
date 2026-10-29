@@ -46,6 +46,13 @@
         "label": "Tagságok",
         "description": "Az ehhez a típushoz tartozó tagságok"
       }
+    },
+    "rules": {
+      "type": "json",
+      "metadatas": {
+        "label": "Szabályok",
+        "description": "Alapértelmezett szabályok ehhez a tagságtípushoz (pl. tojás továbbosztás)"
+      }
     }
   }
 }

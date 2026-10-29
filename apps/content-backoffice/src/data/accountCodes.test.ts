@@ -3,15 +3,17 @@ import { describe, expect, it } from 'vitest';
 import type { DataProvider } from 'react-admin';
 
 import {
-  CREDIT_CODES,
-  DEBIT_CODES,
-  filterAccountChoices,
+  DEFAULT_ACCOUNT_CODE_PATTERNS,
   isCreditCode,
   isDebitCode,
   loadAllAccounts,
   parseCodeRegex,
   type AccountChoice,
 } from './accountCodes';
+import {
+  accountChoicesForProfile,
+  filterAccountsByProfile,
+} from './accountProfiles';
 
 const accounts: AccountChoice[] = [
   { id: 'cash', code: '1000', name: 'Készpénz' },
@@ -45,40 +47,54 @@ describe('parseCodeRegex', () => {
 });
 
 describe('account code filters', () => {
-  it('uses /^5/ for debit when VITE_DEBIT_CODES is unset', () => {
-    expect(DEBIT_CODES.source).toBe('^5');
-    expect(filterAccountChoices(accounts, 'debit').map((row) => row.code)).toEqual([
-      '5000',
-      '5100',
-      '5200',
-      '5400',
-      '5800',
-    ]);
+  it('uses /^5/ for debit with default patterns', () => {
+    expect(DEFAULT_ACCOUNT_CODE_PATTERNS.debit.source).toBe('^5');
+    expect(
+      filterAccountsByProfile(accounts, 'debit').map((row) => row.code),
+    ).toEqual(['5000', '5100', '5200', '5400', '5800']);
     expect(isDebitCode('4000')).toBe(false);
     expect(isDebitCode('1000')).toBe(false);
   });
 
-  it('uses /^(1|3)/ for credit when VITE_CREDIT_CODES is unset', () => {
-    expect(CREDIT_CODES.source).toBe('^(1|3)');
-    expect(filterAccountChoices(accounts, 'credit').map((row) => row.code)).toEqual([
-      '1000',
-      '1100',
-      '1200',
-      '1300',
-      '3000',
-    ]);
+  it('uses /^(1|3)/ for credit with default patterns', () => {
+    expect(DEFAULT_ACCOUNT_CODE_PATTERNS.credit.source).toBe('^(1|3)');
+    expect(
+      filterAccountsByProfile(accounts, 'credit').map((row) => row.code),
+    ).toEqual(['1000', '1100', '1200', '1300', '3000']);
     expect(isCreditCode('2000')).toBe(false);
     expect(isCreditCode('4000')).toBe(false);
     expect(isCreditCode('5000')).toBe(false);
+  });
+
+  it('returns every account when the review profile is empty', () => {
+    expect(filterAccountsByProfile(accounts, 'debit', '')).toHaveLength(
+      accounts.length,
+    );
+    expect(
+      filterAccountsByProfile(accounts, 'credit', '').map((row) => row.code),
+    ).toContain('4000');
+    expect(
+      filterAccountsByProfile(accounts, 'credit', 'cost').map(
+        (row) => row.code,
+      ),
+    ).not.toContain('4000');
+  });
+
+  it('keeps a selected account in the list when it is outside the profile', () => {
+    const choices = accountChoicesForProfile(
+      accounts,
+      'credit',
+      'cost',
+      'revenue',
+    );
+    expect(choices.map((row) => row.id)).toContain('revenue');
+    expect(choices.map((row) => row.code)).toContain('4000');
   });
 });
 
 describe('loadAllAccounts', () => {
   it('follows pages so later expense codes are not dropped', async () => {
-    const pages = [
-      accounts.slice(0, 4),
-      accounts.slice(4),
-    ];
+    const pages = [accounts.slice(0, 4), accounts.slice(4)];
     const getList: DataProvider['getList'] = async (_resource, params) => {
       const page = params.pagination?.page ?? 1;
       return {
@@ -89,12 +105,8 @@ describe('loadAllAccounts', () => {
 
     const loaded = await loadAllAccounts(getList);
     expect(loaded).toHaveLength(accounts.length);
-    expect(filterAccountChoices(loaded, 'debit').map((row) => row.code)).toEqual([
-      '5000',
-      '5100',
-      '5200',
-      '5400',
-      '5800',
-    ]);
+    expect(
+      filterAccountsByProfile(loaded, 'debit').map((row) => row.code),
+    ).toEqual(['5000', '5100', '5200', '5400', '5800']);
   });
 });

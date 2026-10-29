@@ -101,6 +101,7 @@ function errorMessage(error: unknown): string {
   const body = (error as { body?: { error?: { message?: string } } }).body;
   const nested = body?.error?.message;
   if (typeof nested === 'string' && nested.trim()) return nested.trim();
-  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  if (error instanceof Error && error.message.trim())
+    return error.message.trim();
   return '';
 }

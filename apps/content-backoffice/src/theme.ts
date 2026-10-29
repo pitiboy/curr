@@ -1,4 +1,9 @@
-import type { PaletteMode, SxProps, Theme, ThemeOptions } from '@mui/material/styles';
+import type {
+  PaletteMode,
+  SxProps,
+  Theme,
+  ThemeOptions,
+} from '@mui/material/styles';
 import type { SxProps as UntypedSx, SystemStyleObject } from '@mui/system';
 import { deepmerge } from '@mui/utils';
 import { defaultDarkTheme, defaultLightTheme } from 'react-admin';
@@ -21,8 +26,12 @@ export function bandColor(mode: PaletteMode, index: number): string {
 
 function childBands(theme: Theme) {
   return {
-    '& > :nth-of-type(odd)': { backgroundColor: bandColor(theme.palette.mode, 0) },
-    '& > :nth-of-type(even)': { backgroundColor: bandColor(theme.palette.mode, 1) },
+    '& > :nth-of-type(odd)': {
+      backgroundColor: bandColor(theme.palette.mode, 0),
+    },
+    '& > :nth-of-type(even)': {
+      backgroundColor: bandColor(theme.palette.mode, 1),
+    },
   };
 }
 
@@ -261,20 +270,26 @@ const brandSecondary = {
 
 export const lightTheme = deepmerge(
   defaultLightTheme,
-  deepmerge(mobileChrome, deepmerge(readableButtons, {
-    palette: {
-      primary: { main: brandGreen },
-      secondary: brandSecondary,
-    },
-  })),
+  deepmerge(
+    mobileChrome,
+    deepmerge(readableButtons, {
+      palette: {
+        primary: { main: brandGreen },
+        secondary: brandSecondary,
+      },
+    }),
+  ),
 );
 
 export const darkTheme = deepmerge(
   defaultDarkTheme,
-  deepmerge(mobileChrome, deepmerge(readableButtons, {
-    palette: {
-      primary: { main: brandGreenOnDark },
-      secondary: brandSecondary,
-    },
-  })),
+  deepmerge(
+    mobileChrome,
+    deepmerge(readableButtons, {
+      palette: {
+        primary: { main: brandGreenOnDark },
+        secondary: brandSecondary,
+      },
+    }),
+  ),
 );

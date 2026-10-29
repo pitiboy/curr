@@ -781,6 +781,7 @@ export interface ApiMembershipTypeMembershipType
         maxLength: 255;
       }>;
     publishedAt: Schema.Attribute.DateTime;
+    rules: Schema.Attribute.JSON;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -812,12 +813,14 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
     membership_type: Schema.Attribute.Relation<
       'manyToOne',
       'api::membership-type.membership-type'
-    >;
+    > &
+      Schema.Attribute.Required;
     organization: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    rules: Schema.Attribute.JSON;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -957,6 +960,44 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     vendor: Schema.Attribute.String;
+  };
+}
+
+export interface ApiSettingSetting extends Struct.CollectionTypeSchema {
+  collectionName: 'backoffice_features';
+  info: {
+    description: 'Workflow toggles and backoffice settings (Strapi Admin only; Content API reads the aggregated /api/backoffice/config).';
+    displayName: 'Settings';
+    pluralName: 'settings';
+    singularName: 'setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    config: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::setting.setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1729,6 +1770,7 @@ declare module '@strapi/strapi' {
       'api::organization.organization': ApiOrganizationOrganization;
       'api::receipt-type.receipt-type': ApiReceiptTypeReceiptType;
       'api::receipt.receipt': ApiReceiptReceipt;
+      'api::setting.setting': ApiSettingSetting;
       'api::static-page.static-page': ApiStaticPageStaticPage;
       'api::transaction-type.transaction-type': ApiTransactionTypeTransactionType;
       'api::transaction-workflow.transaction-workflow': ApiTransactionWorkflowTransactionWorkflow;

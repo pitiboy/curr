@@ -1,6 +1,7 @@
 import type {
   BulkQuantityConflictChoice,
   BulkQuantityDuplicate,
+  BulkQuantityGlobalConflictChoice,
   BulkQuantityHenHouse,
   BulkQuantityResolvedRefs,
   BulkQuantityRow,
@@ -173,7 +174,9 @@ export function mergeRowResults(
   return [...byOrg.values()];
 }
 
-export function failedRowIds(results: readonly BulkQuantityRowResult[]): string[] {
+export function failedRowIds(
+  results: readonly BulkQuantityRowResult[],
+): string[] {
   return results
     .filter((row) => row.status === 'error')
     .map((row) => row.organizationId);
@@ -185,4 +188,32 @@ export function plansForRetry(
 ): BulkQuantityRowPlan[] {
   const failed = new Set(failedIds);
   return plans.filter((plan) => failed.has(plan.organizationId));
+}
+
+export function buildRowPlansWithGlobalChoice(
+  rows: readonly BulkQuantityRow[],
+  duplicates: readonly BulkQuantityDuplicate[],
+  choice: BulkQuantityGlobalConflictChoice,
+): BulkQuantityRowPlan[] {
+  const duplicateByOrg = new Map(
+    duplicates.map((item) => [item.row.organizationId, item]),
+  );
+  return rows.map((row) => {
+    const duplicate = duplicateByOrg.get(row.organizationId);
+    if (!duplicate) {
+      return { ...row, action: 'insert' as const };
+    }
+    return {
+      ...row,
+      action: choice,
+      updateDocumentId:
+        choice === 'update' ? duplicate.existingDocumentId : undefined,
+    };
+  });
+}
+
+export function hasAnyDuplicate(
+  duplicates: readonly BulkQuantityDuplicate[],
+): boolean {
+  return duplicates.length > 0;
 }

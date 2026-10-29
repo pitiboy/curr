@@ -18,16 +18,16 @@ Helye: `apps/content-backoffice`. Nx `appsDir` már `apps` az `nx.json`-ban. A S
 
 - Vite + React + TypeScript. Függőség: `react-admin` 5, `ra-strapi`, MUI a react-admin peerjei szerint.
 - `vite.config.ts` `base: '/backoffice/'`.
-- `VITE_STRAPI_URL` a Strapi origin, path nélkül (lokálisan `http://localhost:1337`, élesen `https://kor.fejlesztesek.hu`).
+- API origin (`STRAPI_URL` a `config.ts`-ből): lokálon `http://localhost:1337`, élesen `window.location.origin` (kor/edizone közös build).
 
 ## Provider
 
 ```tsx
-const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
+import { STRAPI_URL } from './config';
 const authProvider = strapiAuthProvider({ baseURL: STRAPI_URL });
 const httpClient = strapiHttpClient();
 const dataProvider = withDocumentId(
-  strapiDataProvider({ baseURL: STRAPI_URL, httpClient })
+  strapiDataProvider({ baseURL: STRAPI_URL, httpClient }),
 );
 ```
 
@@ -43,13 +43,13 @@ A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél 
 
 Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és megtekintés. Guesser nincs az éles fában. Külön review lista nincs.
 
-| Route | Szerep | Viselkedés |
-| --- | --- | --- |
-| `/transactions/create` | `dataentry`, `editor` | Create. Mentés draft. Publish nincs. |
-| `/transactions/:id/show` | mindkettő | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít. |
-| `/transactions` | mindkettő | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
-| `/login` | vendég | Email/jelszó és Google. |
-| `/profile` | mindkettő | Név, email. Jelszócsere csak `provider === 'local'`. |
+| Route                    | Szerep                | Viselkedés                                                                                                                                                                             |
+| ------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/transactions/create`   | `dataentry`, `editor` | Create. Mentés draft. Publish nincs.                                                                                                                                                   |
+| `/transactions/:id/show` | mindkettő             | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít.                                 |
+| `/transactions`          | mindkettő             | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
+| `/login`                 | vendég                | Email/jelszó és Google.                                                                                                                                                                |
+| `/profile`               | mindkettő             | Név, email. Jelszócsere csak `provider === 'local'`.                                                                                                                                   |
 
 A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 
@@ -88,7 +88,7 @@ Profil: `GET /api/users/me`. Jelszócsere: `POST /api/auth/change-password` (`cu
 
 ## Deploy
 
-`npm run deploy:f` a repo gyökerében. Előtte `build:f:kor.fejlesztesek.hu` beégeti a `VITE_STRAPI_URL=https://kor.fejlesztesek.hu` értéket. Az FTP a `dist` tartalmát a Strapi `public/backoffice` mappájába teszi; a `strapi::public` middleware a `/backoffice/` útvonalon adja. Ugyanaz az `.env.deploy:kor.fejlesztesek.hu`, mint a Strapi deploy. A jegyzet: `docs/deploy/cpanel/backoffice.md`. CI pipeline nincs.
+`npm run deploy:f` a repo gyökerében. Előtte `build:f:kor.fejlesztesek.hu` (Vite env nélkül). Az FTP a `dist` tartalmát a Strapi `public/backoffice` mappájába teszi; a `strapi::public` middleware a `/backoffice/` útvonalon adja. Ugyanaz az `.env.deploy:kor.fejlesztesek.hu`, mint a Strapi deploy. A jegyzet: `docs/deploy/cpanel/backoffice.md`. CI pipeline nincs.
 
 ## Kész, ha
 

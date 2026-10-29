@@ -1,0 +1,139 @@
+# Árfolyamok (EdiZone)
+# Adat: data/currency-rates.json
+# rate: hány egység cél pénznem = 1 egység forrás pénznem (schema).
+#
+#   npm run seed:http:edizone:currency-rates:local
+#   npm run seed:http:edizone:currency-rates -- prod
+#
+# Teljes seed (01–09): npm run seed:http:edizone:local
+# Környezet: local | prod — http-client.env.json
+# Token: http-client.private.env.json
+# Ha ugyanaz a pénznempár és valid_from már létezik, a POST nem fut le.
+
+{{
+  if (typeof rateItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    const dataDir = "database/seeders/http/edizone/data";
+    exports.rateItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "currency-rates.json"), "utf8")
+    );
+    exports.rateFailed = {};
+    exports.rateExists = {};
+    exports.rateFromIds = {};
+    exports.rateToIds = {};
+  }
+}}
+
+###
+# @name lookup-currency-rate
+# @loop for item of rateItems
+{{
+  exports.fromCode = item.fromCurrencyCode;
+  exports.toCode = item.toCurrencyCode;
+  exports.rateKey = item.fromCurrencyCode + "|" + item.toCurrencyCode + "|" + item.validFrom;
+}}
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{fromCode}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+  }
+  exports.fromId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+}}
+
+###
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{toCode}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+  }
+  const resolvedToId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+  exports.toId = resolvedToId;
+  if (!fromId || !resolvedToId) {
+    rateFailed[rateKey] = true;
+    exports.rateFailed = rateFailed;
+    console.error(
+      "currency rate skipped: missing currency type",
+      item.fromCurrencyCode,
+      item.toCurrencyCode
+    );
+  } else {
+    rateFromIds[rateKey] = fromId;
+    rateToIds[rateKey] = resolvedToId;
+    exports.rateFromIds = rateFromIds;
+    exports.rateToIds = rateToIds;
+    exports.encodedValidFrom = encodeURIComponent(item.validFrom);
+  }
+}}
+
+###
+GET {{baseUrl}}/api/currency-rates?filters[from_currency_type][documentId][$eq]={{fromId}}&filters[to_currency_type][documentId][$eq]={{toId}}&filters[valid_from][$eq]={{encodedValidFrom}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  if (rateFailed[rateKey]) {
+    exports.$cancel = true;
+  } else {
+    let parsed = response.parsedBody;
+    if (!parsed && response.body) {
+      try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+    }
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      rateExists[rateKey] = true;
+      exports.rateExists = rateExists;
+    }
+  }
+}}
+
+###
+# @name create-currency-rate
+# @loop for item of rateItems
+{{
+  exports.rateKey = item.fromCurrencyCode + "|" + item.toCurrencyCode + "|" + item.validFrom;
+  const fromDocId = rateFromIds[rateKey];
+  const toDocId = rateToIds[rateKey];
+  if (rateFailed[rateKey] || rateExists[rateKey] || !fromDocId || !toDocId) {
+    exports.$cancel = true;
+  } else {
+    exports.ratePayload = JSON.stringify({
+      data: {
+        rate: item.rate,
+        valid_from: item.validFrom,
+        from_currency_type: fromDocId,
+        to_currency_type: toDocId,
+      },
+    });
+  }
+}}
+POST {{baseUrl}}/api/currency-rates
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{ratePayload}}
+
+{{
+  if (ratePayload) {
+    let parsed = response.parsedBody;
+    if (!parsed && response.body) {
+      try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+    }
+    if (response.statusCode !== 200 && response.statusCode !== 201) {
+      console.error(
+        "create failed: " + item.fromCurrencyCode + " → " + item.toCurrencyCode,
+        response.statusCode,
+        response.body
+      );
+    }
+  }
+}}

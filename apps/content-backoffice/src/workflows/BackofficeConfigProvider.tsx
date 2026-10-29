@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { strapiHttpClient } from 'ra-strapi';
 
 import { STRAPI_URL } from '../config';
@@ -7,28 +7,20 @@ import {
   type BackofficeConfigValue,
 } from './backofficeConfigContext';
 import {
-  effectiveWorkflows,
-  parseWorkflowOverride,
-} from './effectiveWorkflows';
-import {
   parseBackofficeConfig,
   type BackofficeConfigResponse,
 } from './parseBackofficeConfig';
-import { WORKFLOW_OVERRIDE_KEY } from './storage';
 
 const httpClient = strapiHttpClient({ storage: localStorage });
 
-function readOverride(): string[] | null {
-  return parseWorkflowOverride(localStorage.getItem(WORKFLOW_OVERRIDE_KEY));
-}
+const EMPTY_CONFIG: BackofficeConfigResponse = parseBackofficeConfig(null);
 
-export function BackofficeConfigProvider({ children }: { children: ReactNode }) {
-  const [server, setServer] = useState<BackofficeConfigResponse>({
-    enabled: [],
-    available: [],
-    publisherMustDiffer: true,
-  });
-  const [override, setOverrideState] = useState<string[] | null>(readOverride);
+export function BackofficeConfigProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [server, setServer] = useState<BackofficeConfigResponse>(EMPTY_CONFIG);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -41,11 +33,7 @@ export function BackofficeConfigProvider({ children }: { children: ReactNode }) 
       })
       .catch(() => {
         if (active) {
-          setServer({
-            enabled: [],
-            available: [],
-            publisherMustDiffer: true,
-          });
+          setServer(EMPTY_CONFIG);
         }
       })
       .finally(() => {
@@ -58,37 +46,12 @@ export function BackofficeConfigProvider({ children }: { children: ReactNode }) 
     };
   }, []);
 
-  const setOverride = useCallback(
-    (ids: string[]) => {
-      const known = new Set(server.available);
-      const next = ids.filter(
-        (id, index) => known.has(id) && ids.indexOf(id) === index,
-      );
-      localStorage.setItem(WORKFLOW_OVERRIDE_KEY, JSON.stringify(next));
-      setOverrideState(next);
-    },
-    [server.available],
-  );
-
-  const clearOverride = useCallback(() => {
-    localStorage.removeItem(WORKFLOW_OVERRIDE_KEY);
-    setOverrideState(null);
-  }, []);
-
   const value = useMemo<BackofficeConfigValue>(
     () => ({
-      enabled: server.enabled,
-      available: server.available,
-      effective: ready
-        ? effectiveWorkflows(server.enabled, server.available, override)
-        : [],
-      publisherMustDiffer: server.publisherMustDiffer,
-      hasOverride: override !== null,
+      ...server,
       ready,
-      setOverride,
-      clearOverride,
     }),
-    [server, override, ready, setOverride, clearOverride],
+    [server, ready],
   );
 
   return (

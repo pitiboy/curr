@@ -95,11 +95,44 @@ Edit the `initial-data.js` file to:
 - Relations are properly established between entities
 - The seeder is idempotent (safe to run multiple times)
 
+## Settings (kor / edizone)
+
+Workflow toggles and backoffice settings live in the **Settings** collection (`key`, `enabled`, `config` JSON). Strapi Admin can edit them; the Content API exposes read-only values via `GET /api/backoffice/config`.
+
+Instance seed files (httpyac, same pattern as 01–09):
+
+- `database/seeders/http/common/10-backoffice-features.http`
+- `database/seeders/http/kor/data/backoffice-features.json`
+- `database/seeders/http/edizone/data/backoffice-features.json`
+
+Upsert is **insert-only**: existing keys are left unchanged (Admin edits are preserved). Included in `seed:http:kor` / `seed:http:edizone`; or alone:
+
+```bash
+npm run seed:http:kor:backoffice-features:local
+npm run seed:http:edizone:backoffice-features:local
+npm run seed:http:kor:backoffice-features -- prod
+```
+
+Optional boot-time upsert (Strapi documents API, not httpyac): set `BACKOFFICE_FEATURES_INSTANCE=kor` (or `edizone`) in `.env`. The upsert logic lives in `src/backoffice-features/seed.ts` (compiled into `dist`). The JSON files under `database/seeders/http/<instance>/data/` are uploaded with the backend deploy when boot seed is used.
+
+Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `key` is treated as a workflow id for the backoffice menu. The SPA brand prefix is `app.title` (`config.value`, e.g. `KÖR`).
+
+## HTTP seed (kor / edizone)
+
+A `database/seeders/http/common/01`–`10` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak.
+
+| Lépés | HTTP                                                                                                  | Adat                            |
+| ----- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`      |
+| 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json` |
+
+Előfeltétel a 09-hez: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
+
 ## Transaction import (kor)
 
 `http/common/transactions.http` loads the rows of the "Pénzmozgások" Excel sheet
 from `http/kor/data/transactions.json` as draft transactions. It is not part of
-the `0*.http` run; start it on its own after the 01-08 seeders:
+the `0*.http` run; start it on its own after the 01-09 seeders:
 
 ```bash
 npm run seed:http:kor:transactions -- local

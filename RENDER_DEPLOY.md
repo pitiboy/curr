@@ -4,11 +4,11 @@ Reuse the existing **curr-zep-strapi** service. Do not delete it and do not clic
 
 ## What went wrong last time
 
-| Setting then | Required now |
-| --- | --- |
+| Setting then                                  | Required now                                 |
+| --------------------------------------------- | -------------------------------------------- |
 | Branch `ci/deploy-render-cloud` (Nx monorepo) | `feat/strapi-monorepo` (Strapi at repo root) |
-| Root Directory `apps/backend-strapi` | **empty** |
-| Build ran in the subfolder | `$ npm run build` at repo root |
+| Root Directory `apps/backend-strapi`          | **empty**                                    |
+| Build ran in the subfolder                    | `$ npm run build` at repo root               |
 
 ## Redeploy the failed service
 
@@ -60,12 +60,12 @@ Optional: Cloudinary (`CLOUDINARY_*`), `CORS_ORIGINS`.
 
 ## Troubleshooting
 
-| Symptom | Fix |
-| --- | --- |
-| `strapi: not found` in ~7s | Install never ran. Set **Install Command** to `npm ci` (or Build to `npm ci && npm run build`). Logs must show a dependency install before `strapi build`. |
-| `JavaScript heap out of memory` / **Killed** | Admin build needs more than 512 MB. Upgrade to **2 GB**, set `NODE_OPTIONS=--max-old-space-size=1536`. Do not keep heap at 512 on Free. |
-| DB connection errors | Use **Internal** `DATABASE_URL`, same region (Frankfurt) |
-| Admin cookies fail on HTTPS | `IS_PROXIED=true` and `PUBLIC_URL=https://curr-zep-strapi.onrender.com` |
-| Missing `ENCRYPTION_KEY` | Generate and set it before boot |
+| Symptom                                      | Fix                                                                                                                                                        |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `strapi: not found` in ~7s                   | Install never ran. Set **Install Command** to `npm ci` (or Build to `npm ci && npm run build`). Logs must show a dependency install before `strapi build`. |
+| `JavaScript heap out of memory` / **Killed** | Admin build needs more than 512 MB. Upgrade to **2 GB**, set `NODE_OPTIONS=--max-old-space-size=1536`. Do not keep heap at 512 on Free.                    |
+| DB connection errors                         | Use **Internal** `DATABASE_URL`, same region (Frankfurt)                                                                                                   |
+| Admin cookies fail on HTTPS                  | `IS_PROXIED=true` and `PUBLIC_URL=https://curr-zep-strapi.onrender.com`                                                                                    |
+| Missing `ENCRYPTION_KEY`                     | Generate and set it before boot                                                                                                                            |
 
 Local reproduce: `NODE_ENV=production npm run build && npm start`

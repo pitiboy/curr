@@ -207,7 +207,12 @@ function TransactionListEmpty() {
 
 function transactionDatagridColumns(locale: string, mobile: boolean) {
   const openColumn = (
-    <TransactionOpenField key="open" label={false} sortable={false} source="open" />
+    <TransactionOpenField
+      key="open"
+      label={false}
+      sortable={false}
+      source="open"
+    />
   );
 
   const columns = [
@@ -271,7 +276,11 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       sortBy="receipts"
       source="receipts"
     />,
-    <DateField key="createdAt" source="createdAt" {...dateFieldProps(locale, true)} />,
+    <DateField
+      key="createdAt"
+      source="createdAt"
+      {...dateFieldProps(locale, true)}
+    />,
     <TextField key="entered_by" emptyText="—" source="entered_by" />,
     <TextField key="published_by" emptyText="—" source="published_by" />,
     <DateField
@@ -289,7 +298,6 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
 
   return columns;
 }
-
 
 function draftRowSelectable(record: RaRecord & { status?: string }) {
   return record.status === 'draft';

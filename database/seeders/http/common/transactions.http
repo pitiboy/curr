@@ -63,7 +63,7 @@
 #   npm run seed:http:kor:transactions:reset:local
 #
 # Nincs a 0*.http körben, külön kell futtatni.
-# Előfeltétel: a 01-08 seederek már lefutottak (számlák, típusok, szervezetek, HUF).
+# Előfeltétel: a 01-09 seederek már lefutottak (számlák, típusok, szervezetek, árfolyamok, HUF).
 # Ha a dataDir-ben nincs transactions.json, nem csinál semmit.
 # Környezet: local | prod a http-client.env.json-ban.
 # Token: http-client.private.env.json, példányonként Full access API token.

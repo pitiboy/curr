@@ -55,6 +55,13 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_leave_stay: 'Stay',
     accounts_seed_missing:
       'The account list is empty because the seed is missing.',
+    account_profile: 'Account profile',
+    account_profile_all: 'All accounts',
+    account_profile_cost: 'Expense',
+    account_profile_revenue: 'Revenue',
+    account_profile_egg_production: 'Eggs — production',
+    account_profile_egg_internal: 'Eggs — internal distribution',
+    account_profile_egg_sale: 'Eggs — sale',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
@@ -95,8 +102,33 @@ export const enMessages = mergeTranslations(englishMessages, {
       conflict_update: 'Update existing row',
       conflict_insert: 'Insert as new row',
       conflict_continue: 'Continue',
+      conflict_global_body:
+        'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
+      step_production: 'Production',
+      step_distribution: 'Distribution',
+      next_distribution: 'Next: distribution',
+      back_production: 'Back: production',
+      save_production_only: 'Save production only',
+      save_production_and_distribution: 'Save production and distribution',
+      distribution_produced: 'Total produced today: %{count}',
+      distribution_remaining: 'Still unallocated: %{count}',
+      distribution_over_limit:
+        'Distribution exceeds today’s production by %{count}. Overspending is allowed ( which will be deducted from earlier stock).',
+      distribution_rate: 'Rate (%{from} → %{to}): %{rate}, valid since %{date}',
+      distribution_rate_missing:
+        'No %{from} → %{to} rate for the selected day; sale rows cannot be saved.',
+      distribution_no_members:
+        'No members in organization “%{org}” for this date.',
+      distribution_members_failed: 'Could not load the member list.',
       description: {
         egg: 'Daily eggs — %{organization}: %{amount}',
+        egg_distribution_internal:
+          'Egg distribution (internal) — %{member}: %{amount}',
+        egg_distribution_sale_egg: 'Egg sale (eggs) — %{member}: %{amount}',
+        egg_distribution_cash:
+          'Egg sale (cash payment) — %{member}: %{amount} → %{revenue}',
+        egg_distribution_revenue:
+          'Egg sale (revenue) — %{member}: %{amount} → %{revenue}',
       },
     },
     login_google: 'Sign in with Google',

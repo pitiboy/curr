@@ -5,6 +5,11 @@ import {
   registerStaticPageRoutes,
   registerStaticPageSlugGuard,
 } from './static-pages';
+import { createPublishPolicyLoader } from './backoffice-features/policy';
+import {
+  resolveBackofficeFeaturesSeedPath,
+  upsertBackofficeFeaturesFromFile,
+} from './backoffice-features/seed';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
@@ -37,6 +42,14 @@ const CONTENT_ROLE_ACTIONS = [
   'api::account.account.findOne',
   'api::currency-type.currency-type.find',
   'api::currency-type.currency-type.findOne',
+  'api::currency-rate.currency-rate.find',
+  'api::currency-rate.currency-rate.findOne',
+  'api::member.member.find',
+  'api::member.member.findOne',
+  'api::membership.membership.find',
+  'api::membership.membership.findOne',
+  'api::membership-type.membership-type.find',
+  'api::membership-type.membership-type.findOne',
   'api::transaction-type.transaction-type.find',
   'api::transaction-type.transaction-type.findOne',
   'api::receipt-type.receipt-type.find',
@@ -70,6 +83,26 @@ const usersPermissionsRolePermissions = {
   'api::currency-type': {
     controllers: {
       'currency-type': allow(['find', 'findOne']),
+    },
+  },
+  'api::currency-rate': {
+    controllers: {
+      'currency-rate': allow(['find', 'findOne']),
+    },
+  },
+  'api::member': {
+    controllers: {
+      member: allow(['find', 'findOne']),
+    },
+  },
+  'api::membership': {
+    controllers: {
+      membership: allow(['find', 'findOne']),
+    },
+  },
+  'api::membership-type': {
+    controllers: {
+      'membership-type': allow(['find', 'findOne']),
     },
   },
   'api::transaction-type': {
@@ -118,8 +151,12 @@ const LEGACY_EDITOR_ROLE_TYPE = 'qa';
 type StrapiLike = {
   db: {
     query: (uid: string) => {
-      findOne: (params: Record<string, unknown>) => Promise<{ id: number } | null>;
-      create: (params: { data: Record<string, unknown> }) => Promise<{ id: number }>;
+      findOne: (
+        params: Record<string, unknown>,
+      ) => Promise<{ id: number } | null>;
+      create: (params: {
+        data: Record<string, unknown>;
+      }) => Promise<{ id: number }>;
       update: (params: {
         where: { id: number };
         data: Record<string, unknown>;
@@ -128,7 +165,10 @@ type StrapiLike = {
   };
   plugin: (name: string) => {
     service: (name: string) => {
-      getActions: () => Record<string, { controllers?: Record<string, Record<string, unknown>> }>;
+      getActions: () => Record<
+        string,
+        { controllers?: Record<string, Record<string, unknown>> }
+      >;
       createRole: (params: Record<string, unknown>) => Promise<void>;
     };
   };
@@ -144,7 +184,10 @@ function parseActionId(actionId: string) {
 }
 
 function isActionInCatalog(
-  catalog: Record<string, { controllers?: Record<string, Record<string, unknown>> }>,
+  catalog: Record<
+    string,
+    { controllers?: Record<string, Record<string, unknown>> }
+  >,
   actionId: string,
 ) {
   const { typeName, controllerName, actionName } = parseActionId(actionId);
@@ -223,7 +266,9 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       });
       strapi.log.info(`Created users-permissions role "${roleDef.type}"`);
     } else if (!renamed) {
-      strapi.log.info(`Users-permissions role "${roleDef.type}" already exists`);
+      strapi.log.info(
+        `Users-permissions role "${roleDef.type}" already exists`,
+      );
     }
 
     if (!role) {
@@ -282,13 +327,15 @@ async function ensurePublicStaticPagePermissions(strapi: StrapiLike) {
 
 type GrantStore = Record<string, Record<string, unknown>>;
 
-async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
-  config: { get: (key: string) => unknown };
-  store: (params: { type: string; name: string }) => {
-    get: (params: { key: string }) => Promise<unknown>;
-    set: (params: { key: string; value: unknown }) => Promise<void>;
-  };
-}) {
+async function ensureGoogleOAuthGrant(
+  strapi: StrapiLike & {
+    config: { get: (key: string) => unknown };
+    store: (params: { type: string; name: string }) => {
+      get: (params: { key: string }) => Promise<unknown>;
+      set: (params: { key: string; value: unknown }) => Promise<void>;
+    };
+  },
+) {
   const pluginConfig = strapi.config.get('plugin::users-permissions') as {
     grant?: { google?: Record<string, unknown> };
   };
@@ -327,11 +374,40 @@ async function ensureGoogleOAuthGrant(strapi: StrapiLike & {
   strapi.log.info('Synced users-permissions Google grant from config');
 }
 
+const DEFAULT_ADMIN_APP_TITLE = 'KÖR';
+
+/** Public runtime brand for the Admin tab title (`ADMIN_APP_TITLE`). */
+function registerAdminAppConfigRoute(strapi: {
+  config: { get: (path: string, defaultValue?: string) => unknown };
+  server: { routes: (routes: unknown[]) => void };
+}) {
+  strapi.server.routes([
+    {
+      method: 'GET',
+      path: '/admin-app-config',
+      handler(ctx: { body: unknown }) {
+        const title = strapi.config.get(
+          'admin.appTitle',
+          DEFAULT_ADMIN_APP_TITLE,
+        );
+        ctx.body = {
+          title:
+            typeof title === 'string' && title.trim()
+              ? title.trim()
+              : DEFAULT_ADMIN_APP_TITLE,
+        };
+      },
+      config: { auth: false },
+    },
+  ]);
+}
+
 export default {
   register({ strapi }) {
-    registerPublishGuard(strapi);
+    registerPublishGuard(strapi, createPublishPolicyLoader(strapi));
     registerStaticPageRoutes(strapi);
     registerStaticPageSlugGuard(strapi);
+    registerAdminAppConfigRoute(strapi);
 
     // Behind TLS-terminating proxies (cPanel Passenger, Nginx, ALB) the Node
     // socket is plain HTTP. The `cookies` package checks socket.encrypted and
@@ -356,6 +432,18 @@ export default {
     });
   },
   async bootstrap({ strapi }) {
+    const seedInstance = process.env.BACKOFFICE_FEATURES_INSTANCE?.trim();
+    if (seedInstance) {
+      const seedPath = resolveBackofficeFeaturesSeedPath(seedInstance);
+      try {
+        await upsertBackofficeFeaturesFromFile(strapi, seedPath);
+      } catch (error) {
+        strapi.log.warn(
+          `Settings seed skipped for instance "${seedInstance}": ${error instanceof Error ? error.message : error}`,
+        );
+      }
+    }
+
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);

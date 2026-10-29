@@ -17,7 +17,7 @@ Egy másik agent ezt a fájlt hajtja végre. A PRD §8 (szervezet, tag, ACL, ava
 - A Strapi gyökér `package.json` nem kap React Admin függőséget. Az SPA saját csomag az `apps/content-backoffice` alatt, külön `node_modules`.
 - Éles képernyőn nincs `ListGuesser`, `EditGuesser`, `ShowGuesser`. Az azonosító a `documentId`.
 
-Lokálisan a Strapi a `1337`-es porton fut (`npm run dev` a repo gyökerében). Az SPA dev címe `http://localhost:5173/backoffice/`, mert a Vite `base` a `/backoffice/`. A `VITE_STRAPI_URL` az 1–9. lépésben `http://localhost:1337`. Az éles `kor.fejlesztesek.hu` csak a 10. lépés deploy célja; fejlesztés közben oda nem megy írás.
+Lokálisan a Strapi a `1337`-es porton fut (`npm run dev` a repo gyökerében). Az SPA dev címe `http://localhost:5173/backoffice/`, mert a Vite `base` a `/backoffice/`. A lokális API origin fix `http://localhost:1337`; élesen a page origin. Az éles `kor.fejlesztesek.hu` csak a 10. lépés deploy célja; fejlesztés közben oda nem megy írás.
 
 A helyi adatbázis szervezetei és számlái már seedelve vannak. Üres debit vagy credit selectnél az agent megáll és jelzi, nem futtat seedet, és nem bővíti a kódlistát. A helyi Cloudinary a Strapi `.env`-jében van; az agent a kulcsokat és a providert nem módosítja.
 
@@ -34,7 +34,7 @@ A váz megvan. A Human próba bukott: a `http://localhost:5173/backoffice/` a be
 - [x] `apps/content-backoffice` Vite + React + TypeScript app, saját `package.json` és lockfile
 - [x] Nx `project.json`: `dev` és `build` az app mappájában fut
 - [x] `vite.config.ts` `base: '/backoffice/'`
-- [x] `.env.example` a `VITE_STRAPI_URL` kulccsal
+- [x] `.env.example` (nincs Vite env; API origin a `config.ts`-ből)
 - [x] `react-admin` 5 `Admin`, MUI, resource nincs, API hívás nincs (`requireAuth={false}`, noop dataProvider)
 - [x] i18nProvider bekötve: alapértelmezett `hu`, `en` katalógus a repóban
 - [x] `vite build` lefut
@@ -193,7 +193,7 @@ A Google kliens azonosító és titok a Humané. Az agent env kulcsot olvas, ér
 
 ## 10. Deploy jegyzet és átvétel
 
-- [x] `docs/deploy/` alá rövid jegyzet: `vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` pathra, `VITE_STRAPI_URL` ugyanaz az origin. CI pipeline nincs
+- [x] `docs/deploy/` alá rövid jegyzet: `vite build`, a `dist` a `kor.fejlesztesek.hu/backoffice` pathra, API origin a page host. CI pipeline nincs
 - [x] A `backoffice-acceptance` subagent a §10 storykra és a §12 DoD-ra pass/fail listát ad
 - [ ] A PRD §12 négyzeteit csak a Human pipálja, az agent nem
 

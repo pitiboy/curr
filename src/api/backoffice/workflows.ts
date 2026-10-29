@@ -1,31 +1,28 @@
-/** Known workflow ids, in menu order. Env tokens outside this list stay hidden. */
-export const KNOWN_BACKOFFICE_WORKFLOWS = [
-  'member-fee',
-  'egg-daily-entry',
-] as const;
+import { isBackofficeSettingKey } from '../../backoffice-features/parse';
 
 export type BackofficeWorkflowConfig = {
   enabled: string[];
   available: string[];
 };
 
-/**
- * Env tokens that are in the known list, in known-list order.
- * Unknown and blank tokens are dropped.
- */
-export function selectWorkflows(
-  raw: string | undefined | null,
-  known: readonly string[] = KNOWN_BACKOFFICE_WORKFLOWS,
-): BackofficeWorkflowConfig {
-  const requested = new Set(
-    (raw ?? '')
-      .split(',')
-      .map((token) => token.trim())
-      .filter((token) => token.length > 0),
-  );
+/** @deprecated Catalog is database-driven; kept for tests that assert menu order of seeded ids. */
+export const LEGACY_WORKFLOW_MENU_ORDER = [
+  'member-fee',
+  'egg-daily-entry',
+] as const;
 
+/**
+ * Builds workflow lists from feature rows (non-setting keys).
+ * Order follows row order (typically sorted by key from the loader).
+ */
+export function workflowConfigFromKeys(
+  keys: readonly string[],
+  enabledKeys: readonly string[],
+): BackofficeWorkflowConfig {
+  const enabledSet = new Set(enabledKeys);
+  const available = keys.filter((key) => !isBackofficeSettingKey(key));
   return {
-    enabled: known.filter((id) => requested.has(id)),
-    available: [...known],
+    available,
+    enabled: available.filter((id) => enabledSet.has(id)),
   };
 }

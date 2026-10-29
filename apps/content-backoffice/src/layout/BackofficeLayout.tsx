@@ -2,8 +2,7 @@ import type { LayoutProps } from 'react-admin';
 import { Layout } from 'react-admin';
 
 import { StaticFooter } from '../static/StaticLinks';
-import { BackofficeConfigProvider } from '../workflows/BackofficeConfigProvider';
-import { DocumentTitle } from './AppTitle';
+import { DocumentFavicon, DocumentTitle } from './AppTitle';
 import { BackofficeMenu } from './BackofficeMenu';
 import { BackofficeAppBar } from './BackofficeUserMenu';
 import { FrameSidebar } from './FrameSidebar';
@@ -13,8 +12,9 @@ export function BackofficeLayout(props: LayoutProps) {
   useScrollToTopOnNavigate();
 
   return (
-    <BackofficeConfigProvider>
+    <>
       <DocumentTitle />
+      <DocumentFavicon />
       <Layout
         {...props}
         appBar={BackofficeAppBar}
@@ -24,6 +24,6 @@ export function BackofficeLayout(props: LayoutProps) {
         {props.children}
         <StaticFooter />
       </Layout>
-    </BackofficeConfigProvider>
+    </>
   );
 }

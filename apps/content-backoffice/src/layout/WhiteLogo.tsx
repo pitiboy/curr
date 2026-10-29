@@ -1,5 +1,7 @@
 import Box from '@mui/material/Box';
 
+import { STRAPI_FAVICON_URL } from './AppTitle';
+
 export function WhiteLogo() {
   return (
     <Box
@@ -10,7 +12,7 @@ export function WhiteLogo() {
         justifyContent: 'center',
         width: 32,
         height: 32,
-        '& svg': {
+        '& img': {
           width: 32,
           height: 32,
           display: 'block',
@@ -19,19 +21,13 @@ export function WhiteLogo() {
       }}
       aria-label="Logo"
     >
-      <svg
-        width="32"
-        height="32"
-        viewBox="0 0 32 32"
-        fill="currentColor"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <image
-          href={`${import.meta.env.BASE_URL}favicon.svg`}
-          width="32"
-          height="32"
-        />
-      </svg>
+      <Box
+        alt=""
+        component="img"
+        src={STRAPI_FAVICON_URL}
+        width={32}
+        height={32}
+      />
     </Box>
   );
 }

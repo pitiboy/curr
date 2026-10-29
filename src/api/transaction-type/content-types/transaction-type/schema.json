@@ -23,11 +23,7 @@
     },
     "category": {
       "type": "enumeration",
-      "enum": [
-        "actual",
-        "future",
-        "internal"
-      ],
+      "enum": ["actual", "future", "internal"],
       "required": true,
       "metadatas": {
         "label": "Kategória",

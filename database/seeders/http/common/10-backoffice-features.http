@@ -1,0 +1,93 @@
+# Settings (backoffice features / workflow toggles)
+# A rekordok a dataDir/backoffice-features.json fájlban vannak.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#   npm run seed:http:kor:backoffice-features:local
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Ha a key már létezik, a POST nem fut le (Admin szerkesztések megmaradnak).
+
+{{
+  if (typeof bfItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.bfItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "backoffice-features.json"), "utf8")
+    );
+    exports.bfIds = {};
+    exports.bfFailed = {};
+  }
+}}
+
+###
+# @name lookup-setting
+# @loop for item of bfItems
+{{
+  exports.encoded = encodeURIComponent(item.key);
+}}
+GET {{baseUrl}}/api/settings?filters[key][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    bfFailed[item.key] = true;
+    exports.bfFailed = bfFailed;
+    console.error("lookup failed: " + item.key, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      bfIds[item.key] = found;
+      exports.bfIds = bfIds;
+    }
+  }
+}}
+
+###
+# @name create-setting
+# @loop for item of bfItems
+{{
+  if (bfIds[item.key] || bfFailed[item.key]) {
+    exports.$cancel = true;
+  } else {
+    exports.bfPayload = JSON.stringify({
+      data: {
+        key: item.key,
+        enabled: item.enabled === true,
+        config: Object.prototype.hasOwnProperty.call(item, "config") ? item.config : null,
+      },
+    });
+  }
+}}
+POST {{baseUrl}}/api/settings
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{bfPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.key, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      bfIds[item.key] = created;
+      exports.bfIds = bfIds;
+    }
+  }
+}}

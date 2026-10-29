@@ -147,18 +147,18 @@ erDiagram
 
 ### 💬 Entity Overview
 
-| Entity               | Description                                                                        | Sample Values                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **Member**           | A community participant (individual).                                              | John Doe, jane@example.com                                                                 |
-| **Organization**     | Collective entity managing resources and members (hierarchical structure).         | Zöld források szövetkezet @Szupatak, Igaz Szeretet forrás Egyesület, Kömlődi állatidomárok |
-| **Membership**       | Relation between a Member and an Organization, storing their role.                 | tag, bentlakó tag, szimbpatizáns                                                           |
-| **AccountCategory**  | Categories for financial accounts (revenue, expense, asset, liability, equity).    | Revenue, Expense, Asset, Liability, Equity                                                 |
-| **Account**          | Financial account within an organization (hierarchical structure).                 | Cash Account, Revenue Account, Expense Account, Asset Account                              |
-| **CurrencyCategory** | Organizes currency types into logical groups.                                      | Cash 💰, Labor ⏰, Resources 🌾, Assets 🏠                                                 |
-| **CurrencyType**     | Defines currencies or other measurable resource units (cash, labor, goods).        | HUF, EUR, HOUR, WHEAT, TRACTOR, CHICKEN                                                    |
+| Entity               | Description                                                                                             | Sample Values                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Member**           | A community participant (individual).                                                                   | John Doe, jane@example.com                                                                 |
+| **Organization**     | Collective entity managing resources and members (hierarchical structure).                              | Zöld források szövetkezet @Szupatak, Igaz Szeretet forrás Egyesület, Kömlődi állatidomárok |
+| **Membership**       | Relation between a Member and an Organization, storing their role.                                      | tag, bentlakó tag, szimbpatizáns                                                           |
+| **AccountCategory**  | Categories for financial accounts (revenue, expense, asset, liability, equity).                         | Revenue, Expense, Asset, Liability, Equity                                                 |
+| **Account**          | Financial account within an organization (hierarchical structure).                                      | Cash Account, Revenue Account, Expense Account, Asset Account                              |
+| **CurrencyCategory** | Organizes currency types into logical groups.                                                           | Cash 💰, Labor ⏰, Resources 🌾, Assets 🏠                                                 |
+| **CurrencyType**     | Defines currencies or other measurable resource units (cash, labor, goods).                             | HUF, EUR, HOUR, WHEAT, TRACTOR, CHICKEN                                                    |
 | **CurrencyRate**     | Conversion rate between resource types. Applies from `valid_from` until the next rate of the same pair. | HUF→EUR: 0.0026, HOUR→HUF: 3000                                                            |
-| **TransactionType**  | Categorizes transactions (income, expense, transfer).                              | Elrendelt, Utalás, Készpénz, Átvezetés, Jutalék, Barter                                    |
-| **Transaction**      | Double-entry bookkeeping record with debit and credit entries.                     | Debit: Cash Account 5000 HUF, Credit: Revenue Account 5000 HUF                             |
+| **TransactionType**  | Categorizes transactions (income, expense, transfer).                                                   | Elrendelt, Utalás, Készpénz, Átvezetés, Jutalék, Barter                                    |
+| **Transaction**      | Double-entry bookkeeping record with debit and credit entries.                                          | Debit: Cash Account 5000 HUF, Credit: Revenue Account 5000 HUF                             |
 
 ## 🔄 Key Changes & Improvements
 

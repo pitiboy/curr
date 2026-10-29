@@ -4,18 +4,18 @@ import { STATIC_PAGES, staticLocaleFor, staticPageUrl } from './staticUrls';
 
 describe('staticPageUrl', () => {
   it('builds hu URLs without query', () => {
-    expect(staticPageUrl('privacy-policy', 'hu', 'https://kor.fejlesztesek.hu')).toBe(
-      'https://kor.fejlesztesek.hu/static/privacy-policy',
-    );
-    expect(staticPageUrl('terms-of-service', undefined, 'http://localhost:1337/')).toBe(
-      'http://localhost:1337/static/terms-of-service',
-    );
+    expect(
+      staticPageUrl('privacy-policy', 'hu', 'https://kor.fejlesztesek.hu'),
+    ).toBe('https://kor.fejlesztesek.hu/static/privacy-policy');
+    expect(
+      staticPageUrl('terms-of-service', undefined, 'http://localhost:1337/'),
+    ).toBe('http://localhost:1337/static/terms-of-service');
   });
 
   it('adds locale=en for English UI', () => {
-    expect(staticPageUrl('privacy-policy', 'en', 'https://kor.fejlesztesek.hu')).toBe(
-      'https://kor.fejlesztesek.hu/static/privacy-policy?locale=en',
-    );
+    expect(
+      staticPageUrl('privacy-policy', 'en', 'https://kor.fejlesztesek.hu'),
+    ).toBe('https://kor.fejlesztesek.hu/static/privacy-policy?locale=en');
   });
 
   it('maps UI locale to static page locale', () => {

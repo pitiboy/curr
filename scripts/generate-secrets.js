@@ -14,5 +14,5 @@ process.stdout.write(
     `JWT_SECRET=${random()}`,
     `ENCRYPTION_KEY=${random()}`,
     '',
-  ].join('\n')
+  ].join('\n'),
 );

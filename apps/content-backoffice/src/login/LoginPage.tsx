@@ -18,7 +18,7 @@ import {
   startGoogleLogin,
 } from '../auth/googleLogin';
 import { translateOAuthError } from '../auth/oauthErrors';
-import { DocumentTitle } from '../layout/AppTitle';
+import { DocumentFavicon, DocumentTitle } from '../layout/AppTitle';
 import { StaticLinks } from '../static/StaticLinks';
 
 export function LoginPage() {
@@ -42,9 +42,7 @@ export function LoginPage() {
       })
       .catch((error: unknown) => {
         if (active) {
-          setOauthError(
-            error instanceof Error ? error.message : String(error),
-          );
+          setOauthError(error instanceof Error ? error.message : String(error));
         }
       })
       .finally(() => {
@@ -76,6 +74,7 @@ export function LoginPage() {
   return (
     <Login>
       <DocumentTitle />
+      <DocumentFavicon />
       {oauthError ? (
         <Box sx={{ boxSizing: 'border-box', px: 2, width: 300 }}>
           <Alert severity="error" sx={{ mb: 1 }}>

@@ -6,10 +6,10 @@ Jelenlegi elsődleges példány: `kor.fejlesztesek.hu`, mappa `node/kor-szupatak
 
 ## Mit hova tegyen a cPanel
 
-| Szerep | Alkalmazás-gyökér | Tartalom |
-| --- | --- | --- |
+| Szerep     | Alkalmazás-gyökér   | Tartalom                                                                                               |
+| ---------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
 | Elsődleges | `node/kor-szupatak` | A teljes Strapi: build, `public`, `package.json`, és a cPanel által létrehozott `node_modules` symlink |
-| Alias | `node/kor-edizone` | Csak ennek a mappának a két fájlja |
+| Alias      | `node/kor-edizone`  | Csak ennek a mappának a két fájlja                                                                     |
 
 A cPanel a `node_modules` nevet symlinkként rakja az elsődleges gyökérbe. A célja `nodevenv/node/kor-szupatak/22/lib/node_modules`, oda kerül az `npm install` eredménye. Az alias ezt a linket használja, saját példányt nem kap.
 
@@ -35,7 +35,12 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
 - `CLOUDINARY_NAME`, `CLOUDINARY_KEY`, `CLOUDINARY_SECRET`, `CLOUDINARY_UPLOAD_PRESET`
 - `CLOUDINARY_FOLDER` — az aliastól függő mappa, például `edizone`
 - `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok
-- `BACKOFFICE_WORKFLOWS` — vesszővel elválasztott ügyletazonosítók. Üres értéknél nincs extra űrlap. Az aliasnél ezt is el kell menteni, különben a közös `.env` listája marad. A backoffice rejtett kapcsolója csak abban a böngészőben él, a többi felhasználó továbbra is ezt a listát látja. Edizone példa: `egg-daily-entry` (napi tojás rögzítés).
+- `ADMIN_APP_TITLE` — Strapi Admin böngészőfül brand (pl. `EdiZone`). Runtime, nem a közös `.env`-be; hiányzik → `KÖR`
+- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-daily-entry` enabled).
+- `BACKOFFICE_OAUTH_CALLBACK` — az SPA visszatérési URL záró perjellel, pl. `https://edizone.fejlesztesek.hu/backoffice/`. Ha hiányzik, a közös `.env` kor értéke marad, és a Google login _Invalid callback URL_ hibát ad.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — ugyanaz a Google OAuth kliens, mint a kornál (a közös `.env`-ből örökölhető). A Google Cloud Console **Authorised redirect URIs** listájába vedd fel az alias Strapi callbackjét is: `https://edizone.fejlesztesek.hu/api/connect/google/callback`.
+
+A backoffice statikus fájlok a közös `public/backoffice` mappából jönnek; éles build után az API hívások az aktuális domain originjére mennek (edizone-on az edizone Strapi példányra, nem a kor hostra).
 
 A `PORT` értékét a Passenger adja, nem kell beállítani. Üres Neon adatbázison az első indulás létrehozza a sémát. Az admin felhasználó az alias `/admin` címén külön jön létre.
 

@@ -23,7 +23,8 @@ export async function publishTransactionDraft(
 export function strapiErrorMessage(error: unknown): string {
   const fromBody = messageFromBody(errorBody(error));
   if (fromBody) return fromBody;
-  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  if (error instanceof Error && error.message.trim())
+    return error.message.trim();
   return '';
 }
 
@@ -46,7 +47,8 @@ export function samePersonPublishBlocked(
 }
 
 function errorBody(error: unknown): unknown {
-  if (!error || typeof error !== 'object' || !('body' in error)) return undefined;
+  if (!error || typeof error !== 'object' || !('body' in error))
+    return undefined;
   return (error as { body?: unknown }).body;
 }
 

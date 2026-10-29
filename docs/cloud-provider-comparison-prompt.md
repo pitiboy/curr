@@ -22,21 +22,21 @@ The outcome of **this** run is a comparison document with a ranked recommendatio
 
 Read the repo before ranking. Do not invent a different stack.
 
-| Fact | Source / detail |
-| --- | --- |
-| App | Strapi **5.27** Node API (`package.json` name `backend-strapi`, description “Curr Strapi API”) |
-| Runtime | Node `>=20.0.0 <=22.x.x`, npm `>=10` |
-| Start | `npm start` → `strapi start`; build `npm run build` → `strapi build` |
-| Admin UI | React admin panel is part of the build. The production build is **memory-heavy**. |
-| Health | `/_health` |
-| Admin / API | `/admin`, `/api` |
-| Database today | **Postgres** locally (`docker-compose.yaml`, Postgres 16) and on Render |
-| Config | [`config/database.ts`](../config/database.ts): if `DATABASE_URL` is set, client is **always Postgres**. Separate `mysql` / `postgres` / `sqlite` blocks exist when `DATABASE_CLIENT` is used. |
-| Drivers | Direct deps: `pg`, `better-sqlite3`. **`mysql2` is not a direct dependency.** Switching to MySQL requires adding it and not relying on `DATABASE_URL` as currently written. |
-| Uploads | `@strapi/provider-upload-cloudinary` — keep Cloudinary unless a clearly better free option exists |
-| Secrets | `scripts/generate-secrets.js`; env pattern in [`RENDER_DEPLOY.md`](../RENDER_DEPLOY.md) (`APP_KEYS`, JWT salts, `ENCRYPTION_KEY`, `PUBLIC_URL`, `IS_PROXIED`, `CORS_ORIGINS`) |
-| GitHub | Deploy must be triggerable by **push to a configured special branch** (native platform Git integration **or** GitHub Actions) |
-| Frontend | Appsmith exists in the repo. **Out of scope** except as a CORS client of the API. Do not size the comparison around hosting Appsmith. |
+| Fact           | Source / detail                                                                                                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App            | Strapi **5.27** Node API (`package.json` name `backend-strapi`, description “Curr Strapi API”)                                                                                                |
+| Runtime        | Node `>=20.0.0 <=22.x.x`, npm `>=10`                                                                                                                                                          |
+| Start          | `npm start` → `strapi start`; build `npm run build` → `strapi build`                                                                                                                          |
+| Admin UI       | React admin panel is part of the build. The production build is **memory-heavy**.                                                                                                             |
+| Health         | `/_health`                                                                                                                                                                                    |
+| Admin / API    | `/admin`, `/api`                                                                                                                                                                              |
+| Database today | **Postgres** locally (`docker-compose.yaml`, Postgres 16) and on Render                                                                                                                       |
+| Config         | [`config/database.ts`](../config/database.ts): if `DATABASE_URL` is set, client is **always Postgres**. Separate `mysql` / `postgres` / `sqlite` blocks exist when `DATABASE_CLIENT` is used. |
+| Drivers        | Direct deps: `pg`, `better-sqlite3`. **`mysql2` is not a direct dependency.** Switching to MySQL requires adding it and not relying on `DATABASE_URL` as currently written.                   |
+| Uploads        | `@strapi/provider-upload-cloudinary` — keep Cloudinary unless a clearly better free option exists                                                                                             |
+| Secrets        | `scripts/generate-secrets.js`; env pattern in [`RENDER_DEPLOY.md`](../RENDER_DEPLOY.md) (`APP_KEYS`, JWT salts, `ENCRYPTION_KEY`, `PUBLIC_URL`, `IS_PROXIED`, `CORS_ORIGINS`)                 |
+| GitHub         | Deploy must be triggerable by **push to a configured special branch** (native platform Git integration **or** GitHub Actions)                                                                 |
+| Frontend       | Appsmith exists in the repo. **Out of scope** except as a CORS client of the API. Do not size the comparison around hosting Appsmith.                                                         |
 
 ### Known failed path (baseline, not the answer)
 
@@ -60,17 +60,17 @@ Render Free (**512 MB**) **cannot finish `strapi build`**. Heap around 1.5 GB (`
 
 The team **already pays** for [tárhely.eu Start](https://tarhely.eu/normal-tarhely-csomagok-reszletes-osszehasonlitasa/) (cPanel, Budapest DC, GDPR). Mix this into **every** architecture family below. Public specs as of research time (verify; do not assume they make Strapi viable):
 
-| Spec | Public claim | Why it matters |
-| --- | --- | --- |
-| Disk | **500 MB** NVMe | Strapi `node_modules` + admin build often **will not fit**. Verify with a dry `npm ci` size. |
-| Databases | **2** MySQL **or** PostgreSQL | Enough for one production DB. |
-| MySQL | 8.0 or 8.4 (or equivalent MariaDB) | Plausible for Strapi 5 **if** we add `mysql2` and stop forcing Postgres on `DATABASE_URL`. |
-| PostgreSQL | advertised **9.2.24** | Almost certainly **too old for Strapi 5** (needs a modern Postgres). Treat tárhely Postgres as unfit unless you verify a much newer version on the actual account. |
-| Node | cPanel **Setup Node.js App** + Passenger | Long-running Node is possible in principle. **No public custom port** (not `:3000`). Set listen port to `0` if the app requires a port. Verify **Node 20 or 22** is actually offered. |
-| PHP | 7.4 / 8.0–8.4 | **Cannot run this API.** PHP is irrelevant except as proof the host is classic shared hosting. |
-| RAM | ~2–2.5 GB physical, ~4 GB virtual | Might run Strapi **if disk and Node version allow**. Still may fail the **build** the same way Render Free did. |
-| Backups | Daily / weekly / monthly (JetBackup), Budapest | Strong argument for putting the **durable DB** here if remote access works. |
-| Traffic | ~0.5 TB/month, ~20 entry processes | Far above 1–2 CRUD calls/day. |
+| Spec       | Public claim                                   | Why it matters                                                                                                                                                                        |
+| ---------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Disk       | **500 MB** NVMe                                | Strapi `node_modules` + admin build often **will not fit**. Verify with a dry `npm ci` size.                                                                                          |
+| Databases  | **2** MySQL **or** PostgreSQL                  | Enough for one production DB.                                                                                                                                                         |
+| MySQL      | 8.0 or 8.4 (or equivalent MariaDB)             | Plausible for Strapi 5 **if** we add `mysql2` and stop forcing Postgres on `DATABASE_URL`.                                                                                            |
+| PostgreSQL | advertised **9.2.24**                          | Almost certainly **too old for Strapi 5** (needs a modern Postgres). Treat tárhely Postgres as unfit unless you verify a much newer version on the actual account.                    |
+| Node       | cPanel **Setup Node.js App** + Passenger       | Long-running Node is possible in principle. **No public custom port** (not `:3000`). Set listen port to `0` if the app requires a port. Verify **Node 20 or 22** is actually offered. |
+| PHP        | 7.4 / 8.0–8.4                                  | **Cannot run this API.** PHP is irrelevant except as proof the host is classic shared hosting.                                                                                        |
+| RAM        | ~2–2.5 GB physical, ~4 GB virtual              | Might run Strapi **if disk and Node version allow**. Still may fail the **build** the same way Render Free did.                                                                       |
+| Backups    | Daily / weekly / monthly (JetBackup), Budapest | Strong argument for putting the **durable DB** here if remote access works.                                                                                                           |
+| Traffic    | ~0.5 TB/month, ~20 entry processes             | Far above 1–2 CRUD calls/day.                                                                                                                                                         |
 
 **Unknowns the comparison must resolve (or list as blockers):**
 
@@ -161,20 +161,20 @@ Reject or dump into “do not use” unless you have a cited workaround:
 
 Fill a comparison table (or equivalent structured list) with:
 
-| Column | What to put |
-| --- | --- |
-| Combo name | e.g. `tárhely MySQL + Koyeb API (CI build)` |
-| Architecture family | 1–8 above |
-| Year-1 cost | €/$ and what is already paid (tárhely) |
-| Year-2 cost | After trials / credits expire |
-| DB persistence | Always-on? Backups? Sleep/pause? Data loss risk? |
-| API availability | Always-on vs cold start; typical wake time |
-| GitHub deploy | How a special-branch push becomes a live API |
-| Build/RAM/disk | Fits Strapi build? Need CI? Cite Render 512 MB failure |
-| Data location | Hungary / EU / US |
-| Ops pain | Remote MySQL allowlist, SSL, `PUBLIC_URL`, `IS_PROXIED`, Passenger, ARM vs `better-sqlite3` native builds, IPv6 |
-| Lock-in / next year | Ease of moving if the project gets a grant |
-| Verdict | Viable / viable with caveats / reject |
+| Column              | What to put                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Combo name          | e.g. `tárhely MySQL + Koyeb API (CI build)`                                                                     |
+| Architecture family | 1–8 above                                                                                                       |
+| Year-1 cost         | €/$ and what is already paid (tárhely)                                                                          |
+| Year-2 cost         | After trials / credits expire                                                                                   |
+| DB persistence      | Always-on? Backups? Sleep/pause? Data loss risk?                                                                |
+| API availability    | Always-on vs cold start; typical wake time                                                                      |
+| GitHub deploy       | How a special-branch push becomes a live API                                                                    |
+| Build/RAM/disk      | Fits Strapi build? Need CI? Cite Render 512 MB failure                                                          |
+| Data location       | Hungary / EU / US                                                                                               |
+| Ops pain            | Remote MySQL allowlist, SSL, `PUBLIC_URL`, `IS_PROXIED`, Passenger, ARM vs `better-sqlite3` native builds, IPv6 |
+| Lock-in / next year | Ease of moving if the project gets a grant                                                                      |
+| Verdict             | Viable / viable with caveats / reject                                                                           |
 
 ---
 

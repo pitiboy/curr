@@ -28,7 +28,6 @@ import {
   TextInput,
   useBlocker,
   useCanBlock,
-  useDataProvider,
   useGetIdentity,
   useNotify,
   useRefresh,
@@ -36,12 +35,6 @@ import {
   type RaRecord,
 } from 'react-admin';
 
-import {
-  accountChoiceLabel,
-  filterAccountChoices,
-  loadAllAccounts,
-  type AccountChoice,
-} from '../../data/accountCodes';
 import {
   attachTransactionReceipt,
   publishTransaction,
@@ -59,8 +52,9 @@ import {
   type TransactionRow,
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
-import { AccountFieldLabel } from './accountField';
+import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { dateFieldProps } from './dateField';
+import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { shouldConfirmDraftLeave } from './transactionLeave';
 import {
@@ -95,73 +89,6 @@ function codeOrNameFilterToQuery(searchText: string) {
   return {
     $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
   };
-}
-
-function useAccountCatalog() {
-  const dataProvider = useDataProvider();
-  const [accounts, setAccounts] = useState<AccountChoice[]>([]);
-  const [isPending, setPending] = useState(true);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadAllAccounts((resource, params) =>
-      dataProvider.getList(resource, params),
-    )
-      .then((rows) => {
-        if (!cancelled) setAccounts(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setPending(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dataProvider]);
-
-  return { accounts, isPending, failed };
-}
-
-function ReviewAccountInput({
-  accounts,
-  failed,
-  isPending,
-  kind,
-  source,
-}: {
-  accounts: AccountChoice[];
-  failed: boolean;
-  isPending: boolean;
-  kind: 'debit' | 'credit';
-  source: string;
-}) {
-  const translate = useTranslate();
-  const choices = filterAccountChoices(accounts, kind).map((account) => ({
-    id: account.id,
-    name: accountChoiceLabel(account),
-  }));
-
-  return (
-    <Box>
-      <AutocompleteInput
-        choices={choices}
-        fullWidth
-        isLoading={isPending}
-        label={<AccountFieldLabel kind={kind} required />}
-        source={source}
-        translateChoice={false}
-        validate={requiredMark}
-      />
-      {!isPending && !failed && choices.length === 0 ? (
-        <Typography color="warning.main" variant="body2">
-          {translate('app.accounts_seed_missing')}
-        </Typography>
-      ) : null}
-    </Box>
-  );
 }
 
 function DescriptionInput() {
@@ -263,19 +190,12 @@ function ReviewEditableFields({
         />
       </ReferenceInput>
       <DescriptionInput />
-      <ReviewAccountInput
+      <TransactionAccountProfileRow
         accounts={catalog.accounts}
+        defaultProfile=""
         failed={catalog.failed}
         isPending={catalog.isPending}
-        kind="credit"
-        source="credit_account"
-      />
-      <ReviewAccountInput
-        accounts={catalog.accounts}
-        failed={catalog.failed}
-        isPending={catalog.isPending}
-        kind="debit"
-        source="debit_account"
+        requireAccounts
       />
     </>
   );
@@ -448,10 +368,10 @@ function ReceiptAttachEditor({
     typeof values.description === 'string' ? values.description.trim() : '';
   const canSave = Boolean(
     pending.length > 0 &&
-      !pending.some((card) => receiptCardInvalid(card)) &&
-      formDescription &&
-      values.date &&
-      isFilled(values.amount),
+    !pending.some((card) => receiptCardInvalid(card)) &&
+    formDescription &&
+    values.date &&
+    isFilled(values.amount),
   );
 
   const saveReceipts = () => {

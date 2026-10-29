@@ -21,20 +21,23 @@ const receipt = 'api::receipt.receipt';
 describe('guardEffect', () => {
   it('ignores content types outside transaction and receipt', () => {
     assert.deepEqual(
-      guardEffect('api::organization.organization', 'publish', undefined, dataentry),
+      guardEffect(
+        'api::organization.organization',
+        'publish',
+        undefined,
+        dataentry,
+      ),
       { type: 'ignore' },
     );
   });
 
   it('lets admin and seed through without rewriting audit fields', () => {
-    assert.deepEqual(
-      guardEffect(transaction, 'publish', undefined, null),
-      { type: 'ignore' },
-    );
-    assert.deepEqual(
-      guardEffect(transaction, 'create', 'published', null),
-      { type: 'ignore' },
-    );
+    assert.deepEqual(guardEffect(transaction, 'publish', undefined, null), {
+      type: 'ignore',
+    });
+    assert.deepEqual(guardEffect(transaction, 'create', 'published', null), {
+      type: 'ignore',
+    });
   });
 
   it('forbids dataentry publish, unpublish, and published writes', () => {
@@ -48,7 +51,10 @@ describe('guardEffect', () => {
         guardEffect(transaction, action, status, dataentry).type,
         'forbid',
       );
-      assert.equal(guardEffect(receipt, action, status, dataentry).type, 'forbid');
+      assert.equal(
+        guardEffect(receipt, action, status, dataentry).type,
+        'forbid',
+      );
     }
   });
 
@@ -148,14 +154,11 @@ describe('readPublishPolicy', () => {
     });
   });
 
-  it('reads the published default and turns off the different-person rule', () => {
-    assert.deepEqual(
-      readPublishPolicy({
-        CONTENT_DEFAULT_STATUS: 'published',
-        CONTENT_PUBLISHER_MUST_DIFFER: 'false',
-      }),
-      { defaultStatus: 'published', publisherMustDiffer: false },
-    );
+  it('returns defaults without env overrides', () => {
+    assert.deepEqual(readPublishPolicy(), {
+      defaultStatus: 'draft',
+      publisherMustDiffer: true,
+    });
   });
 });
 
@@ -190,17 +193,22 @@ function fakeStrapi(options: {
   documentsApi?: PublishGuardStrapi['documents'];
 }): PublishGuardStrapi {
   return {
-    documents: options.documentsApi ?? ((() => {
-      throw new Error('documents() was not expected');
-    }) as unknown as PublishGuardStrapi['documents']),
+    documents:
+      options.documentsApi ??
+      ((() => {
+        throw new Error('documents() was not expected');
+      }) as unknown as PublishGuardStrapi['documents']),
     requestContext: {
       get: () =>
         options.request === false
           ? undefined
           : {
               state: {
-                auth: { strategy: { name: options.strategy ?? 'users-permissions' } },
-                user: options.userId == null ? undefined : { id: options.userId },
+                auth: {
+                  strategy: { name: options.strategy ?? 'users-permissions' },
+                },
+                user:
+                  options.userId == null ? undefined : { id: options.userId },
               },
             },
     },
@@ -223,10 +231,16 @@ function fakeStrapi(options: {
 
 describe('contentApiActor', () => {
   it('returns null for admin and for a users-permissions request without a user', async () => {
-    const admin = fakeStrapi({ strategy: 'admin', userId: 1, user: { email: 'a@b.c', role: { type: 'editor' } } });
+    const admin = fakeStrapi({
+      strategy: 'admin',
+      userId: 1,
+      user: { email: 'a@b.c', role: { type: 'editor' } },
+    });
     assert.equal(await contentApiActor(admin), null);
 
-    const anonymous = fakeStrapi({ user: { email: 'a@b.c', role: { type: 'editor' } } });
+    const anonymous = fakeStrapi({
+      user: { email: 'a@b.c', role: { type: 'editor' } },
+    });
     assert.equal(await contentApiActor(anonymous), null);
   });
 
@@ -247,7 +261,11 @@ describe('registerPublishGuard', () => {
       user: { email: dataentry.email, role: { type: 'dataentry' } },
     });
     let middleware: (
-      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { status?: string; data?: Record<string, unknown> };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -282,7 +300,11 @@ describe('registerPublishGuard', () => {
       user: { email: dataentry.email, role: { type: 'dataentry' } },
     });
     let middleware: (
-      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { status?: string; data?: Record<string, unknown> };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -357,7 +379,11 @@ describe('registerPublishGuard', () => {
       };
     };
     let middleware: (
-      context: { uid: string; action: string; params?: { documentId?: string } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { documentId?: string };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -394,7 +420,11 @@ describe('registerPublishGuard', () => {
       };
     };
     let middleware: (
-      context: { uid: string; action: string; params?: { documentId?: string } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { documentId?: string };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -405,7 +435,11 @@ describe('registerPublishGuard', () => {
     await assert.rejects(
       () =>
         middleware(
-          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+          {
+            uid: transaction,
+            action: 'publish',
+            params: { documentId: 'tx_1' },
+          },
           async () => {
             nextCalled = true;
             return { documentId: 'tx_1' };
@@ -427,7 +461,11 @@ describe('registerPublishGuard', () => {
       user: { email: dataentry.email, role: { type: 'dataentry' } },
     });
     let middleware: (
-      context: { uid: string; action: string; params?: { status?: string; data?: Record<string, unknown> } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { status?: string; data?: Record<string, unknown> };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -461,7 +499,11 @@ describe('registerPublishGuard', () => {
     let nextCalled = false;
     const strapi = fakeStrapi({ strategy: 'admin', userId: 1 });
     let middleware: (
-      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { data?: Record<string, unknown> };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -514,7 +556,11 @@ describe('registerPublishGuard', () => {
       };
     };
     let middleware: (
-      context: { uid: string; action: string; params?: { documentId?: string } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { documentId?: string };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -525,7 +571,11 @@ describe('registerPublishGuard', () => {
     await assert.rejects(
       () =>
         middleware(
-          { uid: transaction, action: 'publish', params: { documentId: 'tx_1' } },
+          {
+            uid: transaction,
+            action: 'publish',
+            params: { documentId: 'tx_1' },
+          },
           async () => {
             nextCalled = true;
             return { documentId: 'tx_1' };
@@ -533,7 +583,10 @@ describe('registerPublishGuard', () => {
         ),
       (error: unknown) => {
         assert.ok(error instanceof errors.ValidationError);
-        assert.match(error.message, /organization, debit_account, credit_account/);
+        assert.match(
+          error.message,
+          /organization, debit_account, credit_account/,
+        );
         return true;
       },
     );
@@ -544,7 +597,11 @@ describe('registerPublishGuard', () => {
     let nextCalled = false;
     const strapi = fakeStrapi({ request: false });
     let middleware: (
-      context: { uid: string; action: string; params?: { data?: Record<string, unknown> } },
+      context: {
+        uid: string;
+        action: string;
+        params?: { data?: Record<string, unknown> };
+      },
       next: () => Promise<unknown>,
     ) => Promise<unknown> = async (_context, next) => next();
     strapi.documents.use = (fn) => {
@@ -553,7 +610,11 @@ describe('registerPublishGuard', () => {
     registerPublishGuard(strapi);
 
     await middleware(
-      { uid: transaction, action: 'create', params: { data: { description: 'seed' } } },
+      {
+        uid: transaction,
+        action: 'create',
+        params: { data: { description: 'seed' } },
+      },
       async () => {
         nextCalled = true;
         return { documentId: 'doc_1' };
@@ -578,9 +639,15 @@ describe('missingTransactionFields', () => {
       ),
       [],
     );
-    assert.deepEqual(missingTransactionFields({ description: 'x' }, 'update'), []);
+    assert.deepEqual(
+      missingTransactionFields({ description: 'x' }, 'update'),
+      [],
+    );
     assert.deepEqual(missingTransactionFields({ amount: 0 }, 'update'), []);
-    assert.deepEqual(missingTransactionFields({ organization: { set: [] } }, 'update'), []);
+    assert.deepEqual(
+      missingTransactionFields({ organization: { set: [] } }, 'update'),
+      [],
+    );
     assert.deepEqual(
       missingTransactionFields(
         { currency_type: { set: [{ documentId: 'cur-1' }] } },
