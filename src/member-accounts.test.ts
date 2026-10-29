@@ -85,6 +85,34 @@ describe('missingMemberAccounts', () => {
     );
   });
 
+  it('creates both accounts on update when the stored member has none', () => {
+    assert.deepEqual(
+      fields(missingMemberAccounts({ name: 'x' } as never, {})),
+      ['account', 'private_account'],
+    );
+    assert.deepEqual(
+      fields(
+        missingMemberAccounts({ name: 'x' } as never, {
+          account: null,
+          private_account: undefined,
+        }),
+      ),
+      ['account', 'private_account'],
+    );
+  });
+
+  it('treats stored relations without an id as missing', () => {
+    assert.deepEqual(
+      fields(
+        missingMemberAccounts({ name: 'x' } as never, {
+          account: { id: 1 },
+          private_account: {},
+        }),
+      ),
+      ['private_account'],
+    );
+  });
+
   it('adds only the private account to an existing member', () => {
     assert.deepEqual(
       fields(
