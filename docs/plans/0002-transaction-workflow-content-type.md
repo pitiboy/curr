@@ -224,28 +224,22 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 **name:** `Tagi befizetés ingatlan vásárlásra`  
 **Match:** `debit_account_code: 1520`, `credit_account_code: 1101`  
 **Fejléc currency/type:** üres (HUF egysoros)  
-**Forrás mintaösszeg:** 2 080 000  
+**Forrás mintaösszeg:** 2 000 000  
 
-Lekötés vételár (4 step) és illeték (4 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`).
+Lekötés vételár (4 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`).
 
 | # | description | percent (≈) | Tartozik | Követel | Pénznem | Szervezet | Típus |
 | - | ----------- | ----------- | -------- | ------- | ------- | --------- | ----- |
 | 1 | Részjegy előírása | 100 | 1101 tag | 3000 | HUF | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 2 | Bejövő tagi utalás | 100 | 1100 | 1101 tag | HUF | I/3. Pénzügyi Igazgatóság | Utalás |
-| 3 | Stróman (vételár) | 96.153846 | 1001 tag | 1100 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 4 | Telek vételár | 96.153846 | 1520 | 1001 tag | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 5 | Lekötés vételár 1 HUF fedezet | 96.153846 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 6 | Lekötés vételár 2 KOR kibocsátás | 0.961538 | 1000 | 1900 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 7 | Lekötés vételár 3 KOR le | 0.961538 | 1900 | 1000 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 8 | Lekötés vételár 4 KOR cél | 0.961538 | 1000 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 9 | Illeték aktiválása | 3.846154 | 1520 | 2300 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 10 | Lekötés illeték 1 | 3.846154 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 11 | Lekötés illeték 2 | 0.038462 | 1000 | 1900 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 12 | Lekötés illeték 3 | 0.038462 | 1900 | 1000 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 13 | Lekötés illeték 4 | 0.038462 | 1000 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 14 | Illeték utalása | 3.846154 | 2300 | 1100 | HUF | I/4.11.1.1 Lakóterületek | Utalás |
+| 3 | Stróman (vételár) | 100 | 1001 tag | 1100 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 4 | Telek vételár | 100 | 1520 | 1001 tag | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 5 | Lekötés vételár 1 HUF fedezet | 100 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
+| 6 | Lekötés vételár 2 KOR kibocsátás | 1 | 1000 | 1900 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 7 | Lekötés vételár 3 KOR le | 1 | 1900 | 1000 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 8 | Lekötés vételár 4 KOR cél | 1 | 1000 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
-Percent ellenőrzés (HUF lábak): 2 000 000/2 080 000×100; 80 000/2 080 000×100. KOR: 20 000 ill. 800 / 2 080 000×100.
+Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 
 ---
 
@@ -260,9 +254,6 @@ Percent ellenőrzés (HUF lábak): 2 000 000/2 080 000×100; 80 000/2�
 | - | ----------- | ------- | -------- | ------- | ------- | --------- | ----- |
 | 1 | Telek vételár | 100 | 1520 | 1000 | HUF | Lakóterületek | Készpénz |
 | 2–5 | Lekötés vételár (4) | 100 HUF / 1 KOR (8000/800000×100) | lásd lekötés; fedezet 1520 | | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 6 | Illeték aktiválása | 4 | 1520 | 2300 | HUF | Lakóterületek | Átvezetés |
-| 7–10 | Lekötés illeték (4) | 4 HUF / 0.04 KOR (320/800000×100) | lekötés | | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 11 | Illeték utalása | 4 | 2300 | 1100 | HUF | Lakóterületek | Utalás |
 
 ---
 

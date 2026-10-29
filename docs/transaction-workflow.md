@@ -49,7 +49,7 @@ A tag által saját zsebből kifizetett szövetkezeti költség: tartozik a köl
 
 A könyvekben két főkönyv fut. A **Szövetkezet** a hivatalos rendszer: bank, pénztár, minden, ami a szövetkezet nevén van. A **Homály** a tagoknál lévő készpénz rendszere.
 
-Egy sor akkor Homály, ha valamelyik oldala egy tag `1001` saját számlája. Minden más sor Szövetkezet. A Homályba a [Bányászás](#ügylet-9--bányászás) **forintban** visz át pénzt; Homályban a működési kiadás szintén **HUF**, korona nélkül. **KOR** a Homályban csak az [1. ügyletnél](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) jelenik meg: stróman a `1100`-ról a tag `1001`-jére **legfeljebb az ingatlan vételáráig (KOR)**, majd `1001` → `15xx` ugyanennyi KOR; a tényleges **korona lekötés** utána, az eszköz HUF értékéből a `1900`-on keresztül. A részjegy vételáron felüli része (pl. illeték) **HUF-ban a `1100`-n marad**; ha a `1001`-en mégis felesleg keletkezne, az [bányászás](#ügylet-9--bányászás) (HUF), nem ingatlan-KOR.
+Egy sor akkor Homály, ha valamelyik oldala egy tag `1001` saját számlája. Minden más sor Szövetkezet. A Homályba a [Bányászás](#ügylet-9--bányászás) **forintban** visz át pénzt; Homályban a működési kiadás szintén **HUF**, korona nélkül. **KOR** a Homályban csak az [1. ügyletnél](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) jelenik meg: stróman a `1100`-ról a tag `1001`-jére **az ingatlan vételáráig (KOR)**, majd `1001` → `15xx` ugyanennyi KOR; a tényleges **korona lekötés** utána, az eszköz HUF értékéből a `1900`-on keresztül. Ha a `1001`-en a vételár felett KOR vagy HUF maradna (hibás stróman), a felesleg [bányászás](#ügylet-9--bányászás) (HUF), nem ingatlan-KOR.
 
 ```mermaid
 flowchart LR
@@ -94,7 +94,6 @@ Melyik tétel melyik számlára kerül tartozik oldalra. A követel oldal a fize
 | Belterületi földterület, lakótelek          | `1520` Belterületi földterületek                       | eszköz                                                                        |
 | Mezőgazdasági földterület                   | `1510` Mezőgazdasági földterületek                     | eszköz                                                                        |
 | Képzési díj                                 | `5420` Oktatás és képzés                               |                                                                               |
-| Vagyonszerzési illeték                      | az ingatlan eszközszámlája: `1510`, `1520` vagy `1530` | aktiválva, az ingatlan értékébe                                               |
 | Mezőgazdasági emberi szolgáltatás, kaszálás | `5430` Mezőgazdasági szolgáltatások                    |                                                                               |
 | Könyvelési díj                              | `5440` Könyvelési és szakértői díjak                   |                                                                               |
 | Banki díjak                                 | `5700` Pénzügyi költségek                              | `5700` ← `1100`                                                               |
@@ -114,7 +113,6 @@ A táblázatok a hiányzó tételeket a javasolt kóddal írják. Ezek a seedben
 - A `4400` Előfizetések és tagsági díjak a seedben `equity` típusú. Bevételi számla, javasolt típus: `revenue`.
 - A `1530` Lakóépületek leírása a seedben „1520 Lakóépületek számla”. A kód `1530`, a leírásból a `1520` elírás.
 - Az `1400` Előlegek a seedben a Terjesztési Igazgatóságon ül. Ingatlan-előlegnél a sor szervezete az ingatlan projektje, `I/4.11.1.1 Lakóterületek` vagy `I/4.11.1.2 Termőterületek`.
-- Külön illeték számla nincs és nem is kell: a vagyonszerzési illeték az ingatlan eszközszámlájára aktiválódik.
 - A `1101` és `1001` nincs az `accounts.json`-ban: tagonként automatikusan jön létre.
 - Az árfolyamot a `currency-rate` adja, a sor nem őrzi meg.
 
@@ -213,24 +211,21 @@ A kincstár pénzeszközei: **`1000` Készpénz**, **`1100` Bankszámlák** (see
 
 | Tartozik ←                       | Követel                           | Összeg (minta) | Pénznem | Szervezet                |
 | -------------------------------- | --------------------------------- | -------------- | ------- | ------------------------ |
-| `1520` Belterületi földterületek | `1101` kovács.erika - tagi számla | 2 080 000      | HUF     | I/4.11.1.1 Lakóterületek |
+| `1520` Belterületi földterületek | `1101` kovács.erika - tagi számla | 2 000 000      | HUF     | I/4.11.1.1 Lakóterületek |
 
-Mezőgazdasági földnél a tartozik `1510` Mezőgazdasági földterületek, szervezet `I/4.11.1.2 Termőterületek`. Az összeg a befizetett részjegy; a bontás (előírás, bank, Homály KOR, lekötés, illeték) a sablon lépései.
+Mezőgazdasági földnél a tartozik `1510` Mezőgazdasági földterületek, szervezet `I/4.11.1.2 Termőterületek`. Az összeg a befizetett részjegy (vételár); a bontás (előírás, bank, Homály KOR, lekötés) a sablon lépései.
 
-Egy tag részjegyet fizet be a saját bankjából. A részjegy a `1101` tagi számlán megy át: előírás, majd befizetés a **`1100` Bankszámlák**-ra. A területvásárlás jellemzően **bankon keresztül** történik: stróman **KOR** a `1100`-ról a tag `1001` Homály számlájára **csak a vételár összegéig**, onnan KOR vétel az ingatlan `15xx` számlára. A befizetett részjegy **vételáron felüli** része (a mintában az illeték 80 000 Ft) **nem megy stróman KOR-ként a `1001`-re**: végig **`1100` HUF** marad, amíg az illeték aktiválása és a NAV felé utalás le nem vonja. A **korona lekötés** csak utána, az eszköz HUF értékéből ([lekötés blokk](#lekötés-blokk)). Ha a `1001`-en a vételár felett KOR vagy HUF maradna (hibás stróman), a felesleg **bányászás** (`1100` → `1001` HUF), nem további ingatlan-KOR.
+Egy tag részjegyet fizet be a saját bankjából. A részjegy a `1101` tagi számlán megy át: előírás, majd befizetés a **`1100` Bankszámlák**-ra. A területvásárlás jellemzően **bankon keresztül** történik: stróman **KOR** a `1100`-ról a tag `1001` Homály számlájára **a vételár összegében**, onnan KOR vétel az ingatlan `15xx` számlára. A **korona lekötés** utána, az eszköz HUF értékéből ([lekötés blokk](#lekötés-blokk)). Ha a `1001`-en a vételár felett KOR vagy HUF maradna (hibás stróman), a felesleg **bányászás** (`1100` → `1001` HUF), nem további ingatlan-KOR.
 
-Minta: `kovács.erika` 2 080 000 Ft részjegy. Telek vételár 2 000 000 Ft (20 000 korona lekötés), illeték 80 000 Ft (800 korona lekötés). Számla: `1520` Belterületi földterületek. Szervezet: `I/4.11.1.1 Lakóterületek`. (Mezőgazdasági földnél `1510`, szervezet `I/4.11.1.2 Termőterületek`.)
+Minta: `kovács.erika` 2 000 000 Ft részjegy / telek vételár (20 000 korona lekötés). Számla: `1520` Belterületi földterületek. Szervezet: `I/4.11.1.1 Lakóterületek`. (Mezőgazdasági földnél `1510`, szervezet `I/4.11.1.2 Termőterületek`.)
 
 | #   | Lépés              | Tartozik ←                         | Követel                            | Összeg             | Pénznem | Szervezet                 | Típus     |
 | --- | ------------------ | ---------------------------------- | ---------------------------------- | ------------------ | ------- | ------------------------- | --------- |
-| 1   | Részjegy előírása  | `1101` kovács.erika - tagi számla  | `3000` Részjegytőke                | 2 080 000          | HUF     | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 2   | Bejövő tagi utalás | `1100` Bankszámlák                 | `1101` kovács.erika - tagi számla  | 2 080 000          | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
+| 1   | Részjegy előírása  | `1101` kovács.erika - tagi számla  | `3000` Részjegytőke                | 2 000 000          | HUF     | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 2   | Bejövő tagi utalás | `1100` Bankszámlák                 | `1101` kovács.erika - tagi számla  | 2 000 000          | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
 | 3   | Stróman (vételár)  | `1001` kovács.erika - saját számla | `1100` Bankszámlák                 | 2 000 000          | KOR     | I/3. Pénzügyi Igazgatóság | Átvezetés |
 | 4   | Telek vételár      | `1520` Belterületi földterületek   | `1001` kovács.erika - saját számla | 2 000 000          | KOR     | I/4.11.1.1 Lakóterületek  | Átvezetés |
 | 5   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)    | fedezet `1520` HUF érték           | 2 000 000 / 20 000 | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
-| 6   | Illeték aktiválása | `1520` Belterületi földterületek   | `2300` Adótartozások               | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Átvezetés |
-| 7   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)    | fedezet `1520` HUF érték           | 80 000 / 800       | HUF+KOR | kincstár → Lakóterületek  | Átvezetés |
-| 8   | Illeték utalása    | `2300` Adótartozások               | `1100` Bankszámlák                 | 80 000             | HUF     | I/4.11.1.1 Lakóterületek  | Utalás    |
 
 ```mermaid
 flowchart LR
@@ -240,7 +235,6 @@ flowchart LR
   t1001["1001 saját számla"]
   t1520["1520 Belterületi föld"]
   t1900["1900 átvezető"]
-  t2300["2300 Adótartozások"]
 
   t3000 -->|"előírás · HUF"| t1101
   t1101 -->|"befizetés · HUF"| t1100
@@ -248,8 +242,6 @@ flowchart LR
   t1001 -->|"telek · KOR"| t1520
   t1520 -->|"fedezet · HUF"| t1900
   t1900 -->|"lekötés · KOR"| t1520
-  t2300 -->|"illeték · HUF"| t1520
-  t1100 -->|"NAV · HUF"| t2300
 ```
 
 ```mermaid
@@ -262,7 +254,6 @@ sequenceDiagram
   participant Atv as 1900
   participant Kt as 1000 KOR kincstar
   participant Nyilv as Lakoteruletek nyilvantartas
-  participant Ado as 2300
 
   Toke->>Tag: eloiras HUF
   Tag->>Bank: befizetes HUF
@@ -272,33 +263,24 @@ sequenceDiagram
   Atv->>Kt: KOR kibocsatas
   Kt->>Atv: KOR le kincstarrol
   Atv->>Nyilv: 20 000 KOR marad
-  Ado->>Ingatlan: illetek HUF az eszkozbe
-  Ingatlan->>Atv: lekotes fedezet illetek HUF
-  Atv->>Kt: KOR kibocsatas
-  Kt->>Atv: KOR le kincstarrol
-  Atv->>Nyilv: 800 KOR marad
-  Bank->>Ado: illetek utalasa NAV-nak HUF
 ```
 
-Zárás: `3000` követel 2 080 000 Ft, `1101` és `1100` nulla, `1520` tartozik 2 080 000 Ft HUF, Lakóterületek nyilvántartás 20 800 KOR lekötve.
+Zárás: `3000` követel 2 000 000 Ft, `1101` és `1100` nulla, `1520` tartozik 2 000 000 Ft HUF, Lakóterületek nyilvántartás 20 000 KOR lekötve.
 
 Seedből hiányzik: `1900`.
 
 ## Ügylet 2 — készpénzes belterületi ingatlan vásárlás
 
-A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ingatlant — tagi részjegy és Homály **nélkül**. A vételár HUF készpénz; a vagyonszerzési illeték aktiválódik az eszközbe, a NAV felé az illeték **`1100`-ról** megy (a kincstár bankszámlájáról).
+A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ingatlant — tagi részjegy és Homály **nélkül**. A vételár HUF készpénz; utána [lekötés blokk](#lekötés-blokk) a lakóterület nyilvántartására.
 
-**Egysoros match forrás (v1):** `1520` ← `1000`, összeg a vételár (minta 800 000 HUF). A teljes bontás (lekötés, illeték) a sablon `step` listája.
+**Egysoros match forrás (v1):** `1520` ← `1000`, összeg a vételár (minta 800 000 HUF). A teljes bontás (lekötés) a sablon `step` listája.
 
-Minta: belterületi telek 800 000 Ft + illeték 32 000 Ft. Számla: `1520`. Szervezet: `I/4.11.1.1 Lakóterületek`. Lekötés: 8 000 + 320 = 8 320 KOR (1 korona = 100 Ft).
+Minta: belterületi telek 800 000 Ft. Számla: `1520`. Szervezet: `I/4.11.1.1 Lakóterületek`. Lekötés: 8 000 KOR (1 korona = 100 Ft).
 
-| #   | Lépés              | Tartozik ←                       | Követel              | Összeg          | Pénznem | Szervezet                | Típus     |
-| --- | ------------------ | -------------------------------- | -------------------- | --------------- | ------- | ------------------------ | --------- |
-| 1   | Telek vételár      | `1520` Belterületi földterületek | `1000` Készpénz      | 800 000         | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
-| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`       | 800 000 / 8 000 | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 3   | Illeték aktiválása | `1520` Belterületi földterületek | `2300` Adótartozások | 32 000          | HUF     | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 4   | Lekötés, illeték   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`       | 32 000 / 320    | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
-| 5   | Illeték utalása    | `2300` Adótartozások             | `1100` Bankszámlák   | 32 000          | HUF     | I/4.11.1.1 Lakóterületek | Utalás    |
+| #   | Lépés              | Tartozik ←                       | Követel         | Összeg          | Pénznem | Szervezet                | Típus     |
+| --- | ------------------ | -------------------------------- | --------------- | --------------- | ------- | ------------------------ | --------- |
+| 1   | Telek vételár      | `1520` Belterületi földterületek | `1000` Készpénz | 800 000         | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
+| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`  | 800 000 / 8 000 | HUF+KOR | kincstár → Lakóterületek | Átvezetés |
 
 ```mermaid
 sequenceDiagram
@@ -307,23 +289,15 @@ sequenceDiagram
   participant Atv as 1900
   participant Kt as 1000 KOR kincstar
   participant Nyilv as Lakoteruletek nyilvantartas
-  participant Ado as 2300
-  participant Bank as 1100
 
   Penztar->>Telek: vetelar HUF készpénz az eladonak
   Telek->>Atv: lekotes fedezet vetelar HUF
   Atv->>Kt: KOR kibocsatas
   Kt->>Atv: KOR le kincstarrol
   Atv->>Nyilv: 8 000 KOR marad
-  Ado->>Telek: illetek HUF az eszkozbe
-  Telek->>Atv: lekotes fedezet illetek HUF
-  Atv->>Kt: KOR kibocsatas
-  Kt->>Atv: KOR le kincstarrol
-  Atv->>Nyilv: 320 KOR marad
-  Bank->>Ado: illetek utalasa NAV-nak HUF
 ```
 
-Zárás: `1520` tartozik 832 000 Ft HUF, Lakóterületek nyilvántartás 8 320 KOR, `1000` csökken 800 000 Ft-tal, `1100` csökken 32 000 Ft-tal.
+Zárás: `1520` tartozik 800 000 Ft HUF, Lakóterületek nyilvántartás 8 000 KOR, `1000` csökken 800 000 Ft-tal.
 
 Seedből hiányzik: `1900`.
 
@@ -464,7 +438,7 @@ Telek vagy épület vásárlása foglalóval, majd a fennmaradó vételár bankb
 
 **Egysoros match forrás (v1):** tipikusan a foglaló `1400` ← `1100`, vagy a seed a teljes vételárhoz igazított fejlécet használ (`1530` ← `1100`, minta 10 000 000 HUF), ha a `percent` 0–100 korlát miatt a foglalóösszeg nem arányosítja a többi lépést — lásd [0002 seed 8.5](./plans/0002-transaction-workflow-content-type.md#85-ügylet-5--ingatlan-szerzése).
 
-Az ingatlan számla a fajta szerint: `1510` Mezőgazdasági földterületek, `1520` Belterületi földterületek, `1530` Lakóépületek. A minta egy lakóház, `1530`. Szervezet: `I/4.11.1.1 Lakóterületek`. Pénzeszköz: `1100` Bankszámlák. A vagyonszerzési illeték az ingatlan értékébe kerül, az [1.](#ügylet-1--tagi-befizetés-ingatlan-vásárlásra) vagy [2.](#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás) ügylet illeték lépései szerint.
+Az ingatlan számla a fajta szerint: `1510` Mezőgazdasági földterületek, `1520` Belterületi földterületek, `1530` Lakóépületek. A minta egy lakóház, `1530`. Szervezet: `I/4.11.1.1 Lakóterületek`. Pénzeszköz: `1100` Bankszámlák.
 
 Minta: 2 000 000 Ft foglaló, 8 000 000 Ft fennmaradó rész. Összesen 10 000 000 Ft eszköz; lekötés 100 000 korona (1 korona = 100 Ft).
 
