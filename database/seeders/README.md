@@ -138,7 +138,7 @@ npm run seed:http:kor:transaction-workflows:local
 npm run seed:http:kor:transaction-workflows -- prod
 ```
 
-Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A tagi `1101`/`1001` step csak kód (nincs account a DB-ben). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
+Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A seed a `debit_code`/`credit_code` alapján választ komponenst: fix T/K → `workflow.step`; tagi debit → `step-member-debit`; tagi credit → `step-member-credit`. A Content API dynamic zone itemjeiben a `__component` mezőnek az objektum első kulcsának kell lennie (különben Strapi 5: `Invalid key __component at step`). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
 
 ## Transaction import (kor)
 

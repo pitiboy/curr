@@ -4,7 +4,7 @@
 **Date:** 2026-10-29  
 **Üzleti modell:** [Ügyletek](../transaction-workflow.md)  
 **Backoffice v1:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md) — a Convert API **v1 utáni**  
-**Séma:** [transaction-workflow](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json), [workflow.step](../../src/components/workflow/step.json), [transaction](../../src/api/transaction/content-types/transaction/schema.json)
+**Séma:** [transaction-workflow](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json), [workflow.step](../../src/components/workflow/step.json) (Related), [workflow.step-member-debit](../../src/components/workflow/step-member-debit.json), [workflow.step-member-credit](../../src/components/workflow/step-member-credit.json), [transaction](../../src/api/transaction/content-types/transaction/schema.json)
 
 Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** automáció, valamint a [transaction-workflow.md](../transaction-workflow.md) **Ügylet 1–9** seedelési utasításai. Fizikai seed JSON / httpyac ebben a planben **nincs**; az implementáló a 8. fejezet tábláiból építi a fájlokat.
 
@@ -14,7 +14,7 @@ Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** a
 
 ### Cél
 
-1. **Katalógus** `api::transaction-workflow.transaction-workflow`: fejléc match mezők + `step` dynamic zone (`workflow.step`).
+1. **Katalógus** `api::transaction-workflow.transaction-workflow`: fejléc match mezők + `step` dynamic zone (`workflow.step` | `workflow.step-member-debit` | `workflow.step-member-credit`).
 2. **Seed** mind a kilenc mintaügyletre a [transaction-workflow.md](../transaction-workflow.md) alapján (lásd [8. Seed utasítások](#8-seed-utasítások-ügylet-1–9)).
 3. **Convert** Strapi route/controller: még nem átalakított `transaction` sorok → sablon szerinti új sorok (`keep_original` storno vagy törlés).
 
@@ -84,26 +84,23 @@ flowchart LR
 | `keep_original` | boolean | nem, default `true` | Lásd 6. |
 | `steps_published` | boolean | nem, default **`true`** | Generált step (+ storno) sorok `published` vs draft; Convert body felülírhatja |
 | `configuration` | json | nem | Fenntartott |
-| `step` | dynamic zone [`workflow.step`] | igen, **min 1** | Sorrend = kifejtés sorrendje |
+| `step` | dynamic zone (három komponens, lásd 3.2) | igen, **min 1** | Sorrend = kifejtés sorrendje |
 
 **Jogosultság (javaslat):** sablon szerkesztés Strapi Admin; Content API `find`/`findOne` `dataentry`+`editor`; create/update/delete Content API-n tilos. Convert endpoint: külön jog (pl. `editor` vagy admin token).
 
-### 3.2 `workflow.step`
+### 3.2 Step komponensek (dynamic zone)
 
-| Mező | Típus | Kötelező |
-| ---- | ----- | -------- |
-| `description` | string, default `{1}` | igen |
-| `percent` | decimal **0–100** (tört OK), default 100 | igen |
-| `debit_account_code` / `credit_account_code` | string (account.code) | igen |
-| `debit_account` / `credit_account` | relation → account | nem (fix kódoknál seed tölti; `1101`/`1001` üres) |
-| `currency_type` | relation → currency-type | igen |
-| `transaction_type` | relation → transaction-type | nem |
-| `organization` | relation → organization | igen |
-| `copy_receipt` | boolean, default `false` | nem | `true` → forrás `receipts` a generált sorra (ha volt) |
+Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`.
 
-Generált összeg: `amount = source.amount * percent / 100` (százalék; tört `percent` megengedett, pl. `3.846154`).
+| Komponens UID | Admin név | Számlák |
+| ---- | ---- | ---- |
+| `workflow.step` | Step with Related accounts | `debit_account` + `credit_account` reláció (**required**) |
+| `workflow.step-member-debit` | Step with Member as Debit | `member_account_code` (`1101`/`1001`) + `credit_account` reláció |
+| `workflow.step-member-credit` | Step with Member as Credit | `member_account_code` (`1101`/`1001`) + `debit_account` reláció |
 
-**`1101` / `1001` számlafeloldás:** a step `debit_account_code` / `credit_account_code` mezője a norma; a account reláció tagi kódnál üres maradhat. A match és a generált sor a forrás trx `debit_account` / `credit_account` példányát veszi, ha a kód `1101` vagy `1001`. Így ugyanaz a sablon minden tag saját számlájára működik. Ha a step a forráson nem szereplő testvérkódot kér (pl. forrás `1101`, step `1001`), a Convert a [member-accounts](../../src/member-accounts.ts) testvér számlát oldja fel.
+Generált összeg: `amount = source.amount * percent / 100`.
+
+**Tagi feloldás:** member komponensnél a Convert a forrás trx azonos kódú oldalát (vagy a [member-accounts](../../src/member-accounts.ts) testvért) használja — **nem** seed documentId-t. Fix oldalon a relation `documentId` megy a generált sorra.
 
 **`description` placeholder:** default `{1}` → forrás `description` másolása. Seedben lépésnév szöveg is megengedett.
 
@@ -197,16 +194,16 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 ### 8.0 Általános szabályok
 
 **Normatív forrás:** [docs/transaction-workflow.md](../transaction-workflow.md) Ügylet 1–9.  
-**Cél CT:** `api::transaction-workflow.transaction-workflow` + `workflow.step`.
+**Cél CT:** `api::transaction-workflow.transaction-workflow` + három step komponens.
 
 1. Egy ügylet = **egy** published sablon rekord (**első PR: mind a 9 ügylet** seedelve). Ahol a percent 0–100 mellett más pénznemű / nagyobb összegű lépés kell (3, 4), **második** sablon is megengedett (lásd 8.3–8.4).  
 2. Fejléc kódok = a doc **egysoros match** T←K párja (fejezetenként rögzítve alább).  
 3. `keep_original: true`, `steps_published: true`, `configuration: null` default a speceknél.  
 4. Opcionális fejléc `currency_type` / `transaction_type`: csak ha a matchot szűkíteni kell (alább jelezve).  
-5. Minden könyvelési kimeneti sor → `__component: "workflow.step"`; `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
+5. Minden könyvelési kimeneti sor → megfelelő step `__component` (related / member-debit / member-credit); `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
 6. Lekötés blokk → **4** step; forint bevétel → **2** step.  
 7. `percent` ∈ [0, 100], tört OK = `minta_lépés_összeg / minta_forrás_összeg * 100`. KOR lépésnél a minta **korona** összeg a számláló. Seed ≥ 6 tizedes.  
-8. Step: kötelező `debit_account_code` / `credit_account_code`; account reláció opcionális. Fix kódoknál seed lookup `account.code` → reláció. A `1101`/`1001` **csak kód** (nincs tag-kötött seed account); Convert a forrás trx / member testvér példányát használja. Org / currency / type továbbra is név/kód lookup.  
+8. Seed JSON `debit_code`/`credit_code`: ha az egyik tagi (`1101`/`1001`) → member-debit vagy member-credit + `member_account_code`; ha egyik sem → related mindkét account lookup. Org / currency / type név/kód lookup.  
 9. `step.min` = **1** (séma). Ügylet 9 egy steppel seedelhető.
 
 **Szállítás:**
@@ -408,7 +405,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | ------ | ------ |
 | `percent.max` | **100** marad; tört percent OK |
 | `step.min` | **1** |
-| Tagi `1101`/`1001` | Step mezőn kód; expand **forrás trx / member testvér**; nincs seed account relation |
+| Tagi `1101`/`1001` | Member-debit / member-credit komponens + `member_account_code`; expand **forrás trx / member testvér** |
 | Kimenet státusz | Sablon `steps_published` default `true`; Convert body override |
 | Első PR scope | **Mind a 9 ügylet** seed + Convert API |
 | Receipt | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra |
@@ -447,5 +444,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | ------- | ------ |
 | [docs/transaction-workflow.md](../transaction-workflow.md) | Üzleti norma + Strapi konverzió |
 | [transaction-workflow/schema.json](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) | Sablon CT |
-| [workflow/step.json](../../src/components/workflow/step.json) | Step komponens |
+| [workflow/step.json](../../src/components/workflow/step.json) | Related accounts step |
+| [workflow/step-member-debit.json](../../src/components/workflow/step-member-debit.json) | Member as Debit |
+| [workflow/step-member-credit.json](../../src/components/workflow/step-member-credit.json) | Member as Credit |
 | [transaction/schema.json](../../src/api/transaction/content-types/transaction/schema.json) | `converted_to_workflow`, `entered_key` |

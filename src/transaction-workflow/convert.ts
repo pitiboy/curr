@@ -1,7 +1,7 @@
 /**
  * Convert üzleti logika (Strapi nélkül, tesztelhető).
  * Match: published sablon fejléc kódok + opcionális pénznem/típus, converted_to_workflow === false.
- * Expand: step percent → összeg, {1} leírás, 1101/1001 a forrás trx / testvér számlából.
+ * Expand: step percent → összeg, {1} leírás; tagi oldal forrás trx / testvér számlából.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat).
  */
 export class TransactionWorkflowError extends Error {
@@ -18,6 +18,10 @@ export const TRANSACTION_UID = 'api::transaction.transaction';
 export const WORKFLOW_UID = 'api::transaction-workflow.transaction-workflow';
 export const MEMBER_UID = 'api::member.member';
 
+export const STEP_RELATED = 'workflow.step';
+export const STEP_MEMBER_DEBIT = 'workflow.step-member-debit';
+export const STEP_MEMBER_CREDIT = 'workflow.step-member-credit';
+
 /** Tagi / Homály számlák — ugyanaz a kód-készlet, mint a member-accounts modulban. */
 export const MEMBER_ACCOUNT_CODES = new Set(['1101', '1001']);
 
@@ -27,14 +31,25 @@ export type AccountRef = {
 };
 
 export type WorkflowStep = {
+  __component?: string | null;
   description?: string | null;
   percent?: number | string | null;
-  /** Normatív számla kód; tagi 1101/1001-nél nincs kötelező relation. */
-  debit_account_code?: string | number | null;
-  credit_account_code?: string | number | null;
-  /** Fix számlákhoz; tagi kódoknál Convert a forrás trx példányát használja. */
+  member_account_code?: string | number | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
+  currency_type?: { documentId: string } | null;
+  transaction_type?: { documentId: string } | null;
+  organization?: { documentId: string } | null;
+  copy_receipt?: boolean | null;
+};
+
+export type NormalizedWorkflowStep = {
+  description?: string | null;
+  percent?: number | string | null;
+  debitWanted: string;
+  creditWanted: string;
+  debitRelation?: AccountRef | null;
+  creditRelation?: AccountRef | null;
   currency_type?: { documentId: string } | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
@@ -81,6 +96,101 @@ export function accountCodeString(
 ): string | null {
   const parsed = parseAccountCode(account?.code ?? null);
   return parsed === null ? null : String(parsed);
+}
+
+export function isMemberAccountCode(
+  code: string | number | null | undefined,
+): boolean {
+  const normalized = parseAccountCode(code);
+  return normalized !== null && MEMBER_ACCOUNT_CODES.has(String(normalized));
+}
+
+function requireMemberAccountCode(
+  code: string | number | null | undefined,
+): string {
+  const normalized = parseAccountCode(code);
+  if (normalized === null || !MEMBER_ACCOUNT_CODES.has(String(normalized))) {
+    throw new TransactionWorkflowError(
+      `Invalid member_account_code "${code ?? ''}" (expected 1101 or 1001)`,
+      422,
+    );
+  }
+  return String(normalized);
+}
+
+function requireRelationCode(
+  account: AccountRef | null | undefined,
+  side: 'debit' | 'credit',
+): string {
+  const code = accountCodeString(account);
+  if (!account?.documentId || !code) {
+    throw new TransactionWorkflowError(
+      `Step ${side}_account relation is missing or has no code`,
+      422,
+    );
+  }
+  return code;
+}
+
+/** Dynamic-zone komponens → egységes debit/credit wanted + relation. */
+export function normalizeWorkflowStep(step: WorkflowStep): NormalizedWorkflowStep {
+  const component = step.__component?.trim();
+  if (!component) {
+    throw new TransactionWorkflowError(
+      'Workflow step __component is required',
+      422,
+    );
+  }
+
+  const shared = {
+    description: step.description,
+    percent: step.percent,
+    currency_type: step.currency_type,
+    transaction_type: step.transaction_type,
+    organization: step.organization,
+    copy_receipt: step.copy_receipt,
+  };
+
+  if (component === STEP_RELATED) {
+    const debitWanted = requireRelationCode(step.debit_account, 'debit');
+    const creditWanted = requireRelationCode(step.credit_account, 'credit');
+    return {
+      ...shared,
+      debitWanted,
+      creditWanted,
+      debitRelation: step.debit_account,
+      creditRelation: step.credit_account,
+    };
+  }
+
+  if (component === STEP_MEMBER_DEBIT) {
+    const debitWanted = requireMemberAccountCode(step.member_account_code);
+    const creditWanted = requireRelationCode(step.credit_account, 'credit');
+    return {
+      ...shared,
+      debitWanted,
+      creditWanted,
+      debitRelation: null,
+      creditRelation: step.credit_account,
+    };
+  }
+
+  if (component === STEP_MEMBER_CREDIT) {
+    const creditWanted = requireMemberAccountCode(step.member_account_code);
+    const debitWanted = requireRelationCode(step.debit_account, 'debit');
+    return {
+      ...shared,
+      debitWanted,
+      creditWanted,
+      debitRelation: step.debit_account,
+      creditRelation: null,
+    };
+  }
+
+  throw new TransactionWorkflowError(
+    `Unknown workflow step component "${component}"`,
+    422,
+  );
 }
 
 export function workflowMatchesTransaction(
@@ -148,27 +258,6 @@ export function stepAmount(
     );
   }
   return (base * ratio) / 100;
-}
-
-export function isMemberAccountCode(
-  code: string | number | null | undefined,
-): boolean {
-  const normalized = parseAccountCode(code);
-  return normalized !== null && MEMBER_ACCOUNT_CODES.has(String(normalized));
-}
-
-/** Step számla kód: mező elsőbbség, fallback a relation `code`-jára (régi seed). */
-export function stepAccountCode(
-  step: WorkflowStep,
-  side: 'debit' | 'credit',
-): string | null {
-  const fromField =
-    side === 'debit' ? step.debit_account_code : step.credit_account_code;
-  const parsedField = parseAccountCode(fromField);
-  if (parsedField !== null) return String(parsedField);
-  const fromRelation =
-    side === 'debit' ? step.debit_account : step.credit_account;
-  return accountCodeString(fromRelation);
 }
 
 function memberAccountOnSource(
@@ -246,8 +335,9 @@ export function expandWorkflowSteps(
   }
 
   return steps.map((step, index) => {
-    const currency = step.currency_type?.documentId;
-    const organization = step.organization?.documentId;
+    const normalized = normalizeWorkflowStep(step);
+    const currency = normalized.currency_type?.documentId;
+    const organization = normalized.organization?.documentId;
     if (!currency || !organization) {
       throw new TransactionWorkflowError(
         'Step currency_type or organization is missing',
@@ -257,26 +347,29 @@ export function expandWorkflowSteps(
 
     return {
       index,
-      description: expandDescription(step.description, transaction.description),
-      amount: stepAmount(transaction.amount, step.percent ?? 100),
+      description: expandDescription(
+        normalized.description,
+        transaction.description,
+      ),
+      amount: stepAmount(transaction.amount, normalized.percent ?? 100),
       debit_account: resolveStepAccount(
-        stepAccountCode(step, 'debit'),
-        step.debit_account,
+        normalized.debitWanted,
+        normalized.debitRelation,
         transaction,
         siblingByCode,
       ),
       credit_account: resolveStepAccount(
-        stepAccountCode(step, 'credit'),
-        step.credit_account,
+        normalized.creditWanted,
+        normalized.creditRelation,
         transaction,
         siblingByCode,
       ),
       currency_type: { documentId: currency },
-      transaction_type: step.transaction_type?.documentId
-        ? { documentId: step.transaction_type.documentId }
+      transaction_type: normalized.transaction_type?.documentId
+        ? { documentId: normalized.transaction_type.documentId }
         : null,
       organization: { documentId: organization },
-      copy_receipt: step.copy_receipt === true,
+      copy_receipt: normalized.copy_receipt === true,
       entered_key: `${transaction.documentId}:step:${index}`,
     };
   });

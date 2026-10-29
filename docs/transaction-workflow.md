@@ -651,7 +651,7 @@ Seedből hiányzik: semmi. A `1001` tagonként automatikusan jön létre, a `Bá
 
 ## Ügylet konfigurálása Strapi-ban
 
-A sablon collection: [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json). A lépés komponens: [`workflow.step`](../src/components/workflow/step.json). A v1 kézi tranzakció űrlap ettől nem változik. Seed és Convert API utasítások: [0002 plan](./plans/0002-transaction-workflow-content-type.md).
+A sablon collection: [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json). A lépések dynamic zone: [`workflow.step`](../src/components/workflow/step.json) (Related accounts), [`workflow.step-member-debit`](../src/components/workflow/step-member-debit.json), [`workflow.step-member-credit`](../src/components/workflow/step-member-credit.json). A v1 kézi tranzakció űrlap ettől nem változik. Seed és Convert API: [0002 plan](./plans/0002-transaction-workflow-content-type.md).
 
 A `transaction-type` címke marad (Készpénz, Utalás, Átvezetés, Barter, Jutalék, Elrendelt, Bányászás). A Strapi Adminban és a backoffice-ban a megjelenő név Ügylet.
 
@@ -684,24 +684,21 @@ sequenceDiagram
 | `keep_original`                              | Default `true` — storno + megtartás; `false` — eredeti törlése                                                                                                                                |
 | `steps_published`                            | Default `true` — generált step (és storno) sorok published; `false` → draft. Convert API/UI felülírhatja.                                                                                     |
 | `configuration`                              | JSON, **fenntartott**, nincs implementáció                                                                                                                                                    |
-| `step`                                       | Dynamic zone, csak `workflow.step`; sorrend = kifejtés sorrendje; séma `min: 1`                                                                                                               |
+| `step`                                       | Dynamic zone: Related / Member as Debit / Member as Credit; sorrend = kifejtés; séma `min: 1`                                                                 |
 
 Nincs `workflow_key`, `inputs`, `active`, `sort_order`. A `draftAndPublish` a sablonon **be** van kapcsolva: a Convert csak **published** sablonokat használ.
 
-Egy `workflow.step`:
+Step komponensek:
 
-| Mező                               | Szerep                                                                                                                                                         |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `description`                      | Generált sor leírása; default `{1}` — placeholder a forrás mezőkre (implementációkor rögzítendő)                                                               |
-| `percent`                          | 0–100 (tört megengedett); `amount = forrás.amount * percent / 100`                                                                                             |
-| `debit_account_code` / `credit_account_code` | Kötelező kódok; `1101`/`1001` tagi slot — Convert a **forrás trx** / member testvér példányát használja                                         |
-| `debit_account` / `credit_account` | Opcionális; fix számláknál seed tölti; tagi kódnál üres                                                                                                         |
-| `currency_type`                    | Kötelező a stepen                                                                                                                                              |
-| `transaction_type`                 | Opcionális                                                                                                                                                     |
-| `organization`                     | Kötelező a stepen                                                                                                                                              |
-| `copy_receipt`                     | Default `false`; `true` esetén a forrás `receipts` a generált sorra is rákerül (ha volt); ha nem volt, üres                                                    |
+| Komponens | Számlák |
+| --------- | ------- |
+| `workflow.step` (Related accounts) | `debit_account` + `credit_account` reláció |
+| `workflow.step-member-debit` | `member_account_code` (`1101`/`1001`) + `credit_account` |
+| `workflow.step-member-credit` | `member_account_code` (`1101`/`1001`) + `debit_account` |
 
-A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad. A sablonrétegben **nincs** külön komponens és nincs implicit `1900` kibontás: mind a négy (ill. két) könyvelési sor külön `workflow.step`.
+Közös: `description` (default `{1}`), `percent` (0–100), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
+
+A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad: mind a négy (ill. két) könyvelési sor külön step a dynamic zone-ban (nincs implicit `1900` kibontás).
 
 ### Konverzió
 

@@ -1,7 +1,7 @@
 {
   "collectionName": "components_workflow_steps",
   "info": {
-    "displayName": "Step",
+    "displayName": "Step with Related accounts",
     "icon": "bulletList"
   },
   "options": {},
@@ -18,27 +18,17 @@
       "min": 0,
       "max": 100
     },
-    "debit_account_code": {
-      "type": "string",
-      "required": true,
-      "maxLength": 10
-    },
-    "credit_account_code": {
-      "type": "string",
-      "required": true,
-      "maxLength": 10
-    },
     "credit_account": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::account.account",
-      "required": false
+      "required": true
     },
     "debit_account": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::account.account",
-      "required": false
+      "required": true
     },
     "transaction_type": {
       "type": "relation",

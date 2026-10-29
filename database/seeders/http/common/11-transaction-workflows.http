@@ -9,7 +9,8 @@
 # Token: http-client.private.env.json, példányonként Full access API token.
 # Előfeltétel: 01–07 seed (számlák, szervezetek, pénznemek, tranzakciótípusok),
 # köztük 1900, 4500, EGG, FRUIT és a Tojóól szervezet a kor/data fájlokban.
-# Tagi 1101/1001: csak kód a stepen, nincs account lookup (Convert a forrás trx-ből oldja).
+# Tagi 1101/1001 → workflow.step-member-debit / step-member-credit (member_account_code).
+# Fix T/K → workflow.step (mindkét account reláció). Convert a forrás trx-ből oldja a tagit.
 # Ha a name + fejléc kód páros már létezik, a POST nem fut le.
 
 {{
@@ -260,17 +261,44 @@ Accept: application/json
           "\"";
         break;
       }
-      const row = {
-        __component: "workflow.step",
-        description: step.description,
-        percent: step.percent,
-        debit_account_code: debitCode,
-        credit_account_code: creditCode,
-        currency_type: currencyId,
-        organization: orgId,
-      };
-      if (debitId) row.debit_account = debitId;
-      if (creditId) row.credit_account = creditId;
+      if (debitIsMember && creditIsMember) {
+        skipReason =
+          "both sides are member codes on step \"" +
+          step.description +
+          "\" (unsupported)";
+        break;
+      }
+      // __component must be the first JSON key — Strapi 5 Content API
+      // rejects "Invalid key __component at step" otherwise.
+      const row = debitIsMember
+        ? {
+            __component: "workflow.step-member-debit",
+            description: step.description,
+            percent: step.percent,
+            currency_type: currencyId,
+            organization: orgId,
+            member_account_code: debitCode,
+            credit_account: creditId,
+          }
+        : creditIsMember
+          ? {
+              __component: "workflow.step-member-credit",
+              description: step.description,
+              percent: step.percent,
+              currency_type: currencyId,
+              organization: orgId,
+              member_account_code: creditCode,
+              debit_account: debitId,
+            }
+          : {
+              __component: "workflow.step",
+              description: step.description,
+              percent: step.percent,
+              currency_type: currencyId,
+              organization: orgId,
+              debit_account: debitId,
+              credit_account: creditId,
+            };
       if (typeId) row.transaction_type = typeId;
       if (step.copy_receipt) row.copy_receipt = true;
       steps.push(row);

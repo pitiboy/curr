@@ -52,7 +52,11 @@
     },
     "step": {
       "type": "dynamiczone",
-      "components": ["workflow.step"],
+      "components": [
+        "workflow.step",
+        "workflow.step-member-debit",
+        "workflow.step-member-credit"
+      ],
       "required": true,
       "min": 1
     }

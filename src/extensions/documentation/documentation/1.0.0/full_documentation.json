@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-29T22:12:20.293Z"
+    "x-generation-date": "2026-10-29T22:40:19.089Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -13575,13 +13575,21 @@
                   "anyOf": [
                     {
                       "$ref": "#/components/schemas/WorkflowStepComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/WorkflowStepMemberDebitComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/WorkflowStepMemberCreditComponent"
                     }
                   ]
                 },
                 "discriminator": {
                   "propertyName": "__component",
                   "mapping": {
-                    "workflow.step": "#/components/schemas/WorkflowStepComponent"
+                    "workflow.step": "#/components/schemas/WorkflowStepComponent",
+                    "workflow.step-member-debit": "#/components/schemas/WorkflowStepMemberDebitComponent",
+                    "workflow.step-member-credit": "#/components/schemas/WorkflowStepMemberCreditComponent"
                   }
                 }
               },
@@ -13692,13 +13700,21 @@
               "anyOf": [
                 {
                   "$ref": "#/components/schemas/WorkflowStepComponent"
+                },
+                {
+                  "$ref": "#/components/schemas/WorkflowStepMemberDebitComponent"
+                },
+                {
+                  "$ref": "#/components/schemas/WorkflowStepMemberCreditComponent"
                 }
               ]
             },
             "discriminator": {
               "propertyName": "__component",
               "mapping": {
-                "workflow.step": "#/components/schemas/WorkflowStepComponent"
+                "workflow.step": "#/components/schemas/WorkflowStepComponent",
+                "workflow.step-member-debit": "#/components/schemas/WorkflowStepMemberDebitComponent",
+                "workflow.step-member-credit": "#/components/schemas/WorkflowStepMemberCreditComponent"
               }
             }
           },
@@ -13798,14 +13814,100 @@
             "type": "number",
             "format": "float"
           },
-          "debit_account_code": {
+          "credit_account": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "debit_account": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "transaction_type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "currency_type": {
+            "$ref": "#/components/schemas/CurrencyType"
+          },
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "copy_receipt": {
+            "type": "boolean"
+          }
+        }
+      },
+      "WorkflowStepMemberDebitComponent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "__component": {
+            "type": "string",
+            "enum": [
+              "workflow.step-member-debit"
+            ]
+          },
+          "description": {
             "type": "string"
           },
-          "credit_account_code": {
+          "percent": {
+            "type": "number",
+            "format": "float"
+          },
+          "member_account_code": {
             "type": "string"
           },
           "credit_account": {
             "$ref": "#/components/schemas/Account"
+          },
+          "transaction_type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "currency_type": {
+            "$ref": "#/components/schemas/CurrencyType"
+          },
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "copy_receipt": {
+            "type": "boolean"
+          }
+        }
+      },
+      "WorkflowStepMemberCreditComponent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "__component": {
+            "type": "string",
+            "enum": [
+              "workflow.step-member-credit"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "percent": {
+            "type": "number",
+            "format": "float"
+          },
+          "member_account_code": {
+            "type": "string"
           },
           "debit_account": {
             "$ref": "#/components/schemas/Account"
