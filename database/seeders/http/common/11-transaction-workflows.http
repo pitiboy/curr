@@ -1,17 +1,316 @@
 # Transaction-workflow sablonok (Ügylet 1–9)
 # A rekordok a dataDir/transaction-workflows/*.json fájlokból jönnek.
-# A Strapi boot seed ugyanezt tölti, ha TRANSACTION_WORKFLOWS_INSTANCE=kor (vagy edizone).
 #
-# Előfeltétel: 01–07 seed (számlák, szervezetek, pénznemek, tranzakciótípusok), köztük
-# 1900, 4500, EGG, FRUIT és a Tojóól szervezet a kor/data fájlokban.
+#   npm run seed:http:kor -- local
+#   npm run seed:http:kor:transaction-workflows:local
 #
-# Helyi futtatás (Admin Full access token):
-#   TRANSACTION_WORKFLOWS_INSTANCE=kor npm run develop
-# vagy Strapi console:
-#   const { upsertKorTransactionWorkflowSeeds } = require('./dist/src/transaction-workflow/seed');
-#   await upsertKorTransactionWorkflowSeeds(strapi);
+# A dataDir a kor/data (vagy más instance) mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# Előfeltétel: 01–07 seed (számlák, szervezetek, pénznemek, tranzakciótípusok),
+# köztük 1900, 4500, EGG, FRUIT és a Tojóól szervezet a kor/data fájlokban.
+# Ha a name + fejléc kód páros már létezik, a POST nem fut le.
+
+{{
+  if (typeof wfItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    const dir = path.resolve(process.cwd(), dataDir, "transaction-workflows");
+    const files =
+      fs.existsSync(dir)
+        ? fs
+            .readdirSync(dir)
+            .filter((name) => name.endsWith(".json"))
+            .sort()
+        : [];
+    exports.wfItems = files.map((name) =>
+      JSON.parse(fs.readFileSync(path.join(dir, name), "utf8"))
+    );
+    const accountCodes = new Set();
+    const organizationNames = new Set();
+    const currencyCodes = new Set();
+    const typeNames = new Set();
+    for (const item of exports.wfItems) {
+      if (item.currency) currencyCodes.add(String(item.currency));
+      if (item.transaction_type) typeNames.add(item.transaction_type);
+      for (const step of item.steps || []) {
+        accountCodes.add(String(step.debit_code));
+        accountCodes.add(String(step.credit_code));
+        organizationNames.add(step.organization);
+        currencyCodes.add(String(step.currency));
+        if (step.transaction_type) typeNames.add(step.transaction_type);
+      }
+    }
+    exports.wfAccountCodes = [...accountCodes].sort();
+    exports.wfOrganizationNames = [...organizationNames].sort();
+    exports.wfCurrencyCodes = [...currencyCodes].sort();
+    exports.wfTypeNames = [...typeNames].sort();
+    exports.wfAccountIds = {};
+    exports.wfOrganizationIds = {};
+    exports.wfCurrencyIds = {};
+    exports.wfTypeIds = {};
+    exports.wfExists = {};
+    exports.wfFailed = {};
+  }
+}}
 
 ###
-GET {{baseUrl}}/api/transaction-workflows?pagination[pageSize]=1
+# @name require-account
+# @loop for code of wfAccountCodes
+{{
+  exports.encoded = encodeURIComponent(code);
+}}
+GET {{baseUrl}}/api/accounts?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("account lookup failed: " + code, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      wfAccountIds[code] = found;
+      exports.wfAccountIds = wfAccountIds;
+    } else {
+      console.error("account not found: " + code);
+    }
+  }
+}}
+
+###
+# @name require-organization
+# @loop for organizationName of wfOrganizationNames
+{{
+  exports.encoded = encodeURIComponent(organizationName);
+}}
+GET {{baseUrl}}/api/organizations?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("organization lookup failed: " + organizationName, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      wfOrganizationIds[organizationName] = found;
+      exports.wfOrganizationIds = wfOrganizationIds;
+    } else {
+      console.error("organization not found: " + organizationName);
+    }
+  }
+}}
+
+###
+# @name require-currency
+# @loop for currencyCode of wfCurrencyCodes
+{{
+  exports.encoded = encodeURIComponent(currencyCode);
+}}
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("currency lookup failed: " + currencyCode, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      wfCurrencyIds[currencyCode] = found;
+      exports.wfCurrencyIds = wfCurrencyIds;
+    } else {
+      console.error("currency not found: " + currencyCode);
+    }
+  }
+}}
+
+###
+# @name require-transaction-type
+# @loop for typeName of wfTypeNames
+{{
+  exports.encoded = encodeURIComponent(typeName);
+}}
+GET {{baseUrl}}/api/transaction-types?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("transaction-type lookup failed: " + typeName, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      wfTypeIds[typeName] = found;
+      exports.wfTypeIds = wfTypeIds;
+    } else {
+      console.error("transaction-type not found: " + typeName);
+    }
+  }
+}}
+
+###
+# @name lookup-workflow
+# @loop for item of wfItems
+{{
+  exports.wfKey = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
+  exports.encodedName = encodeURIComponent(item.name);
+  exports.debitCode = item.debit_account_code;
+  exports.creditCode = item.credit_account_code;
+}}
+GET {{baseUrl}}/api/transaction-workflows?filters[name][$eq]={{encodedName}}&filters[debit_account_code][$eq]={{debitCode}}&filters[credit_account_code][$eq]={{creditCode}}&status=published&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    wfFailed[wfKey] = true;
+    exports.wfFailed = wfFailed;
+    console.error("lookup failed: " + wfKey, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      wfExists[wfKey] = found;
+      exports.wfExists = wfExists;
+    }
+  }
+}}
+
+###
+# @name create-workflow
+# @loop for item of wfItems
+{{
+  exports.wfKey = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
+  exports.wfPayload = null;
+  if (wfExists[wfKey] || wfFailed[wfKey]) {
+    exports.$cancel = true;
+  } else {
+    const steps = [];
+    let skipReason = null;
+    for (const step of item.steps || []) {
+      const debitId = wfAccountIds[String(step.debit_code)];
+      const creditId = wfAccountIds[String(step.credit_code)];
+      const orgId = wfOrganizationIds[step.organization];
+      const currencyId = wfCurrencyIds[String(step.currency)];
+      const typeId = step.transaction_type
+        ? wfTypeIds[step.transaction_type]
+        : undefined;
+      if (!debitId || !creditId || !orgId || !currencyId) {
+        skipReason =
+          "missing lookup for step \"" +
+          step.description +
+          "\" (debit " +
+          step.debit_code +
+          ", credit " +
+          step.credit_code +
+          ", org " +
+          step.organization +
+          ", currency " +
+          step.currency +
+          ")";
+        break;
+      }
+      if (step.transaction_type && !typeId) {
+        skipReason =
+          "missing transaction_type \"" +
+          step.transaction_type +
+          "\" for step \"" +
+          step.description +
+          "\"";
+        break;
+      }
+      const row = {
+        __component: "workflow.step",
+        description: step.description,
+        percent: step.percent,
+        debit_account: debitId,
+        credit_account: creditId,
+        currency_type: currencyId,
+        organization: orgId,
+      };
+      if (typeId) row.transaction_type = typeId;
+      if (step.copy_receipt) row.copy_receipt = true;
+      steps.push(row);
+    }
+    const headerCurrencyId = item.currency
+      ? wfCurrencyIds[String(item.currency)]
+      : undefined;
+    const headerTypeId = item.transaction_type
+      ? wfTypeIds[item.transaction_type]
+      : undefined;
+    if (!skipReason && !steps.length) {
+      skipReason = "no steps";
+    } else if (!skipReason && item.currency && !headerCurrencyId) {
+      skipReason = "missing currency " + item.currency;
+    } else if (!skipReason && item.transaction_type && !headerTypeId) {
+      skipReason = "missing transaction_type " + item.transaction_type;
+    }
+    if (skipReason) {
+      console.error("create skipped: " + item.name + " → " + skipReason);
+      wfFailed[wfKey] = true;
+      exports.wfFailed = wfFailed;
+      exports.$cancel = true;
+    } else {
+      const data = {
+        name: item.name,
+        debit_account_code: item.debit_account_code,
+        credit_account_code: item.credit_account_code,
+        keep_original: item.keep_original !== false,
+        steps_published: item.steps_published !== false,
+        configuration: null,
+        step: steps,
+      };
+      if (headerCurrencyId) data.currency_type = headerCurrencyId;
+      if (headerTypeId) data.transaction_type = headerTypeId;
+      exports.wfPayload = JSON.stringify({ data });
+    }
+  }
+}}
+POST {{baseUrl}}/api/transaction-workflows?status=published
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{wfPayload}}
+
+{{
+  if (wfPayload) {
+    let parsed = response.parsedBody;
+    if (!parsed && response.body) {
+      try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+    }
+    if (response.statusCode !== 200 && response.statusCode !== 201) {
+      console.error("create failed: " + item.name, response.statusCode, response.body);
+    } else {
+      const created = parsed && parsed.data && parsed.data.documentId;
+      if (created) {
+        wfExists[wfKey] = created;
+        exports.wfExists = wfExists;
+      }
+    }
+  }
+}}

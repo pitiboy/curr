@@ -14,7 +14,6 @@ import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
-import { upsertTransactionWorkflowSeedsFromInstance } from './transaction-workflow/seed';
 
 const enabled = { enabled: true, policy: '' };
 
@@ -463,19 +462,6 @@ export default {
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);
 
-    const workflowSeedInstance = process.env.TRANSACTION_WORKFLOWS_INSTANCE?.trim();
-    if (workflowSeedInstance) {
-      try {
-        await upsertTransactionWorkflowSeedsFromInstance(
-          strapi,
-          workflowSeedInstance,
-        );
-      } catch (error) {
-        strapi.log.warn(
-          `Transaction-workflow seed skipped for instance "${workflowSeedInstance}": ${error instanceof Error ? error.message : error}`,
-        );
-      }
-    }
     await backfillMemberAccounts(strapi);
     await ensureGoogleOAuthGrant(strapi);
     await migrateLegalPagesToStaticPages(strapi);

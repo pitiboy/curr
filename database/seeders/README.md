@@ -119,25 +119,26 @@ Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `k
 
 ## HTTP seed (kor / edizone)
 
-A `database/seeders/http/common/01`–`10` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak.
+A `database/seeders/http/common/01`–`11` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak. Ha egy instance alatt nincs `transaction-workflows/` mappa (pl. edizone), a 11-es lépés no-op.
 
 | Lépés | HTTP                                                                                                  | Adat                            |
 | ----- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
 | 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`      |
 | 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json` |
-| 11    | `common/11-transaction-workflows.http` (docs; boot seed)                                                | `data/transaction-workflows/*.json` |
+| 11    | `common/11-transaction-workflows.http`                                                                | `data/transaction-workflows/*.json` |
 
 Előfeltétel a 09-hez: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
 
 ### Transaction-workflow sablonok (kor)
 
-A kilenc ügylet sablonja a `database/seeders/http/kor/data/transaction-workflows/` JSON fájlokban van (a `docs/plans/0002-transaction-workflow-content-type.md` 8. fejezete szerint). Boot-time upsert:
+A kilenc ügylet sablonja a `database/seeders/http/kor/data/transaction-workflows/` JSON fájlokban van (a `docs/plans/0002-transaction-workflow-content-type.md` 8. fejezete szerint). HttpYac feltöltés (insert-only, published):
 
 ```bash
-TRANSACTION_WORKFLOWS_INSTANCE=kor npm run develop
+npm run seed:http:kor:transaction-workflows:local
+npm run seed:http:kor:transaction-workflows -- prod
 ```
 
-Insert-only: meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
+Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
 
 ## Transaction import (kor)
 

@@ -208,14 +208,15 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 8. Relation mezők seednél: lookup `account.code` / org név / currency kód / type név. A `1101`/`1001` seed reláció **sablonjelölő** (bármely azonos kódú account); Convert futáskor a forrás trx példányát használja.  
 9. `step.min` = **1** (séma). Ügylet 9 egy steppel seedelhető.
 
-**Szállítás (implementációs fázis, később):**
+**Szállítás:**
 
 | Elem | Utasítás |
 | ---- | -------- |
-| Mappa | `database/seeders/http/kor/data/transaction-workflows/` (pl. `01-member-property-deposit.json` …) |
-| Upsert kulcs | `name` **vagy** (`debit_account_code`,`credit_account_code`, opcionális type/currency) |
+| Mappa | `database/seeders/http/kor/data/transaction-workflows/` |
+| HttpYac | `common/11-transaction-workflows.http` — `npm run seed:http:kor:transaction-workflows:local` |
+| Upsert kulcs | `name` + `debit_account_code` + `credit_account_code` (insert-only) |
 | Előfeltétel | [Számlatükör-rések](../transaction-workflow.md#számlatükör-rések): `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org, stb. |
-| Publish | Seed után `published` állapot |
+| Publish | `POST …?status=published` |
 
 ---
 
