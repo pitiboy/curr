@@ -1164,6 +1164,7 @@ export interface ApiTransactionWorkflowTransactionWorkflow
         number
       >;
     steps_published: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<true>;
     transaction_type: Schema.Attribute.Relation<
       'oneToOne',
