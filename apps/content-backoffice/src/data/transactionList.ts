@@ -27,6 +27,8 @@ export type StrapiTransaction = {
     code?: string | null;
     name?: string | null;
   } | null;
+  converted_to_workflow?: boolean | null;
+  transaction_type?: { documentId?: string } | null;
   receipts?: Array<{
     documentId?: string;
     vendor?: string | null;
@@ -71,6 +73,87 @@ export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
   documentId: string;
   status: PublicationStatus;
 };
+
+/** Published `transaction-workflow` header fields used for Convert match (no steps). */
+export type WorkflowTemplateHeader = {
+  documentId: string;
+  name?: string | null;
+  debit_account_code: number;
+  credit_account_code: number;
+  currency_type?: { documentId?: string } | null;
+  transaction_type?: { documentId?: string } | null;
+};
+
+export type TransactionWorkflowMatchInput = Pick<
+  StrapiTransaction,
+  | 'converted_to_workflow'
+  | 'debit_account'
+  | 'credit_account'
+  | 'currency_type'
+  | 'transaction_type'
+>;
+
+function parseAccountCode(
+  code: string | number | null | undefined,
+): number | null {
+  if (code === null || code === undefined || code === '') return null;
+  const value = Number(code);
+  return Number.isFinite(value) ? value : null;
+}
+
+/** Same rules as server `workflowMatchesTransaction` in `src/transaction-workflow/convert.ts`. */
+export function workflowMatchesTransaction(
+  workflow: WorkflowTemplateHeader,
+  transaction: TransactionWorkflowMatchInput,
+): boolean {
+  if (transaction.converted_to_workflow === true) return false;
+  const debit = parseAccountCode(transaction.debit_account?.code ?? null);
+  const credit = parseAccountCode(transaction.credit_account?.code ?? null);
+  if (debit !== workflow.debit_account_code) return false;
+  if (credit !== workflow.credit_account_code) return false;
+  if (workflow.currency_type?.documentId) {
+    if (
+      transaction.currency_type?.documentId !== workflow.currency_type.documentId
+    ) {
+      return false;
+    }
+  }
+  if (workflow.transaction_type?.documentId) {
+    if (
+      transaction.transaction_type?.documentId !==
+      workflow.transaction_type.documentId
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Client pick: 0 → null, 1 → template, >1 → null (server convert throws 409).
+ */
+export function pickMatchingWorkflow(
+  workflows: WorkflowTemplateHeader[],
+  transaction: TransactionWorkflowMatchInput,
+): WorkflowTemplateHeader | null {
+  const matches = workflows.filter((workflow) =>
+    workflowMatchesTransaction(workflow, transaction),
+  );
+  if (matches.length !== 1) return null;
+  return matches[0] ?? null;
+}
+
+export function transactionLikeFromRecord(
+  record: TransactionWorkflowMatchInput,
+): TransactionWorkflowMatchInput {
+  return {
+    converted_to_workflow: record.converted_to_workflow,
+    debit_account: record.debit_account,
+    credit_account: record.credit_account,
+    currency_type: record.currency_type,
+    transaction_type: record.transaction_type,
+  };
+}
 
 type ListParams = {
   filter?: Record<string, unknown>;

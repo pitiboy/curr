@@ -9,10 +9,8 @@ import {
   NumberInput,
   ReferenceInput,
   required,
-  SaveButton,
   SimpleForm,
   TextInput,
-  Toolbar,
   useBlocker,
   useCanBlock,
   useFormIsDirty,
@@ -27,6 +25,7 @@ import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
+import { TransactionCreateToolbarGate } from './TransactionCreateToolbar';
 
 function currencyOptionText(record: RaRecord): string {
   const currency = record as { code?: string | null; name?: string | null };
@@ -44,14 +43,6 @@ function codeOrNameFilterToQuery(searchText: string) {
   return {
     $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
   };
-}
-
-function DraftSaveToolbar() {
-  return (
-    <Toolbar>
-      <SaveButton />
-    </Toolbar>
-  );
 }
 
 function CreateSaveSucceededMarker({
@@ -212,7 +203,12 @@ export function TransactionCreate() {
     >
       <SimpleForm
         sx={bandedForm}
-        toolbar={<DraftSaveToolbar />}
+        toolbar={
+          <TransactionCreateToolbarGate
+            accounts={catalog.accounts}
+            receiptCards={receiptCards}
+          />
+        }
         validate={(values) =>
           transactionFormErrors(
             values as Record<string, unknown>,

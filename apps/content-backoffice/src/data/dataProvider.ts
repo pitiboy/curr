@@ -13,6 +13,7 @@ import {
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
 import { publishTransactionDraft } from './transactionPublish';
+import { convertTransaction as postConvertTransaction } from './transactionWorkflow';
 import {
   createTransactionDraft,
   updateTransactionDraft,
@@ -114,6 +115,20 @@ export function saveTransactionDraft(
   data: Record<string, unknown>,
 ) {
   return updateTransactionDraft(httpClient, STRAPI_URL, documentId, data);
+}
+
+export function createNewTransactionDraft(data: Record<string, unknown>) {
+  return createTransactionDraft(httpClient, STRAPI_URL, data);
+}
+
+export function convertTransactionToWorkflow(
+  transactionDocumentId: string,
+  workflowDocumentId: string,
+) {
+  return postConvertTransaction(httpClient, STRAPI_URL, {
+    transactionDocumentId,
+    workflowDocumentId,
+  });
 }
 
 export function attachTransactionReceipt(

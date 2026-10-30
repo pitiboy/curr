@@ -36,6 +36,7 @@ import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionBulkApproveButton } from './TransactionBulkApproveButton';
+import { TransactionConvertField } from './TransactionConvertField';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -214,6 +215,14 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       source="open"
     />
   );
+  const convertColumn = (
+    <TransactionConvertField
+      key="convert"
+      label={false}
+      sortable={false}
+      source="convert"
+    />
+  );
 
   const columns = [
     <DateField key="date" source="date" {...dateFieldProps(locale)} />,
@@ -248,6 +257,7 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       translateChoice
     />,
     openColumn,
+    convertColumn,
     <FunctionField
       key="organization"
       render={(record: RaRecord) => relationName(record.organization)}
@@ -292,8 +302,10 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
   ];
 
   if (mobile) {
-    const withoutOpen = columns.filter((column) => column.key !== 'open');
-    return [openColumn, ...withoutOpen];
+    const withoutRowActions = columns.filter(
+      (column) => column.key !== 'open' && column.key !== 'convert',
+    );
+    return [openColumn, convertColumn, ...withoutRowActions];
   }
 
   return columns;
@@ -328,7 +340,7 @@ export function TransactionList() {
         rowClick={false}
         rowSx={bandedRow}
         sx={{
-          '& .column-open': {
+          '& .column-open, & .column-convert': {
             whiteSpace: 'nowrap',
           },
         }}

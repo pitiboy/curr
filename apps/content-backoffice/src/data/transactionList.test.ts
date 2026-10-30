@@ -5,9 +5,12 @@ import {
   buildTransactionFilters,
   encodeStrapiQuery,
   firstReceiptVendor,
+  pickMatchingWorkflow,
   preferTransaction,
   transactionPopulate,
+  workflowMatchesTransaction,
   type StrapiTransaction,
+  type WorkflowTemplateHeader,
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
 
@@ -305,6 +308,86 @@ describe('preferTransaction', () => {
     expect(row?.status).toBe('draft');
     expect(row?.entered_by).toBe('a@b.c');
     expect(row?.published_by).toBeUndefined();
+  });
+});
+
+const ugyelet1Template: WorkflowTemplateHeader = {
+  documentId: 'wf-1',
+  name: 'Ügylet 1',
+  debit_account_code: 1520,
+  credit_account_code: 1101,
+};
+
+describe('workflowMatchesTransaction', () => {
+  it('matches debit/credit codes when not converted', () => {
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: false,
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects rows already converted to a workflow', () => {
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: true,
+      }),
+    ).toBe(false);
+  });
+
+  it('requires currency when the template specifies one', () => {
+    const korTemplate: WorkflowTemplateHeader = {
+      ...ugyelet1Template,
+      currency_type: { documentId: 'cur-kor' },
+    };
+    expect(
+      workflowMatchesTransaction(korTemplate, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        currency_type: { documentId: 'cur-huf' },
+      }),
+    ).toBe(false);
+    expect(
+      workflowMatchesTransaction(korTemplate, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        currency_type: { documentId: 'cur-kor' },
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('pickMatchingWorkflow', () => {
+  it('returns the sole matching template', () => {
+    expect(
+      pickMatchingWorkflow([ugyelet1Template], {
+        debit_account: { code: 1520 },
+        credit_account: { code: 1101 },
+      }),
+    ).toEqual(ugyelet1Template);
+  });
+
+  it('returns null when no template matches or more than one matches', () => {
+    const twin: WorkflowTemplateHeader = {
+      ...ugyelet1Template,
+      documentId: 'wf-2',
+    };
+    expect(
+      pickMatchingWorkflow([ugyelet1Template], {
+        debit_account: { code: '9999' },
+        credit_account: { code: '1101' },
+      }),
+    ).toBeNull();
+    expect(
+      pickMatchingWorkflow([ugyelet1Template, twin], {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+      }),
+    ).toBeNull();
   });
 });
 
