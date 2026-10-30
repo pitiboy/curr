@@ -10,6 +10,16 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_create: 'New transaction',
     transactions_review: 'Review',
     transactions_show: 'View',
+    transactions_convert: 'Expand deal',
+    transactions_convert_save: 'Save and expand deal',
+    transactions_convert_title: 'Expand deal: %{name}',
+    transactions_convert_body:
+      'This will create template rows from the transaction (storno / steps). Continue?',
+    transactions_convert_confirm: 'Expand',
+    transactions_convert_done: 'Deal expanded.',
+    transactions_convert_error: 'Could not expand the deal.',
+    transactions_convert_ambiguous:
+      'More than one deal template matches this transaction.',
     transactions_none: 'No transactions.',
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',

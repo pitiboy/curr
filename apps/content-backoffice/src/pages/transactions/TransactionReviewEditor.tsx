@@ -52,6 +52,7 @@ import {
   type TransactionRow,
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
+import { TransactionConvertSection } from './TransactionConvertSection';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { dateFieldProps } from './dateField';
 import { useAccountCatalog } from './useAccountCatalog';
@@ -521,6 +522,7 @@ export function TransactionReviewEditor({
           record={record}
           onCardsChange={onCardsChange}
         />
+        <TransactionConvertSection record={record} />
         <FinalizeSection
           blocked={blocked}
           documentId={record.documentId}
