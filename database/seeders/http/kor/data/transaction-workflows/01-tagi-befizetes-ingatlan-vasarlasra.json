@@ -26,7 +26,7 @@
       "percent": 100,
       "debit_code": "1001",
       "credit_code": "1100",
-      "currency": "KOR",
+      "currency": "HUF",
       "organization": "I/3. Pénzügyi Igazgatóság",
       "transaction_type": "Átvezetés"
     },
@@ -35,7 +35,7 @@
       "percent": 100,
       "debit_code": "1520",
       "credit_code": "1001",
-      "currency": "KOR",
+      "currency": "HUF",
       "organization": "I/4.11.1.1 Lakóterületek",
       "transaction_type": "Átvezetés"
     },
@@ -49,10 +49,19 @@
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "Lekötés 2 KOR",
+      "description": "Korona kiutalás tagnak",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "Tagi Lekötés koronaként",
       "percent": 1,
       "debit_code": "1520",
-      "credit_code": "1900",
+      "credit_code": "1101",
       "currency": "KOR",
       "organization": "I/4.11.1.1 Lakóterületek",
       "transaction_type": "Átvezetés"
