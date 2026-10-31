@@ -256,6 +256,7 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('populate[organization]')).toBe('true');
     expect(params.get('populate[debit_account]')).toBe('true');
     expect(params.get('populate[credit_account]')).toBe('true');
+    expect(params.get('populate[transaction_type]')).toBe('true');
     expect(
       params.get('populate[currency_type][populate][icon][fields][0]'),
     ).toBe('url');

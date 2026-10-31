@@ -10,6 +10,8 @@ export type StrapiTransaction = {
   published_by?: string | null;
   amount?: string | number | null;
   description?: string | null;
+  /** Set by Convert on the source row; a converted row never matches a template. */
+  converted_to_workflow?: boolean | null;
   currency_type?: {
     documentId?: string;
     code?: string | null;
@@ -17,6 +19,7 @@ export type StrapiTransaction = {
     icon?: { url?: string | null } | { url?: string | null }[] | null;
   } | null;
   organization?: { documentId?: string; name?: string | null } | null;
+  transaction_type?: { documentId?: string } | null;
   debit_account?: {
     documentId?: string;
     code?: string | null;
@@ -34,6 +37,88 @@ export type StrapiTransaction = {
     receipt_type?: { documentId?: string; name?: string | null } | null;
   }> | null;
 };
+
+/** Published `transaction-workflow` header, as far as the client match needs it. */
+export type WorkflowTemplate = {
+  documentId: string;
+  name?: string | null;
+  debit_account_code: number;
+  credit_account_code: number;
+  currency_type?: { documentId?: string } | null;
+  transaction_type?: { documentId?: string } | null;
+};
+
+/** What the match reads: a list/show row, or a snapshot of the create form. */
+export type WorkflowMatchSubject = {
+  converted_to_workflow?: boolean | null;
+  debit_account?: { code?: string | number | null } | null;
+  credit_account?: { code?: string | number | null } | null;
+  currency_type?: { documentId?: string } | null;
+  transaction_type?: { documentId?: string } | null;
+};
+
+/** Same parsing as the server `parseAccountCode` (src/transaction-workflow/convert.ts). */
+function parseAccountCode(
+  code: string | number | null | undefined,
+): number | null {
+  if (code === null || code === undefined || code === '') return null;
+  const value = Number(code);
+  return Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Mirrors the server `workflowMatchesTransaction`; keep the two in step.
+ * A template currency or type narrows the match, and a transaction without
+ * that value does not match (so a typed template never matches the v1 form).
+ */
+export function workflowMatchesTransaction(
+  workflow: WorkflowTemplate,
+  transaction: WorkflowMatchSubject,
+): boolean {
+  if (transaction.converted_to_workflow === true) return false;
+  const debit = parseAccountCode(transaction.debit_account?.code);
+  const credit = parseAccountCode(transaction.credit_account?.code);
+  if (debit !== workflow.debit_account_code) return false;
+  if (credit !== workflow.credit_account_code) return false;
+  if (workflow.currency_type?.documentId) {
+    if (
+      transaction.currency_type?.documentId !==
+      workflow.currency_type.documentId
+    ) {
+      return false;
+    }
+  }
+  if (workflow.transaction_type?.documentId) {
+    if (
+      transaction.transaction_type?.documentId !==
+      workflow.transaction_type.documentId
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function matchingWorkflows(
+  workflows: readonly WorkflowTemplate[],
+  transaction: WorkflowMatchSubject,
+): WorkflowTemplate[] {
+  return workflows.filter((workflow) =>
+    workflowMatchesTransaction(workflow, transaction),
+  );
+}
+
+/**
+ * Exactly one template, or null. The server answers 409 for several matches
+ * (pickMatchingWorkflow throws); the client just shows no button.
+ */
+export function pickMatchingWorkflow(
+  workflows: readonly WorkflowTemplate[],
+  transaction: WorkflowMatchSubject,
+): WorkflowTemplate | null {
+  const matches = matchingWorkflows(workflows, transaction);
+  return matches.length === 1 ? matches[0] : null;
+}
 
 /** Vendor of the first receipt, or an empty string when there is none. */
 export function firstReceiptVendor(receipts: unknown): string {
@@ -53,6 +138,7 @@ export const transactionPopulate = {
   organization: true,
   debit_account: true,
   credit_account: true,
+  transaction_type: true,
   currency_type: {
     populate: {
       icon: { fields: ['url', 'name', 'mime'] },

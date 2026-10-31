@@ -14,6 +14,18 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',
     transactions_finalized: 'Transaction finalized.',
+    transactions_convert: 'Expand deal',
+    transactions_convert_save: 'Save and expand deal',
+    transactions_convert_title: 'Expand deal: %{name}',
+    transactions_convert_body:
+      'The transaction is turned into the rows of the template (storno / steps). Continue?',
+    transactions_convert_confirm: 'Expand',
+    transactions_convert_done: 'The deal was expanded.',
+    transactions_convert_error: 'The deal could not be expanded.',
+    transactions_convert_saved_not_converted:
+      'The transaction was saved as a draft, but the deal could not be expanded. You can expand it from the list.',
+    transactions_convert_ambiguous:
+      'More than one deal template fits this transaction.',
     transactions_bulk_finalize: 'Finalize',
     transactions_bulk_finalize_title:
       'Finalize %{smart_count} transaction |||| Finalize %{smart_count} transactions',

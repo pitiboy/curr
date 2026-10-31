@@ -29,13 +29,20 @@ import {
 } from 'react-admin';
 
 import { receiptCount } from '../../data/receiptDraft';
-import { firstReceiptVendor } from '../../data/transactionList';
+import {
+  firstReceiptVendor,
+  type TransactionRow,
+  type WorkflowMatchSubject,
+  type WorkflowTemplate,
+} from '../../data/transactionList';
 import { bandedRow } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionBulkApproveButton } from './TransactionBulkApproveButton';
+import { TransactionConvertButton } from './TransactionConvertButton';
+import { useTransactionWorkflowCatalog } from './useTransactionWorkflowCatalog';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -194,6 +201,27 @@ function TransactionOpenField(_props: {
   );
 }
 
+/** Ügylet kifejtése next to Open: editor, one matching template, not converted yet. */
+function TransactionConvertField({
+  matchFor,
+}: {
+  label?: false;
+  matchFor: (subject: WorkflowMatchSubject) => WorkflowTemplate | null;
+  sortable?: false;
+  source?: string;
+}) {
+  const record = useRecordContext<TransactionRow>();
+  const workflow = record ? matchFor(record) : null;
+  if (!record || !workflow) return null;
+  return (
+    <TransactionConvertButton
+      size="small"
+      transaction={record}
+      workflow={workflow}
+    />
+  );
+}
+
 function TransactionListEmpty() {
   const translate = useTranslate();
   return (
@@ -205,7 +233,11 @@ function TransactionListEmpty() {
   );
 }
 
-function transactionDatagridColumns(locale: string, mobile: boolean) {
+function transactionDatagridColumns(
+  locale: string,
+  mobile: boolean,
+  matchFor: ((subject: WorkflowMatchSubject) => WorkflowTemplate | null) | null,
+) {
   const openColumn = (
     <TransactionOpenField
       key="open"
@@ -214,6 +246,16 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       source="open"
     />
   );
+  // dataentry gets no column at all, not even an empty one.
+  const convertColumn = matchFor ? (
+    <TransactionConvertField
+      key="convert"
+      label={false}
+      matchFor={matchFor}
+      sortable={false}
+      source="convert"
+    />
+  ) : null;
 
   const columns = [
     <DateField key="date" source="date" {...dateFieldProps(locale)} />,
@@ -248,6 +290,7 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       translateChoice
     />,
     openColumn,
+    convertColumn,
     <FunctionField
       key="organization"
       render={(record: RaRecord) => relationName(record.organization)}
@@ -291,12 +334,17 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
     />,
   ];
 
+  const present = columns.filter((column) => column !== null);
   if (mobile) {
-    const withoutOpen = columns.filter((column) => column.key !== 'open');
-    return [openColumn, ...withoutOpen];
+    const rest = present.filter(
+      (column) => column.key !== 'open' && column.key !== 'convert',
+    );
+    return [openColumn, convertColumn, ...rest].filter(
+      (column) => column !== null,
+    );
   }
 
-  return columns;
+  return present;
 }
 
 function draftRowSelectable(record: RaRecord & { status?: string }) {
@@ -308,6 +356,7 @@ export function TransactionList() {
   const mobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const { permissions, isPending } = usePermissions();
   const editorBulkApprove = !isPending && permissions === 'editor';
+  const { isEditor, matchFor } = useTransactionWorkflowCatalog();
 
   return (
     <List
@@ -328,12 +377,12 @@ export function TransactionList() {
         rowClick={false}
         rowSx={bandedRow}
         sx={{
-          '& .column-open': {
+          '& .column-open, & .column-convert': {
             whiteSpace: 'nowrap',
           },
         }}
       >
-        {transactionDatagridColumns(locale, mobile)}
+        {transactionDatagridColumns(locale, mobile, isEditor ? matchFor : null)}
       </Datagrid>
     </List>
   );

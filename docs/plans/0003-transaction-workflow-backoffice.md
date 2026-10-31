@@ -179,42 +179,42 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 
 ### 1. Match helper + típusok
 
-- [ ] `StrapiTransaction` / `TransactionRow`: `converted_to_workflow`, opcionális `transaction_type`
-- [ ] `workflowMatchesTransaction` + `pickMatchingWorkflow` a `transactionList.ts`-ben (vagy közvetlen export onnan)
-- [ ] Vitest: kód match, converted kizárás, currency, ambiguous → null
-- [ ] A lista/show fetch továbbra is visszaadja a `converted_to_workflow` mezőt (Strapi attributes; külön populate nem kell skalárhoz)
+- [x] `StrapiTransaction` / `TransactionRow`: `converted_to_workflow`, opcionális `transaction_type`
+- [x] `workflowMatchesTransaction` + `pickMatchingWorkflow` a `transactionList.ts`-ben (vagy közvetlen export onnan)
+- [x] Vitest: kód match, converted kizárás, currency, ambiguous → null
+- [x] A lista/show fetch továbbra is visszaadja a `converted_to_workflow` mezőt (Strapi attributes; külön populate nem kell skalárhoz)
 
 - [ ] **Human:** A Vitest lefut (`apps/content-backoffice` teszt script). Egy unit eset mutatja: 1520/1101 + nem converted → match; `converted_to_workflow: true` → nincs match. Ha igen, pipáld ki, és indítsd a 2. lépést.
 
 ### 2. HTTP + katalógus hook
 
-- [ ] `transactionWorkflow.ts`: `fetchPublishedWorkflows`, `convertTransaction`
-- [ ] `useTransactionWorkflowCatalog` (vagy Provider): csak editor fetch; `matchFor`
-- [ ] dataProvider / export wrapper a convert híváshoz, ha a publish mintát követitek
+- [x] `transactionWorkflow.ts`: `fetchPublishedWorkflows`, `convertTransaction`
+- [x] `useTransactionWorkflowCatalog` (vagy Provider): csak editor fetch; `matchFor`
+- [x] dataProvider / export wrapper a convert híváshoz, ha a publish mintát követitek
 
 - [ ] **Human:** Editor JWT-vel a Network tabon `GET …/transaction-workflows?status=published` 200 és sablonok. Convert POST Postman/httpyac nélkül is: a helper unit/mock teszttel ellenőrizhető. dataentry sessionben a hook **nem** hívja a katalógust. Ha igen, pipáld ki, és indítsd a 3. lépést.
 
 ### 3. Lista Convert gomb
 
-- [ ] `TransactionList.tsx`: gomb a Open mellett, editor + match
-- [ ] Confirm → convert → notify + refresh
-- [ ] i18n kulcsok (legalább a listához szükségesek) hu + en
+- [x] `TransactionList.tsx`: gomb a Open mellett, editor + match
+- [x] Confirm → convert → notify + refresh
+- [x] i18n kulcsok (legalább a listához szükségesek) hu + en
 
 - [ ] **Human:** Editor belép, seedelt ügylet páros (pl. Ügylet 1: debit `1520`, credit `1101`) egysoros, még nem converted soron megjelenik az **Ügylet kifejtése**. dataentry ugyanarra a sorra **nem** látja. Confirm után új step/storno sorok, az eredeti `converted_to_workflow` true, a gomb eltűnik. Ha igen, pipáld ki, és indítsd a 4. lépést.
 
 ### 4. Review Convert gomb
 
-- [ ] `TransactionReviewEditor.tsx`: gomb a Finalize mellett, match + nem converted
-- [ ] Convert után refresh; Finalize külön marad
+- [x] `TransactionReviewEditor.tsx`: gomb a Finalize mellett, match + nem converted
+- [x] Convert után refresh; Finalize külön marad
 
 - [ ] **Human:** Editor draft review-n matcholt soron Convert működik; converted után nincs gomb. Véglegesít továbbra is külön. Ha igen, pipáld ki, és indítsd az 5. lépést.
 
 ### 5. Create „Mentés és ügylet kifejtése”
 
-- [ ] `TransactionCreate.tsx`: editor + form match → második gomb
-- [ ] Confirm → draft create → convert → lista
-- [ ] dataentry Create UI változatlan
-- [ ] Account `code` feloldás a matchhez dokumentálva a kódban (rövid komment OK)
+- [x] `TransactionCreate.tsx`: editor + form match → második gomb
+- [x] Confirm → draft create → convert → lista
+- [x] dataentry Create UI változatlan
+- [x] Account `code` feloldás a matchhez dokumentálva a kódban (rövid komment OK)
 
 - [ ] **Human:** Editor Create: 1520←1101 (vagy más seedelt pár) kitöltve megjelenik a Mentés és ügylet kifejtése; sikeres út után a listán az eredeti converted + új sorok. dataentry Create-en nincs ilyen gomb. Ha igen, pipáld ki — a plan kész.
 

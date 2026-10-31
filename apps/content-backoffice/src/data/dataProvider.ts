@@ -14,6 +14,11 @@ import {
 import { loadTransactionRecord } from './transactionRecord';
 import { publishTransactionDraft } from './transactionPublish';
 import {
+  convertTransaction,
+  fetchPublishedWorkflows,
+  type ConvertTransactionInput,
+} from './transactionWorkflow';
+import {
   createTransactionDraft,
   updateTransactionDraft,
 } from './transactionDraft';
@@ -107,6 +112,14 @@ export const dataProvider = withDocumentId({
 
 export function publishTransaction(documentId: string) {
   return publishTransactionDraft(httpClient, STRAPI_URL, documentId);
+}
+
+export function fetchWorkflowCatalog() {
+  return fetchPublishedWorkflows(httpClient, STRAPI_URL);
+}
+
+export function convertTransactionToWorkflow(input: ConvertTransactionInput) {
+  return convertTransaction(httpClient, STRAPI_URL, input);
 }
 
 export function saveTransactionDraft(

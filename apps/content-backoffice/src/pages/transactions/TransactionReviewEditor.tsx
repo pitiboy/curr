@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
@@ -52,6 +53,8 @@ import {
   type TransactionRow,
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
+import { TransactionConvertButton } from './TransactionConvertButton';
+import { useTransactionWorkflowCatalog } from './useTransactionWorkflowCatalog';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { dateFieldProps } from './dateField';
 import { useAccountCatalog } from './useAccountCatalog';
@@ -251,11 +254,14 @@ function DraftLeaveBlocker() {
 
 function FinalizeSection({
   blocked,
+  convertAction,
   documentId,
   missingReceipt,
   samePersonBlocked,
 }: {
   blocked: boolean;
+  /** Ügylet kifejtése, shown only for a unique template match. Separate from Véglegesít. */
+  convertAction?: ReactNode;
   documentId: string;
   missingReceipt: boolean;
   samePersonBlocked: boolean;
@@ -335,14 +341,24 @@ function FinalizeSection({
             {translate('app.transactions_finalize_same_person')}
           </Typography>
         ) : null}
-        <Button
-          disabled={blocked || samePersonBlocked || saving}
-          type="button"
-          variant="contained"
-          onClick={onFinalize}
+        <Box
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
         >
-          {translate('app.transactions_finalize')}
-        </Button>
+          <Button
+            disabled={blocked || samePersonBlocked || saving}
+            type="button"
+            variant="contained"
+            onClick={onFinalize}
+          >
+            {translate('app.transactions_finalize')}
+          </Button>
+          {convertAction}
+        </Box>
       </Box>
     </Box>
   );
@@ -479,6 +495,8 @@ export function TransactionReviewEditor({
   record: TransactionRow;
 }) {
   const catalog = useAccountCatalog();
+  const translate = useTranslate();
+  const { matchFor, isAmbiguous } = useTransactionWorkflowCatalog();
   const { publisherMustDiffer } = useBackofficeConfig();
   const { identity } = useGetIdentity();
   const flatRecord = useMemo(() => reviewFormRecord(record), [record]);
@@ -486,6 +504,9 @@ export function TransactionReviewEditor({
   const blocked =
     pendingReceipt || cards.some((card) => receiptCardInvalid(card));
   const missingReceipt = receiptCount(record.receipts) === 0;
+  // The match reads the stored row. Unsaved form edits do not change it.
+  const workflow = matchFor(record);
+  const ambiguousWorkflows = !workflow && isAmbiguous(record);
   const editorEmail =
     identity && typeof identity.email === 'string' ? identity.email : '';
   const samePersonBlocked = useMemo(
@@ -523,6 +544,18 @@ export function TransactionReviewEditor({
         />
         <FinalizeSection
           blocked={blocked}
+          convertAction={
+            workflow ? (
+              <TransactionConvertButton
+                transaction={record}
+                workflow={workflow}
+              />
+            ) : ambiguousWorkflows ? (
+              <Typography variant="body2">
+                {translate('app.transactions_convert_ambiguous')}
+              </Typography>
+            ) : null
+          }
           documentId={record.documentId}
           missingReceipt={missingReceipt}
           samePersonBlocked={samePersonBlocked}

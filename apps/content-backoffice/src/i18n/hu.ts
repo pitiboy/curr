@@ -14,6 +14,18 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',
     transactions_finalized: 'A tranzakció véglegesítve.',
+    transactions_convert: 'Ügylet kifejtése',
+    transactions_convert_save: 'Mentés és ügylet kifejtése',
+    transactions_convert_title: 'Ügylet kifejtése: %{name}',
+    transactions_convert_body:
+      'A tranzakcióból a sablon szerinti sorok készülnek (storno / lépések). Folytatod?',
+    transactions_convert_confirm: 'Kifejtés',
+    transactions_convert_done: 'Az ügylet kifejtve.',
+    transactions_convert_error: 'Az ügylet kifejtése nem sikerült.',
+    transactions_convert_saved_not_converted:
+      'A tranzakció piszkozatként elmentve, de az ügylet kifejtése nem sikerült. A listán kifejtheted.',
+    transactions_convert_ambiguous:
+      'Több ügylet-sablon is illik erre a tranzakcióra.',
     transactions_bulk_finalize: 'Véglegesítés',
     transactions_bulk_finalize_title:
       '%{smart_count} tranzakció véglegesítése |||| %{smart_count} tranzakció véglegesítése',
