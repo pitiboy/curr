@@ -2,26 +2,62 @@
 # Adat: data/currency-rates.json
 # rate: hány egység cél pénznem = 1 egység forrás pénznem (schema).
 #
-#   npm run seed:http:kor:currency-rates:local
-#   npm run seed:http:kor:currency-rates -- prod
+#   npm run seed:http:kor -- local
+#   (common/09-currency-rates.http fut dataDir=kor/data mellett)
 #
 # Teljes seed (01–09): npm run seed:http:kor:local
 # Környezet: local | prod — http-client.env.json
 # Token: http-client.private.env.json
 # Ha ugyanaz a pénznempár és valid_from már létezik, a POST nem fut le.
+#
+# httpyac @loop csak egy request-blokkra érvényes (###-ig), ezért a from/to
+# lookup külön loop a kódokra, majd a rate existence/create a rateItems-re.
 
 {{
   if (typeof rateItems === "undefined") {
     const fs = require("fs");
     const path = require("path");
     const dataDir = "database/seeders/http/kor/data";
-    exports.rateItems = JSON.parse(
+    const loaded = JSON.parse(
       fs.readFileSync(path.resolve(process.cwd(), dataDir, "currency-rates.json"), "utf8")
     );
+    exports.rateItems = loaded;
+    exports.rateCurrencyCodes = [
+      ...new Set(
+        loaded.flatMap((item) => [item.fromCurrencyCode, item.toCurrencyCode])
+      ),
+    ];
+    exports.rateCurrencyIds = {};
     exports.rateFailed = {};
     exports.rateExists = {};
-    exports.rateFromIds = {};
-    exports.rateToIds = {};
+  }
+}}
+
+###
+# @name require-rate-currency
+# @loop for code of rateCurrencyCodes
+{{
+  exports.encoded = encodeURIComponent(code);
+}}
+GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    console.error("currency type lookup failed: " + code, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      rateCurrencyIds[code] = found;
+      exports.rateCurrencyIds = rateCurrencyIds;
+    } else {
+      console.error("currency type not found: " + code);
+    }
   }
 }}
 
@@ -29,60 +65,32 @@
 # @name lookup-currency-rate
 # @loop for item of rateItems
 {{
-  exports.fromCode = item.fromCurrencyCode;
-  exports.toCode = item.toCurrencyCode;
-  exports.rateKey = item.fromCurrencyCode + "|" + item.toCurrencyCode + "|" + item.validFrom;
-}}
-GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{fromCode}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
-  }
-  exports.fromId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-}}
-
-###
-GET {{baseUrl}}/api/currency-types?filters[code][$eq]={{toCode}}&pagination[pageSize]=1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-{{
-  let parsed = response.parsedBody;
-  if (!parsed && response.body) {
-    try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
-  }
-  const resolvedToId = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
-  exports.toId = resolvedToId;
-  if (!fromId || !resolvedToId) {
+  const fromId = rateCurrencyIds[item.fromCurrencyCode];
+  const toId = rateCurrencyIds[item.toCurrencyCode];
+  const rateKey = item.fromCurrencyCode + "|" + item.toCurrencyCode + "|" + item.validFrom;
+  exports.rateKey = rateKey;
+  if (!fromId || !toId) {
     rateFailed[rateKey] = true;
     exports.rateFailed = rateFailed;
+    exports.$cancel = true;
     console.error(
       "currency rate skipped: missing currency type",
       item.fromCurrencyCode,
       item.toCurrencyCode
     );
   } else {
-    rateFromIds[rateKey] = fromId;
-    rateToIds[rateKey] = resolvedToId;
-    exports.rateFromIds = rateFromIds;
-    exports.rateToIds = rateToIds;
+    exports.$cancel = false;
+    exports.fromId = fromId;
+    exports.toId = toId;
     exports.encodedValidFrom = encodeURIComponent(item.validFrom);
   }
 }}
-
-###
 GET {{baseUrl}}/api/currency-rates?filters[from_currency_type][documentId][$eq]={{fromId}}&filters[to_currency_type][documentId][$eq]={{toId}}&filters[valid_from][$eq]={{encodedValidFrom}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
 
 {{
-  if (rateFailed[rateKey]) {
-    exports.$cancel = true;
-  } else {
+  if (!rateFailed[rateKey]) {
     let parsed = response.parsedBody;
     if (!parsed && response.body) {
       try { parsed = JSON.parse(response.body); } catch (e) { parsed = null; }
@@ -99,10 +107,17 @@ Accept: application/json
 # @name create-currency-rate
 # @loop for item of rateItems
 {{
-  exports.rateKey = item.fromCurrencyCode + "|" + item.toCurrencyCode + "|" + item.validFrom;
-  const fromDocId = rateFromIds[rateKey];
-  const toDocId = rateToIds[rateKey];
+  const rateKey = item.fromCurrencyCode + "|" + item.toCurrencyCode + "|" + item.validFrom;
+  const fromDocId = rateCurrencyIds[item.fromCurrencyCode];
+  const toDocId = rateCurrencyIds[item.toCurrencyCode];
+  exports.ratePayload = null;
+  exports.$cancel = false;
   if (rateFailed[rateKey] || rateExists[rateKey] || !fromDocId || !toDocId) {
+    if (rateExists[rateKey]) {
+      console.error(
+        "create skipped (exists): " + item.fromCurrencyCode + " → " + item.toCurrencyCode
+      );
+    }
     exports.$cancel = true;
   } else {
     exports.ratePayload = JSON.stringify({
