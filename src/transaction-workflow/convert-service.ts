@@ -55,14 +55,35 @@ function documentsApi(strapi: ConvertStrapi, uid: string): DocumentsApi {
   return strapi.documents(uid) as DocumentsApi;
 }
 
+/** Nested relations inside a dynamic zone need per-component `on` fragments (Strapi 5). */
+const stepSharedPopulate = {
+  currency_type: { fields: ['documentId'] },
+  transaction_type: { fields: ['documentId'] },
+  organization: { fields: ['documentId'] },
+};
+
 const workflowPopulate = {
   step: {
-    populate: {
-      debit_account: { fields: ['documentId', 'code'] },
-      credit_account: { fields: ['documentId', 'code'] },
-      currency_type: { fields: ['documentId'] },
-      transaction_type: { fields: ['documentId'] },
-      organization: { fields: ['documentId'] },
+    on: {
+      'workflow.step': {
+        populate: {
+          ...stepSharedPopulate,
+          debit_account: { fields: ['documentId', 'code'] },
+          credit_account: { fields: ['documentId', 'code'] },
+        },
+      },
+      'workflow.step-member-debit': {
+        populate: {
+          ...stepSharedPopulate,
+          credit_account: { fields: ['documentId', 'code'] },
+        },
+      },
+      'workflow.step-member-credit': {
+        populate: {
+          ...stepSharedPopulate,
+          debit_account: { fields: ['documentId', 'code'] },
+        },
+      },
     },
   },
   currency_type: { fields: ['documentId'] },
@@ -182,10 +203,25 @@ async function createTransactionRow(
   published: boolean,
 ): Promise<string> {
   const api = documentsApi(strapi, TRANSACTION_UID);
-  const created = await api.create({
-    data,
-    ...(published ? {} : { status: 'draft' }),
-  });
+  // Always draft first: creating without status can leave an orphan draft when
+  // a later publish fails (e.g. missing required relation), and a retry then
+  // hits transactions_entered_key_draft_uq.
+  let created: { documentId: string };
+  try {
+    created = await api.create({
+      data,
+      status: 'draft',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/entered_key|unique constraint/i.test(message)) {
+      throw new TransactionWorkflowError(
+        `entered_key conflict while creating transaction: ${message}`,
+        409,
+      );
+    }
+    throw error;
+  }
   if (published) {
     await api.publish({ documentId: created.documentId });
   }
@@ -251,6 +287,24 @@ export async function convertTransactions(
     const createdDocumentIds: string[] = [];
 
     if (keepOriginal) {
+      // Storno mirrors the source; draft v1 rows may omit organization — fall back
+      // to the first step org so schema `required` does not block Convert.
+      const stornoOrganization =
+        transaction.organization?.documentId ??
+        expanded[0]?.organization.documentId;
+      if (!stornoOrganization) {
+        throw new TransactionWorkflowError(
+          'Source transaction and workflow steps have no organization',
+          422,
+        );
+      }
+      if (!transaction.currency_type?.documentId) {
+        throw new TransactionWorkflowError(
+          'Source transaction currency_type is required for convert',
+          422,
+        );
+      }
+
       stornoDocumentId = await createTransactionRow(
         strapi,
         {
@@ -259,8 +313,8 @@ export async function convertTransactions(
           description: transaction.description,
           debit_account: transaction.debit_account?.documentId,
           credit_account: transaction.credit_account?.documentId,
-          currency_type: transaction.currency_type?.documentId,
-          organization: transaction.organization?.documentId,
+          currency_type: transaction.currency_type.documentId,
+          organization: stornoOrganization,
           transaction_type: transaction.transaction_type?.documentId,
           related_transaction: transaction.documentId,
           entered_key: stornoEnteredKey(transaction.documentId),
