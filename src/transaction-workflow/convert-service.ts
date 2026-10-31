@@ -3,6 +3,7 @@
  * keep_original: storno + step sorok, related_transaction → eredeti; converted_to_workflow jelölés.
  * keep_original false: eredeti törlése, step lánc; receipt csak copy_receipt stepnél.
  */
+import { withPublishGuardLinked } from '../publish-guard';
 import {
   MEMBER_UID,
   TRANSACTION_UID,
@@ -47,6 +48,11 @@ export type ConvertStrapi = {
     query: (uid: string) => {
       findOne: (params: Record<string, unknown>) => Promise<unknown | null>;
     };
+  };
+  requestContext: {
+    get: () =>
+      | { state?: { publishGuardLinked?: boolean } }
+      | undefined;
   };
   log: { warn: (message: string) => void };
 };
@@ -197,6 +203,19 @@ function transactionWritePayload(
   };
 }
 
+async function findDraftByEnteredKey(
+  strapi: ConvertStrapi,
+  enteredKey: unknown,
+): Promise<{ documentId: string } | null> {
+  if (typeof enteredKey !== 'string' || !enteredKey) return null;
+  const rows = await documentsApi(strapi, TRANSACTION_UID).findMany({
+    status: 'draft',
+    filters: { entered_key: { $eq: enteredKey } },
+  });
+  const first = rows?.[0] as { documentId?: string } | undefined;
+  return first?.documentId ? { documentId: first.documentId } : null;
+}
+
 async function createTransactionRow(
   strapi: ConvertStrapi,
   data: Record<string, unknown>,
@@ -205,7 +224,7 @@ async function createTransactionRow(
   const api = documentsApi(strapi, TRANSACTION_UID);
   // Always draft first: creating without status can leave an orphan draft when
   // a later publish fails (e.g. missing required relation), and a retry then
-  // hits transactions_entered_key_draft_uq.
+  // hits transactions_entered_key_draft_uq. Reuse that orphan on retry.
   let created: { documentId: string };
   try {
     created = await api.create({
@@ -214,16 +233,29 @@ async function createTransactionRow(
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (/entered_key|unique constraint/i.test(message)) {
+    if (!/entered_key|unique constraint/i.test(message)) {
+      throw error;
+    }
+    const existing = await findDraftByEnteredKey(strapi, data.entered_key);
+    if (!existing) {
       throw new TransactionWorkflowError(
         `entered_key conflict while creating transaction: ${message}`,
         409,
       );
     }
-    throw error;
+    await api.update({
+      documentId: existing.documentId,
+      data,
+      status: 'draft',
+    });
+    created = existing;
   }
   if (published) {
-    await api.publish({ documentId: created.documentId });
+    // Convert generates + publishes as the same editor; SAME_PERSON would 403
+    // and leave orphans keyed by entered_key.
+    await withPublishGuardLinked(strapi, () =>
+      api.publish({ documentId: created.documentId }),
+    );
   }
   return created.documentId;
 }

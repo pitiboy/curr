@@ -118,6 +118,14 @@ describe('guardEffect', () => {
     assert.equal(other.type, 'allow');
   });
 
+  it('allows same-person publish when linked (Convert / linked receipts)', () => {
+    const effect = guardEffect(transaction, 'publish', undefined, editor, {
+      enteredBy: editor.email,
+      linkedPublish: true,
+    });
+    assert.equal(effect.type, 'allow');
+  });
+
   it('allows the same person to publish when the env says so', () => {
     const effect = guardEffect(transaction, 'publish', undefined, editor, {
       policy: { defaultStatus: 'draft', publisherMustDiffer: false },
