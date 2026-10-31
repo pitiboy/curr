@@ -33,9 +33,11 @@ function accountCodeByDocumentId(
 
 export function TransactionCreateToolbar({
   accounts,
+  onSaveSucceeded,
   receiptCards,
 }: {
   accounts: AccountChoice[];
+  onSaveSucceeded: () => void;
   receiptCards: ReceiptCardValue[];
 }) {
   const translate = useTranslate();
@@ -91,6 +93,8 @@ export function TransactionCreateToolbar({
       .then(() => {
         notify('app.transactions_convert_done', { type: 'success' });
         setOpen(false);
+        // Bypass leave guard before list redirect (custom create, not SaveButton).
+        onSaveSucceeded();
         redirect('list', 'transactions');
       })
       .catch((error: unknown) => {
@@ -133,9 +137,11 @@ export function TransactionCreateToolbar({
 
 export function TransactionCreateToolbarGate({
   accounts,
+  onSaveSucceeded,
   receiptCards,
 }: {
   accounts: AccountChoice[];
+  onSaveSucceeded: () => void;
   receiptCards: ReceiptCardValue[];
 }) {
   const { permissions, isPending } = usePermissions();
@@ -143,6 +149,7 @@ export function TransactionCreateToolbarGate({
     return (
       <TransactionCreateToolbar
         accounts={accounts}
+        onSaveSucceeded={onSaveSucceeded}
         receiptCards={receiptCards}
       />
     );

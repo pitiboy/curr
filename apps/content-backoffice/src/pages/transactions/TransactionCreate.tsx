@@ -65,17 +65,22 @@ function CreateSaveSucceededMarker({
 function CreateLeaveGuard({
   receiptCardCount,
   saveSucceeded,
+  saveSucceededRef,
 }: {
   receiptCardCount: number;
   saveSucceeded: boolean;
+  saveSucceededRef: { current: boolean };
 }) {
   const formDirty = useFormIsDirty();
   const { isSubmitSuccessful } = useFormState();
   const dirtyRef = useRef(false);
-  const submittedRef = useRef(false);
   dirtyRef.current = formDirty || receiptCardCount > 0;
-  submittedRef.current = isSubmitSuccessful || saveSucceeded;
-  const unsaved = dirtyRef.current && !submittedRef.current;
+  // Shared ref: SaveButton middleware and "save and expand" both flip this
+  // synchronously so redirect does not race a pending setState.
+  if (isSubmitSuccessful || saveSucceeded) {
+    saveSucceededRef.current = true;
+  }
+  const unsaved = dirtyRef.current && !saveSucceededRef.current;
 
   useEffect(() => {
     if (!unsaved) return;
@@ -89,14 +94,13 @@ function CreateLeaveGuard({
 
   const canBlock = useCanBlock();
   if (!canBlock) return null;
-  const submitted = isSubmitSuccessful || saveSucceeded;
 
   return (
     <CreateLeaveBlocker
       dirty={dirtyRef.current}
       dirtyRef={dirtyRef}
-      submitted={submitted}
-      submittedRef={submittedRef}
+      submitted={saveSucceededRef.current}
+      submittedRef={saveSucceededRef}
     />
   );
 }
@@ -189,7 +193,11 @@ export function TransactionCreate() {
   const translate = useTranslate();
   const [receiptCards, setReceiptCards] = useState<ReceiptCardValue[]>([]);
   const [saveSucceeded, setSaveSucceeded] = useState(false);
-  const onSaveSucceeded = useCallback(() => setSaveSucceeded(true), []);
+  const saveSucceededRef = useRef(false);
+  const onSaveSucceeded = useCallback(() => {
+    saveSucceededRef.current = true;
+    setSaveSucceeded(true);
+  }, []);
 
   return (
     <Create
@@ -206,6 +214,7 @@ export function TransactionCreate() {
         toolbar={
           <TransactionCreateToolbarGate
             accounts={catalog.accounts}
+            onSaveSucceeded={onSaveSucceeded}
             receiptCards={receiptCards}
           />
         }
@@ -221,6 +230,7 @@ export function TransactionCreate() {
         <CreateLeaveGuard
           receiptCardCount={receiptCards.length}
           saveSucceeded={saveSucceeded}
+          saveSucceededRef={saveSucceededRef}
         />
 
         <DateInput fullWidth source="date" validate={required()} />
