@@ -27,6 +27,12 @@ import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
 import { TransactionCreateToolbarGate } from './TransactionCreateToolbar';
 
+function todayLocalIsoDate(now = new Date()): string {
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 function currencyOptionText(record: RaRecord): string {
   const currency = record as { code?: string | null; name?: string | null };
   return [currency.code, currency.name].filter(Boolean).join(' ');
@@ -210,6 +216,7 @@ export function TransactionCreate() {
       })}
     >
       <SimpleForm
+        defaultValues={{ date: todayLocalIsoDate() }}
         sx={bandedForm}
         toolbar={
           <TransactionCreateToolbarGate
