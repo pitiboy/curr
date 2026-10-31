@@ -4,7 +4,7 @@
   "credit_account_code": 4200,
   "steps": [
     {
-      "description": "Megítélés",
+      "description": "{original.description} | Megítélés",
       "percent": 100,
       "debit_code": "1200",
       "credit_code": "4200",
@@ -13,7 +13,7 @@
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "Kincstári jóváírás",
+      "description": "{original.description} | Kincstári jóváírás",
       "percent": 100,
       "debit_code": "1100",
       "credit_code": "1900",
@@ -22,7 +22,7 @@
       "transaction_type": "Utalás"
     },
     {
-      "description": "Követelés zárása",
+      "description": "{original.description} | Követelés zárása",
       "percent": 100,
       "debit_code": "1900",
       "credit_code": "1200",

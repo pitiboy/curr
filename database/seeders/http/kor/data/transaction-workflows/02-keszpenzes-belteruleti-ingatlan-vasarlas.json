@@ -4,7 +4,16 @@
   "credit_account_code": 1000,
   "steps": [
     {
-      "description": "Telek vételár",
+      "description": "{original.description} | Bejövő tagi befizetés",
+      "percent": 100,
+      "debit_code": "1000",
+      "credit_code": "1001",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "{original.description} | Telek vételár",
       "percent": 100,
       "debit_code": "1520",
       "credit_code": "1000",
@@ -13,7 +22,7 @@
       "transaction_type": "Készpénz"
     },
     {
-      "description": "Lekötés 1 HUF fedezet",
+      "description": "{original.description} | HUF fedezet",
       "percent": 100,
       "debit_code": "1900",
       "credit_code": "1520",
@@ -22,7 +31,16 @@
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "Lekötés 2 KOR",
+      "description": "{original.description} | Korona kiutalás tagnak",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "{original.description} | KOR adás",
       "percent": 1,
       "debit_code": "1520",
       "credit_code": "1900",
