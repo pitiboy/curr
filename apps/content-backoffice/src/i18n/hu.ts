@@ -173,6 +173,12 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       amount_from: 'Összegtől',
       amount_to: 'Összegig',
     },
+    converted: {
+      none: 'Nincs (kifejthető)',
+      expanded: 'Kifejtett tétel',
+      storno: 'Storno',
+      original: 'Eredeti (forrás)',
+    },
     receipt_yes: 'Van',
     receipt_no: 'Nincs',
     receipt_block: 'Bizonylatok',
@@ -198,6 +204,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions: {
       name: 'Tranzakció |||| Tranzakciók',
       fields: {
+        entryId: 'ID',
         date: 'Dátum',
         createdAt: 'Rögzítve',
         entered_by: 'Rögzítette',
@@ -211,6 +218,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         currency_type: 'Pénznem',
         vendor: 'Eladó',
         status: 'Státusz',
+        converted_to_workflow: 'Ügylet bontás',
         receipt: 'Bizonylat',
       },
     },

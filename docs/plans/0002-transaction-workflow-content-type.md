@@ -36,7 +36,7 @@ Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** a
 | **Tranzakció** | Egy könyvelési sor. |
 | **`transaction-workflow` rekord** | Admin sablon: match fejléc + `step` lista. |
 | **Convert** | API: matcholt egysoros trx → storno/törlés + step-sorok. |
-| **`converted_to_workflow`** | `transaction` boolean; Convert csak `false` sorokat vesz. |
+| **`converted_to_workflow`** | `transaction` enum `original` \| `expanded` \| `storno` (üres = kifejthető); Convert csak null sorokat vesz. |
 | **`entered_key`** | `transaction` string; generált sorok idempotenciája (nem workflow kulcs). |
 | **`steps_published`** | Sablon boolean; generált sorok published/draft; Convert override. |
 | **`copy_receipt`** | Step boolean; forrás receiptjei a generált sorra. |
@@ -108,7 +108,7 @@ Generált összeg: `amount = source.amount * percent / 100`.
 
 | Mező | Szerep |
 | ---- | ------ |
-| `converted_to_workflow` | boolean, default `false`; Convert szűrő |
+| `converted_to_workflow` | enumeration `original` \| `expanded` \| `storno`, nem kötelező (null = kifejthető); Convert szűrő |
 | `entered_key` | unique string; javaslat: `{originalDocumentId}:storno`, `{originalDocumentId}:step:{i}` |
 | `related_transaction` / `related_transactions` | keep ág: gyerekek → eredeti; delete ág: új sorok lánca |
 
@@ -117,7 +117,7 @@ Generált összeg: `amount = source.amount * percent / 100`.
 ## 4. Match szabály
 
 1. Sablon **published**.
-2. Forrás `converted_to_workflow === false`.
+2. Forrás `converted_to_workflow` üres / null.
 3. `Number(debit_account.code) === debit_account_code` és ugyanez **credit**re (`account.code` string). Kód-alapú: minden tag `1101`/`1001` példánya matchel.
 4. Ha a sablonon van `currency_type` documentId: egyezés kötelező.
 5. Ha a sablonon van `transaction_type` documentId: egyezés kötelező.
@@ -150,12 +150,13 @@ A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora
 1. Storno: forrás mezők másolata, `amount * -1`.  
 2. Új step-sorok.  
 3. Storno + új sorok: `related_transaction` → **eredeti**.  
-4. `converted_to_workflow: true` az **eredetin és a storno soron**.
+4. `converted_to_workflow: original` az **eredetin**, `storno` a **storno soron**, `expanded` a **step sorokon**.
+5. A generált sorok státusza a `steps_published` (vagy Convert override) szerint. Az eredeti csak akkor published, ha a hét publish-mező mind kitöltött; hiányzó organization/számla esetén draft marad (`converted_to_workflow: original` mellett). Draft lépéseknél az eredeti draft marad / unpublish.
 
 ### `false`
 
 1. Eredeti törlése. A forrás receiptjei csak azokra az új sorokra kerülnek, ahol `copy_receipt: true` (különben a receipt orphan / előtte átkötés — implementáció: ha van receipt és egyetlen step sem `copy_receipt`, 422 vagy az első stepre másolás; **default:** első `copy_receipt: true` step, ha nincs ilyen és volt receipt → 422).  
-2. Csak új step-sorok; `related_transaction` lánc (első `null`, többi az előzőre).
+2. Csak új step-sorok; `related_transaction` lánc (első `null`, többi az előzőre); `converted_to_workflow: expanded` a step sorokon.
 
 ```mermaid
 flowchart TD
@@ -165,7 +166,7 @@ flowchart TD
   expand["step percent expand"]
   keep{"keep_original?"}
   storno["Storno amount*-1"]
-  mark["converted_to_workflow true on original and storno"]
+  mark["converted original / storno / expanded"]
   linkKeep["Children related_transaction to original"]
   del["Delete original"]
   linkChain["Chain new rows"]

@@ -67,7 +67,6 @@ describe('workflowMatchesTransaction', () => {
       date: '2026-10-14',
       amount: 80_000,
       description: 'könyvelő',
-      converted_to_workflow: false,
       debit_account: account('5440'),
       credit_account: account('2000'),
       currency_type: huf,
@@ -76,7 +75,21 @@ describe('workflowMatchesTransaction', () => {
     assert.equal(
       workflowMatchesTransaction(workflowAdmin, {
         ...tx,
-        converted_to_workflow: true,
+        converted_to_workflow: 'original',
+      }),
+      false,
+    );
+    assert.equal(
+      workflowMatchesTransaction(workflowAdmin, {
+        ...tx,
+        converted_to_workflow: 'expanded',
+      }),
+      false,
+    );
+    assert.equal(
+      workflowMatchesTransaction(workflowAdmin, {
+        ...tx,
+        converted_to_workflow: 'storno',
       }),
       false,
     );

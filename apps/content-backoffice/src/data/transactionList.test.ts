@@ -50,10 +50,23 @@ describe('assembleTransactionList', () => {
     );
     expect(total).toBe(2);
     expect(data.map((row) => [row.id, row.status, row.documentId])).toEqual([
-      ['draft-only', 'draft', 'draft-only'],
       ['both', 'published', 'both'],
+      ['draft-only', 'draft', 'draft-only'],
     ]);
     expect(data.every((row) => row.id === row.documentId)).toBe(true);
+    expect(data.map((row) => row.entryId)).toEqual([2, 1]);
+  });
+
+  it('defaults sort to entryId DESC', () => {
+    const { data } = assembleTransactionList(
+      [
+        { id: 10, documentId: 'low', date: '2026-06-01' },
+        { id: 30, documentId: 'high', date: '2026-01-01' },
+      ],
+      [],
+      {},
+    );
+    expect(data.map((row) => row.documentId)).toEqual(['high', 'low']);
   });
 
   it('drops published twins when the status filter is draft', () => {
@@ -201,6 +214,10 @@ describe('buildTransactionFilters', () => {
         credit_account: { documentId: { $eq: 'acc-credit' } },
         description: { $containsi: 'kávé' },
         receipts: { vendor: { $containsi: 'Bolt' } },
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
       },
     });
   });
@@ -218,11 +235,15 @@ describe('buildTransactionFilters', () => {
           $gte: '2026-02-01T00:00:00.000Z',
           $lte: '2026-02-15T23:59:59.999Z',
         },
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
       },
     });
   });
 
-  it('omits blank filters', () => {
+  it('omits blank filters but keeps the default converted filter', () => {
     expect(
       buildTransactionFilters({
         status: '',
@@ -231,8 +252,47 @@ describe('buildTransactionFilters', () => {
         amount_gte: '',
         amount_lte: null,
         organization: null,
+        converted_to_workflow: '',
       }),
-    ).toEqual({ status: undefined, strapiFilters: {} });
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
+      },
+    });
+  });
+
+  it('maps converted_to_workflow multiselect to null / enum clauses', () => {
+    expect(
+      buildTransactionFilters({ converted_to_workflow: ['none', 'expanded'] }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
+      },
+    });
+    expect(
+      buildTransactionFilters({ converted_to_workflow: 'original' }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: { converted_to_workflow: { $eq: 'original' } },
+    });
+    expect(
+      buildTransactionFilters({
+        converted_to_workflow: ['original', 'expanded'],
+      }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        converted_to_workflow: { $in: ['original', 'expanded'] },
+      },
+    });
   });
 });
 
@@ -324,17 +384,30 @@ describe('workflowMatchesTransaction', () => {
       workflowMatchesTransaction(ugyelet1Template, {
         debit_account: { code: '1520' },
         credit_account: { code: '1101' },
-        converted_to_workflow: false,
       }),
     ).toBe(true);
   });
 
-  it('rejects rows already converted to a workflow', () => {
+  it('rejects original, expanded, and storno rows', () => {
     expect(
       workflowMatchesTransaction(ugyelet1Template, {
         debit_account: { code: '1520' },
         credit_account: { code: '1101' },
-        converted_to_workflow: true,
+        converted_to_workflow: 'original',
+      }),
+    ).toBe(false);
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: 'expanded',
+      }),
+    ).toBe(false);
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: 'storno',
       }),
     ).toBe(false);
   });

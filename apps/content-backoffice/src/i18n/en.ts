@@ -172,6 +172,12 @@ export const enMessages = mergeTranslations(englishMessages, {
       amount_from: 'Amount from',
       amount_to: 'Amount to',
     },
+    converted: {
+      none: 'None (expandable)',
+      expanded: 'Expanded line',
+      storno: 'Storno',
+      original: 'Original (source)',
+    },
     receipt_yes: 'Yes',
     receipt_no: 'No',
     receipt_block: 'Receipts',
@@ -198,6 +204,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions: {
       name: 'Transaction |||| Transactions',
       fields: {
+        entryId: 'ID',
         date: 'Date',
         createdAt: 'Created',
         entered_by: 'Entered by',
@@ -211,6 +218,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         currency_type: 'Currency',
         vendor: 'Vendor',
         status: 'Status',
+        converted_to_workflow: 'Deal expansion',
         receipt: 'Receipt',
       },
     },

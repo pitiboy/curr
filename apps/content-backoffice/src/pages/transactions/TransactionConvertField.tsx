@@ -1,6 +1,7 @@
 import { usePermissions, useRecordContext, type RaRecord } from 'react-admin';
 
 import {
+  isExpandableConvertedValue,
   transactionLikeFromRecord,
   type TransactionRow,
 } from '../../data/transactionList';
@@ -17,7 +18,7 @@ export function TransactionConvertField(_props: {
   const { matchFor, loading: catalogLoading } = useTransactionWorkflowCatalog();
 
   if (!record || isPending || permissions !== 'editor') return null;
-  if (record.converted_to_workflow === true) return null;
+  if (!isExpandableConvertedValue(record.converted_to_workflow)) return null;
 
   const workflow = catalogLoading
     ? null

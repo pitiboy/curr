@@ -14,6 +14,7 @@ import {
   NumberField,
   NumberInput,
   ReferenceInput,
+  SelectArrayInput,
   SelectField,
   SelectInput,
   TextField,
@@ -29,7 +30,18 @@ import {
 } from 'react-admin';
 
 import { receiptCount } from '../../data/receiptDraft';
-import { firstReceiptVendor } from '../../data/transactionList';
+import {
+  CONVERTED_EXPANDED,
+  CONVERTED_FILTER_NONE,
+  CONVERTED_ORIGINAL,
+  CONVERTED_STORNO,
+  DEFAULT_CONVERTED_FILTER,
+  firstReceiptVendor,
+} from '../../data/transactionList';
+import {
+  defaultTransactionDisplayedFilters,
+  defaultTransactionListFilter,
+} from '../../data/transactionListLocation';
 import { bandedRow } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
@@ -41,6 +53,19 @@ import { TransactionConvertField } from './TransactionConvertField';
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
   { id: 'published', name: 'app.status.published' },
+];
+
+const convertedChoices = [
+  { id: CONVERTED_FILTER_NONE, name: 'app.converted.none' },
+  { id: CONVERTED_EXPANDED, name: 'app.converted.expanded' },
+  { id: CONVERTED_STORNO, name: 'app.converted.storno' },
+  { id: CONVERTED_ORIGINAL, name: 'app.converted.original' },
+];
+
+const convertedFieldChoices = [
+  { id: CONVERTED_EXPANDED, name: 'app.converted.expanded' },
+  { id: CONVERTED_STORNO, name: 'app.converted.storno' },
+  { id: CONVERTED_ORIGINAL, name: 'app.converted.original' },
 ];
 
 function accountOptionText(record: RaRecord): string {
@@ -70,6 +95,14 @@ const transactionFilters = [
     key="status"
     label="resources.transactions.fields.status"
     source="status"
+    translateChoice
+  />,
+  <SelectArrayInput
+    alwaysOn
+    choices={convertedChoices}
+    key="converted_to_workflow"
+    label="resources.transactions.fields.converted_to_workflow"
+    source="converted_to_workflow"
     translateChoice
   />,
   <DateInput key="date_gte" label="app.filters.date_from" source="date_gte" />,
@@ -145,7 +178,16 @@ function ClearFiltersButton() {
   const translate = useTranslate();
   const { setFilters } = useListContext();
   return (
-    <Button size="small" variant="outlined" onClick={() => setFilters({}, {})}>
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={() =>
+        setFilters(
+          defaultTransactionListFilter('all'),
+          defaultTransactionDisplayedFilters('all'),
+        )
+      }
+    >
       {translate('app.filters.clear')}
     </Button>
   );
@@ -225,6 +267,7 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
   );
 
   const columns = [
+    <NumberField key="entryId" source="entryId" />,
     <DateField key="date" source="date" {...dateFieldProps(locale)} />,
     <FunctionField
       key="vendor"
@@ -254,6 +297,13 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       key="status"
       choices={statusChoices}
       source="status"
+      translateChoice
+    />,
+    <SelectField
+      key="converted_to_workflow"
+      choices={convertedFieldChoices}
+      emptyText="app.converted.none"
+      source="converted_to_workflow"
       translateChoice
     />,
     openColumn,
@@ -326,9 +376,12 @@ export function TransactionList() {
       actions={<TransactionListActions />}
       empty={false}
       exporter={false}
+      filterDefaultValues={{
+        converted_to_workflow: [...DEFAULT_CONVERTED_FILTER],
+      }}
       filters={transactionFilters}
       perPage={25}
-      sort={{ field: 'date', order: 'DESC' }}
+      sort={{ field: 'entryId', order: 'DESC' }}
     >
       <Datagrid
         bulkActionButtons={

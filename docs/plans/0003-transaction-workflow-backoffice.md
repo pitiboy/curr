@@ -57,7 +57,7 @@ flowchart LR
 
 | Fogalom | Jelentés |
 | -------- | -------- |
-| **Match** | Kliens: published sablon fejléc ↔ trx `debit_account.code` / `credit_account.code` (+ opcionális `currency_type` / `transaction_type` documentId); `converted_to_workflow !== true`. Ugyanaz a szabály, mint a szerver [`workflowMatchesTransaction`](../../src/transaction-workflow/convert.ts) / [`pickMatchingWorkflow`](../../src/transaction-workflow/convert.ts). |
+| **Match** | Kliens: published sablon fejléc ↔ trx `debit_account.code` / `credit_account.code` (+ opcionális `currency_type` / `transaction_type` documentId); `converted_to_workflow` üres / null. Ugyanaz a szabály, mint a szerver [`workflowMatchesTransaction`](../../src/transaction-workflow/convert.ts) / [`pickMatchingWorkflow`](../../src/transaction-workflow/convert.ts). |
 | **Convert gomb** | Csak `permissions === 'editor'` **és** pontosan egy match. Több sablon → nincs gomb (szerver 409). |
 | **Convert hívás** | `POST /api/transaction-workflows/convert` body: `{ transactionDocumentId, workflowDocumentId }`. |
 
@@ -90,7 +90,7 @@ A SPA **nem** küld `steps_published` mezőt.
 
 A meglévő [`transactionPopulate`](../../apps/content-backoffice/src/data/transactionList.ts) mellett a sorokon legyen elérhető:
 
-- `converted_to_workflow` (boolean)
+- `converted_to_workflow` (enum: `original` \| `expanded` \| `storno`, vagy üres)
 - `debit_account.code`, `credit_account.code` (már tipikusan megvan)
 - `currency_type.documentId` (már megvan)
 - `transaction_type` — ha a sablon szigorú típust kér; a v1 űrlapon nincs típusmező, ezért a match csak akkor szűkít, ha a sablonon van `transaction_type` **és** a trx-en is megvan ugyanaz a documentId. Üres trx típus + sablon típus → **nincs** match (szerverrel egyező).
@@ -101,9 +101,9 @@ A meglévő [`transactionPopulate`](../../apps/content-backoffice/src/data/trans
 
 ### 4.1 Match helper — [`transactionList.ts`](../../apps/content-backoffice/src/data/transactionList.ts)
 
-- Bővítsd a `StrapiTransaction` / `TransactionRow` típust: `converted_to_workflow?: boolean | null`, opcionális `transaction_type?: { documentId?: string } | null`.
+- Bővítsd a `StrapiTransaction` / `TransactionRow` típust: `converted_to_workflow?: 'original' | 'expanded' | 'storno' | null`, opcionális `transaction_type?: { documentId?: string } | null`.
 - Exportálj tiszta függvényeket (másold a szerver szabályt, ne importáld a Strapi `src/transaction-workflow` csomagot az SPA-ba):
-  - `workflowMatchesTransaction(workflow, transactionLike)` — kódok + opcionális currency/type + `converted_to_workflow !== true`
+  - `workflowMatchesTransaction(workflow, transactionLike)` — kódok + opcionális currency/type + `converted_to_workflow` üres
   - `pickMatchingWorkflow(workflows, transactionLike)` — 0 → `null`; 1 → sablon; >1 → `null` (UI: nincs gomb; opcionális konzol/`notify` warning)
 - Vitest: [`transactionList.test.ts`](../../apps/content-backoffice/src/data/transactionList.test.ts) vagy külön `transactionWorkflowMatch.test.ts` — kód egyezés, converted kizárás, currency szűkítés, több sablon → null.
 
@@ -133,7 +133,7 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 ### 5.1 Lista — [`TransactionList.tsx`](../../apps/content-backoffice/src/pages/transactions/TransactionList.tsx)
 
 - Új oszlop / mező a `TransactionOpenField` mellett: Convert gomb.
-- Látható, ha: `permissions === 'editor'` **és** `pickMatchingWorkflow` nem null **és** `converted_to_workflow !== true`.
+- Látható, ha: `permissions === 'editor'` **és** `pickMatchingWorkflow` nem null **és** `converted_to_workflow` üres.
 - `dataentry` / nem match / már converted: sem gomb, sem címke.
 - `stopPropagation` a kattintáson (mint az Open gombnál).
 - Hívás: `convertTransaction` a sor `documentId` + match `documentId`.
@@ -141,9 +141,10 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 ### 5.2 Review — [`TransactionReviewEditor.tsx`](../../apps/content-backoffice/src/pages/transactions/TransactionReviewEditor.tsx)
 
 - A Review eleve `editor` + draft. A Convert gomb a **FinalizeSection** mellett / felette (külön `Button`, nem helyettesíti a Véglegesítet).
-- Feltétel: match + `!converted_to_workflow`.
+- Feltétel: match + üres `converted_to_workflow`.
 - Convert **nem** követeli a publishot; draft soron is hívható. A sablon `steps_published` dönt a generált sorok státuszáról.
-- Convert után `refresh()` — az eredeti `converted_to_workflow: true`, a gomb eltűnik.
+- Convert után `refresh()` — eredeti → `original`, storno → `storno`, stepek → `expanded`, a gomb eltűnik; a generált sorok státusza a `steps_published` szerint. Az eredeti csak akkor published, ha a hét mező ki van töltve (organization opcionális a draft Expandnál, mint Mentésnél).
+- Lista: `converted_to_workflow` **multiselect** (`none` / `expanded` / `storno` / `original`); alapértelmezés és Szűrők törlése: `none` + `expanded` (`original` és `storno` rejtve).
 
 ### 5.3 Create — [`TransactionCreate.tsx`](../../apps/content-backoffice/src/pages/transactions/TransactionCreate.tsx)
 
@@ -184,7 +185,7 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 - [x] Vitest: kód match, converted kizárás, currency, ambiguous → null
 - [x] A lista/show fetch továbbra is visszaadja a `converted_to_workflow` mezőt (Strapi attributes; külön populate nem kell skalárhoz)
 
-- [ ] **Human:** A Vitest lefut (`apps/content-backoffice` teszt script). Egy unit eset mutatja: 1520/1101 + nem converted → match; `converted_to_workflow: true` → nincs match. Ha igen, pipáld ki, és indítsd a 2. lépést.
+- [ ] **Human:** A Vitest lefut (`apps/content-backoffice` teszt script). Egy unit eset mutatja: 1520/1101 + üres converted → match; `original` / `expanded` → nincs match. Ha igen, pipáld ki, és indítsd a 2. lépést.
 
 ### 2. HTTP + katalógus hook
 
@@ -200,7 +201,7 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 - [x] Confirm → convert → notify + refresh
 - [x] i18n kulcsok (legalább a listához szükségesek) hu + en
 
-- [ ] **Human:** Editor belép, seedelt ügylet páros (pl. Ügylet 1: debit `1520`, credit `1101`) egysoros, még nem converted soron megjelenik az **Ügylet kifejtése**. dataentry ugyanarra a sorra **nem** látja. Confirm után új step/storno sorok, az eredeti `converted_to_workflow` true, a gomb eltűnik. Ha igen, pipáld ki, és indítsd a 4. lépést.
+- [ ] **Human:** Editor belép, seedelt ügylet páros (pl. Ügylet 1: debit `1520`, credit `1101`) egysoros, még nem converted soron megjelenik az **Ügylet kifejtése**. dataentry ugyanarra a sorra **nem** látja. Confirm után stepek `expanded`, storno `storno`, eredeti `original`, a gomb eltűnik; a lista alapból nem mutatja az `original` és `storno` sorokat. Ha igen, pipáld ki, és indítsd a 4. lépést.
 
 ### 4. Review Convert gomb
 

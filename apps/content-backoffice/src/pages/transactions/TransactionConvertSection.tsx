@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 
 import {
+  isExpandableConvertedValue,
   transactionLikeFromRecord,
   type TransactionRow,
 } from '../../data/transactionList';
@@ -11,7 +12,7 @@ import { bandedSpanClass } from '../../theme';
 export function TransactionConvertSection({ record }: { record: TransactionRow }) {
   const { matchFor, loading: catalogLoading } = useTransactionWorkflowCatalog();
 
-  if (record.converted_to_workflow === true) return null;
+  if (!isExpandableConvertedValue(record.converted_to_workflow)) return null;
 
   const workflow = catalogLoading
     ? null

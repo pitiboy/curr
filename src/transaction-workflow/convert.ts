@@ -1,9 +1,30 @@
 /**
  * Convert üzleti logika (Strapi nélkül, tesztelhető).
- * Match: published sablon fejléc kódok + opcionális pénznem/típus, converted_to_workflow === false.
+ * Match: published sablon fejléc kódok + opcionális pénznem/típus,
+ * converted_to_workflow üres (null) — original/expanded/storno nem matchel.
  * Expand: step percent → összeg, {1} leírás; tagi oldal forrás trx / testvér számlából.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat).
  */
+
+/** Source row after convert. */
+export const CONVERTED_ORIGINAL = 'original' as const;
+/** Step row produced by convert. */
+export const CONVERTED_EXPANDED = 'expanded' as const;
+/** Storno row produced by convert (keep_original). */
+export const CONVERTED_STORNO = 'storno' as const;
+
+export type ConvertedToWorkflow =
+  | typeof CONVERTED_ORIGINAL
+  | typeof CONVERTED_EXPANDED
+  | typeof CONVERTED_STORNO;
+
+/** True when the row can still be matched / expanded (null/empty only). */
+export function isExpandableConvertedValue(
+  value: ConvertedToWorkflow | boolean | null | undefined | '',
+): boolean {
+  // Legacy boolean false (pre-enum) still counts as expandable.
+  return value == null || value === '' || value === false;
+}
 export class TransactionWorkflowError extends Error {
   status: number;
 
@@ -73,7 +94,7 @@ export type SourceTransaction = {
   date: string;
   amount: number | string;
   description?: string | null;
-  converted_to_workflow?: boolean | null;
+  converted_to_workflow?: ConvertedToWorkflow | boolean | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
   currency_type?: { documentId: string } | null;
@@ -197,7 +218,9 @@ export function workflowMatchesTransaction(
   workflow: WorkflowTemplate,
   transaction: SourceTransaction,
 ): boolean {
-  if (transaction.converted_to_workflow === true) return false;
+  if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
+    return false;
+  }
   const debit = parseAccountCode(transaction.debit_account?.code ?? null);
   const credit = parseAccountCode(transaction.credit_account?.code ?? null);
   if (debit !== workflow.debit_account_code) return false;

@@ -446,6 +446,20 @@ export function missingStoredPublishFields(
   });
 }
 
+/**
+ * Convert may publish generated steps while the source still lacks optional
+ * draft fields (organization / accounts). Only publish the source when the
+ * stored draft already meets the seven publish-required fields.
+ */
+export function shouldPublishConvertedSource(
+  storedDraft: Record<string, unknown> | null | undefined,
+  stepsPublished: boolean,
+): boolean {
+  return (
+    stepsPublished && missingStoredPublishFields(storedDraft).length === 0
+  );
+}
+
 async function assertStoredTransactionPublishable(
   strapi: PublishGuardStrapi,
   documentId: string | undefined,
