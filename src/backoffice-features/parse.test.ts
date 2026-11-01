@@ -6,7 +6,7 @@ import {
   emptyBackofficeConfig,
   isBackofficeSettingKey,
   publishPolicyFromFeatures,
-} from './parse';
+} from './parse.ts';
 
 describe('isBackofficeSettingKey', () => {
   it('treats dotted content and accounts keys as settings', () => {
