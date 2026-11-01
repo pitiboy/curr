@@ -10,6 +10,7 @@ import {
   readPublishPolicy,
   registerPublishGuard,
   relationDocumentId,
+  shouldPublishConvertedSource,
   type PublishGuardStrapi,
 } from './publish-guard.ts';
 
@@ -116,6 +117,14 @@ describe('guardEffect', () => {
       enteredBy: dataentry.email,
     });
     assert.equal(other.type, 'allow');
+  });
+
+  it('allows same-person publish when linked (Convert / linked receipts)', () => {
+    const effect = guardEffect(transaction, 'publish', undefined, editor, {
+      enteredBy: editor.email,
+      linkedPublish: true,
+    });
+    assert.equal(effect.type, 'allow');
   });
 
   it('allows the same person to publish when the env says so', () => {
@@ -688,5 +697,35 @@ describe('missingStoredPublishFields', () => {
       }),
       ['organization', 'debit_account', 'credit_account'],
     );
+  });
+});
+
+describe('shouldPublishConvertedSource', () => {
+  const completeStored = {
+    date: '2026-11-01',
+    amount: 2323,
+    description: '2323',
+    currency_type: { id: 1 },
+    organization: { id: 2 },
+    debit_account: { id: 3 },
+    credit_account: { id: 4 },
+  };
+
+  it('publishes a complete source when steps_published', () => {
+    assert.equal(shouldPublishConvertedSource(completeStored, true), true);
+  });
+
+  it('keeps a source without organization as draft when steps_published', () => {
+    assert.equal(
+      shouldPublishConvertedSource(
+        { ...completeStored, organization: null },
+        true,
+      ),
+      false,
+    );
+  });
+
+  it('never publishes when steps_published is false', () => {
+    assert.equal(shouldPublishConvertedSource(completeStored, false), false);
   });
 });

@@ -1,9 +1,32 @@
 /**
  * Convert üzleti logika (Strapi nélkül, tesztelhető).
- * Match: published sablon fejléc kódok + opcionális pénznem/típus, converted_to_workflow === false.
- * Expand: step percent → összeg, {1} leírás; tagi oldal forrás trx / testvér számlából.
+ * Match: published sablon fejléc kódok + opcionális pénznem/típus,
+ * converted_to_workflow üres (null) — original/expanded/storno nem matchel.
+ * Expand: step percent → összeg, {original.*}/{1} leírás;
+ * organization_from_original vagy step org (üres marad üres);
+ * tagi oldal forrás trx / testvér számlából.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat).
  */
+
+/** Source row after convert. */
+export const CONVERTED_ORIGINAL = 'original' as const;
+/** Step row produced by convert. */
+export const CONVERTED_EXPANDED = 'expanded' as const;
+/** Storno row produced by convert (keep_original). */
+export const CONVERTED_STORNO = 'storno' as const;
+
+export type ConvertedToWorkflow =
+  | typeof CONVERTED_ORIGINAL
+  | typeof CONVERTED_EXPANDED
+  | typeof CONVERTED_STORNO;
+
+/** True when the row can still be matched / expanded (null/empty only). */
+export function isExpandableConvertedValue(
+  value: ConvertedToWorkflow | boolean | null | undefined | '',
+): boolean {
+  // Legacy boolean false (pre-enum) still counts as expandable.
+  return value == null || value === '' || value === false;
+}
 export class TransactionWorkflowError extends Error {
   status: number;
 
@@ -40,6 +63,7 @@ export type WorkflowStep = {
   currency_type?: { documentId: string } | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
+  organization_from_original?: boolean | null;
   copy_receipt?: boolean | null;
 };
 
@@ -53,6 +77,7 @@ export type NormalizedWorkflowStep = {
   currency_type?: { documentId: string } | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
+  organization_from_original?: boolean | null;
   copy_receipt?: boolean | null;
 };
 
@@ -73,7 +98,7 @@ export type SourceTransaction = {
   date: string;
   amount: number | string;
   description?: string | null;
-  converted_to_workflow?: boolean | null;
+  converted_to_workflow?: ConvertedToWorkflow | boolean | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
   currency_type?: { documentId: string } | null;
@@ -148,6 +173,7 @@ export function normalizeWorkflowStep(step: WorkflowStep): NormalizedWorkflowSte
     currency_type: step.currency_type,
     transaction_type: step.transaction_type,
     organization: step.organization,
+    organization_from_original: step.organization_from_original === true,
     copy_receipt: step.copy_receipt,
   };
 
@@ -197,7 +223,9 @@ export function workflowMatchesTransaction(
   workflow: WorkflowTemplate,
   transaction: SourceTransaction,
 ): boolean {
-  if (transaction.converted_to_workflow === true) return false;
+  if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
+    return false;
+  }
   const debit = parseAccountCode(transaction.debit_account?.code ?? null);
   const credit = parseAccountCode(transaction.credit_account?.code ?? null);
   if (debit !== workflow.debit_account_code) return false;
@@ -234,15 +262,72 @@ export function pickMatchingWorkflow(
   return matches[0] ?? null;
 }
 
+/** Scalar fields readable via `{original.<field>}` in step description templates. */
+const ORIGINAL_STRING_FIELDS = [
+  'description',
+  'date',
+  'amount',
+  'entered_by',
+] as const;
+
+type OriginalStringField = (typeof ORIGINAL_STRING_FIELDS)[number];
+
+function originalFieldValue(
+  source: SourceTransaction,
+  field: string,
+): string {
+  if (!(ORIGINAL_STRING_FIELDS as readonly string[]).includes(field)) {
+    return '';
+  }
+  const value = source[field as OriginalStringField];
+  if (value == null) return '';
+  return String(value);
+}
+
+/**
+ * Expand `{original.<field>}` and legacy `{1}` (= `{original.description}`).
+ * Empty source values become empty strings — no invented defaults.
+ */
+export function expandTemplate(
+  template: string | null | undefined,
+  source: SourceTransaction,
+): string {
+  const pattern = template?.trim() || '{1}';
+  const withLegacy = pattern.includes('{1}')
+    ? pattern.split('{1}').join('{original.description}')
+    : pattern;
+  return withLegacy.replace(
+    /\{original\.([a-zA-Z_][a-zA-Z0-9_]*)\}/g,
+    (_match, field: string) => originalFieldValue(source, field),
+  );
+}
+
+/** @deprecated Prefer expandTemplate; kept for call-site compatibility. */
 export function expandDescription(
   template: string | null | undefined,
   sourceDescription: string | null | undefined,
 ): string {
-  const pattern = template?.trim() || '{1}';
-  if (pattern.includes('{1}')) {
-    return pattern.split('{1}').join(sourceDescription?.trim() || '');
+  return expandTemplate(template, {
+    documentId: '',
+    date: '',
+    amount: 0,
+    description: sourceDescription,
+  });
+}
+
+export function resolveStepOrganization(
+  step: Pick<
+    NormalizedWorkflowStep,
+    'organization' | 'organization_from_original'
+  >,
+  source: SourceTransaction,
+): { documentId: string } | null {
+  if (step.organization_from_original) {
+    const documentId = source.organization?.documentId;
+    return documentId ? { documentId } : null;
   }
-  return pattern;
+  const documentId = step.organization?.documentId;
+  return documentId ? { documentId } : null;
 }
 
 export function stepAmount(
@@ -319,7 +404,7 @@ export type ExpandedStepRow = {
   credit_account: AccountRef;
   currency_type: { documentId: string };
   transaction_type?: { documentId: string } | null;
-  organization: { documentId: string };
+  organization: { documentId: string } | null;
   copy_receipt: boolean;
   entered_key: string;
 };
@@ -337,20 +422,16 @@ export function expandWorkflowSteps(
   return steps.map((step, index) => {
     const normalized = normalizeWorkflowStep(step);
     const currency = normalized.currency_type?.documentId;
-    const organization = normalized.organization?.documentId;
-    if (!currency || !organization) {
+    if (!currency) {
       throw new TransactionWorkflowError(
-        'Step currency_type or organization is missing',
+        'Step currency_type is missing',
         422,
       );
     }
 
     return {
       index,
-      description: expandDescription(
-        normalized.description,
-        transaction.description,
-      ),
+      description: expandTemplate(normalized.description, transaction),
       amount: stepAmount(transaction.amount, normalized.percent ?? 100),
       debit_account: resolveStepAccount(
         normalized.debitWanted,
@@ -368,7 +449,7 @@ export function expandWorkflowSteps(
       transaction_type: normalized.transaction_type?.documentId
         ? { documentId: normalized.transaction_type.documentId }
         : null,
-      organization: { documentId: organization },
+      organization: resolveStepOrganization(normalized, transaction),
       copy_receipt: normalized.copy_receipt === true,
       entered_key: `${transaction.documentId}:step:${index}`,
     };

@@ -14,7 +14,7 @@ Az **ügylet** a teljes gazdasági esemény. A fejezetek neve ügylet. Adminban 
 
 A **tranzakció** egy sor: egy tartozik, egy követel, egy összeg, egy pénznem. A mostani felület ezt mutatja: `Tranzakció` / `Tranzakciók` a [hu.ts](../apps/content-backoffice/src/i18n/hu.ts)-ben, `Transaction` / `Transactions` az [en.ts](../apps/content-backoffice/src/i18n/en.ts)-ben. Ezek a képernyők egy sort szerkesztenek, a feliratuk tranzakció marad.
 
-A **konverzió** egy már létező, még nem átalakított (`converted_to_workflow = false`) egysoros tranzakciót a sablon `step` listája szerint több sorra bont. A sorok `related_transaction` kapcsolattal maradnak egy ügyletben. A belső collection neve `transaction-workflow`; a felhasználó az Ügylet szót látja.
+A **konverzió** egy már létező, még nem átalakított (`converted_to_workflow` üres / null) egysoros tranzakciót a sablon `step` listája szerint több sorra bont. A sorok `related_transaction` kapcsolattal maradnak egy ügyletben. A belső collection neve `transaction-workflow`; a felhasználó az Ügylet szót látja.
 
 ## Mit rögzít egy sor
 
@@ -620,7 +620,7 @@ sequenceDiagram
   Admin->>Wf: sablon mentese publish
   Entry->>Tx: egysoros draft
   Api->>Wf: published sablonok
-  Api->>Tx: match converted_to_workflow false
+  Api->>Tx: match converted_to_workflow null
   Api->>Tx: storno vagy torles plusz step sorok
 ```
 
@@ -646,17 +646,17 @@ Step komponensek:
 | `workflow.step-member-debit` | `member_account_code` (`1101`/`1001`) + `credit_account` |
 | `workflow.step-member-credit` | `member_account_code` (`1101`/`1001`) + `debit_account` |
 
-Közös: `description` (default `{1}`), `percent` (0–100), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
+Közös: `description` (default `{1}`; `{original.<mező>}` sablon, legacy `{1}` = `{original.description}`), `percent` (0–100), `currency_type`, opcionális `organization` / `organization_from_original` (seed: `"{original.organization}"`; üres marad üres), opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
 
 A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad: mindkét könyvelési sor külön step a dynamic zone-ban (nincs implicit `1900` kibontás).
 
 ### Konverzió
 
-Csak `converted_to_workflow = false` tranzakciók. Match: `debit_account.code` és `credit_account.code` egyezik a fejléc kódokkal; ha a sablonon van `currency_type` és/vagy `transaction_type`, azokra is. A match **kód alapú**, ezért ugyanaz a sablon minden tag `1101`/`1001` sorára alkalmazható.
+Csak `converted_to_workflow` **üres / null** tranzakciók (még kifejthetők). Az enum értékei: `original` (kifejtett forrás), `expanded` (step), `storno` (storno sor). Match: `debit_account.code` és `credit_account.code` egyezik a fejléc kódokkal; ha a sablonon van `currency_type` és/vagy `transaction_type`, azokra is. A match **kód alapú**, ezért ugyanaz a sablon minden tag `1101`/`1001` sorára alkalmazható.
 
-**`keep_original: true`:** az eredeti megmarad; beszúrás egy storno sor (`amount * -1`, ugyanazok a mezők) + a `step` szerinti új sorok. A storno és az új sorok `related_transaction` → eredeti. `converted_to_workflow: true` az **eredetin és a storno soron**.
+**`keep_original: true`:** az eredeti megmarad; beszúrás egy storno sor (`amount * -1`, ugyanazok a mezők) + a `step` szerinti új sorok. A storno és az új sorok `related_transaction` → eredeti. `converted_to_workflow: original` az **eredetin**, `storno` a **storno soron**, `expanded` a **step sorokon** (a fejléc párost ismétlő lépések ne legyenek újra kifejthetők). A generált sorok státusza a `steps_published` szerint draft/published. Az eredeti csak akkor lesz published, ha mind a hét publish-mezője ki van töltve (organization / számlák is); különben draft marad — ugyanúgy, mint egy sima Mentésnél.
 
-**`keep_original: false`:** az eredeti törlődik; csak az új step-sorok; egymás között `related_transaction` lánc.
+**`keep_original: false`:** az eredeti törlődik; csak az új step-sorok; egymás között `related_transaction` lánc; a step sorok `converted_to_workflow: expanded`.
 
 A generált sorok `entered_key` mezője idempotenciához (pl. `{originalDocumentId}:storno` / `{originalDocumentId}:step:{i}`). A Convert Strapi route/controller a `transaction-workflow` API alatt.
 
@@ -668,7 +668,7 @@ flowchart TD
   expand["step: amount = orig * percent / 100"]
   keep{"keep_original?"}
   storno["Storno amount*-1"]
-  mark["converted_to_workflow true eredeti es storno"]
+  mark["converted: original / storno / expanded"]
   linkKeep["Uj sorok related_transaction eredeti"]
   del["Eredeti torlese"]
   linkChain["Uj sorok related_transaction lanc"]

@@ -352,6 +352,20 @@ async function writeDraftPublishedBy(
   });
 }
 
+/** Bypass SAME_PERSON for nested/system publishes (linked receipts, Convert steps). */
+export async function withPublishGuardLinked<T>(
+  strapi: Pick<PublishGuardStrapi, 'requestContext'>,
+  run: () => Promise<T>,
+): Promise<T> {
+  const state = strapi.requestContext.get()?.state;
+  if (state) state.publishGuardLinked = true;
+  try {
+    return await run();
+  } finally {
+    if (state) state.publishGuardLinked = false;
+  }
+}
+
 async function publishLinkedReceipts(
   strapi: PublishGuardStrapi,
   documentId: string,
@@ -367,15 +381,11 @@ async function publishLinkedReceipts(
     return;
   }
 
-  const state = strapi.requestContext.get()?.state;
-  if (state) state.publishGuardLinked = true;
-  try {
+  await withPublishGuardLinked(strapi, async () => {
     for (const receiptId of receiptIds) {
       await strapi.documents(RECEIPT_UID).publish({ documentId: receiptId });
     }
-  } finally {
-    if (state) state.publishGuardLinked = false;
-  }
+  });
 }
 
 async function storedEnteredBy(
@@ -434,6 +444,20 @@ export function missingStoredPublishFields(
     }
     return !transactionFieldFilled(field, row[field], 'update');
   });
+}
+
+/**
+ * Convert may publish generated steps while the source still lacks optional
+ * draft fields (organization / accounts). Only publish the source when the
+ * stored draft already meets the seven publish-required fields.
+ */
+export function shouldPublishConvertedSource(
+  storedDraft: Record<string, unknown> | null | undefined,
+  stepsPublished: boolean,
+): boolean {
+  return (
+    stepsPublished && missingStoredPublishFields(storedDraft).length === 0
+  );
 }
 
 async function assertStoredTransactionPublishable(

@@ -29,8 +29,9 @@ export interface WorkflowStep extends Struct.ComponentSchema {
     organization: Schema.Attribute.Relation<
       'oneToOne',
       'api::organization.organization'
-    > &
-      Schema.Attribute.Required;
+    >;
+    organization_from_original: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     percent: Schema.Attribute.Decimal &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
@@ -77,8 +78,9 @@ export interface WorkflowStepMemberCredit extends Struct.ComponentSchema {
     organization: Schema.Attribute.Relation<
       'oneToOne',
       'api::organization.organization'
-    > &
-      Schema.Attribute.Required;
+    >;
+    organization_from_original: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     percent: Schema.Attribute.Decimal &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
@@ -125,8 +127,9 @@ export interface WorkflowStepMemberDebit extends Struct.ComponentSchema {
     organization: Schema.Attribute.Relation<
       'oneToOne',
       'api::organization.organization'
-    > &
-      Schema.Attribute.Required;
+    >;
+    organization_from_original: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     percent: Schema.Attribute.Decimal &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<

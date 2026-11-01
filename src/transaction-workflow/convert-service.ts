@@ -1,9 +1,20 @@
 /**
- * Convert API Strapi réteg: sablonok és tranzakciók betöltése, expand, majd create/publish/delete.
- * keep_original: storno + step sorok, related_transaction → eredeti; converted_to_workflow jelölés.
- * keep_original false: eredeti törlése, step lánc; receipt csak copy_receipt stepnél.
+ * Convert API Strapi layer: load templates/transactions, expand, then create/publish/delete.
+ * keep_original: storno + step rows, related_transaction -> original;
+ * converted_to_workflow: original on source, storno on storno, expanded on steps.
+ * Generated rows follow steps_published. The source is published only when it
+ * already meets the seven publish-required fields; draft v1 may omit
+ * organization / accounts, same as a plain Save.
+ * keep_original false: delete original, step chain; receipt only on copy_receipt steps.
  */
 import {
+  shouldPublishConvertedSource,
+  withPublishGuardLinked,
+} from '../publish-guard';
+import {
+  CONVERTED_EXPANDED,
+  CONVERTED_ORIGINAL,
+  CONVERTED_STORNO,
   MEMBER_UID,
   TRANSACTION_UID,
   WORKFLOW_UID,
@@ -11,6 +22,7 @@ import {
   assertKeepOriginalReceiptPolicy,
   buildSiblingMap,
   expandWorkflowSteps,
+  isExpandableConvertedValue,
   memberAccountFromTransaction,
   pickMatchingWorkflow,
   stornoEnteredKey,
@@ -26,6 +38,7 @@ type DocumentsApi = {
   update: (params: Record<string, unknown>) => Promise<unknown>;
   delete: (params: Record<string, unknown>) => Promise<unknown>;
   publish: (params: Record<string, unknown>) => Promise<unknown>;
+  unpublish: (params: Record<string, unknown>) => Promise<unknown>;
 };
 
 export type ConvertRequest = {
@@ -48,6 +61,11 @@ export type ConvertStrapi = {
       findOne: (params: Record<string, unknown>) => Promise<unknown | null>;
     };
   };
+  requestContext: {
+    get: () =>
+      | { state?: { publishGuardLinked?: boolean } }
+      | undefined;
+  };
   log: { warn: (message: string) => void };
 };
 
@@ -55,14 +73,35 @@ function documentsApi(strapi: ConvertStrapi, uid: string): DocumentsApi {
   return strapi.documents(uid) as DocumentsApi;
 }
 
+/** Nested relations inside a dynamic zone need per-component `on` fragments (Strapi 5). */
+const stepSharedPopulate = {
+  currency_type: { fields: ['documentId'] },
+  transaction_type: { fields: ['documentId'] },
+  organization: { fields: ['documentId'] },
+};
+
 const workflowPopulate = {
   step: {
-    populate: {
-      debit_account: { fields: ['documentId', 'code'] },
-      credit_account: { fields: ['documentId', 'code'] },
-      currency_type: { fields: ['documentId'] },
-      transaction_type: { fields: ['documentId'] },
-      organization: { fields: ['documentId'] },
+    on: {
+      'workflow.step': {
+        populate: {
+          ...stepSharedPopulate,
+          debit_account: { fields: ['documentId', 'code'] },
+          credit_account: { fields: ['documentId', 'code'] },
+        },
+      },
+      'workflow.step-member-debit': {
+        populate: {
+          ...stepSharedPopulate,
+          credit_account: { fields: ['documentId', 'code'] },
+        },
+      },
+      'workflow.step-member-credit': {
+        populate: {
+          ...stepSharedPopulate,
+          debit_account: { fields: ['documentId', 'code'] },
+        },
+      },
     },
   },
   currency_type: { fields: ['documentId'] },
@@ -119,7 +158,7 @@ async function loadTransactions(
     return row ? [asTransaction(row)] : [];
   }
   const rows = await api.findMany({
-    filters: { converted_to_workflow: { $eq: false } },
+    filters: { converted_to_workflow: { $null: true } },
     populate: transactionPopulate,
   });
   return (rows ?? []).map(asTransaction);
@@ -165,15 +204,32 @@ function transactionWritePayload(
     debit_account: row.debit_account.documentId,
     credit_account: row.credit_account.documentId,
     currency_type: row.currency_type.documentId,
-    organization: row.organization.documentId,
+    ...(row.organization?.documentId
+      ? { organization: row.organization.documentId }
+      : {}),
     transaction_type: row.transaction_type?.documentId ?? undefined,
     related_transaction: relatedDocumentId ?? undefined,
     entered_key: row.entered_key,
-    converted_to_workflow: false,
+    // Step rows often reuse the header debit/credit pair (e.g. Felújítás
+    // Aktiválás); mark expanded so they cannot be expanded again.
+    converted_to_workflow: CONVERTED_EXPANDED,
     ...(receiptDocumentIds.length
       ? { receipts: receiptDocumentIds.map((documentId) => ({ documentId })) }
       : {}),
   };
+}
+
+async function findDraftByEnteredKey(
+  strapi: ConvertStrapi,
+  enteredKey: unknown,
+): Promise<{ documentId: string } | null> {
+  if (typeof enteredKey !== 'string' || !enteredKey) return null;
+  const rows = await documentsApi(strapi, TRANSACTION_UID).findMany({
+    status: 'draft',
+    filters: { entered_key: { $eq: enteredKey } },
+  });
+  const first = rows?.[0] as { documentId?: string } | undefined;
+  return first?.documentId ? { documentId: first.documentId } : null;
 }
 
 async function createTransactionRow(
@@ -182,24 +238,93 @@ async function createTransactionRow(
   published: boolean,
 ): Promise<string> {
   const api = documentsApi(strapi, TRANSACTION_UID);
-  const created = await api.create({
-    data,
-    ...(published ? {} : { status: 'draft' }),
-  });
+  // Always draft first: creating without status can leave an orphan draft when
+  // a later publish fails (e.g. missing required relation), and a retry then
+  // hits transactions_entered_key_draft_uq. Reuse that orphan on retry.
+  let created: { documentId: string };
+  try {
+    created = await api.create({
+      data,
+      status: 'draft',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/entered_key|unique constraint/i.test(message)) {
+      throw error;
+    }
+    const existing = await findDraftByEnteredKey(strapi, data.entered_key);
+    if (!existing) {
+      throw new TransactionWorkflowError(
+        `entered_key conflict while creating transaction: ${message}`,
+        409,
+      );
+    }
+    await api.update({
+      documentId: existing.documentId,
+      data,
+      status: 'draft',
+    });
+    created = existing;
+  }
   if (published) {
-    await api.publish({ documentId: created.documentId });
+    // Convert generates + publishes as the same editor; SAME_PERSON would 403
+    // and leave orphans keyed by entered_key.
+    await withPublishGuardLinked(strapi, () =>
+      api.publish({ documentId: created.documentId }),
+    );
   }
   return created.documentId;
 }
 
-async function markConverted(
+async function loadDraftForPublishCheck(
   strapi: ConvertStrapi,
   documentId: string,
-): Promise<void> {
-  await documentsApi(strapi, TRANSACTION_UID).update({
-    documentId,
-    data: { converted_to_workflow: true },
+): Promise<Record<string, unknown> | null> {
+  const row = await strapi.db.query(TRANSACTION_UID).findOne({
+    where: { documentId, publishedAt: { $null: true } },
+    populate: {
+      organization: true,
+      debit_account: true,
+      credit_account: true,
+      currency_type: true,
+    },
   });
+  return (row as Record<string, unknown> | null) ?? null;
+}
+
+/**
+ * Marks the source row converted and aligns its publication status with the
+ * generated steps when the source is publishable. Strapi update alone only
+ * touches the draft version, so a published source would still show Expand
+ * until we re-publish (or unpublish).
+ */
+async function syncSourceAfterConvert(
+  strapi: ConvertStrapi,
+  documentId: string,
+  published: boolean,
+): Promise<void> {
+  const api = documentsApi(strapi, TRANSACTION_UID);
+  await api.update({
+    documentId,
+    data: { converted_to_workflow: CONVERTED_ORIGINAL },
+    status: 'draft',
+  });
+  if (published) {
+    const draft = await loadDraftForPublishCheck(strapi, documentId);
+    if (shouldPublishConvertedSource(draft, true)) {
+      await withPublishGuardLinked(strapi, () =>
+        api.publish({ documentId }),
+      );
+    }
+    return;
+  }
+  try {
+    await withPublishGuardLinked(strapi, () =>
+      api.unpublish({ documentId }),
+    );
+  } catch {
+    // Already draft-only — nothing to unpublish.
+  }
 }
 
 export async function convertTransactions(
@@ -213,11 +338,19 @@ export async function convertTransactions(
     );
   }
 
-  const workflows = await loadPublishedWorkflows(
+  // Prefer the client-supplied documentId; if it is stale (reseed / cache),
+  // fall back to all published templates and match by transaction codes.
+  let workflows = await loadPublishedWorkflows(
     strapi,
     request.workflowDocumentId,
   );
   if (request.workflowDocumentId && workflows.length === 0) {
+    strapi.log.warn(
+      `Published transaction-workflow ${request.workflowDocumentId} not found; matching by transaction`,
+    );
+    workflows = await loadPublishedWorkflows(strapi);
+  }
+  if (workflows.length === 0) {
     throw new TransactionWorkflowError(
       'Published transaction-workflow not found',
       404,
@@ -232,7 +365,9 @@ export async function convertTransactions(
   const results: ConvertResultItem[] = [];
 
   for (const transaction of transactions) {
-    if (transaction.converted_to_workflow === true) continue;
+    if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
+      continue;
+    }
 
     const workflow = pickMatchingWorkflow(workflows, transaction);
     if (!workflow) continue;
@@ -251,6 +386,16 @@ export async function convertTransactions(
     const createdDocumentIds: string[] = [];
 
     if (keepOriginal) {
+      // Storno mirrors the source. Draft v1 may omit organization — leave empty
+      // rather than inventing one from steps or rejecting Convert.
+      const stornoOrganization = transaction.organization?.documentId;
+      if (!transaction.currency_type?.documentId) {
+        throw new TransactionWorkflowError(
+          'Source transaction currency_type is required for convert',
+          422,
+        );
+      }
+
       stornoDocumentId = await createTransactionRow(
         strapi,
         {
@@ -259,12 +404,14 @@ export async function convertTransactions(
           description: transaction.description,
           debit_account: transaction.debit_account?.documentId,
           credit_account: transaction.credit_account?.documentId,
-          currency_type: transaction.currency_type?.documentId,
-          organization: transaction.organization?.documentId,
+          currency_type: transaction.currency_type.documentId,
+          ...(stornoOrganization
+            ? { organization: stornoOrganization }
+            : {}),
           transaction_type: transaction.transaction_type?.documentId,
           related_transaction: transaction.documentId,
           entered_key: stornoEnteredKey(transaction.documentId),
-          converted_to_workflow: true,
+          converted_to_workflow: CONVERTED_STORNO,
         },
         published,
       );
@@ -285,8 +432,11 @@ export async function convertTransactions(
         createdDocumentIds.push(documentId);
       }
 
-      await markConverted(strapi, transaction.documentId);
-      await markConverted(strapi, stornoDocumentId);
+      await syncSourceAfterConvert(
+        strapi,
+        transaction.documentId,
+        published,
+      );
     } else {
       let previousRelated: string | null = null;
       for (const row of expanded) {
