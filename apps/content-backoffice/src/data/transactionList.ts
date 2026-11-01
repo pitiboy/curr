@@ -15,8 +15,7 @@ export type ConvertedToWorkflow =
   | typeof CONVERTED_STORNO;
 
 export type ConvertedFilterValue =
-  | typeof CONVERTED_FILTER_NONE
-  | ConvertedToWorkflow;
+  typeof CONVERTED_FILTER_NONE | ConvertedToWorkflow;
 
 export const CONVERTED_TO_WORKFLOW_CHOICES = [
   CONVERTED_FILTER_NONE,
@@ -157,7 +156,8 @@ export function workflowMatchesTransaction(
   if (credit !== workflow.credit_account_code) return false;
   if (workflow.currency_type?.documentId) {
     if (
-      transaction.currency_type?.documentId !== workflow.currency_type.documentId
+      transaction.currency_type?.documentId !==
+      workflow.currency_type.documentId
     ) {
       return false;
     }

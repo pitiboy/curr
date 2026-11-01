@@ -25,7 +25,9 @@ const workflowListPopulate = {
   transaction_type: { fields: ['documentId'] },
 };
 
-function toWorkflowHeader(row: StrapiWorkflowRow): WorkflowTemplateHeader | null {
+function toWorkflowHeader(
+  row: StrapiWorkflowRow,
+): WorkflowTemplateHeader | null {
   if (!row.documentId) return null;
   if (typeof row.debit_account_code !== 'number') return null;
   if (typeof row.credit_account_code !== 'number') return null;
@@ -95,16 +97,13 @@ export async function convertTransaction(
     workflowDocumentId: string;
   },
 ): Promise<ConvertTransactionResult> {
-  const { json } = (await httpClient(
-    transactionWorkflowConvertUrl(strapiUrl),
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        transactionDocumentId: input.transactionDocumentId,
-        workflowDocumentId: input.workflowDocumentId,
-      }),
-    },
-  )) as { json: ConvertResponse };
+  const { json } = (await httpClient(transactionWorkflowConvertUrl(strapiUrl), {
+    method: 'POST',
+    body: JSON.stringify({
+      transactionDocumentId: input.transactionDocumentId,
+      workflowDocumentId: input.workflowDocumentId,
+    }),
+  })) as { json: ConvertResponse };
   const first = json.data?.[0];
   if (!first) {
     throw new Error('Convert response missing data');

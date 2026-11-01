@@ -17,32 +17,27 @@ describe('transactionWorkflowConvertUrl', () => {
 describe('fetchPublishedWorkflows', () => {
   it('requests published templates with currency and type populated', async () => {
     const seen: string[] = [];
-    const rows = await fetchPublishedWorkflows(
-      async (url) => {
-        seen.push(url);
-        return {
-          json: {
-            data: [
-              {
-                documentId: 'wf-1',
-                name: 'Ügylet 1',
-                debit_account_code: 1520,
-                credit_account_code: 1101,
-                currency_type: { documentId: 'cur-kor' },
-              },
-            ],
-            meta: { pagination: { pageCount: 1 } },
-          },
-        };
-      },
-      'http://localhost:1337',
-    );
+    const rows = await fetchPublishedWorkflows(async (url) => {
+      seen.push(url);
+      return {
+        json: {
+          data: [
+            {
+              documentId: 'wf-1',
+              name: 'Ügylet 1',
+              debit_account_code: 1520,
+              credit_account_code: 1101,
+              currency_type: { documentId: 'cur-kor' },
+            },
+          ],
+          meta: { pagination: { pageCount: 1 } },
+        },
+      };
+    }, 'http://localhost:1337');
     expect(seen).toHaveLength(1);
     const params = new URL(seen[0]!).searchParams;
     expect(params.get('status')).toBe('published');
-    expect(
-      params.get('populate[currency_type][fields][0]'),
-    ).toBe('documentId');
+    expect(params.get('populate[currency_type][fields][0]')).toBe('documentId');
     expect(rows).toEqual([
       {
         documentId: 'wf-1',

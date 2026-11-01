@@ -1,12 +1,7 @@
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import { Button } from '@mui/material';
 import { Fragment, useState } from 'react';
-import {
-  Confirm,
-  useNotify,
-  useRefresh,
-  useTranslate,
-} from 'react-admin';
+import { Confirm, useNotify, useRefresh, useTranslate } from 'react-admin';
 
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';

@@ -9,7 +9,11 @@ import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWor
 import { TransactionConvertButton } from './TransactionConvertButton';
 import { bandedSpanClass } from '../../theme';
 
-export function TransactionConvertSection({ record }: { record: TransactionRow }) {
+export function TransactionConvertSection({
+  record,
+}: {
+  record: TransactionRow;
+}) {
   const { matchFor, loading: catalogLoading } = useTransactionWorkflowCatalog();
 
   if (!isExpandableConvertedValue(record.converted_to_workflow)) return null;
