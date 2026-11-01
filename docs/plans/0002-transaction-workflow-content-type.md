@@ -36,7 +36,7 @@ Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** a
 | **Tranzakció** | Egy könyvelési sor. |
 | **`transaction-workflow` rekord** | Admin sablon: match fejléc + `step` lista. |
 | **Convert** | API: matcholt egysoros trx → storno/törlés + step-sorok. |
-| **`converted_to_workflow`** | `transaction` boolean; Convert csak `false` sorokat vesz. |
+| **`converted_to_workflow`** | `transaction` enum `original` \| `expanded` \| `storno` (üres = kifejthető); Convert csak null sorokat vesz. |
 | **`entered_key`** | `transaction` string; generált sorok idempotenciája (nem workflow kulcs). |
 | **`steps_published`** | Sablon boolean; generált sorok published/draft; Convert override. |
 | **`copy_receipt`** | Step boolean; forrás receiptjei a generált sorra. |
@@ -90,7 +90,7 @@ flowchart LR
 
 ### 3.2 Step komponensek (dynamic zone)
 
-Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`.
+Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, opcionális `organization`, opcionális `organization_from_original`, opcionális `transaction_type`, `copy_receipt`.
 
 | Komponens UID | Admin név | Számlák |
 | ---- | ---- | ---- |
@@ -102,13 +102,15 @@ Generált összeg: `amount = source.amount * percent / 100`.
 
 **Tagi feloldás:** member komponensnél a Convert a forrás trx azonos kódú oldalát (vagy a [member-accounts](../../src/member-accounts.ts) testvért) használja — **nem** seed documentId-t. Fix oldalon a relation `documentId` megy a generált sorra.
 
-**`description` placeholder:** default `{1}` → forrás `description` másolása. Seedben lépésnév szöveg is megengedett.
+**`description` placeholder:** `{original.<mező>}` → forrás mező (üres forrás → üres string). Legacy `{1}` = `{original.description}`. Ismeretlen mező → üres. Seedben lépésnév szöveg is megengedett.
+
+**`organization`:** opcionális. Fix reláció, vagy seed DSL `"{original.organization}"` → `organization_from_original: true` (Convert a forrás orgját másolja; üres forrás → üres). Üres step org + flag nélkül → generált sor orgja is üres (nincs automatikus fallback).
 
 ### 3.3 `transaction` érintett mezők
 
 | Mező | Szerep |
 | ---- | ------ |
-| `converted_to_workflow` | boolean, default `false`; Convert szűrő |
+| `converted_to_workflow` | enumeration `original` \| `expanded` \| `storno`, nem kötelező (null = kifejthető); Convert szűrő |
 | `entered_key` | unique string; javaslat: `{originalDocumentId}:storno`, `{originalDocumentId}:step:{i}` |
 | `related_transaction` / `related_transactions` | keep ág: gyerekek → eredeti; delete ág: új sorok lánca |
 
@@ -117,7 +119,7 @@ Generált összeg: `amount = source.amount * percent / 100`.
 ## 4. Match szabály
 
 1. Sablon **published**.
-2. Forrás `converted_to_workflow === false`.
+2. Forrás `converted_to_workflow` üres / null.
 3. `Number(debit_account.code) === debit_account_code` és ugyanez **credit**re (`account.code` string). Kód-alapú: minden tag `1101`/`1001` példánya matchel.
 4. Ha a sablonon van `currency_type` documentId: egyezés kötelező.
 5. Ha a sablonon van `transaction_type` documentId: egyezés kötelező.
@@ -133,9 +135,9 @@ Minden `step` sorrendben:
 
 - `amount` = forrás × `percent` / 100  
 - számlák: ha a step debit/credit account **kódja** `1101` vagy `1001` (vagy egyezik a forrás valamelyik oldalának kódjával tagi számlánál), a forrás trx megfelelő account példánya (ill. testvér a member-accounts-ból); egyébként a step relation  
-- `currency_type`, `organization`, `transaction_type` a stepről  
+- `currency_type`, `transaction_type` a stepről; `organization` a stepről, vagy `organization_from_original` esetén a forrásról (üres marad üres)  
 - `date` ← forrás `date`  
-- `description` ← step sablon (`{1}` → forrás description)  
+- `description` ← step sablon (`{original.*}` / `{1}`)  
 - **státusz:** `steps_published` a sablonról, kivéve ha a Convert request body felülírja (`steps_published?: boolean`)  
 - **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres  
 
@@ -150,12 +152,13 @@ A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora
 1. Storno: forrás mezők másolata, `amount * -1`.  
 2. Új step-sorok.  
 3. Storno + új sorok: `related_transaction` → **eredeti**.  
-4. `converted_to_workflow: true` az **eredetin és a storno soron**.
+4. `converted_to_workflow: original` az **eredetin**, `storno` a **storno soron**, `expanded` a **step sorokon**.
+5. A generált sorok státusza a `steps_published` (vagy Convert override) szerint. Az eredeti csak akkor published, ha a hét publish-mező mind kitöltött; hiányzó organization/számla esetén draft marad (`converted_to_workflow: original` mellett). Draft lépéseknél az eredeti draft marad / unpublish.
 
 ### `false`
 
 1. Eredeti törlése. A forrás receiptjei csak azokra az új sorokra kerülnek, ahol `copy_receipt: true` (különben a receipt orphan / előtte átkötés — implementáció: ha van receipt és egyetlen step sem `copy_receipt`, 422 vagy az első stepre másolás; **default:** első `copy_receipt: true` step, ha nincs ilyen és volt receipt → 422).  
-2. Csak új step-sorok; `related_transaction` lánc (első `null`, többi az előzőre).
+2. Csak új step-sorok; `related_transaction` lánc (első `null`, többi az előzőre); `converted_to_workflow: expanded` a step sorokon.
 
 ```mermaid
 flowchart TD
@@ -165,7 +168,7 @@ flowchart TD
   expand["step percent expand"]
   keep{"keep_original?"}
   storno["Storno amount*-1"]
-  mark["converted_to_workflow true on original and storno"]
+  mark["converted original / storno / expanded"]
   linkKeep["Children related_transaction to original"]
   del["Delete original"]
   linkChain["Chain new rows"]
@@ -405,7 +408,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 ### 9.3 Maradék finomság (defaultolható)
 
 - Ütköző sablon fejléc → 409  
-- `{1}` → forrás `description`  
+- `{original.*}` / `{1}` → forrás mezők; üres → üres; `organization_from_original`  
 - Admin UI a Convert híváshoz (opcionális fázis E)  
 
 ---

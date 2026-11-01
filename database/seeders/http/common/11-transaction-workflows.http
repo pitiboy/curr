@@ -33,6 +33,9 @@
     );
     // Tömb, ne Set — az exports blokkok között a Set nem marad meg megbízhatóan.
     exports.wfMemberCodes = ["1101", "1001"];
+    // Seed DSL: "{original.organization}" → Convert copies from source trx.
+    exports.wfIsOriginalOrgTemplate = (value) =>
+      typeof value === "string" && /^\{original\.organization\}$/.test(value.trim());
     const accountCodes = new Set();
     const organizationNames = new Set();
     const currencyCodes = new Set();
@@ -45,7 +48,12 @@
         const credit = String(step.credit_code);
         if (!exports.wfMemberCodes.includes(debit)) accountCodes.add(debit);
         if (!exports.wfMemberCodes.includes(credit)) accountCodes.add(credit);
-        organizationNames.add(step.organization);
+        if (
+          step.organization &&
+          !exports.wfIsOriginalOrgTemplate(step.organization)
+        ) {
+          organizationNames.add(step.organization);
+        }
         currencyCodes.add(String(step.currency));
         if (step.transaction_type) typeNames.add(step.transaction_type);
       }
@@ -227,7 +235,14 @@ Accept: application/json
       const creditIsMember = wfMemberCodes.includes(creditCode);
       const debitId = debitIsMember ? null : wfAccountIds[debitCode];
       const creditId = creditIsMember ? null : wfAccountIds[creditCode];
-      const orgId = wfOrganizationIds[step.organization];
+      const orgFromOriginal = wfIsOriginalOrgTemplate(step.organization);
+      const orgEmpty =
+        step.organization == null ||
+        step.organization === "" ||
+        orgFromOriginal;
+      const orgId = orgEmpty
+        ? null
+        : wfOrganizationIds[step.organization];
       const currencyId = wfCurrencyIds[String(step.currency)];
       const typeId = step.transaction_type
         ? wfTypeIds[step.transaction_type]
@@ -235,7 +250,7 @@ Accept: application/json
       if (
         (!debitIsMember && !debitId) ||
         (!creditIsMember && !creditId) ||
-        !orgId ||
+        (!orgEmpty && !orgId) ||
         !currencyId
       ) {
         skipReason =
@@ -276,7 +291,6 @@ Accept: application/json
             description: step.description,
             percent: step.percent,
             currency_type: currencyId,
-            organization: orgId,
             member_account_code: debitCode,
             credit_account: creditId,
           }
@@ -286,7 +300,6 @@ Accept: application/json
               description: step.description,
               percent: step.percent,
               currency_type: currencyId,
-              organization: orgId,
               member_account_code: creditCode,
               debit_account: debitId,
             }
@@ -295,10 +308,11 @@ Accept: application/json
               description: step.description,
               percent: step.percent,
               currency_type: currencyId,
-              organization: orgId,
               debit_account: debitId,
               credit_account: creditId,
             };
+      if (orgFromOriginal) row.organization_from_original = true;
+      else if (orgId) row.organization = orgId;
       if (typeId) row.transaction_type = typeId;
       if (step.copy_receipt) row.copy_receipt = true;
       steps.push(row);

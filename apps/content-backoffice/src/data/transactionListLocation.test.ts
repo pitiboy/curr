@@ -15,20 +15,33 @@ function filterAsReactAdmin(search: string): Record<string, unknown> {
 }
 
 describe('transactionsMenuTo', () => {
-  it('opens Review on the shared list with only the draft status', () => {
+  it('opens Review on the shared list with draft status and hides originals', () => {
     const target = transactionsMenuTo('draft');
     expect(target.pathname).toBe('/transactions');
-    expect(filterFromListSearch(target.search)).toEqual({ status: 'draft' });
-    expect(filterAsReactAdmin(target.search)).toEqual({ status: 'draft' });
+    expect(filterFromListSearch(target.search)).toEqual({
+      status: 'draft',
+      converted_to_workflow: ['none', 'expanded'],
+    });
+    expect(filterAsReactAdmin(target.search)).toEqual({
+      status: 'draft',
+      converted_to_workflow: ['none', 'expanded'],
+    });
     expect(target.search).not.toContain('/transactions/review');
   });
 
-  it('opens Transactions with an empty filter that replaces a stored draft', () => {
+  it('opens Transactions hiding originals and replaces a stored draft filter', () => {
     const draft = transactionsMenuTo('draft');
     const all = transactionsMenuTo('all');
-    expect(filterFromListSearch(draft.search)).toEqual({ status: 'draft' });
-    expect(filterFromListSearch(all.search)).toEqual({});
-    expect(filterAsReactAdmin(all.search)).toEqual({});
+    expect(filterFromListSearch(draft.search)).toEqual({
+      status: 'draft',
+      converted_to_workflow: ['none', 'expanded'],
+    });
+    expect(filterFromListSearch(all.search)).toEqual({
+      converted_to_workflow: ['none', 'expanded'],
+    });
+    expect(filterAsReactAdmin(all.search)).toEqual({
+      converted_to_workflow: ['none', 'expanded'],
+    });
     expect(all.pathname).toBe(draft.pathname);
     expect(all.search).not.toBe(draft.search);
   });

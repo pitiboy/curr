@@ -18,6 +18,9 @@ import {
 
 import { receiptIsPresent } from '../../data/receiptDraft';
 import {
+  CONVERTED_EXPANDED,
+  CONVERTED_ORIGINAL,
+  CONVERTED_STORNO,
   firstReceiptVendor,
   type TransactionRow,
 } from '../../data/transactionList';
@@ -32,6 +35,12 @@ import { TransactionReviewEditor } from './TransactionReviewEditor';
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
   { id: 'published', name: 'app.status.published' },
+];
+
+const convertedChoices = [
+  { id: CONVERTED_EXPANDED, name: 'app.converted.expanded' },
+  { id: CONVERTED_STORNO, name: 'app.converted.storno' },
+  { id: CONVERTED_ORIGINAL, name: 'app.converted.original' },
 ];
 
 function relationName(value: unknown): string {
@@ -142,6 +151,12 @@ function TransactionShowContent({
         />
 
         <SelectField choices={statusChoices} source="status" translateChoice />
+        <SelectField
+          choices={convertedChoices}
+          emptyText="app.converted.none"
+          source="converted_to_workflow"
+          translateChoice
+        />
 
         <FunctionField
           label={<AccountFieldLabel kind="credit" />}

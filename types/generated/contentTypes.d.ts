@@ -1195,8 +1195,9 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
   };
   attributes: {
     amount: Schema.Attribute.Decimal & Schema.Attribute.Required;
-    converted_to_workflow: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
+    converted_to_workflow: Schema.Attribute.Enumeration<
+      ['original', 'expanded', 'storno']
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

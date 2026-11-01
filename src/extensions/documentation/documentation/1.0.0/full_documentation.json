@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-10-30T08:14:26.082Z"
+    "x-generation-date": "2026-11-01T22:50:37.952Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -13093,7 +13093,12 @@
                 }
               },
               "converted_to_workflow": {
-                "type": "boolean"
+                "type": "string",
+                "enum": [
+                  "original",
+                  "expanded",
+                  "storno"
+                ]
               },
               "entered_key": {
                 "type": "string"
@@ -13227,7 +13232,12 @@
             }
           },
           "converted_to_workflow": {
-            "type": "boolean"
+            "type": "string",
+            "enum": [
+              "original",
+              "expanded",
+              "storno"
+            ]
           },
           "entered_key": {
             "type": "string"
@@ -13829,6 +13839,9 @@
           "organization": {
             "$ref": "#/components/schemas/Organization"
           },
+          "organization_from_original": {
+            "type": "boolean"
+          },
           "copy_receipt": {
             "type": "boolean"
           }
@@ -13875,6 +13888,9 @@
           "organization": {
             "$ref": "#/components/schemas/Organization"
           },
+          "organization_from_original": {
+            "type": "boolean"
+          },
           "copy_receipt": {
             "type": "boolean"
           }
@@ -13920,6 +13936,9 @@
           },
           "organization": {
             "$ref": "#/components/schemas/Organization"
+          },
+          "organization_from_original": {
+            "type": "boolean"
           },
           "copy_receipt": {
             "type": "boolean"

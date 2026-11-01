@@ -4,39 +4,39 @@
   "credit_account_code": 2000,
   "steps": [
     {
-      "description": "Aktiválás",
+      "description": "{original.description} | Aktiválás",
       "percent": 100,
       "debit_code": "1500",
       "credit_code": "2000",
       "currency": "HUF",
-      "organization": "I/4.12.1.2 Állattenyésztés",
+      "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "Utalás",
+      "description": "{original.description} | Utalás",
       "percent": 100,
       "debit_code": "2000",
       "credit_code": "1100",
       "currency": "HUF",
-      "organization": "I/4.12.1.2 Állattenyésztés",
+      "organization": "{original.organization}",
       "transaction_type": "Utalás"
     },
     {
-      "description": "Lekötés 1 HUF fedezet",
+      "description": "{original.description} | HUF fedezet",
       "percent": 100,
       "debit_code": "1900",
       "credit_code": "1500",
       "currency": "HUF",
-      "organization": "I/4.12.1.2 Állattenyésztés",
+      "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "Lekötés 2 KOR",
+      "description": "{original.description} KOR kiadás",
       "percent": 1,
       "debit_code": "1500",
       "credit_code": "1900",
       "currency": "KOR",
-      "organization": "I/4.12.1.2 Állattenyésztés",
+      "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     }
   ]
