@@ -5,13 +5,13 @@ import {
   DEFAULT_CREDIT_CODES_PATTERN,
   DEFAULT_DEBIT_CODES_PATTERN,
   DEFAULT_EGG_SALE_CURRENCY,
-} from './constants';
+} from './constants.ts';
 import type {
   BackofficeConfigResponse,
   BackofficeFeatureRow,
   BackofficeFeatureState,
-} from './types';
-import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-guard';
+} from './types.ts';
+import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-guard.ts';
 
 export function isBackofficeSettingKey(key: string): boolean {
   return BACKOFFICE_SETTING_PREFIXES.some((prefix) => key.startsWith(prefix));
