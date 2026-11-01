@@ -1,9 +1,5 @@
 # Cloud agent prompt: TDD / test coverage
 
-Másold ezt a fájl tartalmát (a cím alatti résztől) egy Cloud Agent promptjaként. A prompt self-contained: ne támaszkodj chat historyra.
-
----
-
 ## Feladat
 
 Állítsd fel a repo tesztpiramisát, írj project skilleket és egy TDD agentet, majd növeld a lefedettséget a meglévő dokumentáció és kód alapján. A cél: a törékeny UI, Strapi middleware és workflow viselkedés ne essen szét észrevétlenül.
