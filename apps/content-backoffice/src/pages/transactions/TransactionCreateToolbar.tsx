@@ -16,7 +16,10 @@ import {
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
 import { strapiErrorMessage } from '../../data/transactionPublish';
-import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
+import {
+  invalidateTransactionWorkflowCatalog,
+  useTransactionWorkflowCatalog,
+} from '../../workflows/useTransactionWorkflowCatalog';
 import type { ReceiptCardValue } from './ReceiptFields';
 import { transactionFormErrors } from './transactionForm';
 
@@ -99,6 +102,9 @@ export function TransactionCreateToolbar({
       })
       .catch((error: unknown) => {
         const message = strapiErrorMessage(error);
+        if (message.includes('transaction-workflow not found')) {
+          invalidateTransactionWorkflowCatalog();
+        }
         notify(message || translate('app.transactions_convert_error'), {
           type: 'error',
         });

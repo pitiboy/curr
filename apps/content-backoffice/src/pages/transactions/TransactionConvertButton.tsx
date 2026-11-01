@@ -11,6 +11,7 @@ import {
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
+import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 
 export function TransactionConvertButton({
   documentId,
@@ -40,6 +41,9 @@ export function TransactionConvertButton({
       })
       .catch((error: unknown) => {
         const message = strapiErrorMessage(error);
+        if (message.includes('transaction-workflow not found')) {
+          invalidateTransactionWorkflowCatalog();
+        }
         notify(message || translate('app.transactions_convert_error'), {
           type: 'error',
         });

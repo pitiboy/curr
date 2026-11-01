@@ -9,9 +9,11 @@ import {
   STEP_RELATED,
   TransactionWorkflowError,
   expandDescription,
+  expandTemplate,
   expandWorkflowSteps,
   normalizeWorkflowStep,
   pickMatchingWorkflow,
+  resolveStepOrganization,
   stepAmount,
   workflowMatchesTransaction,
   type SourceTransaction,
@@ -294,6 +296,117 @@ describe('expandWorkflowSteps', () => {
   it('copies {1} placeholder into step description', () => {
     assert.equal(expandDescription('{1}', 'forrás szöveg'), 'forrás szöveg');
     assert.equal(expandDescription('Fix cím', 'forrás'), 'Fix cím');
+  });
+
+  it('expands {original.description} and leaves empty source empty', () => {
+    const tx: SourceTransaction = {
+      documentId: 'tx-tpl',
+      date: '2026-10-14',
+      amount: 10_000,
+      description: 'felújítás',
+      debit_account: account('1500'),
+      credit_account: account('2000'),
+    };
+    assert.equal(
+      expandTemplate('{original.description} Aktiválás', tx),
+      'felújítás Aktiválás',
+    );
+    assert.equal(
+      expandTemplate('{original.description} Aktiválás', {
+        ...tx,
+        description: null,
+      }),
+      ' Aktiválás',
+    );
+    assert.equal(expandTemplate('{1} Utalás', tx), 'felújítás Utalás');
+    assert.equal(expandTemplate('{original.unknown} x', tx), ' x');
+  });
+
+  it('copies organization only when organization_from_original is set', () => {
+    const project = { documentId: 'org-project' };
+    const tx: SourceTransaction = {
+      documentId: 'tx-org',
+      date: '2026-10-14',
+      amount: 10_000,
+      description: 'felújítás',
+      debit_account: account('1500'),
+      credit_account: account('2000'),
+      organization: project,
+    };
+    assert.deepEqual(
+      resolveStepOrganization(
+        { organization_from_original: true, organization: null },
+        tx,
+      ),
+      project,
+    );
+    assert.equal(
+      resolveStepOrganization(
+        { organization_from_original: true, organization: null },
+        { ...tx, organization: null },
+      ),
+      null,
+    );
+    assert.equal(
+      resolveStepOrganization(
+        { organization_from_original: false, organization: null },
+        tx,
+      ),
+      null,
+    );
+    assert.deepEqual(
+      resolveStepOrganization(
+        { organization_from_original: false, organization: treasury },
+        tx,
+      ),
+      treasury,
+    );
+  });
+
+  it('expands felújítás-style steps with original templates', () => {
+    const project = { documentId: 'org-project' };
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-4',
+      name: 'Felújítás',
+      debit_account_code: 1500,
+      credit_account_code: 2000,
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: '{original.description} Aktiválás',
+          percent: 100,
+          debit_account: account('1500'),
+          credit_account: account('2000'),
+          currency_type: huf,
+          transaction_type: typeTransfer,
+          organization_from_original: true,
+        },
+        {
+          __component: STEP_RELATED,
+          description: '{original.description} Utalás',
+          percent: 100,
+          debit_account: account('2000'),
+          credit_account: account('1100'),
+          currency_type: huf,
+          transaction_type: typeWire,
+          organization_from_original: true,
+        },
+      ],
+    };
+    const tx: SourceTransaction = {
+      documentId: 'tx-4',
+      date: '2026-10-14',
+      amount: 500_000,
+      description: 'ól felújítás',
+      debit_account: account('1500'),
+      credit_account: account('2000'),
+      organization: project,
+    };
+    const rows = expandWorkflowSteps(wf, tx, new Map());
+    assert.equal(rows[0]?.description, 'ól felújítás Aktiválás');
+    assert.equal(rows[1]?.description, 'ól felújítás Utalás');
+    assert.deepEqual(rows[0]?.organization, project);
+    assert.deepEqual(rows[1]?.organization, project);
   });
 });
 

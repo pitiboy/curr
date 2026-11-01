@@ -204,7 +204,9 @@ function transactionWritePayload(
     debit_account: row.debit_account.documentId,
     credit_account: row.credit_account.documentId,
     currency_type: row.currency_type.documentId,
-    organization: row.organization.documentId,
+    ...(row.organization?.documentId
+      ? { organization: row.organization.documentId }
+      : {}),
     transaction_type: row.transaction_type?.documentId ?? undefined,
     related_transaction: relatedDocumentId ?? undefined,
     entered_key: row.entered_key,
@@ -336,11 +338,19 @@ export async function convertTransactions(
     );
   }
 
-  const workflows = await loadPublishedWorkflows(
+  // Prefer the client-supplied documentId; if it is stale (reseed / cache),
+  // fall back to all published templates and match by transaction codes.
+  let workflows = await loadPublishedWorkflows(
     strapi,
     request.workflowDocumentId,
   );
   if (request.workflowDocumentId && workflows.length === 0) {
+    strapi.log.warn(
+      `Published transaction-workflow ${request.workflowDocumentId} not found; matching by transaction`,
+    );
+    workflows = await loadPublishedWorkflows(strapi);
+  }
+  if (workflows.length === 0) {
     throw new TransactionWorkflowError(
       'Published transaction-workflow not found',
       404,
@@ -376,17 +386,9 @@ export async function convertTransactions(
     const createdDocumentIds: string[] = [];
 
     if (keepOriginal) {
-      // Storno mirrors the source; draft v1 rows may omit organization — fall back
-      // to the first step org so schema `required` does not block Convert.
-      const stornoOrganization =
-        transaction.organization?.documentId ??
-        expanded[0]?.organization.documentId;
-      if (!stornoOrganization) {
-        throw new TransactionWorkflowError(
-          'Source transaction and workflow steps have no organization',
-          422,
-        );
-      }
+      // Storno mirrors the source. Draft v1 may omit organization — leave empty
+      // rather than inventing one from steps or rejecting Convert.
+      const stornoOrganization = transaction.organization?.documentId;
       if (!transaction.currency_type?.documentId) {
         throw new TransactionWorkflowError(
           'Source transaction currency_type is required for convert',
@@ -403,7 +405,9 @@ export async function convertTransactions(
           debit_account: transaction.debit_account?.documentId,
           credit_account: transaction.credit_account?.documentId,
           currency_type: transaction.currency_type.documentId,
-          organization: stornoOrganization,
+          ...(stornoOrganization
+            ? { organization: stornoOrganization }
+            : {}),
           transaction_type: transaction.transaction_type?.documentId,
           related_transaction: transaction.documentId,
           entered_key: stornoEnteredKey(transaction.documentId),

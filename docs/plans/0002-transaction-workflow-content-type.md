@@ -90,7 +90,7 @@ flowchart LR
 
 ### 3.2 Step komponensek (dynamic zone)
 
-Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`.
+Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, opcionális `organization`, opcionális `organization_from_original`, opcionális `transaction_type`, `copy_receipt`.
 
 | Komponens UID | Admin név | Számlák |
 | ---- | ---- | ---- |
@@ -102,7 +102,9 @@ Generált összeg: `amount = source.amount * percent / 100`.
 
 **Tagi feloldás:** member komponensnél a Convert a forrás trx azonos kódú oldalát (vagy a [member-accounts](../../src/member-accounts.ts) testvért) használja — **nem** seed documentId-t. Fix oldalon a relation `documentId` megy a generált sorra.
 
-**`description` placeholder:** default `{1}` → forrás `description` másolása. Seedben lépésnév szöveg is megengedett.
+**`description` placeholder:** `{original.<mező>}` → forrás mező (üres forrás → üres string). Legacy `{1}` = `{original.description}`. Ismeretlen mező → üres. Seedben lépésnév szöveg is megengedett.
+
+**`organization`:** opcionális. Fix reláció, vagy seed DSL `"{original.organization}"` → `organization_from_original: true` (Convert a forrás orgját másolja; üres forrás → üres). Üres step org + flag nélkül → generált sor orgja is üres (nincs automatikus fallback).
 
 ### 3.3 `transaction` érintett mezők
 
@@ -133,9 +135,9 @@ Minden `step` sorrendben:
 
 - `amount` = forrás × `percent` / 100  
 - számlák: ha a step debit/credit account **kódja** `1101` vagy `1001` (vagy egyezik a forrás valamelyik oldalának kódjával tagi számlánál), a forrás trx megfelelő account példánya (ill. testvér a member-accounts-ból); egyébként a step relation  
-- `currency_type`, `organization`, `transaction_type` a stepről  
+- `currency_type`, `transaction_type` a stepről; `organization` a stepről, vagy `organization_from_original` esetén a forrásról (üres marad üres)  
 - `date` ← forrás `date`  
-- `description` ← step sablon (`{1}` → forrás description)  
+- `description` ← step sablon (`{original.*}` / `{1}`)  
 - **státusz:** `steps_published` a sablonról, kivéve ha a Convert request body felülírja (`steps_published?: boolean`)  
 - **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres  
 
@@ -406,7 +408,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 ### 9.3 Maradék finomság (defaultolható)
 
 - Ütköző sablon fejléc → 409  
-- `{1}` → forrás `description`  
+- `{original.*}` / `{1}` → forrás mezők; üres → üres; `organization_from_original`  
 - Admin UI a Convert híváshoz (opcionális fázis E)  
 
 ---

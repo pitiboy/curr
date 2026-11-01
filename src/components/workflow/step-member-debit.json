@@ -44,7 +44,12 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::organization.organization",
-      "required": true
+      "required": false
+    },
+    "organization_from_original": {
+      "type": "boolean",
+      "required": false,
+      "default": false
     },
     "copy_receipt": {
       "type": "boolean",

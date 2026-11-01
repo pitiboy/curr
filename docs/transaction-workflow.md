@@ -646,7 +646,7 @@ Step komponensek:
 | `workflow.step-member-debit` | `member_account_code` (`1101`/`1001`) + `credit_account` |
 | `workflow.step-member-credit` | `member_account_code` (`1101`/`1001`) + `debit_account` |
 
-Közös: `description` (default `{1}`), `percent` (0–100), `currency_type`, `organization`, opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
+Közös: `description` (default `{1}`; `{original.<mező>}` sablon, legacy `{1}` = `{original.description}`), `percent` (0–100), `currency_type`, opcionális `organization` / `organization_from_original` (seed: `"{original.organization}"`; üres marad üres), opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
 
 A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad: mindkét könyvelési sor külön step a dynamic zone-ban (nincs implicit `1900` kibontás).
 
