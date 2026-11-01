@@ -6,10 +6,6 @@ import {
   registerStaticPageSlugGuard,
 } from './static-pages';
 import { createPublishPolicyLoader } from './backoffice-features/policy';
-import {
-  resolveBackofficeFeaturesSeedPath,
-  upsertBackofficeFeaturesFromFile,
-} from './backoffice-features/seed';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { ensureReceiptTypes } from './receipt-types';
@@ -446,18 +442,6 @@ export default {
     });
   },
   async bootstrap({ strapi }) {
-    const seedInstance = process.env.BACKOFFICE_FEATURES_INSTANCE?.trim();
-    if (seedInstance) {
-      const seedPath = resolveBackofficeFeaturesSeedPath(seedInstance);
-      try {
-        await upsertBackofficeFeaturesFromFile(strapi, seedPath);
-      } catch (error) {
-        strapi.log.warn(
-          `Settings seed skipped for instance "${seedInstance}": ${error instanceof Error ? error.message : error}`,
-        );
-      }
-    }
-
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);
