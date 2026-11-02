@@ -143,6 +143,35 @@ describe('workflowMatchesTransaction', () => {
   });
 });
 
+describe('workflowMatchesTransaction (területalapú seed)', () => {
+  it('matches debit 1200 and credit 4200 from kor workflow 05', () => {
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-5',
+      name: 'Területalapú agrár támogatás',
+      debit_account_code: 1200,
+      credit_account_code: 4200,
+      step: [],
+    };
+    const tx: SourceTransaction = {
+      documentId: 'tx-agrar',
+      date: '2026-06-01',
+      amount: 250_000,
+      description: 'NAK támogatás',
+      debit_account: account('1200'),
+      credit_account: account('4200'),
+      currency_type: huf,
+    };
+    assert.equal(workflowMatchesTransaction(wf, tx), true);
+    assert.equal(
+      workflowMatchesTransaction(wf, {
+        ...tx,
+        credit_account: account('4201'),
+      }),
+      false,
+    );
+  });
+});
+
 describe('pickMatchingWorkflow', () => {
   it('returns null when nothing matches', () => {
     const tx: SourceTransaction = {

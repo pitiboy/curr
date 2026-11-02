@@ -15,7 +15,8 @@
     "strapi": "strapi develop",
     "local": "strapi develop",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/*.test.ts src/transaction-workflow/convert.test.ts",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "test:e2e": "playwright test",
     "format": "prettier --write \"apps/content-backoffice/**/*.{ts,tsx,json,md,css,html}\" \".github/**/*.{yml,yaml}\" \"docs/ci/**/*.md\" \"docs/prd/0002-content-backoffice-v2.md\" \"lefthook.yml\" \"package.json\"",
     "format:check": "prettier --check \"apps/content-backoffice/**/*.{ts,tsx,json,md,css,html}\" \".github/**/*.{yml,yaml}\" \"docs/ci/**/*.md\" \"docs/prd/0002-content-backoffice-v2.md\" \"lefthook.yml\" \"package.json\"",
     "format:check:ci": "npm run format:check",
@@ -83,6 +84,7 @@
     "styled-components": "^6.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",

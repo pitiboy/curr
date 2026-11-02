@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "preview:e2e": "vite preview --port 4173 --strictPort",
     "pretest": "node scripts/patch-mui9-text-field-props.mjs",
     "test": "vitest run",
     "postinstall": "node scripts/patch-mui9-text-field-props.mjs"
@@ -25,10 +26,14 @@
     "react-dropzone": "^14.4.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^26.1.0",
     "oxlint": "^1.81.0",
     "typescript": "~5.9.3",
     "vite": "^8.3.0",

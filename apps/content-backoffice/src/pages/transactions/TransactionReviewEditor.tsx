@@ -1,7 +1,5 @@
 import CheckIcon from '@mui/icons-material/Check';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, Button, Typography } from '@mui/material';
-import type { Theme } from '@mui/material/styles';
 import {
   useCallback,
   useEffect,
@@ -35,14 +33,9 @@ import {
   type RaRecord,
 } from 'react-admin';
 
-import {
-  attachTransactionReceipt,
-  publishTransaction,
-  saveTransactionDraft,
-} from '../../data/dataProvider';
+import { attachTransactionReceipt } from '../../data/dataProvider';
 import { receiptCardInvalid, receiptCount } from '../../data/receiptDraft';
 import {
-  isSamePersonPublishError,
   samePersonPublishBlocked,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
@@ -56,6 +49,7 @@ import {
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
 import { TransactionConvertSection } from './TransactionConvertSection';
+import { TransactionFinalizeSection } from './TransactionFinalizeSection';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { dateFieldProps } from './dateField';
 import { useAccountCatalog } from './useAccountCatalog';
@@ -65,10 +59,7 @@ import {
   hasDescriptionComment,
   visibleDescription,
 } from './descriptionComment';
-import {
-  reviewFormRecord,
-  transactionPublishFormErrors,
-} from './transactionForm';
+import { reviewFormRecord } from './transactionForm';
 
 const requiredMark = required();
 
@@ -259,105 +250,6 @@ function DraftLeaveBlocker() {
   );
 }
 
-function FinalizeSection({
-  blocked,
-  documentId,
-  missingReceipt,
-  samePersonBlocked,
-}: {
-  blocked: boolean;
-  documentId: string;
-  missingReceipt: boolean;
-  samePersonBlocked: boolean;
-}) {
-  const translate = useTranslate();
-  const notify = useNotify();
-  const refresh = useRefresh();
-  const { getValues, setError, clearErrors } = useFormContext();
-  const [saving, setSaving] = useState(false);
-  const savingRef = useRef(false);
-
-  const onFinalize = () => {
-    if (blocked || samePersonBlocked || savingRef.current) return;
-
-    const values = getValues() as Record<string, unknown>;
-    clearErrors();
-    const errors = transactionPublishFormErrors(values, translate);
-    for (const [field, message] of Object.entries(errors)) {
-      setError(field, { type: 'manual', message });
-    }
-    if (Object.keys(errors).length > 0) {
-      notify('ra.message.invalid_form', { type: 'warning' });
-      return;
-    }
-
-    savingRef.current = true;
-    setSaving(true);
-    saveTransactionDraft(documentId, values)
-      .then(() => publishTransaction(documentId))
-      .then(() => {
-        notify('app.transactions_finalized', { type: 'success' });
-        refresh();
-      })
-      .catch((error: unknown) => {
-        const message = strapiErrorMessage(error);
-        notify(
-          isSamePersonPublishError(message)
-            ? 'app.transactions_finalize_same_person'
-            : message || 'ra.notification.http_error',
-          { type: 'error' },
-        );
-      })
-      .finally(() => {
-        savingRef.current = false;
-        setSaving(false);
-      });
-  };
-
-  return (
-    <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
-      <Box component="fieldset" sx={reviewFieldset}>
-        <Box component="legend" sx={reviewLegend}>
-          <WarningAmberIcon aria-hidden sx={reviewIcon} />
-          <Typography
-            component="span"
-            sx={{ fontWeight: 700 }}
-            variant="subtitle1"
-          >
-            {translate('app.transactions_review')}
-          </Typography>
-        </Box>
-        <Typography sx={{ mb: 1 }} variant="body2">
-          {translate('app.transactions_finalize_hint')}
-        </Typography>
-        {missingReceipt ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_no_receipt')}
-          </Typography>
-        ) : null}
-        {blocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_pending')}
-          </Typography>
-        ) : null}
-        {samePersonBlocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_same_person')}
-          </Typography>
-        ) : null}
-        <Button
-          disabled={blocked || samePersonBlocked || saving}
-          type="button"
-          variant="contained"
-          onClick={onFinalize}
-        >
-          {translate('app.transactions_finalize')}
-        </Button>
-      </Box>
-    </Box>
-  );
-}
-
 function ReceiptAttachEditor({
   cards,
   onCardsChange,
@@ -439,38 +331,6 @@ function ReceiptAttachEditor({
   );
 }
 
-function reviewFieldset(theme: Theme) {
-  const dark = theme.palette.mode === 'dark';
-  return {
-    backgroundColor: dark ? 'rgba(226, 177, 0, 0.16)' : '#FFF4CC',
-    border: '2px solid',
-    borderColor: dark ? '#E6C36A' : '#E2B100',
-    borderRadius: 1,
-    boxSizing: 'border-box',
-    color: dark ? '#F6E7B2' : '#5C4810',
-    m: 0,
-    minWidth: 0,
-    px: 2,
-    py: 1.5,
-    width: '100%',
-  };
-}
-
-const reviewLegend = {
-  alignItems: 'center',
-  color: 'inherit',
-  display: 'flex',
-  gap: 0.75,
-  px: 0.75,
-};
-
-function reviewIcon(theme: Theme) {
-  return {
-    color: theme.palette.mode === 'dark' ? '#F0D060' : '#C48A00',
-    fontSize: 28,
-  };
-}
-
 function isFilled(value: unknown): boolean {
   if (typeof value === 'number') return Number.isFinite(value);
   if (typeof value === 'string') return value.trim() !== '';
@@ -538,7 +398,7 @@ export function TransactionReviewEditor({
           onCardsChange={onCardsChange}
         />
         <TransactionConvertSection record={record} />
-        <FinalizeSection
+        <TransactionFinalizeSection
           blocked={blocked}
           documentId={record.documentId}
           missingReceipt={missingReceipt}
