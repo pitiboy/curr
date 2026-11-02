@@ -65,7 +65,7 @@ mirror -R -p -v $MIRROR_POLICY --overwrite --delete --no-empty-dirs $dry \
   -x '^build/' -x 'tsconfig\.tsbuildinfo\$' \
   dist "$FTP_REMOTE_DIR/dist"
 mirror -R -p -v $MIRROR_POLICY --overwrite --no-empty-dirs $dry \
-  -i '^(public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$|database/seeders/http/[^/]+/data/backoffice-features\.json\$)' \
+  -i '^(public(\$|/)|package\.json\$|package-lock\.json\$|server\.js\$|favicon\.(png|ico)\$)' \
   -x '(^|/)public/uploads(/|\$)' \
   -x '(^|/)\\.' \
   . "$FTP_REMOTE_DIR"
