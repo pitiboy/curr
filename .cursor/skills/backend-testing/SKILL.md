@@ -12,8 +12,9 @@ Scope: publish guard, transaction-workflow convert, backoffice-features parse, a
 
 ## Runner
 
-- `node --experimental-strip-types --test` with `node:assert/strict`.
+- `node --experimental-strip-types --import ./scripts/ts-extless-resolve.mjs --test` with `node:assert/strict`.
 - Root script: `npm test` — glob **`src/**/*.test.ts`** (includes nested paths such as `src/backoffice-features/parse.test.ts` and `src/transaction-workflow/convert.test.ts`).
+- Runtime `src/**/*.ts` must use **extensionless** relative imports (Strapi CJS emit keeps a literal `.ts` suffix and Node cannot load it). Tests may import with `.ts`; the resolve preload maps extensionless deps to `.ts` for strip-types.
 - CI: `.github/workflows/ci.yml` job `strapi` runs `npm test` before production build.
 
 ## Fake Strapi pattern
