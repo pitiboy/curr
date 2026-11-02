@@ -48,6 +48,12 @@ upload_backend() {
     echo "Nincs dist könyvtár. Futtasd előbb: npm run build" >&2
     exit 1
   fi
+  # strapi build alone only fills dist/build when tsconfig has noEmit:true.
+  # Without dist/src the host keeps stale content-types (see compile-server.mjs).
+  if [[ ! -d dist/src/api ]]; then
+    echo "Nincs dist/src/api. Futtasd: npm run compile:server (vagy npm run build)" >&2
+    exit 1
+  fi
 
   local index_put
   if [[ -n "$dry" ]]; then

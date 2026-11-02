@@ -44,6 +44,9 @@
     "docs/",
     "scripts/",
     // Neon CLI config; loaded by the Neon toolchain, not the Strapi server
-    "neon.ts"
+    "neon.ts",
+    // Playwright e2e — not part of the Strapi server emit (see scripts/compile-server.mjs)
+    "e2e/",
+    "playwright.config.ts"
   ]
 }

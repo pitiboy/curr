@@ -22,7 +22,7 @@ flowchart TD
 
   subgraph deploy [Deploy main push / dispatch]
     F[paths-filter: backend / backoffice] --> G{Mit buildelünk?}
-    G -->|backend| H[strapi build]
+    G -->|backend| H[compile-server + strapi build]
     G -->|backoffice| I[Vite build /backoffice]
     H --> J[FTPS lftp mirror]
     I --> J
