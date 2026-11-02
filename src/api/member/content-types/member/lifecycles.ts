@@ -115,6 +115,7 @@ export default {
         {
           identifier: member.identifier || stored?.identifier,
           existing: stored,
+          memberId: stored?.id,
         },
       );
     } catch (error) {

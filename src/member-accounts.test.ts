@@ -5,7 +5,9 @@ import {
   MEMBER_ACCOUNT_KINDS,
   memberAccountName,
   missingMemberAccounts,
+  payloadClearsRelation,
   payloadHasRelationTarget,
+  uniqueMemberAccountName,
 } from './member-accounts.ts';
 
 const fields = (kinds: { field: string }[]) => kinds.map((kind) => kind.field);
@@ -23,6 +25,31 @@ describe('memberAccountName', () => {
     assert.deepEqual(
       MEMBER_ACCOUNT_KINDS.map((kind) => kind.code),
       ['1101', '1001'],
+    );
+  });
+});
+
+describe('uniqueMemberAccountName', () => {
+  it('keeps the base name when free', () => {
+    assert.equal(
+      uniqueMemberAccountName('kovács.erika - tagi számla', []),
+      'kovács.erika - tagi számla',
+    );
+  });
+
+  it('appends (2), (3)… when the base name is taken', () => {
+    assert.equal(
+      uniqueMemberAccountName('kovács.erika - tagi számla', [
+        'kovács.erika - tagi számla',
+      ]),
+      'kovács.erika - tagi számla (2)',
+    );
+    assert.equal(
+      uniqueMemberAccountName('kovács.erika - tagi számla', [
+        'kovács.erika - tagi számla',
+        'kovács.erika - tagi számla (2)',
+      ]),
+      'kovács.erika - tagi számla (3)',
     );
   });
 });
@@ -65,6 +92,34 @@ describe('payloadHasRelationTarget', () => {
   });
 });
 
+describe('payloadClearsRelation', () => {
+  it('treats null, empty set and non-empty disconnect as a clear', () => {
+    for (const value of [
+      null,
+      '',
+      [],
+      { set: [] },
+      { set: null },
+      { disconnect: [{ id: 1 }] },
+      { connect: [], disconnect: [{ id: 1 }] },
+    ]) {
+      assert.equal(payloadClearsRelation(value), true, JSON.stringify(value));
+    }
+  });
+
+  it('does not treat omitted fields or empty no-ops as a clear', () => {
+    for (const value of [
+      undefined,
+      { connect: [], disconnect: [] },
+      { connect: [] },
+      { id: 1 },
+      { connect: [{ id: 1 }] },
+    ]) {
+      assert.equal(payloadClearsRelation(value), false, JSON.stringify(value));
+    }
+  });
+});
+
 describe('missingMemberAccounts', () => {
   it('creates both for a new member', () => {
     assert.deepEqual(fields(missingMemberAccounts({}, null)), [
@@ -85,6 +140,34 @@ describe('missingMemberAccounts', () => {
     );
   });
 
+  it('creates both accounts on update when the stored member has none', () => {
+    assert.deepEqual(
+      fields(missingMemberAccounts({ name: 'x' } as never, {})),
+      ['account', 'private_account'],
+    );
+    assert.deepEqual(
+      fields(
+        missingMemberAccounts({ name: 'x' } as never, {
+          account: null,
+          private_account: undefined,
+        }),
+      ),
+      ['account', 'private_account'],
+    );
+  });
+
+  it('treats stored relations without an id as missing', () => {
+    assert.deepEqual(
+      fields(
+        missingMemberAccounts({ name: 'x' } as never, {
+          account: { id: 1 },
+          private_account: {},
+        }),
+      ),
+      ['private_account'],
+    );
+  });
+
   it('adds only the private account to an existing member', () => {
     assert.deepEqual(
       fields(
@@ -94,6 +177,24 @@ describe('missingMemberAccounts', () => {
         ),
       ),
       ['private_account'],
+    );
+  });
+
+  it('refills when the payload disconnects a stored account', () => {
+    assert.deepEqual(
+      fields(
+        missingMemberAccounts(
+          {
+            account: { disconnect: [{ id: 1 }] },
+            private_account: { set: [] },
+          },
+          {
+            account: { id: 1 },
+            private_account: { id: 2 },
+          },
+        ),
+      ),
+      ['account', 'private_account'],
     );
   });
 
