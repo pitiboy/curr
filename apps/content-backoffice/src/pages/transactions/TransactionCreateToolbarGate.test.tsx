@@ -18,11 +18,7 @@ vi.mock('react-admin', async (importOriginal) => {
     useTranslate: () => (key: string) => key,
     useNotify: () => vi.fn(),
     useRedirect: () => vi.fn(),
-    SaveButton: () => (
-      <button type="button">
-        Mentés
-      </button>
-    ),
+    SaveButton: () => <button type="button">Mentés</button>,
   };
 });
 
