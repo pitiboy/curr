@@ -1155,7 +1155,13 @@ export interface ApiTransactionWorkflowTransactionWorkflow
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    step: Schema.Attribute.DynamicZone<['workflow.step']> &
+    step: Schema.Attribute.DynamicZone<
+      [
+        'workflow.step',
+        'workflow.step-member-debit',
+        'workflow.step-member-credit',
+      ]
+    > &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
         {
@@ -1189,8 +1195,9 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
   };
   attributes: {
     amount: Schema.Attribute.Decimal & Schema.Attribute.Required;
-    converted_to_workflow: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
+    converted_to_workflow: Schema.Attribute.Enumeration<
+      ['original', 'expanded', 'storno']
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

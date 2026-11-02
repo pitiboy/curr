@@ -17,32 +17,56 @@ Az elsődleges `server.js` a repó gyökerében lévő indító. Az alias `serve
 
 ## Alias létrehozása
 
-1. **Tartományok** → **Új tartomány létrehozása**: `edizone.fejlesztesek.hu`. A dokumentumgyökér megosztása maradjon kikapcsolva. A Node.js űrlap csak a már létező tartományokat listázza.
-2. Új Node.js alkalmazás. Verzió **22.23.3**, mód **Production**, gyökér `node/kor-edizone`, URL `edizone.fejlesztesek.hu` üres útvonallal, indító fájl `server.js`. A 22-es főverzió kötelező: a közös modulok ehhez a Node-hoz tartoznak.
-3. A Fájlkezelővel másold ennek a mappának a `package.json` és `server.js` fájlját a `node/kor-edizone` gyökérbe. A cPanel enélkül a `package.json` nélkül nem indítja az alkalmazást. A fájl üres váz, függőség nélkül.
-4. **NPM Installt az aliasen ne indíts.** Saját `nodevenv` modulkészletet és saját symlinket hozna létre.
-5. Add meg az alias környezeti változóit, ments, majd **Újraindítás**.
+cPanel menüfeliratok: **angol (magyar)**. DotRollon a domainkezelő a **Domains (Domain nevek)** ikon; a régi „Tartományok / Aldomainek” külön menü nincs.
 
-Másik domainnél ugyanígy: új tartomány, új Node.js alkalmazás 22-es Node-dal, és ez a két fájl. A `package.json` `name` mezője az adott alias neve legyen. A `server.js` útvonalai az elsődleges mappára mutassanak, a `FAVICON_PATH` pedig az alias saját mappájára. Ha a tárhely felhasználója vagy a mappa más, ezt a három útvonalat kell átírni.
+1. **Domains (Domain nevek)** → **Create a New Domain (Új domain létrehozása)**: `edizone.fejlesztesek.hu` (típus: **Registered Domain**). A Node.js űrlap csak a már létező tartományokat listázza.
+   - A **Share document root** jelölőnégyzet felirata DotRollon pl.: *A dokumentum gyökerének (`/home/…/public_html`) megosztása a(z) “fejlesztesek.hu”.* Angolul: *If the document root is shared, the new domain will serve the same content as “fejlesztesek.hu”.* **Hagyd kikapcsolva.** Bekapcsolva a domain a fő `fejlesztesek.hu` tartalmát szolgálná ki, nem külön Passenger/Node alkalmazást; a beállítás létrehozás után **nem változtatható**.
+   - Kikapcsolva a **Document Root (Dokumentum kezdőkönyvtár)** mező szerkeszthető (pl. `public_html/edizone`). Ez csak a domain statikus gyökere a cPanelben; a Strapi alias a **Setup Node.js App** gyökerében fut (`node/kor-edizone`), nem ebben a mappában.
+2. **Setup Node.js App (Node.js alkalmazás beállítása)** → új alkalmazás. Verzió **22.23.3**, mód **Production**, gyökér `node/kor-edizone`, URL `edizone.fejlesztesek.hu` üres útvonallal, indító fájl `server.js`. A 22-es főverzió kötelező: a közös modulok ehhez a Node-hoz tartoznak.
+3. A **File Manager (Fájlkezelő)**-rel másold ennek a mappának a `package.json` és `server.js` fájlját a `node/kor-edizone` gyökérbe. A cPanel enélkül a `package.json` nélkül nem indítja az alkalmazást. A fájl üres váz, függőség nélkül.
+4. **Run NPM Install**-t az aliasen ne indíts. Saját `nodevenv` modulkészletet és saját symlinket hozna létre.
+5. Add meg az alias környezeti változóit, ments, majd **Restart (Újraindítás)**.
+
+Másik domainnél ugyanígy: új domain a **Domains (Domain nevek)** alatt, új Node.js alkalmazás 22-es Node-dal, és ez a két fájl. A `package.json` `name` mezője az adott alias neve legyen. A `server.js` útvonalai az elsődleges mappára mutassanak, a `FAVICON_PATH` pedig az alias saját mappájára. Ha a tárhely felhasználója vagy a mappa más, ezt a három útvonalat kell átírni.
 
 ## Környezeti változók
 
 Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben megadott változó felülírja, a hiányzó kulcs a `kor` értéke marad. Az aliasnél ezért mindet el kell menteni:
 
 - `PUBLIC_URL` — `https://edizone.fejlesztesek.hu`
-- `DATABASE_URL` — az alias saját Neon connection stringje
-- `DATABASE_SSL` — `true`
-- `CLOUDINARY_NAME`, `CLOUDINARY_KEY`, `CLOUDINARY_SECRET`, `CLOUDINARY_UPLOAD_PRESET`
-- `CLOUDINARY_FOLDER` — az aliastól függő mappa, például `edizone`
-- `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok
+- `DATABASE_URL` — **külön Neon Postgres database** aliasonként (ugyanaz a connection host/role lehet, a path `/dbname` különbözik). A kor URL-jét **ne** másold: közös DB-n a sémák és az adatok összekeverednek.
+  - **Jelenlegi minta (kor / edizone):** egy Neon project (`curr-zep`), egy branch (`production`), több database ugyanazon a compute-on — nem külön project aliasonként. Branch overview → **Postgres database** mutatja a darabszámot („N databases”); a lista: project → **Databases**, vagy **Connect** → Database dropdown.
+  - Létező példák ugyanitt: `neondb` (Neon default), `curr_zep` (kor), `curr_edizone` (edizone).
+  - **Új alias (ajánlott, ugyanez a minta):**
+    1. [Neon Console](https://console.neon.tech) → project `curr-zep` → **Databases** → **New database** (név pl. `curr_teszt_kor`; owner: `neondb_owner`).
+    2. **Connection string** (ugyanitt, meglévő DB-hez is): a project / branch nézetben a fekete **Connect** gomb (felső nav vagy a compute kártyán) → megnyílik a *Connect to your branch* dialóg.
+       - Branch: `production`
+       - Database: az alias DB neve (pl. `curr_teszt_kor` — ne `neondb` / `curr_zep`)
+       - Role: `neondb_owner`
+       - **Connection pooling**: **On** (a hostnévben legyen `-pooler`)
+       - Connection string típus: **URL** / Postgres URI (`postgresql://…`)
+       - A mező melletti **másolás** ikon → illeszd a cPanel env `DATABASE_URL` értékébe egy az egyben (`sslmode=require` maradhat a query stringben).
+  - **Opcionális:** külön Neon project (**New project**) is lehet erősebb izolációhoz; a korábbi aliasok nem így készültek. Ott is ugyanez a **Connect** dialóg adja a stringet.
+- `DATABASE_SSL` — `true` (Neon kötelező). Üres DB-n az első Strapi indulás létrehozza a sémát; az admin user az alias `/admin` címén külön jön létre.
+- Cloudinary — alias **külön** preset + folder (ne a korét). Ajánlott: külön product environment / fiók is; ha ugyanaz a cloud, legalább a preset és a folder legyen alias-specifikus.
+  1. Nyisd a [Cloudinary Console](https://console.cloudinary.com/)-t, jelentkezz be (válaszd az alias product environmentjét, ha több van).
+  2. API adatok: **Settings → API Keys** ([console.cloudinary.com/settings/api-keys](https://console.cloudinary.com/settings/api-keys)) → `Cloud name` → `CLOUDINARY_NAME`; `API Key` → `CLOUDINARY_KEY`; `API Secret` → `CLOUDINARY_SECRET`. Ne a kor cloud credentialjeit másold, ha külön fiókot / environmentet használsz.
+  3. Preset: **Settings → Upload → Upload presets** ([console.cloudinary.com/settings/upload](https://console.cloudinary.com/settings/upload) → **Upload presets** tab) → **Add upload preset**.
+  4. **Upload preset name**: pl. `teszt-kor` / `edizone` (ez lesz a `CLOUDINARY_UPLOAD_PRESET`). **Signing mode**: **Unsigned**. **Asset folder** / **Folder**: pl. `teszt-kor` / `edizone` — **ne** a kor `strapi-uploads` (vagy egyéb közös) folder. **Save**.
+  5. cPanel env: `CLOUDINARY_UPLOAD_PRESET` = a preset neve; `CLOUDINARY_FOLDER` = ugyanaz a folder string, mint a presetben.
+- `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok aliasonként. Generálás a repo gyökeréből: `node scripts/generate-secrets.js` (stdout `KEY=value` sorok; másold a cPanel env-be)
 - `ADMIN_APP_TITLE` — Strapi Admin böngészőfül brand (pl. `EdiZone`). Runtime, nem a közös `.env`-be; hiányzik → `KÖR`
 - Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-daily-entry` enabled).
-- `BACKOFFICE_OAUTH_CALLBACK` — az SPA visszatérési URL záró perjellel, pl. `https://edizone.fejlesztesek.hu/backoffice/`. Ha hiányzik, a közös `.env` kor értéke marad, és a Google login _Invalid callback URL_ hibát ad.
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — ugyanaz a Google OAuth kliens, mint a kornál (a közös `.env`-ből örökölhető). A Google Cloud Console **Authorised redirect URIs** listájába vedd fel az alias Strapi callbackjét is: `https://edizone.fejlesztesek.hu/api/connect/google/callback`.
+- Google OAuth — ugyanaz a Web application kliens, mint a kornál (új kliens nem kell). Részletes háttér: [backoffice-google-oauth.md](../../backoffice-google-oauth.md).
+  1. [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients) → nyisd meg a meglévő **Web application** klienst (ugyanaz a projekt, mint a kornál).
+  2. **Authorised redirect URIs** → **Add URI**: `https://<alias-domain>/api/connect/google/callback` (pl. `https://edizone.fejlesztesek.hu/api/connect/google/callback` vagy `https://teszt-kor.fejlesztesek.hu/api/connect/google/callback`). A kor és a localhost URI-k maradjanak. **Save**.
+  3. **Authorised JavaScript origins**: nem kell bővíteni (a böngésző nem hívja közvetlenül a Google-t).
+  4. **Authorised domains** (Branding / Audience): elég a `fejlesztesek.hu` — az alias aldomainhez nem kell külön domain a listába.
+  5. cPanel env (alias): `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` = ugyanez a kliens (örökölhető a közös `.env`-ből, vagy másold explicit). `BACKOFFICE_OAUTH_CALLBACK` = `https://<alias-domain>/backoffice/` (záró perjel kötelező). `PUBLIC_URL` = `https://<alias-domain>`. A Google konzol redirect URI a **Strapi** callback; a `BACKOFFICE_OAUTH_CALLBACK` az **SPA** — a kettő nem ugyanaz.
 
 A backoffice statikus fájlok a közös `public/backoffice` mappából jönnek; éles build után az API hívások az aktuális domain originjére mennek (edizone-on az edizone Strapi példányra, nem a kor hostra).
 
-A `PORT` értékét a Passenger adja, nem kell beállítani. Üres Neon adatbázison az első indulás létrehozza a sémát. Az admin felhasználó az alias `/admin` címén külön jön létre.
+A `PORT` értékét a Passenger adja, nem kell beállítani.
 
 ## Favicon
 

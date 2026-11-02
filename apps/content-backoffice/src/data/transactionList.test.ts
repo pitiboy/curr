@@ -5,9 +5,12 @@ import {
   buildTransactionFilters,
   encodeStrapiQuery,
   firstReceiptVendor,
+  pickMatchingWorkflow,
   preferTransaction,
   transactionPopulate,
+  workflowMatchesTransaction,
   type StrapiTransaction,
+  type WorkflowTemplateHeader,
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
 
@@ -47,10 +50,23 @@ describe('assembleTransactionList', () => {
     );
     expect(total).toBe(2);
     expect(data.map((row) => [row.id, row.status, row.documentId])).toEqual([
-      ['draft-only', 'draft', 'draft-only'],
       ['both', 'published', 'both'],
+      ['draft-only', 'draft', 'draft-only'],
     ]);
     expect(data.every((row) => row.id === row.documentId)).toBe(true);
+    expect(data.map((row) => row.entryId)).toEqual([2, 1]);
+  });
+
+  it('defaults sort to entryId DESC', () => {
+    const { data } = assembleTransactionList(
+      [
+        { id: 10, documentId: 'low', date: '2026-06-01' },
+        { id: 30, documentId: 'high', date: '2026-01-01' },
+      ],
+      [],
+      {},
+    );
+    expect(data.map((row) => row.documentId)).toEqual(['high', 'low']);
   });
 
   it('drops published twins when the status filter is draft', () => {
@@ -198,6 +214,10 @@ describe('buildTransactionFilters', () => {
         credit_account: { documentId: { $eq: 'acc-credit' } },
         description: { $containsi: 'kávé' },
         receipts: { vendor: { $containsi: 'Bolt' } },
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
       },
     });
   });
@@ -215,11 +235,15 @@ describe('buildTransactionFilters', () => {
           $gte: '2026-02-01T00:00:00.000Z',
           $lte: '2026-02-15T23:59:59.999Z',
         },
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
       },
     });
   });
 
-  it('omits blank filters', () => {
+  it('omits blank filters but keeps the default converted filter', () => {
     expect(
       buildTransactionFilters({
         status: '',
@@ -228,8 +252,47 @@ describe('buildTransactionFilters', () => {
         amount_gte: '',
         amount_lte: null,
         organization: null,
+        converted_to_workflow: '',
       }),
-    ).toEqual({ status: undefined, strapiFilters: {} });
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
+      },
+    });
+  });
+
+  it('maps converted_to_workflow multiselect to null / enum clauses', () => {
+    expect(
+      buildTransactionFilters({ converted_to_workflow: ['none', 'expanded'] }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
+      },
+    });
+    expect(
+      buildTransactionFilters({ converted_to_workflow: 'original' }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: { converted_to_workflow: { $eq: 'original' } },
+    });
+    expect(
+      buildTransactionFilters({
+        converted_to_workflow: ['original', 'expanded'],
+      }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        converted_to_workflow: { $in: ['original', 'expanded'] },
+      },
+    });
   });
 });
 
@@ -305,6 +368,99 @@ describe('preferTransaction', () => {
     expect(row?.status).toBe('draft');
     expect(row?.entered_by).toBe('a@b.c');
     expect(row?.published_by).toBeUndefined();
+  });
+});
+
+const ugyelet1Template: WorkflowTemplateHeader = {
+  documentId: 'wf-1',
+  name: 'Ügylet 1',
+  debit_account_code: 1520,
+  credit_account_code: 1101,
+};
+
+describe('workflowMatchesTransaction', () => {
+  it('matches debit/credit codes when not converted', () => {
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects original, expanded, and storno rows', () => {
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: 'original',
+      }),
+    ).toBe(false);
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: 'expanded',
+      }),
+    ).toBe(false);
+    expect(
+      workflowMatchesTransaction(ugyelet1Template, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        converted_to_workflow: 'storno',
+      }),
+    ).toBe(false);
+  });
+
+  it('requires currency when the template specifies one', () => {
+    const korTemplate: WorkflowTemplateHeader = {
+      ...ugyelet1Template,
+      currency_type: { documentId: 'cur-kor' },
+    };
+    expect(
+      workflowMatchesTransaction(korTemplate, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        currency_type: { documentId: 'cur-huf' },
+      }),
+    ).toBe(false);
+    expect(
+      workflowMatchesTransaction(korTemplate, {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+        currency_type: { documentId: 'cur-kor' },
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('pickMatchingWorkflow', () => {
+  it('returns the sole matching template', () => {
+    expect(
+      pickMatchingWorkflow([ugyelet1Template], {
+        debit_account: { code: 1520 },
+        credit_account: { code: 1101 },
+      }),
+    ).toEqual(ugyelet1Template);
+  });
+
+  it('returns null when no template matches or more than one matches', () => {
+    const twin: WorkflowTemplateHeader = {
+      ...ugyelet1Template,
+      documentId: 'wf-2',
+    };
+    expect(
+      pickMatchingWorkflow([ugyelet1Template], {
+        debit_account: { code: '9999' },
+        credit_account: { code: '1101' },
+      }),
+    ).toBeNull();
+    expect(
+      pickMatchingWorkflow([ugyelet1Template, twin], {
+        debit_account: { code: '1520' },
+        credit_account: { code: '1101' },
+      }),
+    ).toBeNull();
   });
 });
 

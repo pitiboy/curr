@@ -34,7 +34,7 @@ Each transaction is recorded using double-entry bookkeeping principles with debi
 - **Expense tracking**: The system can track expenses that belong to specific projects or locations.
 - **Multi-currency support**: Transactions can be made in different currencies with automatic conversion.
 
-Worked double-entry **ügyletek** (tagi ingatlan befizetés bankon, készpénzes belterületi vétel, tojás, gyümölcs, szövetkezeti ingatlan szerzés, felújítás, agrár támogatás, adminisztráció, bányászás; korona csak lekötéskor a projekthez kötött állóeszköz nyilvántartásán) are in [Ügyletek](./transaction-workflow.md). An ügylet is the whole business event; a transaction remains one debit and credit line. Multi-line expansion is a later **Convert** from a matched single-line row via [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) templates ([plan 0002](./plans/0002-transaction-workflow-content-type.md)).
+Worked double-entry **ügyletek** (tagi ingatlan befizetés bankon, készpénzes belterületi vétel, tojás, gyümölcs, szövetkezeti ingatlan szerzés, felújítás, agrár támogatás, adminisztráció, bányászás; korona csak lekötéskor a projekthez kötött állóeszközön) are in [Ügyletek](./transaction-workflow.md). An ügylet is the whole business event; a transaction remains one debit and credit line. Multi-line expansion is **Convert** from a matched single-line row via [`transaction-workflow`](../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) templates ([plan 0002](./plans/0002-transaction-workflow-content-type.md)); the content-backoffice Convert buttons are [plan 0003](./plans/0003-transaction-workflow-backoffice.md).
 
 ```mermaid
 erDiagram

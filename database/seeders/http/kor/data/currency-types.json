@@ -23,5 +23,17 @@
     "name": "emberi munkaóra",
     "unit": "hour",
     "categoryCode": "LABOUR"
+  },
+  {
+    "code": "EGG",
+    "name": "Tojás",
+    "unit": "egg",
+    "categoryCode": "RESOURCES"
+  },
+  {
+    "code": "FRUIT",
+    "name": "Gyümölcs",
+    "unit": "kg",
+    "categoryCode": "RESOURCES"
   }
 ]

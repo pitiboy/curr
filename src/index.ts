@@ -57,6 +57,12 @@ const CONTENT_ROLE_ACTIONS = [
   'plugin::upload.content-api.upload',
   'plugin::users-permissions.user.me',
   'api::backoffice.backoffice.config',
+  'api::transaction-workflow.transaction-workflow.find',
+  'api::transaction-workflow.transaction-workflow.findOne',
+] as const;
+
+const EDITOR_ONLY_CONTENT_ACTIONS = [
+  'api::transaction-workflow.transaction-workflow.convert',
 ] as const;
 
 const usersPermissionsRolePermissions = {
@@ -128,6 +134,11 @@ const usersPermissionsRolePermissions = {
   'api::backoffice': {
     controllers: {
       backoffice: allow(['config']),
+    },
+  },
+  'api::transaction-workflow': {
+    controllers: {
+      'transaction-workflow': allow(['find', 'findOne', 'convert']),
     },
   },
 };
@@ -275,10 +286,13 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       throw new Error(`Failed to ensure role "${roleDef.type}"`);
     }
 
-    for (const action of [
+    const roleActions = [
       ...CONTENT_ROLE_ACTIONS,
       ...CONTENT_ROLE_AUTH_ACTIONS,
-    ]) {
+      ...(roleDef.type === 'editor' ? EDITOR_ONLY_CONTENT_ACTIONS : []),
+    ];
+
+    for (const action of roleActions) {
       if (
         !CONTENT_ROLE_AUTH_ACTIONS.includes(
           action as (typeof CONTENT_ROLE_AUTH_ACTIONS)[number],
@@ -447,6 +461,7 @@ export default {
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);
+
     await backfillMemberAccounts(strapi);
     await ensureGoogleOAuthGrant(strapi);
     await migrateLegalPagesToStaticPages(strapi);

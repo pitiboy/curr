@@ -109,8 +109,13 @@
       "mappedBy": "transaction"
     },
     "converted_to_workflow": {
-      "type": "boolean",
-      "default": false
+      "type": "enumeration",
+      "enum": ["original", "expanded", "storno"],
+      "required": false,
+      "metadatas": {
+        "label": "Ügylet bontás",
+        "description": "original = kifejtett forrás; expanded = step; storno = storno sor; üres = még kifejthető"
+      }
     },
     "entered_key": {
       "type": "string",

@@ -1,5 +1,43 @@
 export type PublicationStatus = 'draft' | 'published';
 
+/** Source row after Convert. */
+export const CONVERTED_ORIGINAL = 'original' as const;
+/** Step row from Convert. */
+export const CONVERTED_EXPANDED = 'expanded' as const;
+/** Storno row from Convert. */
+export const CONVERTED_STORNO = 'storno' as const;
+/** Multiselect sentinel: rows with null/empty converted_to_workflow. */
+export const CONVERTED_FILTER_NONE = 'none' as const;
+
+export type ConvertedToWorkflow =
+  | typeof CONVERTED_ORIGINAL
+  | typeof CONVERTED_EXPANDED
+  | typeof CONVERTED_STORNO;
+
+export type ConvertedFilterValue =
+  typeof CONVERTED_FILTER_NONE | ConvertedToWorkflow;
+
+export const CONVERTED_TO_WORKFLOW_CHOICES = [
+  CONVERTED_FILTER_NONE,
+  CONVERTED_EXPANDED,
+  CONVERTED_STORNO,
+  CONVERTED_ORIGINAL,
+] as const;
+
+/** Default list filter: hide `original` and `storno` rows. */
+export const DEFAULT_CONVERTED_FILTER: ConvertedFilterValue[] = [
+  CONVERTED_FILTER_NONE,
+  CONVERTED_EXPANDED,
+];
+
+/** True when Convert may still match the row (null/empty only). */
+export function isExpandableConvertedValue(
+  value: ConvertedToWorkflow | boolean | null | undefined | '',
+): boolean {
+  // Legacy boolean false (pre-enum) still counts as expandable.
+  return value == null || value === '' || value === false;
+}
+
 export type StrapiTransaction = {
   id?: number;
   documentId?: string;
@@ -27,6 +65,8 @@ export type StrapiTransaction = {
     code?: string | null;
     name?: string | null;
   } | null;
+  converted_to_workflow?: ConvertedToWorkflow | boolean | null;
+  transaction_type?: { documentId?: string } | null;
   receipts?: Array<{
     documentId?: string;
     vendor?: string | null;
@@ -67,10 +107,97 @@ export const transactionPopulate = {
 };
 
 export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
+  /** React-admin id: Strapi documentId (not the numeric PK). */
   id: string;
   documentId: string;
+  /** Strapi numeric primary key for list display/sort. */
+  entryId?: number;
   status: PublicationStatus;
 };
+
+/** Published `transaction-workflow` header fields used for Convert match (no steps). */
+export type WorkflowTemplateHeader = {
+  documentId: string;
+  name?: string | null;
+  debit_account_code: number;
+  credit_account_code: number;
+  currency_type?: { documentId?: string } | null;
+  transaction_type?: { documentId?: string } | null;
+};
+
+export type TransactionWorkflowMatchInput = Pick<
+  StrapiTransaction,
+  | 'converted_to_workflow'
+  | 'debit_account'
+  | 'credit_account'
+  | 'currency_type'
+  | 'transaction_type'
+>;
+
+function parseAccountCode(
+  code: string | number | null | undefined,
+): number | null {
+  if (code === null || code === undefined || code === '') return null;
+  const value = Number(code);
+  return Number.isFinite(value) ? value : null;
+}
+
+/** Same rules as server `workflowMatchesTransaction` in `src/transaction-workflow/convert.ts`. */
+export function workflowMatchesTransaction(
+  workflow: WorkflowTemplateHeader,
+  transaction: TransactionWorkflowMatchInput,
+): boolean {
+  if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
+    return false;
+  }
+  const debit = parseAccountCode(transaction.debit_account?.code ?? null);
+  const credit = parseAccountCode(transaction.credit_account?.code ?? null);
+  if (debit !== workflow.debit_account_code) return false;
+  if (credit !== workflow.credit_account_code) return false;
+  if (workflow.currency_type?.documentId) {
+    if (
+      transaction.currency_type?.documentId !==
+      workflow.currency_type.documentId
+    ) {
+      return false;
+    }
+  }
+  if (workflow.transaction_type?.documentId) {
+    if (
+      transaction.transaction_type?.documentId !==
+      workflow.transaction_type.documentId
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Client pick: 0 → null, 1 → template, >1 → null (server convert throws 409).
+ */
+export function pickMatchingWorkflow(
+  workflows: WorkflowTemplateHeader[],
+  transaction: TransactionWorkflowMatchInput,
+): WorkflowTemplateHeader | null {
+  const matches = workflows.filter((workflow) =>
+    workflowMatchesTransaction(workflow, transaction),
+  );
+  if (matches.length !== 1) return null;
+  return matches[0] ?? null;
+}
+
+export function transactionLikeFromRecord(
+  record: TransactionWorkflowMatchInput,
+): TransactionWorkflowMatchInput {
+  return {
+    converted_to_workflow: record.converted_to_workflow,
+    debit_account: record.debit_account,
+    credit_account: record.credit_account,
+    currency_type: record.currency_type,
+    transaction_type: record.transaction_type,
+  };
+}
 
 type ListParams = {
   filter?: Record<string, unknown>;
@@ -94,7 +221,7 @@ export function assembleTransactionList(
   );
   const sorted = sortTransactionRows(
     merged,
-    params.sort?.field || 'date',
+    params.sort?.field || 'entryId',
     params.sort?.order || 'DESC',
   );
   const page = params.pagination?.page || 1;
@@ -150,8 +277,65 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   if (typeof filter.vendor === 'string' && filter.vendor.trim()) {
     strapiFilters.receipts = { vendor: { $containsi: filter.vendor.trim() } };
   }
+  // Always constrain the enum filter: empty / missing → hide `original`.
+  const convertedClauses = convertedToWorkflowFilterClauses(
+    normalizeConvertedFilter(filter.converted_to_workflow) ?? [
+      ...DEFAULT_CONVERTED_FILTER,
+    ],
+  );
+  if (convertedClauses.length === 1) {
+    Object.assign(strapiFilters, convertedClauses[0]);
+  } else if (convertedClauses.length > 1) {
+    strapiFilters.$or = convertedClauses;
+  }
 
   return { status, strapiFilters };
+}
+
+/** Normalize List multiselect → Strapi `$null` / `$eq` / `$in` clauses. */
+export function convertedToWorkflowFilterClauses(
+  raw: unknown,
+): Record<string, unknown>[] {
+  const selected = normalizeConvertedFilter(raw);
+  if (!selected || selected.length === 0) return [];
+
+  const includeNull = selected.includes(CONVERTED_FILTER_NONE);
+  const enums = selected.filter(
+    (value): value is ConvertedToWorkflow =>
+      value === CONVERTED_ORIGINAL ||
+      value === CONVERTED_EXPANDED ||
+      value === CONVERTED_STORNO,
+  );
+
+  const clauses: Record<string, unknown>[] = [];
+  if (includeNull) {
+    clauses.push({ converted_to_workflow: { $null: true } });
+  }
+  if (enums.length === 1) {
+    clauses.push({ converted_to_workflow: { $eq: enums[0] } });
+  } else if (enums.length > 1) {
+    clauses.push({ converted_to_workflow: { $in: enums } });
+  }
+  return clauses;
+}
+
+export function normalizeConvertedFilter(
+  raw: unknown,
+): ConvertedFilterValue[] | undefined {
+  if (raw == null || raw === '') return undefined;
+  const list = Array.isArray(raw) ? raw : [raw];
+  const values: ConvertedFilterValue[] = [];
+  for (const item of list) {
+    if (
+      item === CONVERTED_FILTER_NONE ||
+      item === CONVERTED_ORIGINAL ||
+      item === CONVERTED_EXPANDED ||
+      item === CONVERTED_STORNO
+    ) {
+      if (!values.includes(item)) values.push(item);
+    }
+  }
+  return values.length > 0 ? values : undefined;
 }
 
 export function encodeStrapiQuery(query: Record<string, unknown>): string {
@@ -182,11 +366,12 @@ function toListRecord(
   raw: StrapiTransaction,
   status: PublicationStatus,
 ): TransactionRow {
-  const { id: _numericId, documentId, ...rest } = raw;
+  const { id: entryId, documentId, ...rest } = raw;
   return {
     ...rest,
     id: documentId as string,
     documentId: documentId as string,
+    entryId: typeof entryId === 'number' ? entryId : undefined,
     status,
   };
 }
@@ -230,6 +415,9 @@ function sortTransactionRows(
 
 function sortValue(row: TransactionRow, field: string): string | number {
   switch (field) {
+    case 'entryId':
+    case 'id':
+      return typeof row.entryId === 'number' ? row.entryId : 0;
     case 'amount':
       return toNumber(row.amount);
     case 'organization':

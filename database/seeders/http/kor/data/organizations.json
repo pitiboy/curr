@@ -185,6 +185,12 @@
     "parentName": "I/4.12.1.2 Állattenyésztés"
   },
   {
+    "name": "Tojóól",
+    "description": "Tyúkól termelés",
+    "address": "",
+    "parentName": "I/4.12.1.2 Állattenyésztés"
+  },
+  {
     "name": "I/5. Minőségfelügyeleti Igazgatóság",
     "description": "Minőség és ellenőrzés",
     "address": "",

@@ -1,0 +1,17 @@
+{
+  "name": "Bányászás (készpénz)",
+  "debit_account_code": 1001,
+  "credit_account_code": 1000,
+  "transaction_type": "Bányászás",
+  "steps": [
+    {
+      "description": "Bányászás",
+      "percent": 100,
+      "debit_code": "1001",
+      "credit_code": "1000",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás"
+    }
+  ]
+}
