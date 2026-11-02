@@ -5,7 +5,9 @@
  *   own, informal "homály" pocket)
  *
  * The member lifecycle (beforeCreate/beforeUpdate) fills in whichever is
- * missing, and the bootstrap backfill does the same for existing members.
+ * missing: first reconnects an existing account with the expected name, else
+ * creates one (with a "(n)" name tail if that name is already taken). The
+ * bootstrap backfill does the same for existing members.
  * Only the decision functions are pure; the rest talks to Strapi.
  */
 
@@ -31,6 +33,25 @@ export function memberAccountName(
   kind: MemberAccountKind,
 ): string {
   return `${identifier} - ${kind.suffix}`;
+}
+
+/**
+ * `base`, or `base (2)`, `base (3)`… if taken — so a recreate after disconnect
+ * does not collide with an orphan that another member already reclaimed.
+ */
+export function uniqueMemberAccountName(
+  base: string,
+  taken: Iterable<string>,
+): string {
+  const used = new Set(taken);
+  if (!used.has(base)) {
+    return base;
+  }
+  let n = 2;
+  while (used.has(`${base} (${n})`)) {
+    n += 1;
+  }
+  return `${base} (${n})`;
 }
 
 /**
@@ -60,9 +81,34 @@ export function payloadHasRelationTarget(value: unknown): boolean {
 }
 
 /**
- * Which account relations to create. A relation is skipped when the payload
- * sets it, or when the stored member already has it (an update payload
- * usually does not repeat relations, so the payload alone is not enough).
+ * True when the write payload clears the relation (so after the update the
+ * stored link will be gone). Empty `{ connect: [], disconnect: [] }` is a
+ * no-op, not a clear — Content Manager sometimes sends that for untouched
+ * fields. A non-empty `disconnect` or an empty `set` is a clear.
+ */
+export function payloadClearsRelation(value: unknown): boolean {
+  if (value === undefined) return false;
+  if (value === null || value === '') return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value !== 'object') return false;
+  if (payloadHasRelationTarget(value)) return false;
+  const obj = value as Record<string, unknown>;
+  if ('set' in obj) {
+    const list = obj.set;
+    return Array.isArray(list) ? list.length === 0 : list == null;
+  }
+  if ('disconnect' in obj) {
+    const list = obj.disconnect;
+    return Array.isArray(list) ? list.length > 0 : !!list;
+  }
+  return false;
+}
+
+/**
+ * Which account relations to create or reconnect. A relation is skipped when
+ * the payload sets it, or when the stored member already has it — unless the
+ * payload is clearing it (disconnect / set []), in which case the stored link
+ * will be gone after the update and must be filled again.
  */
 export function missingMemberAccounts(
   payload: Partial<Record<MemberAccountField, unknown>>,
@@ -70,6 +116,7 @@ export function missingMemberAccounts(
 ): MemberAccountKind[] {
   return MEMBER_ACCOUNT_KINDS.filter((kind) => {
     if (payloadHasRelationTarget(payload[kind.field])) return false;
+    if (payloadClearsRelation(payload[kind.field])) return true;
     if (existing && payloadHasRelationTarget(existing[kind.field])) return false;
     return true;
   });
@@ -110,9 +157,71 @@ async function mainOrganizationId(
   return org?.documentId;
 }
 
+async function accountLinkedToOtherMember(
+  strapi: StrapiForMemberAccounts,
+  accountId: number | string,
+  memberId: number | string | null | undefined,
+): Promise<boolean> {
+  const where: Record<string, unknown> = {
+    $or: [{ account: { id: accountId } }, { private_account: { id: accountId } }],
+  };
+  if (memberId !== null && memberId !== undefined) {
+    where.id = { $ne: memberId };
+  }
+  const owner = await strapi.db.query(MEMBER_UID).findOne({
+    where,
+    select: ['id'],
+  });
+  return !!owner;
+}
+
 /**
- * Creates the missing accounts and writes `{ id }` relations into `data`
- * (the lifecycle payload or the backfill update). Returns the created kinds.
+ * Prefer an existing account with the canonical name + code that is not already
+ * linked to another member (orphans from a prior disconnect are fine).
+ */
+async function findReusableMemberAccount(
+  strapi: StrapiForMemberAccounts,
+  options: {
+    name: string;
+    code: string;
+    memberId?: number | string | null;
+  },
+): Promise<{ id: number | string; name: string } | null> {
+  const candidates = await strapi.db.query(ACCOUNT_UID).findMany({
+    where: { name: options.name, code: options.code },
+    select: ['id', 'name', 'code'],
+    orderBy: { createdAt: 'asc' },
+  });
+  for (const account of candidates) {
+    if (
+      !(await accountLinkedToOtherMember(strapi, account.id, options.memberId))
+    ) {
+      return account;
+    }
+  }
+  return null;
+}
+
+async function nextUniqueAccountName(
+  strapi: StrapiForMemberAccounts,
+  base: string,
+): Promise<string> {
+  const rows = await strapi.db.query(ACCOUNT_UID).findMany({
+    where: {
+      $or: [{ name: base }, { name: { $startsWith: `${base} (` } }],
+    },
+    select: ['name'],
+  });
+  return uniqueMemberAccountName(
+    base,
+    rows.map((row) => String(row.name)),
+  );
+}
+
+/**
+ * Fills missing accounts into `data` (lifecycle payload or backfill update):
+ * reconnect an orphan with the expected name when possible, otherwise create
+ * (with a "(n)" name tail on collision). Returns the filled kinds.
  */
 export async function createMissingMemberAccounts(
   strapi: StrapiForMemberAccounts,
@@ -120,6 +229,7 @@ export async function createMissingMemberAccounts(
   options: {
     identifier: string | null | undefined;
     existing?: Partial<Record<MemberAccountField, unknown>> | null;
+    memberId?: number | string | null;
   },
 ): Promise<MemberAccountKind[]> {
   const missing = missingMemberAccounts(data, options.existing);
@@ -134,21 +244,38 @@ export async function createMissingMemberAccounts(
     strapi.log.warn('Member accounts skipped: no organization found');
     return [];
   }
+  const filled: MemberAccountKind[] = [];
   for (const kind of missing) {
+    const baseName = memberAccountName(identifier, kind);
+    const reusable = await findReusableMemberAccount(strapi, {
+      name: baseName,
+      code: kind.code,
+      memberId: options.memberId,
+    });
+    if (reusable) {
+      data[kind.field] = { id: reusable.id };
+      filled.push(kind);
+      strapi.log.info(
+        `Reconnected member account "${reusable.name}" (${kind.code}, id ${reusable.id})`,
+      );
+      continue;
+    }
+    const name = await nextUniqueAccountName(strapi, baseName);
     // Document service, so the account gets a documentId like any other.
     const account = await strapi.documents(ACCOUNT_UID).create({
       data: {
-        name: memberAccountName(identifier, kind),
+        name,
         code: kind.code,
         organization,
       },
     });
     data[kind.field] = { id: account.id };
+    filled.push(kind);
     strapi.log.info(
-      `Created member account "${memberAccountName(identifier, kind)}" (${kind.code}, id ${account.id})`,
+      `Created member account "${name}" (${kind.code}, id ${account.id})`,
     );
   }
-  return missing;
+  return filled;
 }
 
 /** The stored member with its account relations, for beforeUpdate. */
@@ -189,6 +316,7 @@ export async function backfillMemberAccounts(
       const created = await createMissingMemberAccounts(strapi, data, {
         identifier: member.identifier,
         existing: member,
+        memberId: member.id,
       });
       if (!created.length) continue;
       await strapi.db
