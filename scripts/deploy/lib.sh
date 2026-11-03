@@ -98,10 +98,12 @@ set ftp:ssl-allow true
 set ftp:ssl-force true
 set ftp:passive-mode true
 set ssl:verify-certificate no
-set net:timeout 30
-set net:max-retries 2
-set net:connection-limit 4
-set mirror:parallel-transfer-count 4
+set net:timeout 60
+set net:max-retries 4
+# DotRoll FTPS rejects >~8 parallel sessions (421). Keep this low so
+# transfer-all of dist/build cannot leave truncated/corrupt admin chunks.
+set net:connection-limit 2
+set mirror:parallel-transfer-count 1
 set mirror:use-pget-n 0
 open --env-password -u "$FTP_USER" -p "$FTP_PORT" "$FTP_HOST"
 EOF
