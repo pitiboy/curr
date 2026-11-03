@@ -101,7 +101,11 @@ export type SourceTransaction = {
   converted_to_workflow?: ConvertedToWorkflow | boolean | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
-  currency_type?: { documentId: string } | null;
+  currency_type?: {
+    documentId: string;
+    code?: string | null;
+    name?: string | null;
+  } | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
   receipts?: { documentId: string }[] | null;
