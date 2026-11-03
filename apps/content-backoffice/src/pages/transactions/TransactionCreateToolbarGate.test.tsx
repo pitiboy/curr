@@ -28,6 +28,14 @@ vi.mock('../../workflows/useTransactionWorkflowCatalog', () => ({
   }),
 }));
 
+vi.mock('../../workflows/useConvertPreview', () => ({
+  useConvertPreview: () => ({
+    preview: null,
+    loading: false,
+    error: null,
+  }),
+}));
+
 vi.mock('react-hook-form', () => ({
   useWatch: () => undefined,
 }));
