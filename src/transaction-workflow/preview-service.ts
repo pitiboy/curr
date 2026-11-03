@@ -143,10 +143,41 @@ function ingestCurrency(
   row: CurrencyRow | null | undefined,
 ): void {
   if (!row?.documentId) return;
+  const existing = map.get(row.documentId);
   map.set(row.documentId, {
-    code: row.code ?? null,
-    name: row.name ?? null,
+    code: row.code ?? existing?.code ?? null,
+    name: row.name ?? existing?.name ?? null,
   });
+}
+
+function collectCurrencyDocumentIds(
+  workflows: WorkflowTemplate[],
+  transaction: SourceTransaction,
+): Set<string> {
+  const ids = new Set<string>();
+  const transactionCurrencyId = transaction.currency_type?.documentId;
+  if (transactionCurrencyId) ids.add(transactionCurrencyId);
+  for (const workflow of workflows) {
+    for (const step of workflow.step ?? []) {
+      const stepCurrencyId = step.currency_type?.documentId;
+      if (stepCurrencyId) ids.add(stepCurrencyId);
+    }
+  }
+  return ids;
+}
+
+async function hydrateCurrencyLookup(
+  strapi: PreviewStrapi,
+  currencyLookup: Map<string, { code: string | null; name: string | null }>,
+  documentIds: Iterable<string>,
+): Promise<void> {
+  await Promise.all(
+    [...documentIds].map(async (documentId) => {
+      const existing = currencyLookup.get(documentId);
+      if (existing?.code) return;
+      ingestCurrency(currencyLookup, await loadCurrencyRow(strapi, documentId));
+    }),
+  );
 }
 
 function collectMetaFromWorkflow(
@@ -375,6 +406,8 @@ async function inlineToSourceTransaction(
     },
     currency_type: {
       documentId: currencyRow.documentId,
+      code: currencyRow.code,
+      name: currencyRow.name,
     },
     transaction_type: inline.transaction_type,
     organization: inline.organization,
@@ -501,13 +534,11 @@ export async function convertPreview(
       ingestAccount(accountLookup, await loadAccountRow(strapi, documentId));
     }
   }
-  const currencyDocumentId = transaction.currency_type?.documentId;
-  if (currencyDocumentId && !currencyLookup.has(currencyDocumentId)) {
-    ingestCurrency(
-      currencyLookup,
-      await loadCurrencyRow(strapi, currencyDocumentId),
-    );
-  }
+  await hydrateCurrencyLookup(
+    strapi,
+    currencyLookup,
+    collectCurrencyDocumentIds(workflows, transaction),
+  );
   for (const ref of siblingMap.values()) {
     ingestAccount(accountLookup, ref as AccountRow);
   }

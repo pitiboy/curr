@@ -18,6 +18,14 @@ function accountLabel(code: string, name: string | null): string {
   return name ? `${code} — ${name}` : code;
 }
 
+function currencyLabel(code: string | null, name: string | null): string {
+  const trimmedCode = code?.trim();
+  if (trimmedCode) return trimmedCode;
+  const trimmedName = name?.trim();
+  if (trimmedName) return trimmedName;
+  return '—';
+}
+
 export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
   const translate = useTranslate();
   const stepTotal = preview.movements
@@ -72,7 +80,12 @@ export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
             <TableCell align="right">
               {formatAmount(preview.original.amount)}
             </TableCell>
-            <TableCell>{preview.original.currency.code ?? '—'}</TableCell>
+            <TableCell>
+              {currencyLabel(
+                preview.original.currency.code,
+                preview.original.currency.name,
+              )}
+            </TableCell>
           </TableRow>
           {preview.movements.map((movement) => (
             <TableRow key={`${movement.kind}-${movement.index ?? 's'}`}>
@@ -96,7 +109,9 @@ export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
               <TableCell align="right">
                 {formatAmount(movement.amount)}
               </TableCell>
-              <TableCell>{movement.currency.code ?? '—'}</TableCell>
+              <TableCell>
+                {currencyLabel(movement.currency.code, movement.currency.name)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
