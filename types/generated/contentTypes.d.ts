@@ -724,7 +724,7 @@ export interface ApiMemberMember extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     memberships: Schema.Attribute.Relation<
-      'oneToMany',
+      'manyToMany',
       'api::membership.membership'
     >;
     name: Schema.Attribute.String &
@@ -791,7 +791,7 @@ export interface ApiMembershipTypeMembershipType
 export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
   collectionName: 'memberships';
   info: {
-    description: 'Relation between a Member and an Organization, storing their role';
+    description: 'Tags\u00E1g: szervezet + tags\u00E1gt\u00EDpus + egy vagy t\u00F6bb tag k\u00F6z\u00F6s szab\u00E1lyokkal';
     displayName: 'Membership';
     pluralName: 'memberships';
     singularName: 'membership';
@@ -809,12 +809,17 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
       'api::membership.membership'
     > &
       Schema.Attribute.Private;
-    member: Schema.Attribute.Relation<'manyToOne', 'api::member.member'>;
+    members: Schema.Attribute.Relation<'manyToMany', 'api::member.member'>;
     membership_type: Schema.Attribute.Relation<
       'manyToOne',
       'api::membership-type.membership-type'
     > &
       Schema.Attribute.Required;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
     organization: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
@@ -824,7 +829,9 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    valid_from: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    valid_from: Schema.Attribute.DateTime &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'2026-11-03T22:12:00.800Z'>;
     valid_to: Schema.Attribute.DateTime;
   };
 }

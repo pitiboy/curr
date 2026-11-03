@@ -5,13 +5,22 @@
     "singularName": "membership",
     "pluralName": "memberships",
     "displayName": "Membership",
-    "description": "Relation between a Member and an Organization, storing their role"
+    "description": "Tagság: szervezet + tagságtípus + egy vagy több tag közös szabályokkal"
   },
   "options": {
     "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
+    "name": {
+      "type": "string",
+      "maxLength": 255,
+      "required": true,
+      "metadatas": {
+        "label": "Név",
+        "description": "A tagság megjelenő neve (pl. csoportnév); relációkban ez látszik a documentId helyett"
+      }
+    },
     "organization": {
       "type": "relation",
       "relation": "manyToOne",
@@ -22,14 +31,14 @@
         "description": "A tagsághoz tartozó szervezet"
       }
     },
-    "member": {
+    "members": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::member.member",
       "inversedBy": "memberships",
       "metadatas": {
-        "label": "Tag",
-        "description": "A tagsághoz tartozó tag"
+        "label": "Tagok",
+        "description": "A tagsághoz tartozó tagok (egy rekordhoz több is választható)"
       }
     },
     "membership_type": {

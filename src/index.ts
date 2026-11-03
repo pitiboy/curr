@@ -8,6 +8,7 @@ import {
 import { createPublishPolicyLoader } from './backoffice-features/policy';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
+import { registerMembershipValidFromFormDefault } from './membership-valid-from-default';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
 
@@ -457,5 +458,6 @@ export default {
     await migrateLegalPagesToStaticPages(strapi);
     await ensureStaticPageLocales(strapi);
     await ensurePublicStaticPagePermissions(strapi);
+    registerMembershipValidFromFormDefault(strapi);
   },
 };
