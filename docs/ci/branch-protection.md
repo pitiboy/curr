@@ -1,6 +1,6 @@
 # `main` branch protection (GitHub)
 
-A [PRD 0002 §4.3](../prd/0002-content-backoffice-v2.md#43-minőségkapu-pre-commit-és-main-branch-protection) szerint a `main`-re közvetlen push tiltott, kötelező CI státuszokkal.
+A [PRD 0002 §4.2](../prd/0002-content-backoffice-v2.md#42-minőségkapu-a-még-hiányzó-rész) szerint a `main`-re közvetlen push tiltott, kötelező CI státuszokkal.
 
 ## Kötelező status check nevek
 
