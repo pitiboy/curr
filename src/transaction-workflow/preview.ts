@@ -107,6 +107,17 @@ function requireAccountMeta(
   };
 }
 
+/** Merge Strapi currency rows without wiping an already-resolved code. */
+export function mergeCurrencyLookupRow(
+  existing: { code: string | null; name: string | null } | undefined,
+  incoming: { code?: string | null; name?: string | null },
+): { code: string | null; name: string | null } {
+  return {
+    code: incoming.code ?? existing?.code ?? null,
+    name: incoming.name ?? existing?.name ?? null,
+  };
+}
+
 function currencyMeta(
   documentId: string,
   lookup: CurrencyMetaLookup,
