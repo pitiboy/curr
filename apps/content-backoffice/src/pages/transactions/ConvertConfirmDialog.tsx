@@ -5,6 +5,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Typography,
 } from '@mui/material';
 import { Suspense, lazy } from 'react';
 import { useTranslate } from 'react-admin';
@@ -24,7 +25,7 @@ export function ConvertConfirmDialog({
   onConfirm,
   loading,
   workflow,
-  previewInput,
+  previewInput = null,
   confirmLabelKey = 'app.transactions_convert_confirm',
 }: {
   open: boolean;
@@ -32,7 +33,7 @@ export function ConvertConfirmDialog({
   onConfirm: () => void;
   loading: boolean;
   workflow: WorkflowTemplateHeader;
-  previewInput: ConvertPreviewRequest;
+  previewInput?: ConvertPreviewRequest | null;
   confirmLabelKey?: string;
 }) {
   const translate = useTranslate();
@@ -50,16 +51,22 @@ export function ConvertConfirmDialog({
         })}
       </DialogTitle>
       <DialogContent dividers>
-        <Suspense
-          fallback={
-            <CircularProgress
-              size={28}
-              sx={{ display: 'block', mx: 'auto', my: 2 }}
-            />
-          }
-        >
-          <ConvertPreviewPanel active={open} previewInput={previewInput} />
-        </Suspense>
+        {previewInput ? (
+          <Suspense
+            fallback={
+              <CircularProgress
+                size={28}
+                sx={{ display: 'block', mx: 'auto', my: 2 }}
+              />
+            }
+          >
+            <ConvertPreviewPanel active={open} previewInput={previewInput} />
+          </Suspense>
+        ) : (
+          <Typography sx={{ py: 1 }} variant="body2">
+            {translate('app.transactions_convert_body')}
+          </Typography>
+        )}
       </DialogContent>
       <DialogActions>
         <Button disabled={loading} onClick={onClose}>
