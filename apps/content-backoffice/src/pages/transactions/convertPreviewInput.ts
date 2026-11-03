@@ -10,6 +10,7 @@ export function inlinePreviewFromCreateForm(
   const debit = formValues.debit_account;
   const credit = formValues.credit_account;
   const currency = formValues.currency_type;
+  const transactionType = formValues.transaction_type;
 
   if (typeof date !== 'string' || !date.trim()) return null;
   const amount = Number(amountRaw);
@@ -30,6 +31,10 @@ export function inlinePreviewFromCreateForm(
     debit_account: { documentId: debit.trim() },
     credit_account: { documentId: credit.trim() },
     currency_type: { documentId: currency.trim() },
+    transaction_type:
+      typeof transactionType === 'string' && transactionType.trim()
+        ? { documentId: transactionType.trim() }
+        : null,
     receiptCount,
   };
 }

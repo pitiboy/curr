@@ -98,6 +98,15 @@ export const enMessages = mergeTranslations(englishMessages, {
     account_profile_egg_production: 'Eggs — production',
     account_profile_egg_internal: 'Eggs — internal distribution',
     account_profile_egg_sale: 'Eggs — sale',
+    account_profile_group_profiles: 'Profiles',
+    account_profile_group_workflows: 'Transaction templates',
+    account_profile_workflows_loading: 'Loading templates…',
+    account_profile_workflow_prefill_incomplete:
+      'Template account codes could not be resolved uniquely — check the account fields.',
+    account_profile_workflow_dropped:
+      'The selected transaction template no longer matches the chosen accounts.',
+    account_profile_workflow_chip_currency: 'Currency',
+    account_profile_workflow_chip_type: 'Type',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',

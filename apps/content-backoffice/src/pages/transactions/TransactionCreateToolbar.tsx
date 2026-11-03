@@ -9,13 +9,17 @@ import {
   useTranslate,
 } from 'react-admin';
 
+import {
+  buildTransactionWorkflowMatchInput,
+  profileModeMatchCount,
+  resolveCreateWorkflow,
+} from '../../data/accountRowSelection';
 import type { AccountChoice } from '../../data/accountCodes';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import {
   createNewTransactionDraft,
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
-import { countMatchingWorkflows } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import {
   invalidateTransactionWorkflowCatalog,
@@ -25,23 +29,13 @@ import type { ReceiptCardValue } from './ReceiptFields';
 import { inlinePreviewFromCreateForm } from './convertPreviewInput';
 import { transactionFormErrors } from './transactionForm';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
+import { useOptionalTransactionCreateAccountRow } from './TransactionCreateAccountRowContext';
 
 const ConvertConfirmDialog = lazy(() =>
   import('./ConvertConfirmDialog').then((module) => ({
     default: module.ConvertConfirmDialog,
   })),
 );
-
-/** ReferenceInput stores account documentId; match uses ledger codes from the catalog. */
-function accountCodeByDocumentId(
-  accounts: AccountChoice[],
-  documentId: unknown,
-): string | null {
-  if (typeof documentId !== 'string' || !documentId.trim()) return null;
-  const row = accounts.find((account) => String(account.id) === documentId);
-  const code = row?.code;
-  return typeof code === 'string' && code.trim() ? code.trim() : null;
-}
 
 export function TransactionCreateToolbar({
   accounts,
@@ -55,37 +49,52 @@ export function TransactionCreateToolbar({
   const translate = useTranslate();
   const notify = useNotify();
   const redirect = useRedirect();
-  const { permissions, isPending } = usePermissions();
-  const {
-    matchFor,
-    workflows,
-    loading: catalogLoading,
-  } = useTransactionWorkflowCatalog();
+  const { isPending } = usePermissions();
+  const accountRow = useOptionalTransactionCreateAccountRow();
+  const { workflows, loading: catalogLoading } =
+    useTransactionWorkflowCatalog();
   const debitId = useWatch({ name: 'debit_account' });
   const creditId = useWatch({ name: 'credit_account' });
   const currencyId = useWatch({ name: 'currency_type' });
+  const transactionTypeId = useWatch({ name: 'transaction_type' });
   const values = useWatch();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const matchInput = useMemo(
-    () => ({
-      debit_account: { code: accountCodeByDocumentId(accounts, debitId) },
-      credit_account: { code: accountCodeByDocumentId(accounts, creditId) },
-      currency_type:
-        typeof currencyId === 'string' && currencyId
-          ? { documentId: currencyId }
-          : null,
-    }),
-    [accounts, creditId, currencyId, debitId],
+    () =>
+      buildTransactionWorkflowMatchInput({
+        accounts,
+        debitAccountDocumentId: debitId,
+        creditAccountDocumentId: creditId,
+        currencyTypeDocumentId: currencyId,
+        transactionTypeDocumentId: transactionTypeId,
+      }),
+    [accounts, creditId, currencyId, debitId, transactionTypeId],
   );
 
+  const createWorkflowResolution = useMemo(
+    () =>
+      resolveCreateWorkflow({
+        activeWorkflow: accountRow?.resolved.activeWorkflow ?? null,
+        workflows,
+        matchInput,
+      }),
+    [accountRow?.resolved.activeWorkflow, matchInput, workflows],
+  );
+
+  const workflow = !isPending ? createWorkflowResolution.workflow : null;
+
   const matchCount =
-    !catalogLoading && !isPending && permissions === 'editor'
-      ? countMatchingWorkflows(workflows, matchInput)
+    !catalogLoading && !isPending
+      ? profileModeMatchCount(workflows, matchInput)
       : 0;
-  const workflow =
-    !isPending && permissions === 'editor' ? matchFor(matchInput) : null;
+
+  const showAmbiguityAlert =
+    !catalogLoading &&
+    !isPending &&
+    !accountRow?.resolved.activeWorkflow &&
+    matchCount > 1;
 
   const inlineTransaction = useMemo(
     () =>
@@ -137,6 +146,7 @@ export function TransactionCreateToolbar({
         const message = strapiErrorMessage(error);
         if (message.includes('transaction-workflow not found')) {
           invalidateTransactionWorkflowCatalog();
+          accountRow?.resetToProfileAfterStaleWorkflow();
         }
         notify(message || translate('app.transactions_convert_error'), {
           type: 'error',
@@ -148,7 +158,7 @@ export function TransactionCreateToolbar({
   return (
     <Toolbar>
       <SaveButton disabled={busy} />
-      {matchCount > 1 ? (
+      {showAmbiguityAlert ? (
         <Alert severity="warning" sx={{ ml: 1, py: 0 }} variant="outlined">
           {translate('app.transactions_convert_ambiguous')}
         </Alert>

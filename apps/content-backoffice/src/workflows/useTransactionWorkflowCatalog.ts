@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePermissions } from 'react-admin';
 
 import { STRAPI_URL } from '../config';
+import { TRANSACTION_WORKFLOW_PREFILL_ROLES } from '../data/accountRowSelection';
 import { fetchPublishedWorkflows } from '../data/transactionWorkflow';
 import {
   pickMatchingWorkflow,
@@ -35,16 +36,30 @@ export function invalidateTransactionWorkflowCatalog(): void {
   cachedWorkflows = null;
 }
 
+function mayLoadWorkflowCatalog(
+  permissions: unknown,
+  isPending: boolean,
+): boolean {
+  if (isPending) return false;
+  return (
+    typeof permissions === 'string' &&
+    (TRANSACTION_WORKFLOW_PREFILL_ROLES as readonly string[]).includes(
+      permissions,
+    )
+  );
+}
+
 export function useTransactionWorkflowCatalog() {
   const { permissions, isPending } = usePermissions();
   const isEditor = !isPending && permissions === 'editor';
+  const canLoadCatalog = mayLoadWorkflowCatalog(permissions, isPending);
   const [workflows, setWorkflows] = useState<WorkflowTemplateHeader[]>(
-    isEditor && cachedWorkflows ? cachedWorkflows : [],
+    canLoadCatalog && cachedWorkflows ? cachedWorkflows : [],
   );
-  const [loading, setLoading] = useState(isEditor && !cachedWorkflows);
+  const [loading, setLoading] = useState(canLoadCatalog && !cachedWorkflows);
 
   useEffect(() => {
-    if (!isEditor) {
+    if (!canLoadCatalog) {
       setWorkflows([]);
       setLoading(false);
       return;
@@ -64,7 +79,7 @@ export function useTransactionWorkflowCatalog() {
     return () => {
       cancelled = true;
     };
-  }, [isEditor]);
+  }, [canLoadCatalog]);
 
   const matchFor = useMemo(
     () => (transaction: TransactionWorkflowMatchInput) =>
@@ -72,5 +87,11 @@ export function useTransactionWorkflowCatalog() {
     [workflows],
   );
 
-  return { workflows, loading, matchFor, isEditor };
+  return {
+    workflows,
+    loading,
+    matchFor,
+    isEditor,
+    canLoadCatalog,
+  };
 }

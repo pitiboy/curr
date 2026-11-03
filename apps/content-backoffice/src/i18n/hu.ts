@@ -98,6 +98,15 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     account_profile_egg_production: 'Tojás — termelés',
     account_profile_egg_internal: 'Tojás — belső továbbosztás',
     account_profile_egg_sale: 'Tojás — eladás',
+    account_profile_group_profiles: 'Profilok',
+    account_profile_group_workflows: 'Ügylet-sablonok',
+    account_profile_workflows_loading: 'Sablonok betöltése…',
+    account_profile_workflow_prefill_incomplete:
+      'A sablon számlakódjai nem egyértelműen találhatók meg — ellenőrizd a számlaválasztókat.',
+    account_profile_workflow_dropped:
+      'A kiválasztott ügylet-sablon már nem illik a megadott számlákra.',
+    account_profile_workflow_chip_currency: 'Pénznem',
+    account_profile_workflow_chip_type: 'Típus',
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',
