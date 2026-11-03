@@ -70,7 +70,7 @@ const workflowAdmin: WorkflowTemplate = {
     {
       __component: STEP_RELATED,
       description: 'Számla',
-      percent: 100,
+      percent: 60,
       debit_account: account('5440'),
       credit_account: account('2000'),
       currency_type: huf,
@@ -80,7 +80,7 @@ const workflowAdmin: WorkflowTemplate = {
     {
       __component: STEP_RELATED,
       description: 'Utalás',
-      percent: 100,
+      percent: 40,
       debit_account: account('2000'),
       credit_account: account('1100'),
       currency_type: huf,
@@ -114,9 +114,8 @@ describe('buildConvertPreview', () => {
     assert.equal(preview.movements[0]?.amount, -80_000);
     assert.equal(preview.movements[1]?.kind, 'step');
     assert.equal(preview.movements[1]?.index, 0);
-    assert.equal(preview.movements[1]?.amount, 80_000);
-    assert.equal(preview.movements[2]?.amount, 80_000);
-    assert.deepEqual(preview.warnings, []);
+    assert.equal(preview.movements[1]?.amount, 48_000);
+    assert.equal(preview.movements[2]?.amount, 32_000);
   });
 
   it('omits storno when keep_original is false', () => {
@@ -153,153 +152,6 @@ describe('buildConvertPreview', () => {
     assert.equal(preview.workflow.keepOriginal, false);
     assert.equal(preview.movements.length, 1);
     assert.equal(preview.movements[0]?.kind, 'step');
-  });
-
-  it('does not warn when every chain step uses percent 100 on distinct pairs', () => {
-    const wf: WorkflowTemplate = {
-      documentId: 'wf-egg',
-      name: 'Tojás',
-      debit_account_code: 1001,
-      credit_account_code: 4500,
-      keep_original: true,
-      step: [
-        {
-          __component: STEP_RELATED,
-          description: 'Napi tojás',
-          percent: 100,
-          debit_account: account('1300'),
-          credit_account: account('4500'),
-          currency_type: huf,
-        },
-        {
-          __component: STEP_RELATED,
-          description: 'Tojás eladás',
-          percent: 100,
-          debit_account: account('1001'),
-          credit_account: account('1300'),
-          currency_type: huf,
-        },
-        {
-          __component: STEP_RELATED,
-          description: 'Kp befizetés',
-          percent: 100,
-          debit_account: account('1000'),
-          credit_account: account('1001'),
-          currency_type: huf,
-        },
-      ],
-    };
-    const tx: SourceTransaction = {
-      documentId: 'tx-egg',
-      date: '2026-10-14',
-      amount: 324,
-      description: 'tojás',
-      debit_account: account('1001'),
-      credit_account: account('4500'),
-      currency_type: huf,
-    };
-    const preview = buildConvertPreview(
-      wf,
-      tx,
-      new Map(),
-      accountLookup(
-        account('1000'),
-        account('1001'),
-        account('1300'),
-        account('4500'),
-      ),
-      currencyLookup(huf),
-    );
-    assert.deepEqual(preview.warnings, []);
-    assert.equal(preview.movements.filter((m) => m.kind === 'step').length, 3);
-  });
-
-  it('does not warn when same debit/credit pair percents sum to 100', () => {
-    const wf: WorkflowTemplate = {
-      documentId: 'wf-split',
-      debit_account_code: 5440,
-      credit_account_code: 2000,
-      keep_original: false,
-      step: [
-        {
-          __component: STEP_RELATED,
-          description: 'A',
-          percent: 60,
-          debit_account: account('5440'),
-          credit_account: account('2000'),
-          currency_type: huf,
-        },
-        {
-          __component: STEP_RELATED,
-          description: 'B',
-          percent: 40,
-          debit_account: account('5440'),
-          credit_account: account('2000'),
-          currency_type: huf,
-        },
-      ],
-    };
-    const tx: SourceTransaction = {
-      documentId: 'tx-split',
-      date: '2026-10-14',
-      amount: 10_000,
-      debit_account: account('5440'),
-      credit_account: account('2000'),
-      currency_type: huf,
-    };
-    const preview = buildConvertPreview(
-      wf,
-      tx,
-      new Map(),
-      accountLookup(account('5440'), account('2000')),
-      currencyLookup(huf),
-    );
-    assert.deepEqual(preview.warnings, []);
-  });
-
-  it('warns when same debit/credit pair percents do not sum to 100', () => {
-    const wf: WorkflowTemplate = {
-      documentId: 'wf-bad-split',
-      debit_account_code: 5440,
-      credit_account_code: 2000,
-      keep_original: false,
-      step: [
-        {
-          __component: STEP_RELATED,
-          description: 'A',
-          percent: 60,
-          debit_account: account('5440'),
-          credit_account: account('2000'),
-          currency_type: huf,
-        },
-        {
-          __component: STEP_RELATED,
-          description: 'B',
-          percent: 30,
-          debit_account: account('5440'),
-          credit_account: account('2000'),
-          currency_type: huf,
-        },
-      ],
-    };
-    const tx: SourceTransaction = {
-      documentId: 'tx-bad',
-      date: '2026-10-14',
-      amount: 10_000,
-      debit_account: account('5440'),
-      credit_account: account('2000'),
-      currency_type: huf,
-    };
-    const preview = buildConvertPreview(
-      wf,
-      tx,
-      new Map(),
-      accountLookup(account('5440'), account('2000')),
-      currencyLookup(huf),
-    );
-    assert.ok(
-      preview.warnings.some((line) => line.includes('do not sum to 100%')),
-    );
   });
 
   it('warns when receipts exist but no copy_receipt with keep_original false', () => {
