@@ -61,16 +61,18 @@ function renderMessageArrow(
     );
   }
 
-  const x1 = from.centerX;
-  const x2 = to.centerX;
-  const leftToRight = x1 < x2;
-  const marker = leftToRight ? 'url(#seq-arrow)' : 'url(#seq-arrow-reverse)';
+  // Debit → credit; arrowhead always at credit (to) lifeline.
+  const xFrom = from.centerX;
+  const xTo = to.centerX;
   const lineY = y;
+  const tipGap = 6;
+  const x1 = xFrom;
+  const x2 = xTo > xFrom ? xTo - tipGap : xTo + tipGap;
 
   return (
     <g key={message.id}>
       <line
-        markerEnd={marker}
+        markerEnd="url(#seq-arrow)"
         stroke={stroke}
         strokeWidth={1.75}
         x1={x1}
@@ -83,7 +85,7 @@ function renderMessageArrow(
         fontSize={11}
         fontWeight={600}
         textAnchor="middle"
-        x={(x1 + x2) / 2}
+        x={(xFrom + xTo) / 2}
         y={lineY - 8}
       >
         <title>{message.label}</title>
@@ -94,7 +96,7 @@ function renderMessageArrow(
           fill="#666"
           fontSize={10}
           textAnchor="middle"
-          x={(x1 + x2) / 2}
+          x={(xFrom + xTo) / 2}
           y={lineY + 14}
         >
           <title>{message.description}</title>
@@ -145,25 +147,15 @@ export function ConvertPreviewDiagram({
         <defs>
           <marker
             id="seq-arrow"
-            markerHeight="8"
-            markerUnits="strokeWidth"
-            markerWidth="8"
+            markerHeight="10"
+            markerUnits="userSpaceOnUse"
+            markerWidth="10"
             orient="auto"
-            refX="7"
-            refY="3"
+            refX="10"
+            refY="5"
+            viewBox="0 0 10 10"
           >
-            <path d="M0,0 L0,6 L7,3 z" fill="context-stroke" />
-          </marker>
-          <marker
-            id="seq-arrow-reverse"
-            markerHeight="8"
-            markerUnits="strokeWidth"
-            markerWidth="8"
-            orient="auto"
-            refX="0"
-            refY="3"
-          >
-            <path d="M7,0 L7,6 L0,3 z" fill="context-stroke" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
           </marker>
         </defs>
 
