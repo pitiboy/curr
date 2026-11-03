@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { ConvertPreview } from './convertPreview';
 import {
-  buildMovementSequence,
   formatSequenceAmount,
+  layoutSequenceDiagram,
 } from './convertPreviewGraph';
 
 const previewFixture: ConvertPreview = {
@@ -49,33 +49,64 @@ const previewFixture: ConvertPreview = {
   warnings: [],
 };
 
-describe('buildMovementSequence', () => {
-  it('orders original then storno then steps', () => {
-    const frames = buildMovementSequence(previewFixture);
-    expect(frames.map((frame) => frame.kind)).toEqual([
+describe('layoutSequenceDiagram', () => {
+  it('orders messages original then storno then step', () => {
+    const layout = layoutSequenceDiagram(previewFixture);
+    expect(layout.messages.map((row) => row.kind)).toEqual([
       'original',
       'storno',
       'step',
     ]);
-    expect(frames.map((frame) => frame.order)).toEqual([1, 2, 3]);
   });
 
-  it('marks member ledger accounts', () => {
+  it('places participants left-to-right by first appearance', () => {
+    const layout = layoutSequenceDiagram(previewFixture);
+    expect(layout.participants.map((row) => row.code)).toEqual([
+      '5440',
+      '2000',
+      '1100',
+    ]);
+    for (let index = 1; index < layout.participants.length; index += 1) {
+      expect(layout.participants[index]!.x).toBeGreaterThan(
+        layout.participants[index - 1]!.x,
+      );
+    }
+  });
+
+  it('uses member pastel fill for 1101/1001', () => {
     const preview: ConvertPreview = {
       ...previewFixture,
+      movements: [],
       original: {
         ...previewFixture.original,
         debit: { documentId: 'm', code: '1101', name: 'Tag' },
       },
-      movements: [],
     };
-    const frames = buildMovementSequence(preview);
-    expect(frames[0]?.debit.isMember).toBe(true);
+    const layout = layoutSequenceDiagram(preview);
+    expect(layout.participants[0]?.isMember).toBe(true);
+    expect(layout.participants[0]?.headerFill).toContain('FFE0B2');
   });
 
-  it('rotates step colors by index', () => {
-    const frames = buildMovementSequence(previewFixture);
-    expect(frames[2]?.stepColorKey).toBe('primary');
+  it('detects self-loop messages', () => {
+    const preview: ConvertPreview = {
+      ...previewFixture,
+      movements: [
+        {
+          kind: 'step',
+          index: 0,
+          description: 'loop',
+          amount: 1,
+          currency: { documentId: 'cur', code: 'HUF', name: null },
+          debit: { documentId: 'same', code: '1001', name: null },
+          credit: { documentId: 'same', code: '1001', name: null },
+          percent: 100,
+          copyReceipt: false,
+          organizationDocumentId: null,
+        },
+      ],
+    };
+    const layout = layoutSequenceDiagram(preview);
+    expect(layout.messages.at(-1)?.selfLoop).toBe(true);
   });
 });
 

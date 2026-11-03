@@ -35,7 +35,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_legend:
       'Arrow direction: debit account → credit account (ledger flow).',
     transactions_convert_preview_sequence_legend:
-      'Timeline top to bottom: original row, then storno and steps in convert order. Arrows show debit → credit.',
+      'Sequence diagram: accounts as headers with lifelines; messages top-to-bottom — arrow debit → credit (ledger flow).',
     transactions_convert_preview_diagram_aria: 'Account movements: %{summary}',
     transactions_convert_preview_kind: 'Kind',
     transactions_convert_preview_kind_original: 'Original',

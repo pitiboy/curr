@@ -1,6 +1,6 @@
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import { Button, Stack } from '@mui/material';
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNotify, useRefresh, useTranslate } from 'react-admin';
 
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
@@ -8,13 +8,8 @@ import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
+import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
-
-const ConvertConfirmDialog = lazy(() =>
-  import('./ConvertConfirmDialog').then((module) => ({
-    default: module.ConvertConfirmDialog,
-  })),
-);
 
 export function TransactionConvertButton({
   documentId,
@@ -87,16 +82,14 @@ export function TransactionConvertButton({
         </Button>
       </Stack>
       {open ? (
-        <Suspense fallback={null}>
-          <ConvertConfirmDialog
-            loading={busy}
-            open={open}
-            previewInput={previewInput}
-            workflow={workflow}
-            onClose={() => !busy && setOpen(false)}
-            onConfirm={onConfirm}
-          />
-        </Suspense>
+        <ConvertConfirmDialog
+          loading={busy}
+          open={open}
+          previewInput={previewInput}
+          workflow={workflow}
+          onClose={() => !busy && setOpen(false)}
+          onConfirm={onConfirm}
+        />
       ) : null}
     </>
   );

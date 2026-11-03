@@ -1,5 +1,5 @@
 import { Alert, Button, Stack, Toolbar } from '@mui/material';
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useWatch } from 'react-hook-form';
 import {
   SaveButton,
@@ -24,13 +24,8 @@ import {
 import type { ReceiptCardValue } from './ReceiptFields';
 import { inlinePreviewFromCreateForm } from './convertPreviewInput';
 import { transactionFormErrors } from './transactionForm';
+import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
-
-const ConvertConfirmDialog = lazy(() =>
-  import('./ConvertConfirmDialog').then((module) => ({
-    default: module.ConvertConfirmDialog,
-  })),
-);
 
 /** ReferenceInput stores account documentId; match uses ledger codes from the catalog. */
 function accountCodeByDocumentId(
@@ -169,17 +164,15 @@ export function TransactionCreateToolbar({
             {translate('app.transactions_convert_save')}
           </Button>
           {open ? (
-            <Suspense fallback={null}>
-              <ConvertConfirmDialog
-                confirmLabelKey="app.transactions_convert_save"
-                loading={busy}
-                open={open}
-                previewInput={previewInput}
-                workflow={workflow}
-                onClose={() => !busy && setOpen(false)}
-                onConfirm={onSaveAndConvert}
-              />
-            </Suspense>
+            <ConvertConfirmDialog
+              confirmLabelKey="app.transactions_convert_save"
+              loading={busy}
+              open={open}
+              previewInput={previewInput}
+              workflow={workflow}
+              onClose={() => !busy && setOpen(false)}
+              onConfirm={onSaveAndConvert}
+            />
           ) : null}
         </Stack>
       ) : null}

@@ -1,185 +1,107 @@
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import {
-  Box,
-  Chip,
-  Paper,
-  Stack,
-  Typography,
-  useTheme,
-  type Theme,
-} from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import { useTranslate } from 'react-admin';
 
 import type { ConvertPreview } from '../../data/convertPreview';
 import {
-  buildMovementSequence,
-  formatSequenceAmount,
+  layoutSequenceDiagram,
   movementSequenceAriaSummary,
-  type MovementSequenceFrame,
-  type MovementSequenceKind,
-  type SequenceStepColorKey,
+  SEQ_HEADER_HEIGHT,
+  SEQ_MESSAGE_ROW_HEIGHT,
+  SEQ_PADDING_Y,
+  SEQ_SELF_LOOP_WIDTH,
+  type SequenceMessage,
+  type SequenceParticipant,
 } from '../../data/convertPreviewGraph';
 
-function paletteColor(theme: Theme, key: SequenceStepColorKey): string {
-  return theme.palette[key].main;
+function messageStroke(
+  kind: SequenceMessage['kind'],
+  themeStroke: string,
+  themeInfo: string,
+  themeError: string,
+): string {
+  if (kind === 'original') return themeInfo;
+  if (kind === 'storno') return themeError;
+  return themeStroke;
 }
 
-function kindLabelKey(kind: MovementSequenceKind): string {
-  if (kind === 'original') return 'app.transactions_convert_preview_kind_original';
-  if (kind === 'storno') return 'app.transactions_convert_preview_kind_storno';
-  return 'app.transactions_convert_preview_kind_step';
-}
+function renderMessageArrow(
+  message: SequenceMessage,
+  participants: SequenceParticipant[],
+  stroke: string,
+) {
+  const from = participants.find((row) => row.id === message.fromId);
+  const to = participants.find((row) => row.id === message.toId);
+  if (!from || !to) return null;
 
-function frameAccent(theme: Theme, frame: MovementSequenceFrame): string {
-  if (frame.kind === 'original') return theme.palette.info.main;
-  if (frame.kind === 'storno') return theme.palette.error.main;
-  return paletteColor(theme, frame.stepColorKey);
-}
+  const y = message.y;
 
-function AccountChip({
-  account,
-  side,
-}: {
-  account: MovementSequenceFrame['debit'];
-  side: 'debit' | 'credit';
-}) {
-  const theme = useTheme();
-  const translate = useTranslate();
-  const member = account.isMember;
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        px: 1.5,
-        py: 1,
-        minWidth: { xs: '7rem', sm: '9rem' },
-        flex: '1 1 0',
-        border: 2,
-        borderColor: member ? theme.palette.warning.main : 'divider',
-        bgcolor: member ? theme.palette.warning.light : 'background.paper',
-      }}
-      variant="outlined"
-    >
-      <Typography fontWeight={700} variant="body2">
-        {account.code}
-      </Typography>
-      {account.name ? (
-        <Typography color="text.secondary" variant="caption">
-          {account.name}
-        </Typography>
-      ) : null}
-      <Typography color="text.secondary" display="block" variant="caption">
-        {side === 'debit'
-          ? translate('app.transactions_convert_preview_debit')
-          : translate('app.transactions_convert_preview_credit')}
-      </Typography>
-    </Paper>
-  );
-}
-
-function SequenceFrameRow({
-  frame,
-  isLast,
-}: {
-  frame: MovementSequenceFrame;
-  isLast: boolean;
-}) {
-  const theme = useTheme();
-  const translate = useTranslate();
-  const accent = frameAccent(theme, frame);
-  const amountLabel = formatSequenceAmount(frame.amount, frame.currencyCode);
-
-  return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'stretch' }}>
-      <Stack
-        sx={{
-          alignItems: 'center',
-          width: 40,
-          flexShrink: 0,
-          pt: 1,
-        }}
-      >
-        <Box
-          sx={{
-            width: 14,
-            height: 14,
-            borderRadius: '50%',
-            bgcolor: accent,
-            boxShadow: `0 0 0 3px ${accent}33`,
-          }}
+  if (message.selfLoop) {
+    const loopX = from.centerX + SEQ_SELF_LOOP_WIDTH;
+    return (
+      <g key={message.id}>
+        <path
+          d={`M ${from.centerX} ${y} H ${loopX} V ${y - 18} H ${from.centerX + 8}`}
+          fill="none"
+          markerEnd="url(#seq-arrow)"
+          stroke={stroke}
+          strokeWidth={1.75}
         />
-        {!isLast ? (
-          <Box
-            sx={{
-              flex: 1,
-              width: 3,
-              minHeight: 24,
-              mt: 0.5,
-              borderRadius: 2,
-              bgcolor: `${accent}55`,
-            }}
-          />
-        ) : null}
-      </Stack>
-      <Paper
-        elevation={0}
-        sx={{
-          flex: 1,
-          mb: isLast ? 0 : 2,
-          p: 1.5,
-          borderLeft: 4,
-          borderColor: accent,
-          bgcolor: `${accent}0d`,
-        }}
-        variant="outlined"
-      >
-        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
-          <Chip
-            label={`${frame.order}. ${translate(kindLabelKey(frame.kind))}${
-              frame.kind === 'step' && frame.stepIndex != null
-                ? ` #${frame.stepIndex + 1}`
-                : ''
-            }`}
-            size="small"
-            sx={{
-              bgcolor: accent,
-              color: theme.palette.getContrastText(accent),
-              fontWeight: 600,
-            }}
-          />
-          {frame.percent != null ? (
-            <Chip
-              label={`${frame.percent}%`}
-              size="small"
-              variant="outlined"
-            />
-          ) : null}
-        </Stack>
-        {frame.description ? (
-          <Typography sx={{ mb: 1.25 }} variant="body2">
-            {frame.description}
-          </Typography>
-        ) : null}
-        <Stack
-          alignItems="center"
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1}
+        <text
+          fill={stroke}
+          fontSize={11}
+          fontWeight={600}
+          textAnchor="middle"
+          x={(from.centerX + loopX) / 2}
+          y={y - 22}
         >
-          <AccountChip account={frame.debit} side="debit" />
-          <Stack alignItems="center" spacing={0.25} sx={{ px: 0.5 }}>
-            <ArrowForwardIcon color="action" fontSize="small" />
-            <Chip
-              color={frame.kind === 'storno' ? 'error' : 'default'}
-              label={amountLabel}
-              size="small"
-              sx={{ fontWeight: 700 }}
-              variant={frame.kind === 'storno' ? 'filled' : 'outlined'}
-            />
-          </Stack>
-          <AccountChip account={frame.credit} side="credit" />
-        </Stack>
-      </Paper>
-    </Stack>
+          <title>{message.label}</title>
+          {message.label}
+        </text>
+      </g>
+    );
+  }
+
+  const x1 = from.centerX;
+  const x2 = to.centerX;
+  const leftToRight = x1 < x2;
+  const marker = leftToRight ? 'url(#seq-arrow)' : 'url(#seq-arrow-reverse)';
+  const lineY = y;
+
+  return (
+    <g key={message.id}>
+      <line
+        markerEnd={marker}
+        stroke={stroke}
+        strokeWidth={1.75}
+        x1={x1}
+        x2={x2}
+        y1={lineY}
+        y2={lineY}
+      />
+      <text
+        fill={stroke}
+        fontSize={11}
+        fontWeight={600}
+        textAnchor="middle"
+        x={(x1 + x2) / 2}
+        y={lineY - 8}
+      >
+        <title>{message.label}</title>
+        {message.label}
+      </text>
+      {message.description ? (
+        <text
+          fill="#666"
+          fontSize={10}
+          textAnchor="middle"
+          x={(x1 + x2) / 2}
+          y={lineY + 14}
+        >
+          <title>{message.description}</title>
+          {message.description}
+        </text>
+      ) : null}
+    </g>
   );
 }
 
@@ -188,11 +110,20 @@ export function ConvertPreviewDiagram({
 }: {
   preview: ConvertPreview;
 }) {
+  const theme = useTheme();
   const translate = useTranslate();
-  const frames = buildMovementSequence(preview);
+  const layout = layoutSequenceDiagram(preview);
+  const lifelineBottom =
+    SEQ_HEADER_HEIGHT +
+    SEQ_PADDING_Y +
+    layout.messages.length * SEQ_MESSAGE_ROW_HEIGHT;
+
+  const strokeDefault = theme.palette.text.primary;
+  const strokeInfo = theme.palette.info.main;
+  const strokeError = theme.palette.error.main;
 
   return (
-    <Box sx={{ mt: 1 }}>
+    <Box sx={{ mt: 1, overflowX: 'auto' }}>
       <Typography color="text.secondary" variant="caption">
         {translate('app.transactions_convert_preview_sequence_legend')}
       </Typography>
@@ -200,17 +131,96 @@ export function ConvertPreviewDiagram({
         aria-label={translate('app.transactions_convert_preview_diagram_aria', {
           summary: movementSequenceAriaSummary(preview),
         })}
-        role="list"
-        sx={{ mt: 1.5 }}
+        component="svg"
+        role="img"
+        sx={{
+          display: 'block',
+          minWidth: layout.width,
+          width: '100%',
+          maxWidth: layout.width,
+          mt: 1,
+        }}
+        viewBox={`0 0 ${layout.width} ${layout.height}`}
       >
-        {frames.map((frame, index) => (
-          <Box key={frame.id} role="listitem">
-            <SequenceFrameRow
-              frame={frame}
-              isLast={index === frames.length - 1}
+        <defs>
+          <marker
+            id="seq-arrow"
+            markerHeight="8"
+            markerUnits="strokeWidth"
+            markerWidth="8"
+            orient="auto"
+            refX="7"
+            refY="3"
+          >
+            <path d="M0,0 L0,6 L7,3 z" fill="context-stroke" />
+          </marker>
+          <marker
+            id="seq-arrow-reverse"
+            markerHeight="8"
+            markerUnits="strokeWidth"
+            markerWidth="8"
+            orient="auto"
+            refX="0"
+            refY="3"
+          >
+            <path d="M7,0 L7,6 L0,3 z" fill="context-stroke" />
+          </marker>
+        </defs>
+
+        {layout.participants.map((participant) => (
+          <g key={participant.id}>
+            <rect
+              fill={participant.headerFill}
+              height={SEQ_HEADER_HEIGHT - 4}
+              rx={8}
+              stroke={participant.isMember ? '#FFB74D' : '#B0BEC5'}
+              strokeWidth={1}
+              width={participant.width}
+              x={participant.x}
+              y={2}
             />
-          </Box>
+            <text
+              fontSize={13}
+              fontWeight={700}
+              textAnchor="middle"
+              x={participant.centerX}
+              y={22}
+            >
+              {participant.code}
+            </text>
+            {participant.name ? (
+              <text
+                fill="#546E7A"
+                fontSize={10}
+                textAnchor="middle"
+                x={participant.centerX}
+                y={38}
+              >
+                <title>{participant.name}</title>
+                {participant.name.length > 22
+                  ? `${participant.name.slice(0, 21)}…`
+                  : participant.name}
+              </text>
+            ) : null}
+            <line
+              stroke="#CFD8DC"
+              strokeDasharray="4 4"
+              strokeWidth={1}
+              x1={participant.centerX}
+              x2={participant.centerX}
+              y1={SEQ_HEADER_HEIGHT}
+              y2={lifelineBottom}
+            />
+          </g>
         ))}
+
+        {layout.messages.map((message) =>
+          renderMessageArrow(
+            message,
+            layout.participants,
+            messageStroke(message.kind, strokeDefault, strokeInfo, strokeError),
+          ),
+        )}
       </Box>
     </Box>
   );

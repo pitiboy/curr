@@ -35,7 +35,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_legend:
       'A nyíl iránya: terhelési számla → követelési számla (könyvelési irány).',
     transactions_convert_preview_sequence_legend:
-      'Idővonal felülről lefelé: eredeti sor, majd storno és lépések a kifejtés sorrendjében. A nyíl a terhelés → követelés irányát mutatja.',
+      'Sequence diagram: a számlák felül, szaggatott lifeline; az üzenetek felülről lefelé — nyíl a terhelés → követelés felé (könyvelési irány).',
     transactions_convert_preview_diagram_aria:
       'Számlák közti mozgás: %{summary}',
     transactions_convert_preview_kind: 'Típus',

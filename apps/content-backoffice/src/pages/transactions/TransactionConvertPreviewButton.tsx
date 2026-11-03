@@ -1,16 +1,11 @@
 import PreviewIcon from '@mui/icons-material/Preview';
-import { Button, CircularProgress, Tooltip } from '@mui/material';
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { Button, Tooltip } from '@mui/material';
+import { useMemo, useState } from 'react';
 import { useTranslate } from 'react-admin';
 
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
-
-const ConvertPreviewDialog = lazy(() =>
-  import('./ConvertPreviewDialog').then((module) => ({
-    default: module.ConvertPreviewDialog,
-  })),
-);
+import { ConvertPreviewDialog } from './ConvertPreviewDialog';
 
 export function TransactionConvertPreviewButton({
   workflow,
@@ -76,16 +71,12 @@ export function TransactionConvertPreviewButton({
         button
       )}
       {open && input ? (
-        <Suspense
-          fallback={<CircularProgress size={24} sx={{ display: 'none' }} />}
-        >
-          <ConvertPreviewDialog
-            open={open}
-            previewInput={input}
-            workflow={workflow}
-            onClose={() => setOpen(false)}
-          />
-        </Suspense>
+        <ConvertPreviewDialog
+          open={open}
+          previewInput={input}
+          workflow={workflow}
+          onClose={() => setOpen(false)}
+        />
       ) : null}
     </>
   );
