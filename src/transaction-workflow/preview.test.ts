@@ -13,6 +13,7 @@ import {
 } from './convert.ts';
 import {
   buildConvertPreview,
+  mergeCurrencyLookupRow,
   previewForTransaction,
   type AccountMetaLookup,
   type CurrencyMetaLookup,
@@ -90,6 +91,26 @@ const workflowAdmin: WorkflowTemplate = {
   ],
 };
 
+describe('mergeCurrencyLookupRow', () => {
+  it('keeps an existing code when a later row only has documentId', () => {
+    const merged = mergeCurrencyLookupRow(
+      { code: 'EGG', name: 'tojás termelés' },
+      { code: null, name: null },
+    );
+    assert.equal(merged.code, 'EGG');
+    assert.equal(merged.name, 'tojás termelés');
+  });
+
+  it('fills a missing code from a hydrated row', () => {
+    const merged = mergeCurrencyLookupRow(
+      { code: null, name: null },
+      { code: 'HUF', name: 'Forint' },
+    );
+    assert.equal(merged.code, 'HUF');
+    assert.equal(merged.name, 'Forint');
+  });
+});
+
 describe('buildConvertPreview', () => {
   it('includes storno then steps when keep_original is true', () => {
     const tx: SourceTransaction = {
@@ -116,6 +137,72 @@ describe('buildConvertPreview', () => {
     assert.equal(preview.movements[1]?.index, 0);
     assert.equal(preview.movements[1]?.amount, 48_000);
     assert.equal(preview.movements[2]?.amount, 32_000);
+  });
+
+  it('shows EGG on original and EGG steps after lookup hydration', () => {
+    const egg = { documentId: 'cur-egg', code: 'EGG', name: 'tojás termelés' };
+    const huf = { documentId: 'cur-huf', code: 'HUF', name: 'Forint' };
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-egg',
+      debit_account_code: 1001,
+      credit_account_code: 4500,
+      keep_original: true,
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: 'Napi tojás',
+          percent: 100,
+          debit_account: account('1300'),
+          credit_account: account('4500'),
+          currency_type: { documentId: egg.documentId },
+        },
+        {
+          __component: STEP_RELATED,
+          description: 'Tojás eladás (kp befizetés)',
+          percent: 100,
+          debit_account: account('1000'),
+          credit_account: account('1001'),
+          currency_type: { documentId: huf.documentId },
+        },
+      ],
+    };
+    const tx: SourceTransaction = {
+      documentId: 'tx-egg',
+      date: '2026-11-03',
+      amount: 111,
+      description: 'sfsdf',
+      debit_account: account('1001'),
+      credit_account: account('4500'),
+      currency_type: { documentId: egg.documentId },
+    };
+    const lookup = new Map<string, { code: string | null; name: string | null }>(
+      [
+        [egg.documentId, { code: null, name: null }],
+        [huf.documentId, { code: 'HUF', name: 'Forint' }],
+      ],
+    );
+    lookup.set(
+      egg.documentId,
+      mergeCurrencyLookupRow(lookup.get(egg.documentId), egg),
+    );
+
+    const preview = buildConvertPreview(
+      wf,
+      tx,
+      new Map(),
+      accountLookup(
+        account('1001'),
+        account('4500'),
+        account('1300'),
+        account('1000'),
+      ),
+      lookup,
+    );
+
+    assert.equal(preview.original.currency.code, 'EGG');
+    assert.equal(preview.movements[0]?.currency.code, 'EGG');
+    assert.equal(preview.movements[1]?.currency.code, 'EGG');
+    assert.equal(preview.movements[2]?.currency.code, 'HUF');
   });
 
   it('omits storno when keep_original is false', () => {

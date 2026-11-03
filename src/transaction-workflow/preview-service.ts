@@ -14,6 +14,7 @@ import {
   type WorkflowTemplate,
 } from './convert';
 import {
+  mergeCurrencyLookupRow,
   PREVIEW_INLINE_DOCUMENT_ID,
   previewForTransaction,
   type ConvertPreview,
@@ -143,11 +144,7 @@ function ingestCurrency(
   row: CurrencyRow | null | undefined,
 ): void {
   if (!row?.documentId) return;
-  const existing = map.get(row.documentId);
-  map.set(row.documentId, {
-    code: row.code ?? existing?.code ?? null,
-    name: row.name ?? existing?.name ?? null,
-  });
+  map.set(row.documentId, mergeCurrencyLookupRow(map.get(row.documentId), row));
 }
 
 function collectCurrencyDocumentIds(
