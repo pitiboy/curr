@@ -12,17 +12,19 @@ type ListResponse<T> = { data?: T[] };
 
 type OrganizationRow = { documentId?: string; name?: string | null };
 
+type MembershipMemberRow = {
+  documentId?: string;
+  name?: string | null;
+  account?: { documentId?: string; code?: string | null } | null;
+  private_account?: { documentId?: string; code?: string | null } | null;
+};
+
 type MembershipRow = {
   documentId?: string;
   valid_from?: string | null;
   valid_to?: string | null;
   rules?: unknown;
-  member?: {
-    documentId?: string;
-    name?: string | null;
-    account?: { documentId?: string; code?: string | null } | null;
-    private_account?: { documentId?: string; code?: string | null } | null;
-  } | null;
+  members?: MembershipMemberRow[] | null;
   membership_type?: { name?: string | null; rules?: unknown } | null;
 };
 
@@ -67,7 +69,7 @@ export async function loadDistributionMembers(
       organization: { documentId: { $eq: org.documentId } },
     },
     populate: {
-      member: {
+      members: {
         populate: {
           account: { fields: ['documentId', 'code'] },
           private_account: { fields: ['documentId', 'code'] },
@@ -75,7 +77,7 @@ export async function loadDistributionMembers(
       },
       membership_type: { fields: ['name', 'rules'] },
     },
-    sort: ['member.name:asc'],
+    sort: ['name:asc'],
     pagination: { page: 1, pageSize: 200 },
   });
   const { json } = (await httpClient(
@@ -83,24 +85,31 @@ export async function loadDistributionMembers(
   )) as { json: ListResponse<MembershipRow> };
 
   const members: DistributionMember[] = [];
+  const seenMemberIds = new Set<string>();
   for (const row of json.data ?? []) {
-    const member = row.member;
-    if (!member?.documentId || !member.name) {
-      continue;
-    }
     if (!membershipValidOnDate(row.valid_from, row.valid_to, isoDate)) {
       continue;
     }
-    members.push({
-      memberId: member.documentId,
-      memberName: member.name,
-      membershipTypeName: row.membership_type?.name ?? null,
-      membershipRules: row.rules,
-      membershipTypeRules: row.membership_type?.rules,
-      account: member.account ?? null,
-      private_account: member.private_account ?? null,
-    });
+    for (const member of row.members ?? []) {
+      if (!member?.documentId || !member.name) {
+        continue;
+      }
+      if (seenMemberIds.has(member.documentId)) {
+        continue;
+      }
+      seenMemberIds.add(member.documentId);
+      members.push({
+        memberId: member.documentId,
+        memberName: member.name,
+        membershipTypeName: row.membership_type?.name ?? null,
+        membershipRules: row.rules,
+        membershipTypeRules: row.membership_type?.rules,
+        account: member.account ?? null,
+        private_account: member.private_account ?? null,
+      });
+    }
   }
+  members.sort((a, b) => a.memberName.localeCompare(b.memberName, 'hu'));
   return members;
 }
 

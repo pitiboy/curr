@@ -9,10 +9,10 @@ Optional **distribution** (second wizard step) allocates the day’s total quant
 Members are **not** linked to organizations directly. The **`membership`** collection connects them:
 
 - `membership.organization` — which org (for eggs: `Tyúktartás`, constant `DISTRIBUTION_MEMBER_ORG` in `configs/eggDailyEntry.config.ts`)
-- `membership.member` — the member record (with `account` / `private_account`)
+- `membership.members` — one or more member records (many-to-many; each with `account` / `private_account`)
 - `membership.membership_type` — role/type; default egg rules live on `membership_type.rules`, overridable on `membership.rules`
 
-Distribution lists memberships valid on the form date (`valid_from` / `valid_to`).
+One membership row can cover a whole group (shared rules). Distribution expands each membership’s `members`, dedupes by member id, and keeps rows valid on the form date (`valid_from` / `valid_to`).
 
 ## Add a new production-only workflow
 

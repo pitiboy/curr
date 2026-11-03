@@ -62,12 +62,12 @@
     },
     "memberships": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToMany",
       "target": "api::membership.membership",
-      "mappedBy": "member",
+      "mappedBy": "members",
       "metadatas": {
         "label": "Tagságok",
-        "description": "A tag tagságai különböző szervezetekben"
+        "description": "A tag tagságai (csoportok) különböző szervezetekben"
       }
     }
   }

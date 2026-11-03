@@ -1,8 +1,7 @@
-import { Button, Toolbar } from '@mui/material';
+import { Alert, Button, Stack, Toolbar } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useWatch } from 'react-hook-form';
 import {
-  Confirm,
   SaveButton,
   useNotify,
   usePermissions,
@@ -11,17 +10,22 @@ import {
 } from 'react-admin';
 
 import type { AccountChoice } from '../../data/accountCodes';
+import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import {
   createNewTransactionDraft,
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
+import { countMatchingWorkflows } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
 } from '../../workflows/useTransactionWorkflowCatalog';
 import type { ReceiptCardValue } from './ReceiptFields';
+import { inlinePreviewFromCreateForm } from './convertPreviewInput';
 import { transactionFormErrors } from './transactionForm';
+import { ConvertConfirmDialog } from './ConvertConfirmDialog';
+import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 
 /** ReferenceInput stores account documentId; match uses ledger codes from the catalog. */
 function accountCodeByDocumentId(
@@ -47,7 +51,11 @@ export function TransactionCreateToolbar({
   const notify = useNotify();
   const redirect = useRedirect();
   const { permissions, isPending } = usePermissions();
-  const { matchFor } = useTransactionWorkflowCatalog();
+  const {
+    matchFor,
+    workflows,
+    loading: catalogLoading,
+  } = useTransactionWorkflowCatalog();
   const debitId = useWatch({ name: 'debit_account' });
   const creditId = useWatch({ name: 'credit_account' });
   const currencyId = useWatch({ name: 'currency_type' });
@@ -67,8 +75,29 @@ export function TransactionCreateToolbar({
     [accounts, creditId, currencyId, debitId],
   );
 
+  const matchCount =
+    !catalogLoading && !isPending && permissions === 'editor'
+      ? countMatchingWorkflows(workflows, matchInput)
+      : 0;
   const workflow =
     !isPending && permissions === 'editor' ? matchFor(matchInput) : null;
+
+  const inlineTransaction = useMemo(
+    () =>
+      inlinePreviewFromCreateForm(
+        (values ?? {}) as Record<string, unknown>,
+        receiptCards,
+      ),
+    [receiptCards, values],
+  );
+
+  const previewInput = useMemo<ConvertPreviewRequest | null>(() => {
+    if (!workflow || !inlineTransaction) return null;
+    return {
+      workflowDocumentId: workflow.documentId,
+      transaction: inlineTransaction,
+    };
+  }, [inlineTransaction, workflow]);
 
   const onSaveAndConvert = () => {
     if (!workflow || busy) return;
@@ -96,7 +125,6 @@ export function TransactionCreateToolbar({
       .then(() => {
         notify('app.transactions_convert_done', { type: 'success' });
         setOpen(false);
-        // Bypass leave guard before list redirect (custom create, not SaveButton).
         onSaveSucceeded();
         redirect('list', 'transactions');
       })
@@ -115,8 +143,19 @@ export function TransactionCreateToolbar({
   return (
     <Toolbar>
       <SaveButton disabled={busy} />
+      {matchCount > 1 ? (
+        <Alert severity="warning" sx={{ ml: 1, py: 0 }} variant="outlined">
+          {translate('app.transactions_convert_ambiguous')}
+        </Alert>
+      ) : null}
       {workflow ? (
-        <>
+        <Stack direction="row" spacing={1} sx={{ ml: 1 }}>
+          <TransactionConvertPreviewButton
+            disabled={!previewInput}
+            disabledReasonKey="app.transactions_convert_preview_disabled"
+            previewInput={previewInput}
+            workflow={workflow}
+          />
           <Button
             disabled={busy}
             variant="contained"
@@ -124,18 +163,18 @@ export function TransactionCreateToolbar({
           >
             {translate('app.transactions_convert_save')}
           </Button>
-          <Confirm
-            confirm={translate('app.transactions_convert_confirm')}
-            content={translate('app.transactions_convert_body')}
-            isOpen={open}
-            loading={busy}
-            title={translate('app.transactions_convert_title', {
-              name: workflow.name ?? workflow.documentId,
-            })}
-            onClose={() => !busy && setOpen(false)}
-            onConfirm={onSaveAndConvert}
-          />
-        </>
+          {open ? (
+            <ConvertConfirmDialog
+              confirmLabelKey="app.transactions_convert_save"
+              loading={busy}
+              open={open}
+              previewInput={previewInput}
+              workflow={workflow}
+              onClose={() => !busy && setOpen(false)}
+              onConfirm={onSaveAndConvert}
+            />
+          ) : null}
+        </Stack>
       ) : null}
     </Toolbar>
   );

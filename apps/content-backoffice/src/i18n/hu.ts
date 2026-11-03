@@ -20,6 +20,35 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_error: 'Az ügylet kifejtése nem sikerült.',
     transactions_convert_ambiguous:
       'Több ügylet-sablon is illik erre a tranzakcióra.',
+    transactions_convert_preview: 'Kifejtés előnézete',
+    transactions_convert_preview_loading: 'Előnézet betöltése…',
+    transactions_convert_preview_error: 'Az előnézet nem tölthető be.',
+    transactions_convert_preview_empty: 'Nincs megjeleníthető előnézet.',
+    transactions_convert_preview_disabled:
+      'Töltsd ki a dátumot, összeget, pénznemet és a terhelési/követelési számlát.',
+    transactions_convert_preview_keep_original:
+      'Az eredeti megmarad (storno + lépések)',
+    transactions_convert_preview_delete_original: 'Az eredeti törlődik',
+    transactions_convert_preview_steps_published:
+      'A lépések published státuszúak',
+    transactions_convert_preview_steps_draft: 'A lépések draft státuszúak',
+    transactions_convert_preview_legend:
+      'A nyíl iránya: terhelési számla → követelési számla (könyvelési irány).',
+    transactions_convert_preview_sequence_legend:
+      'Sequence diagram: a számlák felül, szaggatott lifeline; az üzenetek felülről lefelé — nyíl a terhelés → követelés felé (könyvelési irány).',
+    transactions_convert_preview_diagram_aria:
+      'Számlák közti mozgás: %{summary}',
+    transactions_convert_preview_kind: 'Típus',
+    transactions_convert_preview_kind_original: 'Eredeti',
+    transactions_convert_preview_kind_storno: 'Storno',
+    transactions_convert_preview_kind_step: 'Lépés',
+    transactions_convert_preview_description: 'Leírás',
+    transactions_convert_preview_debit: 'T terhelés',
+    transactions_convert_preview_credit: 'K követelés',
+    transactions_convert_preview_amount: 'Összeg',
+    transactions_convert_preview_currency: 'Pénznem',
+    transactions_convert_preview_steps_total:
+      'Lépések összege: %{steps} (eredeti: %{original})',
     transactions_none: 'Nincs tranzakció.',
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',

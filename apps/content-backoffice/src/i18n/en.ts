@@ -20,6 +20,34 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_error: 'Could not expand the deal.',
     transactions_convert_ambiguous:
       'More than one deal template matches this transaction.',
+    transactions_convert_preview: 'Preview expansion',
+    transactions_convert_preview_loading: 'Loading preview…',
+    transactions_convert_preview_error: 'Could not load the preview.',
+    transactions_convert_preview_empty: 'No preview to show.',
+    transactions_convert_preview_disabled:
+      'Fill in date, amount, currency, and debit/credit accounts first.',
+    transactions_convert_preview_keep_original:
+      'Original row is kept (storno + steps)',
+    transactions_convert_preview_delete_original: 'Original row is deleted',
+    transactions_convert_preview_steps_published:
+      'Generated steps are published',
+    transactions_convert_preview_steps_draft: 'Generated steps stay draft',
+    transactions_convert_preview_legend:
+      'Arrow direction: debit account → credit account (ledger flow).',
+    transactions_convert_preview_sequence_legend:
+      'Sequence diagram: accounts as headers with lifelines; messages top-to-bottom — arrow debit → credit (ledger flow).',
+    transactions_convert_preview_diagram_aria: 'Account movements: %{summary}',
+    transactions_convert_preview_kind: 'Kind',
+    transactions_convert_preview_kind_original: 'Original',
+    transactions_convert_preview_kind_storno: 'Storno',
+    transactions_convert_preview_kind_step: 'Step',
+    transactions_convert_preview_description: 'Description',
+    transactions_convert_preview_debit: 'Debit',
+    transactions_convert_preview_credit: 'Credit',
+    transactions_convert_preview_amount: 'Amount',
+    transactions_convert_preview_currency: 'Currency',
+    transactions_convert_preview_steps_total:
+      'Step total: %{steps} (original: %{original})',
     transactions_none: 'No transactions.',
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',

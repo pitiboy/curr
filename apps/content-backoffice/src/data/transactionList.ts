@@ -173,6 +173,15 @@ export function workflowMatchesTransaction(
   return true;
 }
 
+export function countMatchingWorkflows(
+  workflows: WorkflowTemplateHeader[],
+  transaction: TransactionWorkflowMatchInput,
+): number {
+  return workflows.filter((workflow) =>
+    workflowMatchesTransaction(workflow, transaction),
+  ).length;
+}
+
 /**
  * Client pick: 0 → null, 1 → template, >1 → null (server convert throws 409).
  */
@@ -180,11 +189,12 @@ export function pickMatchingWorkflow(
   workflows: WorkflowTemplateHeader[],
   transaction: TransactionWorkflowMatchInput,
 ): WorkflowTemplateHeader | null {
-  const matches = workflows.filter((workflow) =>
-    workflowMatchesTransaction(workflow, transaction),
+  if (countMatchingWorkflows(workflows, transaction) !== 1) return null;
+  return (
+    workflows.find((workflow) =>
+      workflowMatchesTransaction(workflow, transaction),
+    ) ?? null
   );
-  if (matches.length !== 1) return null;
-  return matches[0] ?? null;
 }
 
 export function transactionLikeFromRecord(
