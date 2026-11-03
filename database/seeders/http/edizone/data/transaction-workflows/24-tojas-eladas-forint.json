@@ -1,24 +1,33 @@
 {
   "name": "Tojás eladás forint",
-  "debit_account_code": 1000,
-  "credit_account_code": 1900,
+  "debit_account_code": 1001,
+  "credit_account_code": 1300,
   "steps": [
     {
-      "description": "Beérkezés",
+      "description": "Tojás eladás (tojás)",
+      "percent": 100,
+      "debit_code": "1001",
+      "credit_code": "1300",
+      "currency": "EGG",
+      "organization": "Tyúktartás",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Tojás eladás (kp befizetés)",
       "percent": 100,
       "debit_code": "1000",
-      "credit_code": "1900",
+      "credit_code": "1001",
       "currency": "HUF",
-      "organization": "I/3. Pénzügyi Igazgatóság",
+      "organization": "Tyúktartás",
       "transaction_type": "Készpénz"
     },
     {
-      "description": "Értékesítés",
+      "description": "Tojás eladás (bevétel)",
       "percent": 100,
-      "debit_code": "1900",
-      "credit_code": "4000",
+      "debit_code": "4000",
+      "credit_code": "1000",
       "currency": "HUF",
-      "organization": "Tojóól",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés"
     }
   ]
