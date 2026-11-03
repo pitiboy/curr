@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ConvertPreview } from './convertPreview';
-import { layoutMovementGraph } from './convertPreviewGraph';
+import {
+  buildMovementSequence,
+  formatSequenceAmount,
+} from './convertPreviewGraph';
 
 const previewFixture: ConvertPreview = {
   workflow: {
@@ -46,22 +49,38 @@ const previewFixture: ConvertPreview = {
   warnings: [],
 };
 
-describe('layoutMovementGraph', () => {
-  it('dedupes accounts and orders debit column before credit', () => {
-    const layout = layoutMovementGraph(previewFixture);
-    const debitCodes = layout.nodes
-      .filter((node) => node.column === 'debit')
-      .map((node) => node.code);
-    expect(debitCodes).toEqual(['5440']);
-    expect(layout.nodes.some((node) => node.code === '1100')).toBe(true);
-    expect(layout.edges.some((edge) => edge.kind === 'original')).toBe(true);
-    expect(layout.edges.filter((edge) => edge.kind === 'step')).toHaveLength(1);
+describe('buildMovementSequence', () => {
+  it('orders original then storno then steps', () => {
+    const frames = buildMovementSequence(previewFixture);
+    expect(frames.map((frame) => frame.kind)).toEqual([
+      'original',
+      'storno',
+      'step',
+    ]);
+    expect(frames.map((frame) => frame.order)).toEqual([1, 2, 3]);
   });
 
-  it('labels step edges with order and percent', () => {
-    const layout = layoutMovementGraph(previewFixture);
-    const stepEdge = layout.edges.find((edge) => edge.kind === 'step');
-    expect(stepEdge?.label).toContain('#1');
-    expect(stepEdge?.label).toContain('60');
+  it('marks member ledger accounts', () => {
+    const preview: ConvertPreview = {
+      ...previewFixture,
+      original: {
+        ...previewFixture.original,
+        debit: { documentId: 'm', code: '1101', name: 'Tag' },
+      },
+      movements: [],
+    };
+    const frames = buildMovementSequence(preview);
+    expect(frames[0]?.debit.isMember).toBe(true);
+  });
+
+  it('rotates step colors by index', () => {
+    const frames = buildMovementSequence(previewFixture);
+    expect(frames[2]?.stepColorKey).toBe('primary');
+  });
+});
+
+describe('formatSequenceAmount', () => {
+  it('includes currency code', () => {
+    expect(formatSequenceAmount(324, 'EGG')).toContain('EGG');
   });
 });

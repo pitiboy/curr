@@ -1,16 +1,186 @@
-import { Box, Typography, useTheme } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import {
+  Box,
+  Chip,
+  Paper,
+  Stack,
+  Typography,
+  useTheme,
+  type Theme,
+} from '@mui/material';
 import { useTranslate } from 'react-admin';
 
 import type { ConvertPreview } from '../../data/convertPreview';
 import {
-  layoutMovementGraph,
-  movementGraphAriaSummary,
-  PREVIEW_NODE_HEIGHT,
-  PREVIEW_NODE_WIDTH,
+  buildMovementSequence,
+  formatSequenceAmount,
+  movementSequenceAriaSummary,
+  type MovementSequenceFrame,
+  type MovementSequenceKind,
+  type SequenceStepColorKey,
 } from '../../data/convertPreviewGraph';
 
-function nodeLabel(code: string, name: string | null): string {
-  return name ? `${code} ${name}` : code;
+function paletteColor(theme: Theme, key: SequenceStepColorKey): string {
+  return theme.palette[key].main;
+}
+
+function kindLabelKey(kind: MovementSequenceKind): string {
+  if (kind === 'original') return 'app.transactions_convert_preview_kind_original';
+  if (kind === 'storno') return 'app.transactions_convert_preview_kind_storno';
+  return 'app.transactions_convert_preview_kind_step';
+}
+
+function frameAccent(theme: Theme, frame: MovementSequenceFrame): string {
+  if (frame.kind === 'original') return theme.palette.info.main;
+  if (frame.kind === 'storno') return theme.palette.error.main;
+  return paletteColor(theme, frame.stepColorKey);
+}
+
+function AccountChip({
+  account,
+  side,
+}: {
+  account: MovementSequenceFrame['debit'];
+  side: 'debit' | 'credit';
+}) {
+  const theme = useTheme();
+  const translate = useTranslate();
+  const member = account.isMember;
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        px: 1.5,
+        py: 1,
+        minWidth: { xs: '7rem', sm: '9rem' },
+        flex: '1 1 0',
+        border: 2,
+        borderColor: member ? theme.palette.warning.main : 'divider',
+        bgcolor: member ? theme.palette.warning.light : 'background.paper',
+      }}
+      variant="outlined"
+    >
+      <Typography fontWeight={700} variant="body2">
+        {account.code}
+      </Typography>
+      {account.name ? (
+        <Typography color="text.secondary" variant="caption">
+          {account.name}
+        </Typography>
+      ) : null}
+      <Typography color="text.secondary" display="block" variant="caption">
+        {side === 'debit'
+          ? translate('app.transactions_convert_preview_debit')
+          : translate('app.transactions_convert_preview_credit')}
+      </Typography>
+    </Paper>
+  );
+}
+
+function SequenceFrameRow({
+  frame,
+  isLast,
+}: {
+  frame: MovementSequenceFrame;
+  isLast: boolean;
+}) {
+  const theme = useTheme();
+  const translate = useTranslate();
+  const accent = frameAccent(theme, frame);
+  const amountLabel = formatSequenceAmount(frame.amount, frame.currencyCode);
+
+  return (
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'stretch' }}>
+      <Stack
+        sx={{
+          alignItems: 'center',
+          width: 40,
+          flexShrink: 0,
+          pt: 1,
+        }}
+      >
+        <Box
+          sx={{
+            width: 14,
+            height: 14,
+            borderRadius: '50%',
+            bgcolor: accent,
+            boxShadow: `0 0 0 3px ${accent}33`,
+          }}
+        />
+        {!isLast ? (
+          <Box
+            sx={{
+              flex: 1,
+              width: 3,
+              minHeight: 24,
+              mt: 0.5,
+              borderRadius: 2,
+              bgcolor: `${accent}55`,
+            }}
+          />
+        ) : null}
+      </Stack>
+      <Paper
+        elevation={0}
+        sx={{
+          flex: 1,
+          mb: isLast ? 0 : 2,
+          p: 1.5,
+          borderLeft: 4,
+          borderColor: accent,
+          bgcolor: `${accent}0d`,
+        }}
+        variant="outlined"
+      >
+        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
+          <Chip
+            label={`${frame.order}. ${translate(kindLabelKey(frame.kind))}${
+              frame.kind === 'step' && frame.stepIndex != null
+                ? ` #${frame.stepIndex + 1}`
+                : ''
+            }`}
+            size="small"
+            sx={{
+              bgcolor: accent,
+              color: theme.palette.getContrastText(accent),
+              fontWeight: 600,
+            }}
+          />
+          {frame.percent != null ? (
+            <Chip
+              label={`${frame.percent}%`}
+              size="small"
+              variant="outlined"
+            />
+          ) : null}
+        </Stack>
+        {frame.description ? (
+          <Typography sx={{ mb: 1.25 }} variant="body2">
+            {frame.description}
+          </Typography>
+        ) : null}
+        <Stack
+          alignItems="center"
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+        >
+          <AccountChip account={frame.debit} side="debit" />
+          <Stack alignItems="center" spacing={0.25} sx={{ px: 0.5 }}>
+            <ArrowForwardIcon color="action" fontSize="small" />
+            <Chip
+              color={frame.kind === 'storno' ? 'error' : 'default'}
+              label={amountLabel}
+              size="small"
+              sx={{ fontWeight: 700 }}
+              variant={frame.kind === 'storno' ? 'filled' : 'outlined'}
+            />
+          </Stack>
+          <AccountChip account={frame.credit} side="credit" />
+        </Stack>
+      </Paper>
+    </Stack>
+  );
 }
 
 export function ConvertPreviewDiagram({
@@ -18,112 +188,28 @@ export function ConvertPreviewDiagram({
 }: {
   preview: ConvertPreview;
 }) {
-  const theme = useTheme();
   const translate = useTranslate();
-  const layout = layoutMovementGraph(preview);
-  const memberFill = theme.palette.warning.light;
-  const memberStroke = theme.palette.warning.dark;
-  const nodeFill = theme.palette.background.paper;
-  const nodeStroke = theme.palette.divider;
-  const edgeColor = theme.palette.text.secondary;
+  const frames = buildMovementSequence(preview);
 
   return (
     <Box sx={{ mt: 1 }}>
       <Typography color="text.secondary" variant="caption">
-        {translate('app.transactions_convert_preview_legend')}
+        {translate('app.transactions_convert_preview_sequence_legend')}
       </Typography>
       <Box
         aria-label={translate('app.transactions_convert_preview_diagram_aria', {
-          summary: movementGraphAriaSummary(preview),
+          summary: movementSequenceAriaSummary(preview),
         })}
-        component="svg"
-        role="img"
-        sx={{ width: '100%', maxWidth: layout.width, display: 'block' }}
-        viewBox={`0 0 ${layout.width} ${layout.height}`}
+        role="list"
+        sx={{ mt: 1.5 }}
       >
-        <defs>
-          <marker
-            id="preview-arrow"
-            markerHeight="8"
-            markerUnits="strokeWidth"
-            markerWidth="8"
-            orient="auto"
-            refX="6"
-            refY="3"
-          >
-            <path d="M0,0 L0,6 L6,3 z" fill={edgeColor} />
-          </marker>
-        </defs>
-        {layout.edges.map((edge) => {
-          const from = layout.nodes.find((node) => node.id === edge.fromId);
-          const to = layout.nodes.find((node) => node.id === edge.toId);
-          if (!from || !to) return null;
-          const x1 = from.x + PREVIEW_NODE_WIDTH;
-          const y1 = from.y + PREVIEW_NODE_HEIGHT / 2;
-          const x2 = to.x;
-          const y2 = to.y + PREVIEW_NODE_HEIGHT / 2;
-          const midX = (x1 + x2) / 2;
-          return (
-            <g key={edge.id}>
-              <line
-                markerEnd="url(#preview-arrow)"
-                stroke={edgeColor}
-                strokeWidth={1.5}
-                x1={x1}
-                x2={x2}
-                y1={y1}
-                y2={y2}
-              />
-              <text
-                fill={edgeColor}
-                fontSize={11}
-                textAnchor="middle"
-                x={midX}
-                y={Math.min(y1, y2) - 6}
-              >
-                <title>{edge.label}</title>
-                {edge.label}
-              </text>
-            </g>
-          );
-        })}
-        {layout.nodes.map((node) => (
-          <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
-            <rect
-              fill={node.isMember ? memberFill : nodeFill}
-              height={PREVIEW_NODE_HEIGHT}
-              rx={6}
-              stroke={node.isMember ? memberStroke : nodeStroke}
-              strokeWidth={1.5}
-              width={PREVIEW_NODE_WIDTH}
+        {frames.map((frame, index) => (
+          <Box key={frame.id} role="listitem">
+            <SequenceFrameRow
+              frame={frame}
+              isLast={index === frames.length - 1}
             />
-            <text
-              dominantBaseline="middle"
-              fill={theme.palette.text.primary}
-              fontSize={12}
-              fontWeight={600}
-              textAnchor="middle"
-              x={PREVIEW_NODE_WIDTH / 2}
-              y={PREVIEW_NODE_HEIGHT / 2 - 6}
-            >
-              {node.code}
-            </text>
-            {node.name ? (
-              <text
-                dominantBaseline="middle"
-                fill={theme.palette.text.secondary}
-                fontSize={10}
-                textAnchor="middle"
-                x={PREVIEW_NODE_WIDTH / 2}
-                y={PREVIEW_NODE_HEIGHT / 2 + 10}
-              >
-                <title>{nodeLabel(node.code, node.name)}</title>
-                {node.name.length > 18
-                  ? `${node.name.slice(0, 17)}…`
-                  : node.name}
-              </text>
-            ) : null}
-          </g>
+          </Box>
         ))}
       </Box>
     </Box>

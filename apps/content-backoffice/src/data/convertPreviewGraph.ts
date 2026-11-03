@@ -1,179 +1,98 @@
-import type { ConvertPreview, PreviewMovement } from './convertPreview';
+import type { ConvertPreview, PreviewAccount } from './convertPreview';
 
 export const MEMBER_LEDGER_CODES = new Set(['1101', '1001']);
-export const PREVIEW_NODE_WIDTH = 128;
-export const PREVIEW_NODE_HEIGHT = 44;
-export const PREVIEW_COLUMN_GAP = 96;
-export const PREVIEW_ROW_GAP = 52;
-export const PREVIEW_DIAGRAM_PADDING = 16;
-export const PREVIEW_EDGE_LABEL_MAX = 48;
-export const PREVIEW_DESCRIPTION_MAX = 64;
 
-export type MovementGraphNode = {
-  id: string;
-  code: string;
-  name: string | null;
-  column: 'debit' | 'credit';
-  x: number;
-  y: number;
-  isMember: boolean;
-};
+export const SEQUENCE_STEP_COLOR_KEYS = [
+  'primary',
+  'secondary',
+  'success',
+  'info',
+] as const;
 
-export type MovementGraphEdge = {
+export type SequenceStepColorKey = (typeof SEQUENCE_STEP_COLOR_KEYS)[number];
+
+export type MovementSequenceKind = 'original' | 'storno' | 'step';
+
+export type MovementSequenceFrame = {
   id: string;
-  fromId: string;
-  toId: string;
-  label: string;
-  kind: PreviewMovement['kind'] | 'original';
+  /** 1-based display order on the timeline */
+  order: number;
+  kind: MovementSequenceKind;
   stepIndex: number | null;
+  description: string;
+  amount: number;
+  currencyCode: string | null;
+  percent: number | null;
+  debit: PreviewAccount & { isMember: boolean };
+  credit: PreviewAccount & { isMember: boolean };
+  stepColorKey: SequenceStepColorKey;
 };
 
-export type MovementGraphLayout = {
-  width: number;
-  height: number;
-  nodes: MovementGraphNode[];
-  edges: MovementGraphEdge[];
-};
-
-type AccountColumn = MovementGraphNode['column'];
-
-function truncate(text: string, max: number): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= max) return trimmed;
-  return `${trimmed.slice(0, max - 1)}…`;
+function accountWithMemberFlag(
+  account: PreviewAccount,
+): PreviewAccount & { isMember: boolean } {
+  return {
+    ...account,
+    isMember: MEMBER_LEDGER_CODES.has(account.code),
+  };
 }
 
-function accountNodeId(documentId: string, column: AccountColumn): string {
-  return `${column}:${documentId}`;
+function stepColorKey(stepIndex: number | null): SequenceStepColorKey {
+  if (stepIndex == null) return 'primary';
+  return SEQUENCE_STEP_COLOR_KEYS[
+    stepIndex % SEQUENCE_STEP_COLOR_KEYS.length
+  ]!;
 }
 
-function registerNode(
-  map: Map<string, MovementGraphNode>,
-  account: { documentId: string; code: string; name: string | null },
-  column: AccountColumn,
-): string {
-  const id = accountNodeId(account.documentId, column);
-  if (!map.has(id)) {
-    map.set(id, {
-      id,
-      code: account.code,
-      name: account.name,
-      column,
-      x: 0,
-      y: 0,
-      isMember: MEMBER_LEDGER_CODES.has(account.code),
-    });
-  }
-  return id;
-}
-
-function edgeLabel(
-  amount: number,
-  currencyCode: string | null,
-  stepIndex: number | null,
-  percent: number | null,
-): string {
-  const currency = currencyCode ?? '?';
-  const base = `${amount.toLocaleString('hu-HU')} ${currency}`;
-  if (stepIndex != null) {
-    const order = `#${stepIndex + 1}`;
-    if (percent != null) {
-      return truncate(`${order} ${base} (${percent}%)`, PREVIEW_EDGE_LABEL_MAX);
-    }
-    return truncate(`${order} ${base}`, PREVIEW_EDGE_LABEL_MAX);
-  }
-  return truncate(base, PREVIEW_EDGE_LABEL_MAX);
-}
-
-function layoutColumns(nodes: MovementGraphNode[]): void {
-  const debitNodes = nodes.filter((node) => node.column === 'debit');
-  const creditNodes = nodes.filter((node) => node.column === 'credit');
-  const debitX = PREVIEW_DIAGRAM_PADDING;
-  const creditX =
-    PREVIEW_DIAGRAM_PADDING + PREVIEW_NODE_WIDTH + PREVIEW_COLUMN_GAP;
-
-  debitNodes.forEach((node, index) => {
-    node.x = debitX;
-    node.y = PREVIEW_DIAGRAM_PADDING + index * PREVIEW_ROW_GAP;
-  });
-  creditNodes.forEach((node, index) => {
-    node.x = creditX;
-    node.y = PREVIEW_DIAGRAM_PADDING + index * PREVIEW_ROW_GAP;
-  });
-}
-
-export function layoutMovementGraph(
+/** Chronological frames: source row, then storno and steps in convert order. */
+export function buildMovementSequence(
   preview: ConvertPreview,
-): MovementGraphLayout {
-  const nodeMap = new Map<string, MovementGraphNode>();
-  const edges: MovementGraphEdge[] = [];
-
-  const originalDebit = registerNode(nodeMap, preview.original.debit, 'debit');
-  const originalCredit = registerNode(
-    nodeMap,
-    preview.original.credit,
-    'credit',
-  );
-  edges.push({
-    id: 'original',
-    fromId: originalDebit,
-    toId: originalCredit,
-    label: edgeLabel(
-      preview.original.amount,
-      preview.original.currency.code,
-      null,
-      null,
-    ),
-    kind: 'original',
-    stepIndex: null,
-  });
+): MovementSequenceFrame[] {
+  const frames: MovementSequenceFrame[] = [
+    {
+      id: 'original',
+      order: 1,
+      kind: 'original',
+      stepIndex: null,
+      description: preview.original.description,
+      amount: preview.original.amount,
+      currencyCode: preview.original.currency.code,
+      percent: null,
+      debit: accountWithMemberFlag(preview.original.debit),
+      credit: accountWithMemberFlag(preview.original.credit),
+      stepColorKey: 'info',
+    },
+  ];
 
   for (const movement of preview.movements) {
-    const fromId = registerNode(nodeMap, movement.debit, 'debit');
-    const toId = registerNode(nodeMap, movement.credit, 'credit');
-    edges.push({
+    frames.push({
       id: `${movement.kind}-${movement.index ?? 'storno'}`,
-      fromId,
-      toId,
-      label: edgeLabel(
-        movement.amount,
-        movement.currency.code,
-        movement.kind === 'step' ? movement.index : null,
-        movement.percent,
-      ),
+      order: frames.length + 1,
       kind: movement.kind,
       stepIndex: movement.index,
+      description: movement.description,
+      amount: movement.amount,
+      currencyCode: movement.currency.code,
+      percent: movement.percent,
+      debit: accountWithMemberFlag(movement.debit),
+      credit: accountWithMemberFlag(movement.credit),
+      stepColorKey:
+        movement.kind === 'storno' ? 'secondary' : stepColorKey(movement.index),
     });
   }
 
-  const nodes = [...nodeMap.values()].sort((left, right) => {
-    if (left.column !== right.column) {
-      return left.column === 'debit' ? -1 : 1;
-    }
-    return left.code.localeCompare(right.code, 'hu');
-  });
-
-  layoutColumns(nodes);
-
-  const maxRows = Math.max(
-    nodes.filter((node) => node.column === 'debit').length,
-    nodes.filter((node) => node.column === 'credit').length,
-    1,
-  );
-  const width =
-    PREVIEW_DIAGRAM_PADDING * 2 + PREVIEW_NODE_WIDTH * 2 + PREVIEW_COLUMN_GAP;
-  const height =
-    PREVIEW_DIAGRAM_PADDING * 2 +
-    PREVIEW_NODE_HEIGHT +
-    (maxRows - 1) * PREVIEW_ROW_GAP;
-
-  return { width, height, nodes, edges };
+  return frames;
 }
 
-export function movementGraphAriaSummary(preview: ConvertPreview): string {
-  const parts = [
-    `${preview.original.amount} ${preview.original.currency.code ?? ''}`.trim(),
-    `${preview.movements.length} movements`,
-  ];
-  return parts.join(', ');
+export function movementSequenceAriaSummary(preview: ConvertPreview): string {
+  const frames = buildMovementSequence(preview);
+  return `${frames.length} sequence frames, ${preview.original.amount} ${preview.original.currency.code ?? ''}`.trim();
+}
+
+export function formatSequenceAmount(
+  amount: number,
+  currencyCode: string | null,
+): string {
+  const currency = currencyCode ?? '?';
+  return `${amount.toLocaleString('hu-HU', { maximumFractionDigits: 4 })} ${currency}`;
 }
