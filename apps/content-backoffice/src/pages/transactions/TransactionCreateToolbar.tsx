@@ -153,10 +153,10 @@ export function TransactionCreateToolbar({
           {translate('app.transactions_convert_ambiguous')}
         </Alert>
       ) : null}
-      {workflow && previewInput ? (
+      {workflow ? (
         <Stack direction="row" spacing={1} sx={{ ml: 1 }}>
           <TransactionConvertPreviewButton
-            disabled={!inlineTransaction}
+            disabled={!previewInput}
             disabledReasonKey="app.transactions_convert_preview_disabled"
             previewInput={previewInput}
             workflow={workflow}

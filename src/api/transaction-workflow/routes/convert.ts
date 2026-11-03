@@ -17,7 +17,7 @@ export default {
       config: {
         auth: {
           scope: [
-            'api::transaction-workflow.transaction-workflow.convert-preview',
+            'api::transaction-workflow.transaction-workflow.convertPreview',
           ],
         },
       },
