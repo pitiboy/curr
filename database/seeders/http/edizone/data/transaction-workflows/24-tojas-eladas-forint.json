@@ -1,7 +1,8 @@
 {
-  "name": "Tojás eladás forint",
+  "name": "Tojás eladás forintért",
   "debit_account_code": 1001,
   "credit_account_code": 1300,
+  "currency": "EGG",
   "steps": [
     {
       "description": "Tojás eladás (tojás)",
