@@ -59,7 +59,7 @@ const CONTENT_ROLE_ACTIONS = [
 
 const EDITOR_ONLY_CONTENT_ACTIONS = [
   'api::transaction-workflow.transaction-workflow.convert',
-  'api::transaction-workflow.transaction-workflow.convert-preview',
+  'api::transaction-workflow.transaction-workflow.convertPreview',
 ] as const;
 
 const usersPermissionsRolePermissions = {
@@ -139,7 +139,7 @@ const usersPermissionsRolePermissions = {
         'find',
         'findOne',
         'convert',
-        'convert-preview',
+        'convertPreview',
       ]),
     },
   },
