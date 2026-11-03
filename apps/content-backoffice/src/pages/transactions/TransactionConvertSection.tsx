@@ -1,6 +1,8 @@
-import { Box } from '@mui/material';
+import { Alert, Box } from '@mui/material';
+import { useTranslate } from 'react-admin';
 
 import {
+  countMatchingWorkflows,
   isExpandableConvertedValue,
   transactionLikeFromRecord,
   type TransactionRow,
@@ -14,13 +16,31 @@ export function TransactionConvertSection({
 }: {
   record: TransactionRow;
 }) {
-  const { matchFor, loading: catalogLoading } = useTransactionWorkflowCatalog();
+  const translate = useTranslate();
+  const {
+    matchFor,
+    loading: catalogLoading,
+    workflows,
+  } = useTransactionWorkflowCatalog();
 
   if (!isExpandableConvertedValue(record.converted_to_workflow)) return null;
 
-  const workflow = catalogLoading
-    ? null
-    : matchFor(transactionLikeFromRecord(record));
+  const transactionLike = transactionLikeFromRecord(record);
+  const matchCount = catalogLoading
+    ? 0
+    : countMatchingWorkflows(workflows, transactionLike);
+  const workflow = catalogLoading ? null : matchFor(transactionLike);
+
+  if (matchCount > 1) {
+    return (
+      <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
+        <Alert severity="warning" variant="outlined">
+          {translate('app.transactions_convert_ambiguous')}
+        </Alert>
+      </Box>
+    );
+  }
+
   if (!workflow) return null;
 
   return (

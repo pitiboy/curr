@@ -10,5 +10,17 @@ export default {
         },
       },
     },
+    {
+      method: 'POST',
+      path: '/transaction-workflows/convert-preview',
+      handler: 'transaction-workflow.convertPreview',
+      config: {
+        auth: {
+          scope: [
+            'api::transaction-workflow.transaction-workflow.convert-preview',
+          ],
+        },
+      },
+    },
   ],
 };

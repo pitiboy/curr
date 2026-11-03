@@ -158,7 +158,9 @@ function requireRelationCode(
 }
 
 /** Dynamic-zone komponens → egységes debit/credit wanted + relation. */
-export function normalizeWorkflowStep(step: WorkflowStep): NormalizedWorkflowStep {
+export function normalizeWorkflowStep(
+  step: WorkflowStep,
+): NormalizedWorkflowStep {
   const component = step.__component?.trim();
   if (!component) {
     throw new TransactionWorkflowError(
@@ -231,7 +233,10 @@ export function workflowMatchesTransaction(
   if (debit !== workflow.debit_account_code) return false;
   if (credit !== workflow.credit_account_code) return false;
   if (workflow.currency_type?.documentId) {
-    if (transaction.currency_type?.documentId !== workflow.currency_type.documentId) {
+    if (
+      transaction.currency_type?.documentId !==
+      workflow.currency_type.documentId
+    ) {
       return false;
     }
   }
@@ -272,10 +277,7 @@ const ORIGINAL_STRING_FIELDS = [
 
 type OriginalStringField = (typeof ORIGINAL_STRING_FIELDS)[number];
 
-function originalFieldValue(
-  source: SourceTransaction,
-  field: string,
-): string {
+function originalFieldValue(source: SourceTransaction, field: string): string {
   if (!(ORIGINAL_STRING_FIELDS as readonly string[]).includes(field)) {
     return '';
   }
@@ -423,10 +425,7 @@ export function expandWorkflowSteps(
     const normalized = normalizeWorkflowStep(step);
     const currency = normalized.currency_type?.documentId;
     if (!currency) {
-      throw new TransactionWorkflowError(
-        'Step currency_type is missing',
-        422,
-      );
+      throw new TransactionWorkflowError('Step currency_type is missing', 422);
     }
 
     return {
@@ -486,6 +485,54 @@ export function memberAccountFromTransaction(
 
 export function stornoEnteredKey(originalDocumentId: string): string {
   return `${originalDocumentId}:storno`;
+}
+
+/** Storno row amount mirrors the source with inverted sign. */
+export function stornoAmountFromSource(sourceAmount: number | string): number {
+  return -Number(sourceAmount);
+}
+
+export type StornoRowShape = {
+  amount: number;
+  date: string;
+  description: string | null | undefined;
+  debit_account: AccountRef | null | undefined;
+  credit_account: AccountRef | null | undefined;
+  currency_type: { documentId: string };
+  organization: { documentId: string } | null;
+  transaction_type: { documentId: string } | undefined;
+  related_transaction: { documentId: string };
+  entered_key: string;
+};
+
+/** Payload fields shared by convert storno create and convert preview. */
+export function buildStornoRowShape(
+  transaction: SourceTransaction,
+): StornoRowShape {
+  const currencyDocumentId = transaction.currency_type?.documentId;
+  if (!currencyDocumentId) {
+    throw new TransactionWorkflowError(
+      'Source transaction currency_type is required for convert',
+      422,
+    );
+  }
+  const organizationDocumentId = transaction.organization?.documentId;
+  return {
+    date: transaction.date,
+    amount: stornoAmountFromSource(transaction.amount),
+    description: transaction.description,
+    debit_account: transaction.debit_account,
+    credit_account: transaction.credit_account,
+    currency_type: { documentId: currencyDocumentId },
+    organization: organizationDocumentId
+      ? { documentId: organizationDocumentId }
+      : null,
+    transaction_type: transaction.transaction_type?.documentId
+      ? { documentId: transaction.transaction_type.documentId }
+      : undefined,
+    related_transaction: { documentId: transaction.documentId },
+    entered_key: stornoEnteredKey(transaction.documentId),
+  };
 }
 
 export function assertKeepOriginalReceiptPolicy(

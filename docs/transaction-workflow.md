@@ -87,20 +87,20 @@ A külső bank, a tag saját bankja a könyvekben nem szerepel.
 
 Melyik tétel melyik számlára kerül tartozik oldalra. A követel oldal a fizetés módja: `1100`, `1000`, tagi megelőlegezésnél a tag `1101`-e, Homályban a tag `1001`-je.
 
-| Tétel                                       | Tartozik                                               | Megjegyzés                                                                    |
-| ------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| Üzemanyag, utazás                           | `5410` Utazás és üzemanyag                             |                                                                               |
-| Lakóépület                                  | `1530` Lakóépületek                                    | eszköz                                                                        |
-| Belterületi földterület, lakótelek          | `1520` Belterületi földterületek                       | eszköz                                                                        |
-| Mezőgazdasági földterület                   | `1510` Mezőgazdasági földterületek                     | eszköz                                                                        |
-| Képzési díj                                 | `5420` Oktatás és képzés                               |                                                                               |
-| Mezőgazdasági emberi szolgáltatás, kaszálás | `5430` Mezőgazdasági szolgáltatások                    |                                                                               |
-| Könyvelési díj                              | `5440` Könyvelési és szakértői díjak                   |                                                                               |
-| Banki díjak                                 | `5700` Pénzügyi költségek                              | `5700` ← `1100`                                                               |
-| Gépbérlés                                   | `5450` Bérleti díjak                                   |                                                                               |
-| Javítási díj                                | `5460` Javítás és karbantartás                         | ha az ingatlanba beépül és értéket növel: az eszközszámla, `1530` vagy `1500` |
-| Munkaebéd                                   | `5510` Reprezentáció                                   |                                                                               |
-| Hatósági díj                                | `5800` Egyéb költségek                                 |                                                                               |
+| Tétel                                       | Tartozik                             | Megjegyzés                                                                    |
+| ------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| Üzemanyag, utazás                           | `5410` Utazás és üzemanyag           |                                                                               |
+| Lakóépület                                  | `1530` Lakóépületek                  | eszköz                                                                        |
+| Belterületi földterület, lakótelek          | `1520` Belterületi földterületek     | eszköz                                                                        |
+| Mezőgazdasági földterület                   | `1510` Mezőgazdasági földterületek   | eszköz                                                                        |
+| Képzési díj                                 | `5420` Oktatás és képzés             |                                                                               |
+| Mezőgazdasági emberi szolgáltatás, kaszálás | `5430` Mezőgazdasági szolgáltatások  |                                                                               |
+| Könyvelési díj                              | `5440` Könyvelési és szakértői díjak |                                                                               |
+| Banki díjak                                 | `5700` Pénzügyi költségek            | `5700` ← `1100`                                                               |
+| Gépbérlés                                   | `5450` Bérleti díjak                 |                                                                               |
+| Javítási díj                                | `5460` Javítás és karbantartás       | ha az ingatlanba beépül és értéket növel: az eszközszámla, `1530` vagy `1500` |
+| Munkaebéd                                   | `5510` Reprezentáció                 |                                                                               |
+| Hatósági díj                                | `5800` Egyéb költségek               |                                                                               |
 
 ## Számlatükör-rések
 
@@ -142,10 +142,10 @@ A készlet (`1300`), a költség- és bevételszámlák, valamint a kincstár p�
 
 A lekötés **nem** fizeti ki vele az eladót vagy a szállítót. A külső fizetés külön, tiszta forint sor. A blokk két sor: HUF fedezet az átvezetőre, majd ugyanannyi érték KOR-ban vissza az eszközre. A forint fedezet forrása az eszköz HUF értéke (`1510`, `1520`, `1530`, `1500`).
 
-| Lépés                  | Tartozik ← | Követel              | Pénznem | Szervezet            |
-| ---------------------- | ---------- | -------------------- | ------- | -------------------- |
-| 1. Forint fedezet      | `1900`     | `15xx` / `1500` HUF  | HUF     | eszköz szervezete    |
-| 2. Korona az eszközre  | `15xx` / `1500` | `1900`          | KOR     | eszköz szervezete    |
+| Lépés                 | Tartozik ←      | Követel             | Pénznem | Szervezet         |
+| --------------------- | --------------- | ------------------- | ------- | ----------------- |
+| 1. Forint fedezet     | `1900`          | `15xx` / `1500` HUF | HUF     | eszköz szervezete |
+| 2. Korona az eszközre | `15xx` / `1500` | `1900`              | KOR     | eszköz szervezete |
 
 ```mermaid
 sequenceDiagram
@@ -265,10 +265,10 @@ A szövetkezet **készpénzből** (`1000` Készpénz) vásárol belterületi ing
 
 Minta: belterületi telek 800 000 Ft. Számla: `1520`. Szervezet: `I/4.11.1.1 Lakóterületek`. Lekötés: 8 000 KOR (1 korona = 100 Ft).
 
-| #   | Lépés              | Tartozik ←                       | Követel         | Összeg          | Pénznem | Szervezet                | Típus     |
-| --- | ------------------ | -------------------------------- | --------------- | --------------- | ------- | ------------------------ | --------- |
-| 1   | Telek vételár      | `1520` Belterületi földterületek | `1000` Készpénz | 800 000         | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
-| 2   | Lekötés, vételár   | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`  | 800 000 / 8 000 | HUF+KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
+| #   | Lépés            | Tartozik ←                       | Követel         | Összeg          | Pénznem | Szervezet                | Típus     |
+| --- | ---------------- | -------------------------------- | --------------- | --------------- | ------- | ------------------------ | --------- |
+| 1   | Telek vételár    | `1520` Belterületi földterületek | `1000` Készpénz | 800 000         | HUF     | I/4.11.1.1 Lakóterületek | Készpénz  |
+| 2   | Lekötés, vételár | [lekötés blokk](#lekötés-blokk)  | fedezet `1520`  | 800 000 / 8 000 | HUF+KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
 ```mermaid
 sequenceDiagram
@@ -426,11 +426,11 @@ Az ingatlan számla a fajta szerint: `1510` Mezőgazdasági földterületek, `15
 
 Minta: 2 000 000 Ft foglaló, 8 000 000 Ft fennmaradó rész. Összesen 10 000 000 Ft eszköz; lekötés 100 000 korona (1 korona = 100 Ft).
 
-| Lépés              | Tartozik ←                                  | Követel                  | Összeg               | Pénznem   | Szervezet                | Típus     |
-| ------------------ | ------------------------------------------- | ------------------------ | -------------------- | --------- | ------------------------ | --------- |
-| Foglaló kifizetés  | `1400` Előlegek                             | `1100`                   | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
-| Fennmaradó vételár | `1530` Lakóépületek                         | `1100`                   | 8 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
-| Beszámítás         | `1530` Lakóépületek                         | `1400` Előlegek          | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Átvezetés |
+| Lépés              | Tartozik ←                                 | Követel                  | Összeg               | Pénznem   | Szervezet                | Típus     |
+| ------------------ | ------------------------------------------ | ------------------------ | -------------------- | --------- | ------------------------ | --------- |
+| Foglaló kifizetés  | `1400` Előlegek                            | `1100`                   | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
+| Fennmaradó vételár | `1530` Lakóépületek                        | `1100`                   | 8 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Utalás    |
+| Beszámítás         | `1530` Lakóépületek                        | `1400` Előlegek          | 2 000 000            | HUF       | I/4.11.1.1 Lakóterületek | Átvezetés |
 | Lekötés blokk      | a [lekötés blokk](#lekötés-blokk) két sora | fedezet `1530` HUF érték | 10 000 000 / 100 000 | HUF + KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
 
 ```mermaid
@@ -634,17 +634,17 @@ sequenceDiagram
 | `keep_original`                              | Default `true` — storno + megtartás; `false` — eredeti törlése                                                                                                                                |
 | `steps_published`                            | Default `true` — generált step (és storno) sorok published; `false` → draft. Convert API/UI felülírhatja.                                                                                     |
 | `configuration`                              | JSON, **fenntartott**, nincs implementáció                                                                                                                                                    |
-| `step`                                       | Dynamic zone: Related / Member as Debit / Member as Credit; sorrend = kifejtés; séma `min: 1`                                                                 |
+| `step`                                       | Dynamic zone: Related / Member as Debit / Member as Credit; sorrend = kifejtés; séma `min: 1`                                                                                                 |
 
 Nincs `workflow_key`, `inputs`, `active`, `sort_order`. A `draftAndPublish` a sablonon **be** van kapcsolva: a Convert csak **published** sablonokat használ.
 
 Step komponensek:
 
-| Komponens | Számlák |
-| --------- | ------- |
-| `workflow.step` (Related accounts) | `debit_account` + `credit_account` reláció |
-| `workflow.step-member-debit` | `member_account_code` (`1101`/`1001`) + `credit_account` |
-| `workflow.step-member-credit` | `member_account_code` (`1101`/`1001`) + `debit_account` |
+| Komponens                          | Számlák                                                  |
+| ---------------------------------- | -------------------------------------------------------- |
+| `workflow.step` (Related accounts) | `debit_account` + `credit_account` reláció               |
+| `workflow.step-member-debit`       | `member_account_code` (`1101`/`1001`) + `credit_account` |
+| `workflow.step-member-credit`      | `member_account_code` (`1101`/`1001`) + `debit_account`  |
 
 Közös: `description` (default `{1}`; `{original.<mező>}` sablon, legacy `{1}` = `{original.description}`), `percent` (0–100), `currency_type`, opcionális `organization` / `organization_from_original` (seed: `"{original.organization}"`; üres marad üres), opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
 
@@ -659,6 +659,10 @@ Csak `converted_to_workflow` **üres / null** tranzakciók (még kifejthetők). 
 **`keep_original: false`:** az eredeti törlődik; csak az új step-sorok; egymás között `related_transaction` lánc; a step sorok `converted_to_workflow: expanded`.
 
 A generált sorok `entered_key` mezője idempotenciához (pl. `{originalDocumentId}:storno` / `{originalDocumentId}:step:{i}`). A Convert Strapi route/controller a `transaction-workflow` API alatt.
+
+#### Előnézet
+
+Szerkesztő (`editor`) a kifejtés megerősítése előtt megnyithatja a **Kifejtés előnézete** modált. A `POST /api/transaction-workflows/convert-preview` dry-run endpoint ugyanazt a pure logikát hívja (`expandWorkflowSteps`, storno szabályok), mint a Convert — nincs írás az adatbázisba. Mentett tranzakcióhoz `transactionDocumentId`, create űrlaphoz inline `transaction` payload (documentId-kkel). A válasz SVG diagramhoz és táblázathoz: eredeti, storno (ha `keep_original`), lépések sorrendben; figyelmeztetések (pl. bizonylat másolás, százalék-összeg).
 
 ```mermaid
 flowchart TD

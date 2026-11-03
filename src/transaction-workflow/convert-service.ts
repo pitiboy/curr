@@ -21,11 +21,11 @@ import {
   TransactionWorkflowError,
   assertKeepOriginalReceiptPolicy,
   buildSiblingMap,
+  buildStornoRowShape,
   expandWorkflowSteps,
   isExpandableConvertedValue,
   memberAccountFromTransaction,
   pickMatchingWorkflow,
-  stornoEnteredKey,
   type ExpandedStepRow,
   type SourceTransaction,
   type WorkflowTemplate,
@@ -62,9 +62,7 @@ export type ConvertStrapi = {
     };
   };
   requestContext: {
-    get: () =>
-      | { state?: { publishGuardLinked?: boolean } }
-      | undefined;
+    get: () => { state?: { publishGuardLinked?: boolean } } | undefined;
   };
   log: { warn: (message: string) => void };
 };
@@ -184,10 +182,16 @@ async function loadMemberSiblingMap(
     },
   });
 
-  return buildSiblingMap(memberAccount, member as {
-    account?: { documentId: string; code?: string | number | null } | null;
-    private_account?: { documentId: string; code?: string | number | null } | null;
-  });
+  return buildSiblingMap(
+    memberAccount,
+    member as {
+      account?: { documentId: string; code?: string | number | null } | null;
+      private_account?: {
+        documentId: string;
+        code?: string | number | null;
+      } | null;
+    },
+  );
 }
 
 function transactionWritePayload(
@@ -312,16 +316,12 @@ async function syncSourceAfterConvert(
   if (published) {
     const draft = await loadDraftForPublishCheck(strapi, documentId);
     if (shouldPublishConvertedSource(draft, true)) {
-      await withPublishGuardLinked(strapi, () =>
-        api.publish({ documentId }),
-      );
+      await withPublishGuardLinked(strapi, () => api.publish({ documentId }));
     }
     return;
   }
   try {
-    await withPublishGuardLinked(strapi, () =>
-      api.unpublish({ documentId }),
-    );
+    await withPublishGuardLinked(strapi, () => api.unpublish({ documentId }));
   } catch {
     // Already draft-only — nothing to unpublish.
   }
@@ -386,31 +386,23 @@ export async function convertTransactions(
     const createdDocumentIds: string[] = [];
 
     if (keepOriginal) {
-      // Storno mirrors the source. Draft v1 may omit organization — leave empty
-      // rather than inventing one from steps or rejecting Convert.
-      const stornoOrganization = transaction.organization?.documentId;
-      if (!transaction.currency_type?.documentId) {
-        throw new TransactionWorkflowError(
-          'Source transaction currency_type is required for convert',
-          422,
-        );
-      }
+      const stornoShape = buildStornoRowShape(transaction);
 
       stornoDocumentId = await createTransactionRow(
         strapi,
         {
-          date: transaction.date,
-          amount: -Number(transaction.amount),
-          description: transaction.description,
-          debit_account: transaction.debit_account?.documentId,
-          credit_account: transaction.credit_account?.documentId,
-          currency_type: transaction.currency_type.documentId,
-          ...(stornoOrganization
-            ? { organization: stornoOrganization }
+          date: stornoShape.date,
+          amount: stornoShape.amount,
+          description: stornoShape.description,
+          debit_account: stornoShape.debit_account?.documentId,
+          credit_account: stornoShape.credit_account?.documentId,
+          currency_type: stornoShape.currency_type.documentId,
+          ...(stornoShape.organization?.documentId
+            ? { organization: stornoShape.organization.documentId }
             : {}),
-          transaction_type: transaction.transaction_type?.documentId,
-          related_transaction: transaction.documentId,
-          entered_key: stornoEnteredKey(transaction.documentId),
+          transaction_type: stornoShape.transaction_type?.documentId,
+          related_transaction: stornoShape.related_transaction.documentId,
+          entered_key: stornoShape.entered_key,
           converted_to_workflow: CONVERTED_STORNO,
         },
         published,
@@ -432,11 +424,7 @@ export async function convertTransactions(
         createdDocumentIds.push(documentId);
       }
 
-      await syncSourceAfterConvert(
-        strapi,
-        transaction.documentId,
-        published,
-      );
+      await syncSourceAfterConvert(strapi, transaction.documentId, published);
     } else {
       let previousRelated: string | null = null;
       for (const row of expanded) {
