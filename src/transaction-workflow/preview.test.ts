@@ -298,9 +298,7 @@ describe('buildConvertPreview', () => {
       currencyLookup(huf),
     );
     assert.ok(
-      preview.warnings.some((line) =>
-        line.includes('do not sum to 100%'),
-      ),
+      preview.warnings.some((line) => line.includes('do not sum to 100%')),
     );
   });
 

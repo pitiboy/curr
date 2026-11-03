@@ -78,10 +78,7 @@ const RECEIPT_WARNING =
 const PERCENT_SUM_WARNING =
   'Step percentages do not sum to 100% of the original amount';
 
-function accountPairKey(
-  debit: AccountRef,
-  credit: AccountRef,
-): string | null {
+function accountPairKey(debit: AccountRef, credit: AccountRef): string | null {
   const debitKey = accountCodeString(debit) ?? debit.documentId;
   const creditKey = accountCodeString(credit) ?? credit.documentId;
   if (!debitKey || !creditKey) return null;
