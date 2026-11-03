@@ -3,12 +3,12 @@
  * Reuses expandWorkflowSteps and storno rules from convert.ts.
  */
 import {
+  accountCodeString,
   buildStornoRowShape,
   expandWorkflowSteps,
   isExpandableConvertedValue,
   isMemberAccountCode,
   pickMatchingWorkflow,
-  stepAmount,
   TransactionWorkflowError,
   type AccountRef,
   type ExpandedStepRow,
@@ -78,6 +78,16 @@ const RECEIPT_WARNING =
 const PERCENT_SUM_WARNING =
   'Step percentages do not sum to 100% of the original amount';
 
+function accountPairKey(
+  debit: AccountRef,
+  credit: AccountRef,
+): string | null {
+  const debitKey = accountCodeString(debit) ?? debit.documentId;
+  const creditKey = accountCodeString(credit) ?? credit.documentId;
+  if (!debitKey || !creditKey) return null;
+  return `${debitKey}:${creditKey}`;
+}
+
 function requireAccountMeta(
   account: AccountRef | null | undefined,
   lookup: AccountMetaLookup,
@@ -126,7 +136,6 @@ function collectPreviewWarnings(
   transaction: SourceTransaction,
   expanded: ExpandedStepRow[],
   workflow: WorkflowTemplate,
-  sourceAmount: number,
 ): string[] {
   const warnings: string[] = [];
   const hasReceipts = (transaction.receipts?.length ?? 0) > 0;
@@ -138,17 +147,18 @@ function collectPreviewWarnings(
     warnings.push(RECEIPT_WARNING);
   }
 
-  const percents = (workflow.step ?? [])
-    .map((step) => Number(step.percent))
-    .filter((value) => Number.isFinite(value));
-  if (percents.length > 0) {
-    const sum = percents.reduce((total, value) => total + value, 0);
-    const stepsTotal = expanded.reduce((total, row) => total + row.amount, 0);
-    const expectedTotal = stepAmount(sourceAmount, sum);
+  const percentSumByPair = new Map<string, number>();
+  for (const row of expanded) {
+    const percent = stepPercent(workflow, row.index);
+    if (percent == null) continue;
+    const key = accountPairKey(row.debit_account, row.credit_account);
+    if (!key) continue;
+    percentSumByPair.set(key, (percentSumByPair.get(key) ?? 0) + percent);
+  }
+  for (const sum of percentSumByPair.values()) {
     if (Math.abs(sum - 100) > 0.0001) {
       warnings.push(PERCENT_SUM_WARNING);
-    } else if (Math.abs(stepsTotal - expectedTotal) > 0.01) {
-      warnings.push(PERCENT_SUM_WARNING);
+      break;
     }
   }
 
@@ -228,7 +238,6 @@ export function buildConvertPreview(
     transaction,
     expanded,
     workflow,
-    sourceAmount,
   );
 
   const originalCurrencyId = transaction.currency_type?.documentId;
