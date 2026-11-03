@@ -1,6 +1,6 @@
 /**
  * Convert API Strapi layer: load templates/transactions, expand, then create/publish/delete.
- * keep_original: storno + step rows, related_transaction -> original;
+ * keep_original: mark source original, then storno + step rows (related_transaction -> original);
  * converted_to_workflow: original on source, storno on storno, expanded on steps.
  * Generated rows follow steps_published. The source is published only when it
  * already meets the seven publish-required fields; draft v1 may omit
@@ -386,6 +386,8 @@ export async function convertTransactions(
     const createdDocumentIds: string[] = [];
 
     if (keepOriginal) {
+      await syncSourceAfterConvert(strapi, transaction.documentId, published);
+
       const stornoShape = buildStornoRowShape(transaction);
 
       stornoDocumentId = await createTransactionRow(
@@ -423,8 +425,6 @@ export async function convertTransactions(
         );
         createdDocumentIds.push(documentId);
       }
-
-      await syncSourceAfterConvert(strapi, transaction.documentId, published);
     } else {
       let previousRelated: string | null = null;
       for (const row of expanded) {
