@@ -163,6 +163,7 @@
         legacyKey: source.keyPrefix + item.row,
         date: item.date,
         amount: item.amount,
+        currency: item.currency || source.currencyCode || null,
         description: [item.description, excelBlock(item)].filter(Boolean).join("\n\n"),
         creditAccount: credit,
         debitAccount: debit,
@@ -180,8 +181,11 @@
 
     const unique = (values) => [...new Set(values.filter(Boolean))];
     exports.trxRows = rows;
-    exports.trxCurrencyCodes = rows.length && source.currencyCode ? [source.currencyCode] : [];
-    exports.trxCurrencyCode = source.currencyCode;
+    const fileCurrency = source.currencyCode || null;
+    exports.trxCurrencyCodes = unique(
+      rows.map((row) => row.currency || fileCurrency).filter(Boolean),
+    );
+    exports.trxCurrencyCode = fileCurrency;
     const accountRefs = rows.flatMap((row) => [row.creditAccount, row.debitAccount]).filter(Boolean);
     const refRows = {};
     accountRefs.forEach((ref) => { refRows[ref] = (refRows[ref] || 0) + 1; });
@@ -451,11 +455,12 @@ Content-Type: application/json
 # @loop for item of trxRows
 # Rewrites the draft that already has this entered_key. Receipts stay.
 {{
-  const currencyId = trxCurrencyIds[trxCurrencyCode];
+  const currencyCode = item.currency || trxCurrencyCode;
+  const currencyId = currencyCode && trxCurrencyIds[currencyCode];
   if (!trxIds[item.key] || trxFailed[item.key]) {
     exports.$cancel = true;
   } else if (!currencyId) {
-    console.error("missing currency for " + item.key);
+    console.error("missing currency for " + item.key + " (" + currencyCode + ")");
     exports.$cancel = true;
   } else {
     exports.updateId = trxIds[item.key];
@@ -490,11 +495,12 @@ Content-Type: application/json
 # @name create-transaction
 # @loop for item of trxRows
 {{
-  const currencyId = trxCurrencyIds[trxCurrencyCode];
+  const currencyCode = item.currency || trxCurrencyCode;
+  const currencyId = currencyCode && trxCurrencyIds[currencyCode];
   if (trxIds[item.key] || trxFailed[item.key]) {
     exports.$cancel = true;
   } else if (!currencyId) {
-    console.error("missing currency for " + item.key);
+    console.error("missing currency for " + item.key + " (" + currencyCode + ")");
     exports.$cancel = true;
   } else {
     exports.trxPayload = JSON.stringify({
@@ -571,11 +577,12 @@ Accept: application/json
 # @loop for item of trxRows
 # The other run inserted the key. Write this JSON onto that draft too.
 {{
-  const currencyId = trxCurrencyIds[trxCurrencyCode];
+  const currencyCode = item.currency || trxCurrencyCode;
+  const currencyId = currencyCode && trxCurrencyIds[currencyCode];
   if (!trxRaced[item.key] || !trxIds[item.key] || trxFailed[item.key]) {
     exports.$cancel = true;
   } else if (!currencyId) {
-    console.error("missing currency for " + item.key);
+    console.error("missing currency for " + item.key + " (" + currencyCode + ")");
     exports.$cancel = true;
   } else {
     exports.updateId = trxIds[item.key];

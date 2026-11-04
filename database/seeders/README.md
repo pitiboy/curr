@@ -138,6 +138,42 @@ npm run seed:http:kor:transaction-workflows -- prod
 
 Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A seed a `debit_code`/`credit_code` alapján választ komponenst: fix T/K → `workflow.step`; tagi debit → `step-member-debit`; tagi credit → `step-member-credit`. A `description` mezőben `{original.<mező>}` / `{1}` sablonok a Convertben oldódnak; `"organization": "{original.organization}"` → `organization_from_original` (üres forrás → üres). A Content API dynamic zone itemjeiben a `__component` mezőnek az objektum első kulcsának kell lennie (különben Strapi 5: `Invalid key __component at step`). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
 
+## Tojás napló import (edizone)
+
+A Google Sheet tojás naplóból generált tranzakciók az
+`http/edizone/data/transactions.json` fájlban vannak. A konverter a
+`database/seeders/egg-sheet-to-transactions.mjs` script; a vágóidőpontok a
+fájl tetején állíthatók (`PRODUCTION_FROM`, `SALES_FROM` — az eladások
+korábbra húzásához elég a `SALES_FROM` értékét módosítani, pl.
+`2026-01-01`).
+
+JSON generálás (alapértelmezett CSV:
+`database/seeders/fixtures/egg-sheet.csv`, vagy `--url` a nyilvános exportra):
+
+```bash
+npm run seed:egg:transactions:generate
+node database/seeders/egg-sheet-to-transactions.mjs --csv /path/to/egg.csv
+```
+
+HttpYac feltöltés piszkozatként (nem része a 01–09 körnek; előfeltétel: edizone
+01–09 seed, tagok a sheetben szereplő azonosítókkal):
+
+```bash
+npm run seed:http:edizone:transactions -- local
+npm run seed:http:edizone:transactions -- prod
+```
+
+Reset csak az `egg-sheet:` előtagú import sorokra (`importKeyPrefix` a JSON-ban):
+
+```bash
+npm run seed:http:edizone:transactions:reset:local
+npm run seed:http:edizone:transactions:reset -- prod
+```
+
+Token: `database/seeders/http/http-client.private.env.json` (edizone Full access).
+
+Unit tesztek: `npm run test:seeders`.
+
 ## Transaction import (kor)
 
 `http/common/transactions.http` loads the rows of the "Pénzmozgások" Excel sheet

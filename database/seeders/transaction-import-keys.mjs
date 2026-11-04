@@ -169,6 +169,10 @@ export function canonicalRow(row, fields, currencyCode = '') {
 }
 
 export function importKeys(source) {
+  const prefix =
+    typeof source.importKeyPrefix === 'string' && source.importKeyPrefix
+      ? source.importKeyPrefix
+      : 'excel:';
   const fields = keyFields(source);
   const seen = new Map();
   return (source.transactions || []).map((row) => {
@@ -178,7 +182,7 @@ export function importKeys(source) {
       .slice(0, HASH_LENGTH);
     const count = (seen.get(hash) || 0) + 1;
     seen.set(hash, count);
-    return 'excel:' + hash + (count > 1 ? '#' + count : '');
+    return prefix + hash + (count > 1 ? '#' + count : '');
   });
 }
 
