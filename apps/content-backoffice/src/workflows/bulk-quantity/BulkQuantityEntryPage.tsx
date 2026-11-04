@@ -73,7 +73,14 @@ import {
   buildPoolTransferLegPlans,
   type PoolTransferResolvedRefs,
 } from './poolTransfer';
-import { executeLegPlans, executeRowPlans } from './saveRows';
+import { submissionAnchorDocumentId } from '../../../../../src/transaction-event-anchor.ts';
+import {
+  attachDistributionLegAnchors,
+  attachPoolLegAnchors,
+  executeLegPlans,
+  executeRowPlansSequentially,
+  productionAnchorByOrganizationId,
+} from './saveRows';
 import type {
   BulkQuantityConflictChoice,
   BulkQuantityDuplicate,
@@ -407,18 +414,6 @@ export function BulkQuantityEntryPage({
     [config, refs, translate],
   );
 
-  const runProductionPlans = useCallback(
-    async (plans: BulkQuantityRowPlan[], date: string) => {
-      setSaving(true);
-      const batch = await executeRowPlans(dataProvider, plans, (plan) =>
-        buildProductionPayload(plan, date),
-      );
-      setResults((previous) => mergeRowResults(previous, batch));
-      setSaving(false);
-    },
-    [buildProductionPayload, dataProvider],
-  );
-
   const runLegPlans = useCallback(
     async (plans: DistributionTransactionLegPlan[]) => {
       setSaving(true);
@@ -627,13 +622,40 @@ export function BulkQuantityEntryPage({
       productionPlans: BulkQuantityRowPlan[],
       poolLegPlans: DistributionTransactionLegPlan[],
       date: string,
+      distributionLegPlans: DistributionTransactionLegPlan[] = [],
+      priorProductionResults: BulkQuantityRowResult[] = [],
     ) => {
-      await runProductionPlans(productionPlans, date);
+      setSaving(true);
+      const productionResults = await executeRowPlansSequentially(
+        dataProvider,
+        productionPlans,
+        (plan) => buildProductionPayload(plan, date),
+        { linkFollowingRowsToFirstSuccess: true },
+      );
+      setResults((previous) => mergeRowResults(previous, productionResults));
+      const mergedProduction = [...priorProductionResults, ...productionResults];
+      const submissionAnchor = submissionAnchorDocumentId(mergedProduction);
+      const productionByOrg = productionAnchorByOrganizationId(mergedProduction);
       if (poolLegPlans.length > 0) {
-        await runLegPlans(poolLegPlans);
+        await runLegPlans(
+          attachPoolLegAnchors(
+            poolLegPlans,
+            productionByOrg,
+            submissionAnchor,
+          ),
+        );
       }
+      if (distributionLegPlans.length > 0) {
+        await runLegPlans(
+          attachDistributionLegAnchors(
+            distributionLegPlans,
+            submissionAnchor,
+          ),
+        );
+      }
+      setSaving(false);
     },
-    [runLegPlans, runProductionPlans],
+    [buildProductionPayload, dataProvider, runLegPlans],
   );
 
   const buildSavePlans = (
@@ -812,10 +834,8 @@ export function BulkQuantityEntryPage({
       prepared.productionPlans,
       prepared.poolLegPlans,
       date,
+      prepared.legPlans,
     );
-    if (prepared.legPlans.length > 0) {
-      await runLegPlans(prepared.legPlans);
-    }
   };
 
   const confirmGlobalConflicts = async () => {
@@ -833,10 +853,12 @@ export function BulkQuantityEntryPage({
     setPendingPoolLegPlans(poolLegPlans);
     setPendingLegPlans(legPlans);
     setGlobalConflictOpen(false);
-    await runProductionAndPool(productionPlans, poolLegPlans, submitDate);
-    if (pendingIncludeDistribution && legPlans.length > 0) {
-      await runLegPlans(legPlans);
-    }
+    await runProductionAndPool(
+      productionPlans,
+      poolLegPlans,
+      submitDate,
+      pendingIncludeDistribution ? legPlans : [],
+    );
   };
 
   const confirmConflicts = async () => {
@@ -866,14 +888,24 @@ export function BulkQuantityEntryPage({
     const poolRetry = pendingPoolLegPlans.filter((plan) =>
       failedIds.includes(plan.legKey),
     );
-    if (productionRetry.length > 0 || poolRetry.length > 0) {
-      await runProductionAndPool(productionRetry, poolRetry, submitDate);
-    }
+    const priorProduction = results.filter(
+      (row) =>
+        row.status === 'success' &&
+        productionRows.some(
+          (production) => production.organizationId === row.organizationId,
+        ),
+    );
     const legRetry = pendingLegPlans.filter((plan) =>
       failedIds.includes(plan.legKey),
     );
-    if (legRetry.length > 0) {
-      await runLegPlans(legRetry);
+    if (productionRetry.length > 0 || poolRetry.length > 0 || legRetry.length > 0) {
+      await runProductionAndPool(
+        productionRetry,
+        poolRetry,
+        submitDate,
+        legRetry,
+        priorProduction,
+      );
     }
   };
 

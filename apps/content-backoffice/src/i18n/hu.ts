@@ -49,6 +49,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_currency: 'Pénznem',
     transactions_convert_preview_steps_total:
       'Lépések összege: %{steps} (eredeti: %{original})',
+    transactions_related_children: '%{count} kapcsolódó sor',
+    transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
+    transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
     transactions_none: 'Nincs tranzakció.',
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',
@@ -254,6 +257,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         status: 'Státusz',
         converted_to_workflow: 'Ügylet bontás',
         receipt: 'Bizonylat',
+        related_group: 'Kapcsolt tranzakciók',
       },
     },
     organizations: {

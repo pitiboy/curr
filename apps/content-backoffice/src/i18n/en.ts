@@ -48,6 +48,9 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_currency: 'Currency',
     transactions_convert_preview_steps_total:
       'Step total: %{steps} (original: %{original})',
+    transactions_related_children: '%{count} linked transaction(s)',
+    transactions_related_parent: 'Linked to: %{date} / %{amount}',
+    transactions_related_parent_short: 'Linked to another transaction',
     transactions_none: 'No transactions.',
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',
@@ -252,6 +255,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         status: 'Status',
         converted_to_workflow: 'Deal expansion',
         receipt: 'Receipt',
+        related_group: 'Linked transactions',
       },
     },
     organizations: {

@@ -26,7 +26,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:a8f34d91d8d87b8763b2"
+      "entered_key": "egg-sheet:a8f34d91d8d87b8763b2",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 261,
@@ -40,7 +41,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:505a803f4695f150f738"
+      "entered_key": "egg-sheet:505a803f4695f150f738",
+      "related_transaction_entered_key": "egg-sheet:a8f34d91d8d87b8763b2"
     },
     {
       "sheet_row": 261,
@@ -54,7 +56,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:3d87c3b550a802561c36"
+      "entered_key": "egg-sheet:3d87c3b550a802561c36",
+      "related_transaction_entered_key": "egg-sheet:a8f34d91d8d87b8763b2"
     },
     {
       "sheet_row": 261,
@@ -68,7 +71,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:5994308e03485dbcef34"
+      "entered_key": "egg-sheet:5994308e03485dbcef34",
+      "related_transaction_entered_key": "egg-sheet:a8f34d91d8d87b8763b2"
     },
     {
       "sheet_row": 261,
@@ -82,7 +86,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:951e6d604c308ba0611b"
+      "entered_key": "egg-sheet:951e6d604c308ba0611b",
+      "related_transaction_entered_key": "egg-sheet:a8f34d91d8d87b8763b2"
     },
     {
       "sheet_row": 262,
@@ -96,7 +101,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:b5cb1ac4e28e1f694472"
+      "entered_key": "egg-sheet:b5cb1ac4e28e1f694472",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 262,
@@ -110,7 +116,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:53f5fecfdf7182bc3b51"
+      "entered_key": "egg-sheet:53f5fecfdf7182bc3b51",
+      "related_transaction_entered_key": "egg-sheet:b5cb1ac4e28e1f694472"
     },
     {
       "sheet_row": 262,
@@ -124,7 +131,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:98c0a8162e861b0743b2"
+      "entered_key": "egg-sheet:98c0a8162e861b0743b2",
+      "related_transaction_entered_key": "egg-sheet:b5cb1ac4e28e1f694472"
     },
     {
       "sheet_row": 262,
@@ -138,7 +146,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:c8b1fe91793d3d7360c4"
+      "entered_key": "egg-sheet:c8b1fe91793d3d7360c4",
+      "related_transaction_entered_key": "egg-sheet:b5cb1ac4e28e1f694472"
     },
     {
       "sheet_row": 263,
@@ -152,7 +161,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:1c257cb15985029d1f22"
+      "entered_key": "egg-sheet:1c257cb15985029d1f22",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 263,
@@ -166,7 +176,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:8aee47ade5bb6ae85aa3"
+      "entered_key": "egg-sheet:8aee47ade5bb6ae85aa3",
+      "related_transaction_entered_key": "egg-sheet:1c257cb15985029d1f22"
     },
     {
       "sheet_row": 263,
@@ -180,7 +191,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:568a299da185a749ae7b"
+      "entered_key": "egg-sheet:568a299da185a749ae7b",
+      "related_transaction_entered_key": "egg-sheet:1c257cb15985029d1f22"
     },
     {
       "sheet_row": 263,
@@ -194,7 +206,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:51a1f31d02a85f7f0e38"
+      "entered_key": "egg-sheet:51a1f31d02a85f7f0e38",
+      "related_transaction_entered_key": "egg-sheet:1c257cb15985029d1f22"
     },
     {
       "sheet_row": 264,
@@ -208,7 +221,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:a9519d763cedafecbce3"
+      "entered_key": "egg-sheet:a9519d763cedafecbce3",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 264,
@@ -222,7 +236,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:214a1bb607aa807be346"
+      "entered_key": "egg-sheet:214a1bb607aa807be346",
+      "related_transaction_entered_key": "egg-sheet:a9519d763cedafecbce3"
     },
     {
       "sheet_row": 264,
@@ -236,7 +251,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:9045de4bd588adddb75c"
+      "entered_key": "egg-sheet:9045de4bd588adddb75c",
+      "related_transaction_entered_key": "egg-sheet:a9519d763cedafecbce3"
     },
     {
       "sheet_row": 264,
@@ -250,7 +266,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:73fa3c1e291d216264d7"
+      "entered_key": "egg-sheet:73fa3c1e291d216264d7",
+      "related_transaction_entered_key": "egg-sheet:a9519d763cedafecbce3"
     },
     {
       "sheet_row": 265,
@@ -264,7 +281,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Gabi)",
-      "entered_key": "egg-sheet:ab6fd25243af526acec7"
+      "entered_key": "egg-sheet:ab6fd25243af526acec7",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 265,
@@ -278,7 +296,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:280a14e2193514ca5f02"
+      "entered_key": "egg-sheet:280a14e2193514ca5f02",
+      "related_transaction_entered_key": "egg-sheet:ab6fd25243af526acec7"
     },
     {
       "sheet_row": 265,
@@ -292,7 +311,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:7acc681cd2e0181267a1"
+      "entered_key": "egg-sheet:7acc681cd2e0181267a1",
+      "related_transaction_entered_key": "egg-sheet:ab6fd25243af526acec7"
     },
     {
       "sheet_row": 265,
@@ -306,7 +326,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:51168720760947c2953d"
+      "entered_key": "egg-sheet:51168720760947c2953d",
+      "related_transaction_entered_key": "egg-sheet:ab6fd25243af526acec7"
     },
     {
       "sheet_row": 266,
@@ -320,7 +341,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:215ad6891dcb5cf0e330"
+      "entered_key": "egg-sheet:215ad6891dcb5cf0e330",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 266,
@@ -334,7 +356,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:e68386fe35be11309af4"
+      "entered_key": "egg-sheet:e68386fe35be11309af4",
+      "related_transaction_entered_key": "egg-sheet:215ad6891dcb5cf0e330"
     },
     {
       "sheet_row": 266,
@@ -348,7 +371,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:6ac0672d1074e0f5e46e"
+      "entered_key": "egg-sheet:6ac0672d1074e0f5e46e",
+      "related_transaction_entered_key": "egg-sheet:215ad6891dcb5cf0e330"
     },
     {
       "sheet_row": 266,
@@ -362,7 +386,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:5a3ac96b52a4c61dfa68"
+      "entered_key": "egg-sheet:5a3ac96b52a4c61dfa68",
+      "related_transaction_entered_key": "egg-sheet:215ad6891dcb5cf0e330"
     },
     {
       "sheet_row": 267,
@@ -376,7 +401,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Gabi)",
-      "entered_key": "egg-sheet:073ee2c2606f5b240027"
+      "entered_key": "egg-sheet:073ee2c2606f5b240027",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 267,
@@ -390,7 +416,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:1c978a34d9f611c5a681"
+      "entered_key": "egg-sheet:1c978a34d9f611c5a681",
+      "related_transaction_entered_key": "egg-sheet:073ee2c2606f5b240027"
     },
     {
       "sheet_row": 267,
@@ -404,7 +431,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:bc1e531fe202d9cf754b"
+      "entered_key": "egg-sheet:bc1e531fe202d9cf754b",
+      "related_transaction_entered_key": "egg-sheet:073ee2c2606f5b240027"
     },
     {
       "sheet_row": 267,
@@ -418,7 +446,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:5b1d1418bdd6b61be4eb"
+      "entered_key": "egg-sheet:5b1d1418bdd6b61be4eb",
+      "related_transaction_entered_key": "egg-sheet:073ee2c2606f5b240027"
     },
     {
       "sheet_row": 268,
@@ -432,7 +461,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Gabi)",
-      "entered_key": "egg-sheet:d452b8d68f9edcb9e0aa"
+      "entered_key": "egg-sheet:d452b8d68f9edcb9e0aa",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 268,
@@ -446,7 +476,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:b74fbca3f6e736ffa1d6"
+      "entered_key": "egg-sheet:b74fbca3f6e736ffa1d6",
+      "related_transaction_entered_key": "egg-sheet:d452b8d68f9edcb9e0aa"
     },
     {
       "sheet_row": 268,
@@ -460,7 +491,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:f7b2d8b0949e30011595"
+      "entered_key": "egg-sheet:f7b2d8b0949e30011595",
+      "related_transaction_entered_key": "egg-sheet:d452b8d68f9edcb9e0aa"
     },
     {
       "sheet_row": 268,
@@ -474,7 +506,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:5b3f8d7292b023fd6d37"
+      "entered_key": "egg-sheet:5b3f8d7292b023fd6d37",
+      "related_transaction_entered_key": "egg-sheet:d452b8d68f9edcb9e0aa"
     },
     {
       "sheet_row": 269,
@@ -488,7 +521,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Gabi)",
-      "entered_key": "egg-sheet:636df8838a67018335ae"
+      "entered_key": "egg-sheet:636df8838a67018335ae",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 269,
@@ -502,7 +536,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:e8ea61dbc88596dd25f1"
+      "entered_key": "egg-sheet:e8ea61dbc88596dd25f1",
+      "related_transaction_entered_key": "egg-sheet:636df8838a67018335ae"
     },
     {
       "sheet_row": 269,
@@ -516,7 +551,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:39a5b9e4f6ff43632908"
+      "entered_key": "egg-sheet:39a5b9e4f6ff43632908",
+      "related_transaction_entered_key": "egg-sheet:636df8838a67018335ae"
     },
     {
       "sheet_row": 269,
@@ -530,7 +566,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:90fc4192a9bf11488154"
+      "entered_key": "egg-sheet:90fc4192a9bf11488154",
+      "related_transaction_entered_key": "egg-sheet:636df8838a67018335ae"
     },
     {
       "sheet_row": 270,
@@ -544,7 +581,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:8d309027caf62b1dee0d"
+      "entered_key": "egg-sheet:8d309027caf62b1dee0d",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 270,
@@ -558,7 +596,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:8c066bdbf4cf0b524867"
+      "entered_key": "egg-sheet:8c066bdbf4cf0b524867",
+      "related_transaction_entered_key": "egg-sheet:8d309027caf62b1dee0d"
     },
     {
       "sheet_row": 270,
@@ -572,7 +611,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:a6fa0e1c8992cead40c4"
+      "entered_key": "egg-sheet:a6fa0e1c8992cead40c4",
+      "related_transaction_entered_key": "egg-sheet:8d309027caf62b1dee0d"
     },
     {
       "sheet_row": 270,
@@ -586,7 +626,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:dceca481a9222a0a16e0"
+      "entered_key": "egg-sheet:dceca481a9222a0a16e0",
+      "related_transaction_entered_key": "egg-sheet:8d309027caf62b1dee0d"
     },
     {
       "sheet_row": 271,
@@ -600,7 +641,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:91471230e9a9b521f328"
+      "entered_key": "egg-sheet:91471230e9a9b521f328",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 271,
@@ -614,7 +656,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:51e7a7d498da86d3773e"
+      "entered_key": "egg-sheet:51e7a7d498da86d3773e",
+      "related_transaction_entered_key": "egg-sheet:91471230e9a9b521f328"
     },
     {
       "sheet_row": 271,
@@ -628,7 +671,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:01dacc8b57b31f5d6384"
+      "entered_key": "egg-sheet:01dacc8b57b31f5d6384",
+      "related_transaction_entered_key": "egg-sheet:91471230e9a9b521f328"
     },
     {
       "sheet_row": 271,
@@ -642,7 +686,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:1f78a7cbb746b9dbe1a4"
+      "entered_key": "egg-sheet:1f78a7cbb746b9dbe1a4",
+      "related_transaction_entered_key": "egg-sheet:91471230e9a9b521f328"
     },
     {
       "sheet_row": 272,
@@ -656,7 +701,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:c1e1f5bf23049d0eab7f"
+      "entered_key": "egg-sheet:c1e1f5bf23049d0eab7f",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 272,
@@ -670,7 +716,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:af0c771b3e152b5de9e0"
+      "entered_key": "egg-sheet:af0c771b3e152b5de9e0",
+      "related_transaction_entered_key": "egg-sheet:c1e1f5bf23049d0eab7f"
     },
     {
       "sheet_row": 272,
@@ -684,7 +731,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:58a5bfca560d347bcf24"
+      "entered_key": "egg-sheet:58a5bfca560d347bcf24",
+      "related_transaction_entered_key": "egg-sheet:c1e1f5bf23049d0eab7f"
     },
     {
       "sheet_row": 272,
@@ -698,7 +746,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:0b00e0efbd89d97b6b54"
+      "entered_key": "egg-sheet:0b00e0efbd89d97b6b54",
+      "related_transaction_entered_key": "egg-sheet:c1e1f5bf23049d0eab7f"
     },
     {
       "sheet_row": 273,
@@ -712,7 +761,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:9f0a7c858f3e7c476d1c"
+      "entered_key": "egg-sheet:9f0a7c858f3e7c476d1c",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 273,
@@ -726,7 +776,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:565a2affeac2b3d1f365"
+      "entered_key": "egg-sheet:565a2affeac2b3d1f365",
+      "related_transaction_entered_key": "egg-sheet:9f0a7c858f3e7c476d1c"
     },
     {
       "sheet_row": 273,
@@ -740,7 +791,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:25938817eec09a77aaea"
+      "entered_key": "egg-sheet:25938817eec09a77aaea",
+      "related_transaction_entered_key": "egg-sheet:9f0a7c858f3e7c476d1c"
     },
     {
       "sheet_row": 273,
@@ -754,7 +806,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:3a56ad86432707e0a18e"
+      "entered_key": "egg-sheet:3a56ad86432707e0a18e",
+      "related_transaction_entered_key": "egg-sheet:9f0a7c858f3e7c476d1c"
     },
     {
       "sheet_row": 274,
@@ -768,7 +821,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:c2099b086694939641ec"
+      "entered_key": "egg-sheet:c2099b086694939641ec",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 274,
@@ -782,7 +836,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:fb35acb92783e271aa9d"
+      "entered_key": "egg-sheet:fb35acb92783e271aa9d",
+      "related_transaction_entered_key": "egg-sheet:c2099b086694939641ec"
     },
     {
       "sheet_row": 274,
@@ -796,7 +851,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:e26ac9e5ccee547100c0"
+      "entered_key": "egg-sheet:e26ac9e5ccee547100c0",
+      "related_transaction_entered_key": "egg-sheet:c2099b086694939641ec"
     },
     {
       "sheet_row": 274,
@@ -810,7 +866,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:1eb3dee8b3d6ee6f712d"
+      "entered_key": "egg-sheet:1eb3dee8b3d6ee6f712d",
+      "related_transaction_entered_key": "egg-sheet:c2099b086694939641ec"
     },
     {
       "sheet_row": 275,
@@ -824,7 +881,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:17f838071c6523c73e69"
+      "entered_key": "egg-sheet:17f838071c6523c73e69",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 275,
@@ -838,7 +896,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:3b415e97eca954f3d94a"
+      "entered_key": "egg-sheet:3b415e97eca954f3d94a",
+      "related_transaction_entered_key": "egg-sheet:17f838071c6523c73e69"
     },
     {
       "sheet_row": 275,
@@ -852,7 +911,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:7af353123c271f368a26"
+      "entered_key": "egg-sheet:7af353123c271f368a26",
+      "related_transaction_entered_key": "egg-sheet:17f838071c6523c73e69"
     },
     {
       "sheet_row": 275,
@@ -866,7 +926,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Peti",
-      "entered_key": "egg-sheet:7f3b121c2672643e741d"
+      "entered_key": "egg-sheet:7f3b121c2672643e741d",
+      "related_transaction_entered_key": "egg-sheet:17f838071c6523c73e69"
     },
     {
       "sheet_row": 276,
@@ -880,7 +941,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:668fb8435b022f0c15ff"
+      "entered_key": "egg-sheet:668fb8435b022f0c15ff",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 276,
@@ -894,7 +956,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:26659289f3758dcdbd04"
+      "entered_key": "egg-sheet:26659289f3758dcdbd04",
+      "related_transaction_entered_key": "egg-sheet:668fb8435b022f0c15ff"
     },
     {
       "sheet_row": 276,
@@ -908,7 +971,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:2735709a78aa3cfa7aea"
+      "entered_key": "egg-sheet:2735709a78aa3cfa7aea",
+      "related_transaction_entered_key": "egg-sheet:668fb8435b022f0c15ff"
     },
     {
       "sheet_row": 276,
@@ -922,7 +986,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:77052eb199c560b19a4b"
+      "entered_key": "egg-sheet:77052eb199c560b19a4b",
+      "related_transaction_entered_key": "egg-sheet:668fb8435b022f0c15ff"
     },
     {
       "sheet_row": 277,
@@ -936,7 +1001,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:c93f9e2eaf0065688046"
+      "entered_key": "egg-sheet:c93f9e2eaf0065688046",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 277,
@@ -950,7 +1016,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:38870854a31a1e3f667a"
+      "entered_key": "egg-sheet:38870854a31a1e3f667a",
+      "related_transaction_entered_key": "egg-sheet:c93f9e2eaf0065688046"
     },
     {
       "sheet_row": 277,
@@ -964,7 +1031,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:925e59be94d16773bedf"
+      "entered_key": "egg-sheet:925e59be94d16773bedf",
+      "related_transaction_entered_key": "egg-sheet:c93f9e2eaf0065688046"
     },
     {
       "sheet_row": 278,
@@ -978,7 +1046,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:e8ac8f218ed4b93aff14"
+      "entered_key": "egg-sheet:e8ac8f218ed4b93aff14",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 278,
@@ -992,7 +1061,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:36847f3b154406610486"
+      "entered_key": "egg-sheet:36847f3b154406610486",
+      "related_transaction_entered_key": "egg-sheet:e8ac8f218ed4b93aff14"
     },
     {
       "sheet_row": 278,
@@ -1006,7 +1076,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:89f83fdd03e456178f61"
+      "entered_key": "egg-sheet:89f83fdd03e456178f61",
+      "related_transaction_entered_key": "egg-sheet:e8ac8f218ed4b93aff14"
     },
     {
       "sheet_row": 278,
@@ -1020,7 +1091,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Gabi",
-      "entered_key": "egg-sheet:a7bdfb7927dfded0c5d6"
+      "entered_key": "egg-sheet:a7bdfb7927dfded0c5d6",
+      "related_transaction_entered_key": "egg-sheet:e8ac8f218ed4b93aff14"
     },
     {
       "sheet_row": 279,
@@ -1034,7 +1106,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:204f29074c39b847a55b"
+      "entered_key": "egg-sheet:204f29074c39b847a55b",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 279,
@@ -1048,7 +1121,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:fc90f88e3cd752329bcb"
+      "entered_key": "egg-sheet:fc90f88e3cd752329bcb",
+      "related_transaction_entered_key": "egg-sheet:204f29074c39b847a55b"
     },
     {
       "sheet_row": 279,
@@ -1062,7 +1136,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:6064feace23621e08519"
+      "entered_key": "egg-sheet:6064feace23621e08519",
+      "related_transaction_entered_key": "egg-sheet:204f29074c39b847a55b"
     },
     {
       "sheet_row": 280,
@@ -1076,7 +1151,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:065f7085b50fc83f6a38"
+      "entered_key": "egg-sheet:065f7085b50fc83f6a38",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 280,
@@ -1090,7 +1166,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:6a0f1e7b3e0129dbadf1"
+      "entered_key": "egg-sheet:6a0f1e7b3e0129dbadf1",
+      "related_transaction_entered_key": "egg-sheet:065f7085b50fc83f6a38"
     },
     {
       "sheet_row": 280,
@@ -1104,7 +1181,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:f1aba0a3a48d3aa53104"
+      "entered_key": "egg-sheet:f1aba0a3a48d3aa53104",
+      "related_transaction_entered_key": "egg-sheet:065f7085b50fc83f6a38"
     },
     {
       "sheet_row": 280,
@@ -1118,7 +1196,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Dávid",
-      "entered_key": "egg-sheet:b7403f57c20ccc30debd"
+      "entered_key": "egg-sheet:b7403f57c20ccc30debd",
+      "related_transaction_entered_key": "egg-sheet:065f7085b50fc83f6a38"
     },
     {
       "sheet_row": 281,
@@ -1132,7 +1211,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:d077f705f5058fca2369"
+      "entered_key": "egg-sheet:d077f705f5058fca2369",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 281,
@@ -1146,7 +1226,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:dd25bf9d0458fd58755e"
+      "entered_key": "egg-sheet:dd25bf9d0458fd58755e",
+      "related_transaction_entered_key": "egg-sheet:d077f705f5058fca2369"
     },
     {
       "sheet_row": 281,
@@ -1160,7 +1241,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:9fbc6ff5f4159b0b197f"
+      "entered_key": "egg-sheet:9fbc6ff5f4159b0b197f",
+      "related_transaction_entered_key": "egg-sheet:d077f705f5058fca2369"
     },
     {
       "sheet_row": 281,
@@ -1174,7 +1256,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:8b118f7cd841c25d8bec"
+      "entered_key": "egg-sheet:8b118f7cd841c25d8bec",
+      "related_transaction_entered_key": "egg-sheet:d077f705f5058fca2369"
     },
     {
       "sheet_row": 282,
@@ -1188,7 +1271,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:ea45d1ba2e54036107a8"
+      "entered_key": "egg-sheet:ea45d1ba2e54036107a8",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 282,
@@ -1202,7 +1286,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:5209ce916e69794b55a9"
+      "entered_key": "egg-sheet:5209ce916e69794b55a9",
+      "related_transaction_entered_key": "egg-sheet:ea45d1ba2e54036107a8"
     },
     {
       "sheet_row": 282,
@@ -1216,7 +1301,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:18f592e4fa00dc9ba3cb"
+      "entered_key": "egg-sheet:18f592e4fa00dc9ba3cb",
+      "related_transaction_entered_key": "egg-sheet:ea45d1ba2e54036107a8"
     },
     {
       "sheet_row": 282,
@@ -1230,7 +1316,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:dd799fcf3b3b9e279add"
+      "entered_key": "egg-sheet:dd799fcf3b3b9e279add",
+      "related_transaction_entered_key": "egg-sheet:ea45d1ba2e54036107a8"
     },
     {
       "sheet_row": 283,
@@ -1244,7 +1331,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:b08e805f5830368e0eb3"
+      "entered_key": "egg-sheet:b08e805f5830368e0eb3",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 283,
@@ -1258,7 +1346,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:32884d45c48bb32f64bb"
+      "entered_key": "egg-sheet:32884d45c48bb32f64bb",
+      "related_transaction_entered_key": "egg-sheet:b08e805f5830368e0eb3"
     },
     {
       "sheet_row": 283,
@@ -1272,7 +1361,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:439bcc53ada9ad1634f6"
+      "entered_key": "egg-sheet:439bcc53ada9ad1634f6",
+      "related_transaction_entered_key": "egg-sheet:b08e805f5830368e0eb3"
     },
     {
       "sheet_row": 283,
@@ -1286,7 +1376,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Peti",
-      "entered_key": "egg-sheet:87e0cd11c9023837d0e8"
+      "entered_key": "egg-sheet:87e0cd11c9023837d0e8",
+      "related_transaction_entered_key": "egg-sheet:b08e805f5830368e0eb3"
     },
     {
       "sheet_row": 284,
@@ -1300,7 +1391,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:47f4645a53d39809e050"
+      "entered_key": "egg-sheet:47f4645a53d39809e050",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 284,
@@ -1314,7 +1406,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:c639d991000e183a9808"
+      "entered_key": "egg-sheet:c639d991000e183a9808",
+      "related_transaction_entered_key": "egg-sheet:47f4645a53d39809e050"
     },
     {
       "sheet_row": 284,
@@ -1328,7 +1421,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:e2e2e4a93512fd570329"
+      "entered_key": "egg-sheet:e2e2e4a93512fd570329",
+      "related_transaction_entered_key": "egg-sheet:47f4645a53d39809e050"
     },
     {
       "sheet_row": 284,
@@ -1342,7 +1436,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:0e0ee42d5c5f2665b9b5"
+      "entered_key": "egg-sheet:0e0ee42d5c5f2665b9b5",
+      "related_transaction_entered_key": "egg-sheet:47f4645a53d39809e050"
     },
     {
       "sheet_row": 285,
@@ -1356,7 +1451,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:579dd5c616d95b194cbf"
+      "entered_key": "egg-sheet:579dd5c616d95b194cbf",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 285,
@@ -1370,7 +1466,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:29bf02a7f021b8df9409"
+      "entered_key": "egg-sheet:29bf02a7f021b8df9409",
+      "related_transaction_entered_key": "egg-sheet:579dd5c616d95b194cbf"
     },
     {
       "sheet_row": 285,
@@ -1384,7 +1481,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:e8fbe28172373aeff343"
+      "entered_key": "egg-sheet:e8fbe28172373aeff343",
+      "related_transaction_entered_key": "egg-sheet:579dd5c616d95b194cbf"
     },
     {
       "sheet_row": 286,
@@ -1398,7 +1496,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:5a9924e3baff27d052c5"
+      "entered_key": "egg-sheet:5a9924e3baff27d052c5",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 286,
@@ -1412,7 +1511,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:bd6e8a98f034db7cac42"
+      "entered_key": "egg-sheet:bd6e8a98f034db7cac42",
+      "related_transaction_entered_key": "egg-sheet:5a9924e3baff27d052c5"
     },
     {
       "sheet_row": 286,
@@ -1426,7 +1526,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:4a78fe7a70191f49e51f"
+      "entered_key": "egg-sheet:4a78fe7a70191f49e51f",
+      "related_transaction_entered_key": "egg-sheet:5a9924e3baff27d052c5"
     },
     {
       "sheet_row": 287,
@@ -1440,7 +1541,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:66eec9df30ea93ac1c19"
+      "entered_key": "egg-sheet:66eec9df30ea93ac1c19",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 287,
@@ -1454,7 +1556,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:235afe8050f79e84c1df"
+      "entered_key": "egg-sheet:235afe8050f79e84c1df",
+      "related_transaction_entered_key": "egg-sheet:66eec9df30ea93ac1c19"
     },
     {
       "sheet_row": 287,
@@ -1468,7 +1571,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:14c8a174b1880ec93591"
+      "entered_key": "egg-sheet:14c8a174b1880ec93591",
+      "related_transaction_entered_key": "egg-sheet:66eec9df30ea93ac1c19"
     },
     {
       "sheet_row": 288,
@@ -1482,7 +1586,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:73c87c06a57fee7be2f2"
+      "entered_key": "egg-sheet:73c87c06a57fee7be2f2",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 288,
@@ -1496,7 +1601,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:eb04e9e7e9a07e01be90"
+      "entered_key": "egg-sheet:eb04e9e7e9a07e01be90",
+      "related_transaction_entered_key": "egg-sheet:73c87c06a57fee7be2f2"
     },
     {
       "sheet_row": 288,
@@ -1510,7 +1616,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:a82431f31a0715d9ccb9"
+      "entered_key": "egg-sheet:a82431f31a0715d9ccb9",
+      "related_transaction_entered_key": "egg-sheet:73c87c06a57fee7be2f2"
     },
     {
       "sheet_row": 289,
@@ -1524,7 +1631,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:9d890dba443d13530cb1"
+      "entered_key": "egg-sheet:9d890dba443d13530cb1",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 289,
@@ -1538,7 +1646,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:4d5b631d5db21344548d"
+      "entered_key": "egg-sheet:4d5b631d5db21344548d",
+      "related_transaction_entered_key": "egg-sheet:9d890dba443d13530cb1"
     },
     {
       "sheet_row": 289,
@@ -1552,7 +1661,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:efea4e7ffec00fbd19e7"
+      "entered_key": "egg-sheet:efea4e7ffec00fbd19e7",
+      "related_transaction_entered_key": "egg-sheet:9d890dba443d13530cb1"
     },
     {
       "sheet_row": 290,
@@ -1566,7 +1676,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:89606c29a04bfd8215ca"
+      "entered_key": "egg-sheet:89606c29a04bfd8215ca",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 290,
@@ -1580,7 +1691,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:4e4effd450d9b2888753"
+      "entered_key": "egg-sheet:4e4effd450d9b2888753",
+      "related_transaction_entered_key": "egg-sheet:89606c29a04bfd8215ca"
     },
     {
       "sheet_row": 290,
@@ -1594,7 +1706,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:855384932d9e845004c6"
+      "entered_key": "egg-sheet:855384932d9e845004c6",
+      "related_transaction_entered_key": "egg-sheet:89606c29a04bfd8215ca"
     },
     {
       "sheet_row": 294,
@@ -1608,7 +1721,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:6e6a15a8387f3aa54b29"
+      "entered_key": "egg-sheet:6e6a15a8387f3aa54b29",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 294,
@@ -1622,7 +1736,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:f7b15e771b65922d9352"
+      "entered_key": "egg-sheet:f7b15e771b65922d9352",
+      "related_transaction_entered_key": "egg-sheet:6e6a15a8387f3aa54b29"
     },
     {
       "sheet_row": 294,
@@ -1636,7 +1751,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:bd34f8589f05983433a8"
+      "entered_key": "egg-sheet:bd34f8589f05983433a8",
+      "related_transaction_entered_key": "egg-sheet:6e6a15a8387f3aa54b29"
     },
     {
       "sheet_row": 295,
@@ -1650,7 +1766,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:182340f7ac8f15886155"
+      "entered_key": "egg-sheet:182340f7ac8f15886155",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 295,
@@ -1664,7 +1781,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:e2dede44a0eb9d7e0d1d"
+      "entered_key": "egg-sheet:e2dede44a0eb9d7e0d1d",
+      "related_transaction_entered_key": "egg-sheet:182340f7ac8f15886155"
     },
     {
       "sheet_row": 295,
@@ -1678,7 +1796,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:b61b0a3de15eb2452027"
+      "entered_key": "egg-sheet:b61b0a3de15eb2452027",
+      "related_transaction_entered_key": "egg-sheet:182340f7ac8f15886155"
     },
     {
       "sheet_row": 295,
@@ -1692,7 +1811,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Gabi",
-      "entered_key": "egg-sheet:2488ebc219a509c6d57f"
+      "entered_key": "egg-sheet:2488ebc219a509c6d57f",
+      "related_transaction_entered_key": "egg-sheet:182340f7ac8f15886155"
     },
     {
       "sheet_row": 296,
@@ -1706,7 +1826,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:c43b82b9189594b96f3b"
+      "entered_key": "egg-sheet:c43b82b9189594b96f3b",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 296,
@@ -1720,7 +1841,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:d1d00065b6545d7f76cc"
+      "entered_key": "egg-sheet:d1d00065b6545d7f76cc",
+      "related_transaction_entered_key": "egg-sheet:c43b82b9189594b96f3b"
     },
     {
       "sheet_row": 296,
@@ -1734,7 +1856,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:dabdc84ab3e151d0e76b"
+      "entered_key": "egg-sheet:dabdc84ab3e151d0e76b",
+      "related_transaction_entered_key": "egg-sheet:c43b82b9189594b96f3b"
     },
     {
       "sheet_row": 297,
@@ -1748,7 +1871,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:292f0a297980a710dcda"
+      "entered_key": "egg-sheet:292f0a297980a710dcda",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 297,
@@ -1762,7 +1886,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:c23f7fe16583ab3d71bb"
+      "entered_key": "egg-sheet:c23f7fe16583ab3d71bb",
+      "related_transaction_entered_key": "egg-sheet:292f0a297980a710dcda"
     },
     {
       "sheet_row": 297,
@@ -1776,7 +1901,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:2993657c00f4b47b1256"
+      "entered_key": "egg-sheet:2993657c00f4b47b1256",
+      "related_transaction_entered_key": "egg-sheet:292f0a297980a710dcda"
     },
     {
       "sheet_row": 298,
@@ -1790,7 +1916,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:6ab39dcc9943e8b11ba4"
+      "entered_key": "egg-sheet:6ab39dcc9943e8b11ba4",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 298,
@@ -1804,7 +1931,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:3de3c61eb8b7155f3604"
+      "entered_key": "egg-sheet:3de3c61eb8b7155f3604",
+      "related_transaction_entered_key": "egg-sheet:6ab39dcc9943e8b11ba4"
     },
     {
       "sheet_row": 298,
@@ -1818,7 +1946,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:fa2eb28f1be6d05ca891"
+      "entered_key": "egg-sheet:fa2eb28f1be6d05ca891",
+      "related_transaction_entered_key": "egg-sheet:6ab39dcc9943e8b11ba4"
     },
     {
       "sheet_row": 299,
@@ -1832,7 +1961,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:21d480f484583d02d47c"
+      "entered_key": "egg-sheet:21d480f484583d02d47c",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 299,
@@ -1846,7 +1976,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:4fc4157514a58dedefaa"
+      "entered_key": "egg-sheet:4fc4157514a58dedefaa",
+      "related_transaction_entered_key": "egg-sheet:21d480f484583d02d47c"
     },
     {
       "sheet_row": 299,
@@ -1860,7 +1991,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:fe376dc2febb02c2aef5"
+      "entered_key": "egg-sheet:fe376dc2febb02c2aef5",
+      "related_transaction_entered_key": "egg-sheet:21d480f484583d02d47c"
     },
     {
       "sheet_row": 299,
@@ -1874,7 +2006,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:535cd5e477a451c38232"
+      "entered_key": "egg-sheet:535cd5e477a451c38232",
+      "related_transaction_entered_key": "egg-sheet:21d480f484583d02d47c"
     },
     {
       "sheet_row": 300,
@@ -1888,7 +2021,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:3a6846ce8c4c6db94029"
+      "entered_key": "egg-sheet:3a6846ce8c4c6db94029",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 300,
@@ -1902,7 +2036,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:77d95b25723b5825dd79"
+      "entered_key": "egg-sheet:77d95b25723b5825dd79",
+      "related_transaction_entered_key": "egg-sheet:3a6846ce8c4c6db94029"
     },
     {
       "sheet_row": 300,
@@ -1916,7 +2051,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:42c7e80cd65579b36d2c"
+      "entered_key": "egg-sheet:42c7e80cd65579b36d2c",
+      "related_transaction_entered_key": "egg-sheet:3a6846ce8c4c6db94029"
     },
     {
       "sheet_row": 301,
@@ -1930,7 +2066,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:f20d786b7cbc8ae172a1"
+      "entered_key": "egg-sheet:f20d786b7cbc8ae172a1",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 301,
@@ -1944,7 +2081,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:ebbd5a8e4733046c4e8b"
+      "entered_key": "egg-sheet:ebbd5a8e4733046c4e8b",
+      "related_transaction_entered_key": "egg-sheet:f20d786b7cbc8ae172a1"
     },
     {
       "sheet_row": 301,
@@ -1958,7 +2096,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:dff593406a4a69e67588"
+      "entered_key": "egg-sheet:dff593406a4a69e67588",
+      "related_transaction_entered_key": "egg-sheet:f20d786b7cbc8ae172a1"
     },
     {
       "sheet_row": 302,
@@ -1972,7 +2111,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:6e7dcc7696e7fa4f2280"
+      "entered_key": "egg-sheet:6e7dcc7696e7fa4f2280",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 302,
@@ -1986,7 +2126,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:f3db01bfffa53331df67"
+      "entered_key": "egg-sheet:f3db01bfffa53331df67",
+      "related_transaction_entered_key": "egg-sheet:6e7dcc7696e7fa4f2280"
     },
     {
       "sheet_row": 302,
@@ -2000,7 +2141,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:64bad05e1f717eab6893"
+      "entered_key": "egg-sheet:64bad05e1f717eab6893",
+      "related_transaction_entered_key": "egg-sheet:6e7dcc7696e7fa4f2280"
     },
     {
       "sheet_row": 302,
@@ -2014,7 +2156,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:547b294ac44cdc89f34a"
+      "entered_key": "egg-sheet:547b294ac44cdc89f34a",
+      "related_transaction_entered_key": "egg-sheet:6e7dcc7696e7fa4f2280"
     },
     {
       "sheet_row": 302,
@@ -2028,7 +2171,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:df4b61e14ac690f2d70d"
+      "entered_key": "egg-sheet:df4b61e14ac690f2d70d",
+      "related_transaction_entered_key": "egg-sheet:6e7dcc7696e7fa4f2280"
     },
     {
       "sheet_row": 303,
@@ -2042,7 +2186,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:46edb4d568df4e6ef602"
+      "entered_key": "egg-sheet:46edb4d568df4e6ef602",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 303,
@@ -2056,7 +2201,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:4be4942f1daf3faec737"
+      "entered_key": "egg-sheet:4be4942f1daf3faec737",
+      "related_transaction_entered_key": "egg-sheet:46edb4d568df4e6ef602"
     },
     {
       "sheet_row": 303,
@@ -2070,7 +2216,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:cafa6d6c06f9b43931ef"
+      "entered_key": "egg-sheet:cafa6d6c06f9b43931ef",
+      "related_transaction_entered_key": "egg-sheet:46edb4d568df4e6ef602"
     },
     {
       "sheet_row": 304,
@@ -2084,7 +2231,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:416685631c03db3b36e5"
+      "entered_key": "egg-sheet:416685631c03db3b36e5",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 304,
@@ -2098,7 +2246,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:1c5754f562cc46e85601"
+      "entered_key": "egg-sheet:1c5754f562cc46e85601",
+      "related_transaction_entered_key": "egg-sheet:416685631c03db3b36e5"
     },
     {
       "sheet_row": 304,
@@ -2112,7 +2261,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:e83023e0dcf97e445347"
+      "entered_key": "egg-sheet:e83023e0dcf97e445347",
+      "related_transaction_entered_key": "egg-sheet:416685631c03db3b36e5"
     },
     {
       "sheet_row": 305,
@@ -2126,7 +2276,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:c668d5ca6c3349199638"
+      "entered_key": "egg-sheet:c668d5ca6c3349199638",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 305,
@@ -2140,7 +2291,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:7ce6e58fdc3f45a06b33"
+      "entered_key": "egg-sheet:7ce6e58fdc3f45a06b33",
+      "related_transaction_entered_key": "egg-sheet:c668d5ca6c3349199638"
     },
     {
       "sheet_row": 305,
@@ -2154,7 +2306,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:80fbff4f196d5aa67729"
+      "entered_key": "egg-sheet:80fbff4f196d5aa67729",
+      "related_transaction_entered_key": "egg-sheet:c668d5ca6c3349199638"
     },
     {
       "sheet_row": 306,
@@ -2168,7 +2321,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:284c0a515d1b2dd7f8f1"
+      "entered_key": "egg-sheet:284c0a515d1b2dd7f8f1",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 306,
@@ -2182,7 +2336,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:e726b3793ecc7478a6d8"
+      "entered_key": "egg-sheet:e726b3793ecc7478a6d8",
+      "related_transaction_entered_key": "egg-sheet:284c0a515d1b2dd7f8f1"
     },
     {
       "sheet_row": 306,
@@ -2196,7 +2351,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:a3dce52531743ab33975"
+      "entered_key": "egg-sheet:a3dce52531743ab33975",
+      "related_transaction_entered_key": "egg-sheet:284c0a515d1b2dd7f8f1"
     },
     {
       "sheet_row": 307,
@@ -2210,7 +2366,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:86b2e372b6970c382217"
+      "entered_key": "egg-sheet:86b2e372b6970c382217",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 307,
@@ -2224,7 +2381,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:f600aad9432163bc31ad"
+      "entered_key": "egg-sheet:f600aad9432163bc31ad",
+      "related_transaction_entered_key": "egg-sheet:86b2e372b6970c382217"
     },
     {
       "sheet_row": 307,
@@ -2238,7 +2396,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:2c7a2203296c1a54c864"
+      "entered_key": "egg-sheet:2c7a2203296c1a54c864",
+      "related_transaction_entered_key": "egg-sheet:86b2e372b6970c382217"
     },
     {
       "sheet_row": 308,
@@ -2252,7 +2411,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:c74be9e5d35f5ad9afba"
+      "entered_key": "egg-sheet:c74be9e5d35f5ad9afba",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 308,
@@ -2266,7 +2426,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:1f49ad41d3d39d632012"
+      "entered_key": "egg-sheet:1f49ad41d3d39d632012",
+      "related_transaction_entered_key": "egg-sheet:c74be9e5d35f5ad9afba"
     },
     {
       "sheet_row": 308,
@@ -2280,7 +2441,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:02b79cd12c593c09c3e5"
+      "entered_key": "egg-sheet:02b79cd12c593c09c3e5",
+      "related_transaction_entered_key": "egg-sheet:c74be9e5d35f5ad9afba"
     },
     {
       "sheet_row": 308,
@@ -2294,7 +2456,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Dávid",
-      "entered_key": "egg-sheet:1fe8c4c59c894ed5485c"
+      "entered_key": "egg-sheet:1fe8c4c59c894ed5485c",
+      "related_transaction_entered_key": "egg-sheet:c74be9e5d35f5ad9afba"
     },
     {
       "sheet_row": 309,
@@ -2308,7 +2471,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:267443c8157638dfef31"
+      "entered_key": "egg-sheet:267443c8157638dfef31",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 309,
@@ -2322,7 +2486,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:db9e0509f3b304df346e"
+      "entered_key": "egg-sheet:db9e0509f3b304df346e",
+      "related_transaction_entered_key": "egg-sheet:267443c8157638dfef31"
     },
     {
       "sheet_row": 309,
@@ -2336,7 +2501,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:ccad7ceba144c43c1300"
+      "entered_key": "egg-sheet:ccad7ceba144c43c1300",
+      "related_transaction_entered_key": "egg-sheet:267443c8157638dfef31"
     },
     {
       "sheet_row": 310,
@@ -2350,7 +2516,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:29478854a2ad69511d35"
+      "entered_key": "egg-sheet:29478854a2ad69511d35",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 310,
@@ -2364,7 +2531,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:f7c69042e4f8fda8b228"
+      "entered_key": "egg-sheet:f7c69042e4f8fda8b228",
+      "related_transaction_entered_key": "egg-sheet:29478854a2ad69511d35"
     },
     {
       "sheet_row": 310,
@@ -2378,7 +2546,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:0a35bccd0a3996a693c8"
+      "entered_key": "egg-sheet:0a35bccd0a3996a693c8",
+      "related_transaction_entered_key": "egg-sheet:29478854a2ad69511d35"
     },
     {
       "sheet_row": 311,
@@ -2392,7 +2561,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:f5d7d0ef074aace69aa3"
+      "entered_key": "egg-sheet:f5d7d0ef074aace69aa3",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 311,
@@ -2406,7 +2576,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:0cdb70c40135020bc0db"
+      "entered_key": "egg-sheet:0cdb70c40135020bc0db",
+      "related_transaction_entered_key": "egg-sheet:f5d7d0ef074aace69aa3"
     },
     {
       "sheet_row": 311,
@@ -2420,7 +2591,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:2cf7b28f4fdd6f683de7"
+      "entered_key": "egg-sheet:2cf7b28f4fdd6f683de7",
+      "related_transaction_entered_key": "egg-sheet:f5d7d0ef074aace69aa3"
     },
     {
       "sheet_row": 311,
@@ -2434,7 +2606,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:f17f084441312e1ed4ac"
+      "entered_key": "egg-sheet:f17f084441312e1ed4ac",
+      "related_transaction_entered_key": "egg-sheet:f5d7d0ef074aace69aa3"
     },
     {
       "sheet_row": 313,
@@ -2448,7 +2621,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:de6ac7b10a17dc89b6e8"
+      "entered_key": "egg-sheet:de6ac7b10a17dc89b6e8",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 313,
@@ -2462,7 +2636,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:0046eddcd1e569a6d56a"
+      "entered_key": "egg-sheet:0046eddcd1e569a6d56a",
+      "related_transaction_entered_key": "egg-sheet:de6ac7b10a17dc89b6e8"
     },
     {
       "sheet_row": 313,
@@ -2476,7 +2651,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:f58a29153f73e78e0477"
+      "entered_key": "egg-sheet:f58a29153f73e78e0477",
+      "related_transaction_entered_key": "egg-sheet:de6ac7b10a17dc89b6e8"
     },
     {
       "sheet_row": 314,
@@ -2490,7 +2666,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:f83f35b13e5db64d3678"
+      "entered_key": "egg-sheet:f83f35b13e5db64d3678",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 314,
@@ -2504,7 +2681,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:6075ac80be6605bbd5c5"
+      "entered_key": "egg-sheet:6075ac80be6605bbd5c5",
+      "related_transaction_entered_key": "egg-sheet:f83f35b13e5db64d3678"
     },
     {
       "sheet_row": 314,
@@ -2518,7 +2696,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:19e27416137a42f98735"
+      "entered_key": "egg-sheet:19e27416137a42f98735",
+      "related_transaction_entered_key": "egg-sheet:f83f35b13e5db64d3678"
     },
     {
       "sheet_row": 315,
@@ -2532,7 +2711,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:055e6131d8d2fc23a5db"
+      "entered_key": "egg-sheet:055e6131d8d2fc23a5db",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 315,
@@ -2546,7 +2726,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:770e5dc2b0b30ea3a4e5"
+      "entered_key": "egg-sheet:770e5dc2b0b30ea3a4e5",
+      "related_transaction_entered_key": "egg-sheet:055e6131d8d2fc23a5db"
     },
     {
       "sheet_row": 315,
@@ -2560,7 +2741,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:704e3a733ccfc8b399f6"
+      "entered_key": "egg-sheet:704e3a733ccfc8b399f6",
+      "related_transaction_entered_key": "egg-sheet:055e6131d8d2fc23a5db"
     },
     {
       "sheet_row": 316,
@@ -2574,7 +2756,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:e22ea252adf9e43203f5"
+      "entered_key": "egg-sheet:e22ea252adf9e43203f5",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 316,
@@ -2588,7 +2771,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:d81f9306b29a23c50cd1"
+      "entered_key": "egg-sheet:d81f9306b29a23c50cd1",
+      "related_transaction_entered_key": "egg-sheet:e22ea252adf9e43203f5"
     },
     {
       "sheet_row": 316,
@@ -2602,7 +2786,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:814a520660fec93f9484"
+      "entered_key": "egg-sheet:814a520660fec93f9484",
+      "related_transaction_entered_key": "egg-sheet:e22ea252adf9e43203f5"
     },
     {
       "sheet_row": 316,
@@ -2616,7 +2801,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Dávid",
-      "entered_key": "egg-sheet:935ac2ff3a3c2dd474c5"
+      "entered_key": "egg-sheet:935ac2ff3a3c2dd474c5",
+      "related_transaction_entered_key": "egg-sheet:e22ea252adf9e43203f5"
     },
     {
       "sheet_row": 317,
@@ -2630,7 +2816,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:29bb0e62edf3fe0a1d2a"
+      "entered_key": "egg-sheet:29bb0e62edf3fe0a1d2a",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 317,
@@ -2644,7 +2831,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:7bf7510f3892aa8ee9b1"
+      "entered_key": "egg-sheet:7bf7510f3892aa8ee9b1",
+      "related_transaction_entered_key": "egg-sheet:29bb0e62edf3fe0a1d2a"
     },
     {
       "sheet_row": 317,
@@ -2658,7 +2846,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:7bb5f6fb6521fe979ebc"
+      "entered_key": "egg-sheet:7bb5f6fb6521fe979ebc",
+      "related_transaction_entered_key": "egg-sheet:29bb0e62edf3fe0a1d2a"
     },
     {
       "sheet_row": 318,
@@ -2672,7 +2861,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:545532e250028c8fef80"
+      "entered_key": "egg-sheet:545532e250028c8fef80",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 318,
@@ -2686,7 +2876,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:8bc9ba0a0768a5fff473"
+      "entered_key": "egg-sheet:8bc9ba0a0768a5fff473",
+      "related_transaction_entered_key": "egg-sheet:545532e250028c8fef80"
     },
     {
       "sheet_row": 318,
@@ -2700,7 +2891,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:c9e092cd87dcc63b6dec"
+      "entered_key": "egg-sheet:c9e092cd87dcc63b6dec",
+      "related_transaction_entered_key": "egg-sheet:545532e250028c8fef80"
     },
     {
       "sheet_row": 319,
@@ -2714,7 +2906,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Peti)",
-      "entered_key": "egg-sheet:85042a10f21a25bee2e5"
+      "entered_key": "egg-sheet:85042a10f21a25bee2e5",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 319,
@@ -2728,7 +2921,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:b53e17901c16608d0373"
+      "entered_key": "egg-sheet:b53e17901c16608d0373",
+      "related_transaction_entered_key": "egg-sheet:85042a10f21a25bee2e5"
     },
     {
       "sheet_row": 319,
@@ -2742,7 +2936,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:53bbcc16bad9f6a00582"
+      "entered_key": "egg-sheet:53bbcc16bad9f6a00582",
+      "related_transaction_entered_key": "egg-sheet:85042a10f21a25bee2e5"
     },
     {
       "sheet_row": 319,
@@ -2756,7 +2951,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:0cb75db9f59741dbb634"
+      "entered_key": "egg-sheet:0cb75db9f59741dbb634",
+      "related_transaction_entered_key": "egg-sheet:85042a10f21a25bee2e5"
     },
     {
       "sheet_row": 321,
@@ -2770,7 +2966,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom (gyűjtötte: Gabi)",
-      "entered_key": "egg-sheet:32e1173afcade98f45a6"
+      "entered_key": "egg-sheet:32e1173afcade98f45a6",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 321,
@@ -2784,7 +2981,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:3ee2f5794e7064f33e40"
+      "entered_key": "egg-sheet:3ee2f5794e7064f33e40",
+      "related_transaction_entered_key": "egg-sheet:32e1173afcade98f45a6"
     },
     {
       "sheet_row": 321,
@@ -2798,7 +2996,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:fde55844a2d71dfbe9b3"
+      "entered_key": "egg-sheet:fde55844a2d71dfbe9b3",
+      "related_transaction_entered_key": "egg-sheet:32e1173afcade98f45a6"
     },
     {
       "sheet_row": 322,
@@ -2812,7 +3011,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom (gyűjtötte: Gabi)",
-      "entered_key": "egg-sheet:c56c44de0cc045d09554"
+      "entered_key": "egg-sheet:c56c44de0cc045d09554",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 322,
@@ -2826,7 +3026,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:ac40b1eefed4907b9677"
+      "entered_key": "egg-sheet:ac40b1eefed4907b9677",
+      "related_transaction_entered_key": "egg-sheet:c56c44de0cc045d09554"
     },
     {
       "sheet_row": 322,
@@ -2840,7 +3041,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:feca2b79cd599a0af67e"
+      "entered_key": "egg-sheet:feca2b79cd599a0af67e",
+      "related_transaction_entered_key": "egg-sheet:c56c44de0cc045d09554"
     },
     {
       "sheet_row": 322,
@@ -2854,7 +3056,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:9b097a8c5b17a48b78fc"
+      "entered_key": "egg-sheet:9b097a8c5b17a48b78fc",
+      "related_transaction_entered_key": "egg-sheet:c56c44de0cc045d09554"
     },
     {
       "sheet_row": 323,
@@ -2868,7 +3071,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2025 alom",
-      "entered_key": "egg-sheet:b693187825c9ffc00632"
+      "entered_key": "egg-sheet:b693187825c9ffc00632",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 323,
@@ -2882,7 +3086,8 @@
       "organization": "2025 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2025 alom → Tyúktartás",
-      "entered_key": "egg-sheet:50a98f1d50e7f2aee3ee"
+      "entered_key": "egg-sheet:50a98f1d50e7f2aee3ee",
+      "related_transaction_entered_key": "egg-sheet:b693187825c9ffc00632"
     },
     {
       "sheet_row": 323,
@@ -2896,7 +3101,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2025 alom",
-      "entered_key": "egg-sheet:b7cf661445eda838e6bc"
+      "entered_key": "egg-sheet:b7cf661445eda838e6bc",
+      "related_transaction_entered_key": "egg-sheet:b693187825c9ffc00632"
     },
     {
       "sheet_row": 324,
@@ -2910,7 +3116,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2026 alom",
-      "entered_key": "egg-sheet:4cb8fc2cb27978aae494"
+      "entered_key": "egg-sheet:4cb8fc2cb27978aae494",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 324,
@@ -2924,7 +3131,8 @@
       "organization": "2026 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2026 alom → Tyúktartás",
-      "entered_key": "egg-sheet:960acddc3cfea069907c"
+      "entered_key": "egg-sheet:960acddc3cfea069907c",
+      "related_transaction_entered_key": "egg-sheet:4cb8fc2cb27978aae494"
     },
     {
       "sheet_row": 324,
@@ -2938,7 +3146,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2026 alom",
-      "entered_key": "egg-sheet:e2019a69ef3f3e998631"
+      "entered_key": "egg-sheet:e2019a69ef3f3e998631",
+      "related_transaction_entered_key": "egg-sheet:4cb8fc2cb27978aae494"
     },
     {
       "sheet_row": 325,
@@ -2952,7 +3161,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás termelés – 2024 alom",
-      "entered_key": "egg-sheet:57a89a827cee2b59acd7"
+      "entered_key": "egg-sheet:57a89a827cee2b59acd7",
+      "related_transaction_entered_key": null
     },
     {
       "sheet_row": 325,
@@ -2966,7 +3176,8 @@
       "organization": "2024 alom",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (ól) – 2024 alom → Tyúktartás",
-      "entered_key": "egg-sheet:a35f71a9095a9c46ed7c"
+      "entered_key": "egg-sheet:a35f71a9095a9c46ed7c",
+      "related_transaction_entered_key": "egg-sheet:57a89a827cee2b59acd7"
     },
     {
       "sheet_row": 325,
@@ -2980,7 +3191,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás készlet átvezetés (Tyúktartás) – 2024 alom",
-      "entered_key": "egg-sheet:361688e5b43563ce8b4c"
+      "entered_key": "egg-sheet:361688e5b43563ce8b4c",
+      "related_transaction_entered_key": "egg-sheet:57a89a827cee2b59acd7"
     },
     {
       "sheet_row": 325,
@@ -2994,7 +3206,8 @@
       "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:920ab90046485d755c35"
+      "entered_key": "egg-sheet:920ab90046485d755c35",
+      "related_transaction_entered_key": "egg-sheet:57a89a827cee2b59acd7"
     }
   ]
 }

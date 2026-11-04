@@ -176,6 +176,10 @@
           pick(source.projectOrganizations, item.project) ||
           source.mainOrganization ||
           null,
+        relatedAnchorKey:
+          typeof item.related_transaction_entered_key === "string"
+            ? item.related_transaction_entered_key
+            : null,
       };
     });
 
@@ -226,6 +230,14 @@
         if (relations[field]) data[field] = relations[field];
         else if (mode === "update") data[field] = null;
       });
+      const relatedAnchorKey = item.relatedAnchorKey;
+      const relatedId =
+        relatedAnchorKey && maps.transactionIds && maps.transactionIds[relatedAnchorKey];
+      if (relatedId) {
+        data.related_transaction = relatedId;
+      } else if (mode === "update" && relatedAnchorKey) {
+        data.related_transaction = null;
+      }
       return data;
     };
   }
@@ -470,6 +482,7 @@ Content-Type: application/json
         accountIds: trxAccountIds,
         typeIds: trxTypeIds,
         organizationIds: trxOrganizationIds,
+        transactionIds: trxIds,
       }, "update"),
     });
   }
@@ -509,6 +522,7 @@ Content-Type: application/json
         accountIds: trxAccountIds,
         typeIds: trxTypeIds,
         organizationIds: trxOrganizationIds,
+        transactionIds: trxIds,
       }, "create"),
     });
   }
@@ -592,6 +606,7 @@ Accept: application/json
         accountIds: trxAccountIds,
         typeIds: trxTypeIds,
         organizationIds: trxOrganizationIds,
+        transactionIds: trxIds,
       }, "update"),
     });
   }
@@ -610,3 +625,29 @@ Content-Type: application/json
     console.info("updated: " + item.key);
   }
 }}
+
+###
+# @name link-related-transaction
+# @loop for item of trxRows
+# Second pass: ensure related_transaction is set once every entered_key is in trxIds.
+{{
+  if (!item.relatedAnchorKey || !trxIds[item.key] || trxFailed[item.key]) {
+    exports.$cancel = true;
+  } else {
+    const anchorId = trxIds[item.relatedAnchorKey];
+    if (!anchorId || anchorId === trxIds[item.key]) {
+      exports.$cancel = true;
+    } else {
+      exports.updateId = trxIds[item.key];
+      exports.trxPayload = JSON.stringify({
+        data: { related_transaction: anchorId },
+      });
+    }
+  }
+}}
+PUT {{baseUrl}}/api/transactions/{{updateId}}?status=draft
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{trxPayload}}

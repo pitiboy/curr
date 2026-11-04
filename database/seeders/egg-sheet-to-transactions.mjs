@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assignRelatedEnteredKeys } from './transaction-event-anchor.mjs';
 import {
   importKeys,
   memberIdentifierBase,
@@ -560,10 +561,11 @@ export function buildTransactionsJson(parsedRows, meta = {}) {
     transactions,
   };
   const keys = importKeys(source);
-  source.transactions = transactions.map((row, index) => ({
+  const withKeys = transactions.map((row, index) => ({
     ...row,
     entered_key: keys[index],
   }));
+  source.transactions = assignRelatedEnteredKeys(withKeys);
   return { json: source, warnings, stats, duplicateGroups };
 }
 

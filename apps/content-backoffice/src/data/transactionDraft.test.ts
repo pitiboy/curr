@@ -7,7 +7,7 @@ import {
 } from './transactionDraft';
 
 describe('transactionDraftBody', () => {
-  it('sends the create fields and drops audit and workflow relations', () => {
+  it('sends the create fields and drops audit fields but keeps related_transaction', () => {
     expect(
       transactionDraftBody({
         date: '2026-10-14',
@@ -33,6 +33,7 @@ describe('transactionDraftBody', () => {
       credit_account: 'credit-1',
       currency_type: 'currency-1',
       transaction_type: 'type-1',
+      related_transaction: 'tx-1',
     });
   });
 

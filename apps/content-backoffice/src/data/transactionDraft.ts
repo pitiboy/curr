@@ -40,6 +40,7 @@ export function transactionDraftBody(
     'credit_account',
     'currency_type',
     'transaction_type',
+    'related_transaction',
   ] as const) {
     const value = relationId(input[key]);
     if (value) body[key] = value;

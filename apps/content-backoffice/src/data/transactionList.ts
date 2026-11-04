@@ -93,6 +93,12 @@ export const transactionPopulate = {
   organization: true,
   debit_account: true,
   credit_account: true,
+  related_transaction: {
+    fields: ['documentId', 'date', 'description'],
+  },
+  related_transactions: {
+    fields: ['documentId', 'date', 'amount'],
+  },
   currency_type: {
     populate: {
       icon: { fields: ['url', 'name', 'mime'] },

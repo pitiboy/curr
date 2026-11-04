@@ -164,6 +164,12 @@ EGG_SHEET_MEMBERS='Dávid=dávid,Peti=peti,Gabi=gabi'
 Ismeretlen sheet név → figyelmeztetés, az érintett láb kimarad (a
 `transactions.http` továbbra is jelzi, ha a tag runtime nem oldódik fel).
 
+**Kapcsolt tranzakciók:** ugyanahhoz a sheet sorhoz tartozó lábak (termelés,
+átvezetés, kivét, eladás) a meglévő `related_transaction` mezővel kapcsolódnak
+a sor **termelés** tranzakciójához (`related_transaction_entered_key` a
+JSON-ban; http import feloldja `entered_key` alapján). Ugyanaz a minta, mint
+az ügylet-kifejtésnél (`convert-service`).
+
 **Szervezet és készlet:** termelés a coop org-on (`1300`/`4500`); utána két
 átvezetési sor (coop `4500`/`1300`, majd `Tyúktartás` `1300`/`4500`) — a
 modellben tranzakciónként egy `organization` mező van, ezért nem egyetlen

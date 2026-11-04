@@ -149,6 +149,13 @@ describe('buildTransactionsJson', () => {
     assert.equal(json.importKeyPrefix, 'egg-sheet:');
     assert.ok(json.transactions.length > 0);
     assert.ok(json.transactions.every((t) => t.entered_key.startsWith('egg-sheet:')));
+    const prod = json.transactions.find((t) => t.leg === 'production');
+    assert.ok(prod);
+    const pool = json.transactions.find(
+      (t) => t.sheet_row === prod.sheet_row && t.leg === 'pool-transfer-coop',
+    );
+    assert.equal(pool.related_transaction_entered_key, prod.entered_key);
+    assert.equal(prod.related_transaction_entered_key, null);
     const currencies = new Set(json.transactions.map((t) => t.currency));
     assert.ok(currencies.has('EGG'));
     const saleFixture = sheetRowsToTransactions(
