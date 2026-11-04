@@ -37,10 +37,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:88aba907a8b8617765a2"
+      "entered_key": "egg-sheet:5994308e03485dbcef34"
     },
     {
       "sheet_row": 261,
@@ -51,10 +51,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:68def9ed55439b193c03"
+      "entered_key": "egg-sheet:951e6d604c308ba0611b"
     },
     {
       "sheet_row": 262,
@@ -79,10 +79,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:11f8ee0596e81815b571"
+      "entered_key": "egg-sheet:c8b1fe91793d3d7360c4"
     },
     {
       "sheet_row": 263,
@@ -107,10 +107,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:9dba68f897e14a58b414"
+      "entered_key": "egg-sheet:51a1f31d02a85f7f0e38"
     },
     {
       "sheet_row": 264,
@@ -135,10 +135,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:3250948ab0a9a4361e39"
+      "entered_key": "egg-sheet:73fa3c1e291d216264d7"
     },
     {
       "sheet_row": 265,
@@ -163,10 +163,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:5b6c15f01f6a4bc2ec8c"
+      "entered_key": "egg-sheet:51168720760947c2953d"
     },
     {
       "sheet_row": 266,
@@ -191,10 +191,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:0e72fe05a35406339505"
+      "entered_key": "egg-sheet:5a3ac96b52a4c61dfa68"
     },
     {
       "sheet_row": 267,
@@ -219,10 +219,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:2107dc60b46ffb742b6f"
+      "entered_key": "egg-sheet:5b1d1418bdd6b61be4eb"
     },
     {
       "sheet_row": 268,
@@ -247,10 +247,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:8496b513460b34a1965b"
+      "entered_key": "egg-sheet:5b3f8d7292b023fd6d37"
     },
     {
       "sheet_row": 269,
@@ -275,10 +275,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:2b1bd2072dbda6177ba1"
+      "entered_key": "egg-sheet:90fc4192a9bf11488154"
     },
     {
       "sheet_row": 270,
@@ -303,10 +303,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:e82cc6ab946ca06fc477"
+      "entered_key": "egg-sheet:dceca481a9222a0a16e0"
     },
     {
       "sheet_row": 271,
@@ -331,10 +331,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:38e7c8f507802a835677"
+      "entered_key": "egg-sheet:1f78a7cbb746b9dbe1a4"
     },
     {
       "sheet_row": 272,
@@ -359,10 +359,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:7dd585cfaa6889fdf9ac"
+      "entered_key": "egg-sheet:0b00e0efbd89d97b6b54"
     },
     {
       "sheet_row": 273,
@@ -387,10 +387,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:b1a3b91e192b319be8d9"
+      "entered_key": "egg-sheet:3a56ad86432707e0a18e"
     },
     {
       "sheet_row": 274,
@@ -415,10 +415,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2026 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:d64417c185950334dcc6"
+      "entered_key": "egg-sheet:1eb3dee8b3d6ee6f712d"
     },
     {
       "sheet_row": 275,
@@ -443,10 +443,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2025 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Peti",
-      "entered_key": "egg-sheet:a86b6e210d52abd2c4a5"
+      "entered_key": "egg-sheet:7f3b121c2672643e741d"
     },
     {
       "sheet_row": 276,
@@ -471,10 +471,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:799409f5457a0a2490d9"
+      "entered_key": "egg-sheet:77052eb199c560b19a4b"
     },
     {
       "sheet_row": 277,
@@ -513,10 +513,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2026 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Gabi",
-      "entered_key": "egg-sheet:d91bc51159635040e2e7"
+      "entered_key": "egg-sheet:a7bdfb7927dfded0c5d6"
     },
     {
       "sheet_row": 279,
@@ -555,10 +555,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:dávid",
-      "organization": "2025 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Dávid",
-      "entered_key": "egg-sheet:6f8cffe011521cfd2978"
+      "entered_key": "egg-sheet:b7403f57c20ccc30debd"
     },
     {
       "sheet_row": 281,
@@ -583,10 +583,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2026 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:47ea617b9a035609dfe3"
+      "entered_key": "egg-sheet:8b118f7cd841c25d8bec"
     },
     {
       "sheet_row": 282,
@@ -611,10 +611,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:a7ac4662d8a9fc130aa6"
+      "entered_key": "egg-sheet:dd799fcf3b3b9e279add"
     },
     {
       "sheet_row": 283,
@@ -639,10 +639,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2025 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Peti",
-      "entered_key": "egg-sheet:585f678ca4df1b5d131b"
+      "entered_key": "egg-sheet:87e0cd11c9023837d0e8"
     },
     {
       "sheet_row": 284,
@@ -667,10 +667,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2026 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:0be9651bba92ddd48303"
+      "entered_key": "egg-sheet:0e0ee42d5c5f2665b9b5"
     },
     {
       "sheet_row": 285,
@@ -793,10 +793,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2025 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Gabi",
-      "entered_key": "egg-sheet:94cd720de220369ac4bc"
+      "entered_key": "egg-sheet:2488ebc219a509c6d57f"
     },
     {
       "sheet_row": 296,
@@ -863,10 +863,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2026 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:53ba4f304f42a9c70c52"
+      "entered_key": "egg-sheet:535cd5e477a451c38232"
     },
     {
       "sheet_row": 300,
@@ -919,10 +919,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:ccb56ab7830c86987fdc"
+      "entered_key": "egg-sheet:547b294ac44cdc89f34a"
     },
     {
       "sheet_row": 302,
@@ -933,10 +933,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:b3fddc0058bc02c5083e"
+      "entered_key": "egg-sheet:df4b61e14ac690f2d70d"
     },
     {
       "sheet_row": 303,
@@ -1031,10 +1031,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:dávid",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Dávid",
-      "entered_key": "egg-sheet:4c0584104ac87260dcae"
+      "entered_key": "egg-sheet:1fe8c4c59c894ed5485c"
     },
     {
       "sheet_row": 309,
@@ -1087,10 +1087,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:8b2553f59267a0d04d79"
+      "entered_key": "egg-sheet:f17f084441312e1ed4ac"
     },
     {
       "sheet_row": 313,
@@ -1157,10 +1157,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:dávid",
-      "organization": "2025 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2025 alom, Dávid",
-      "entered_key": "egg-sheet:f9ab214cc4f451245613"
+      "entered_key": "egg-sheet:935ac2ff3a3c2dd474c5"
     },
     {
       "sheet_row": 317,
@@ -1213,10 +1213,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2026 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2026 alom, Peti",
-      "entered_key": "egg-sheet:0b7f6ab81667d9be62da"
+      "entered_key": "egg-sheet:0cb75db9f59741dbb634"
     },
     {
       "sheet_row": 321,
@@ -1255,10 +1255,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:gabi",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Gabi",
-      "entered_key": "egg-sheet:d71923f015b94ed8a8b8"
+      "entered_key": "egg-sheet:9b097a8c5b17a48b78fc"
     },
     {
       "sheet_row": 323,
@@ -1311,10 +1311,10 @@
       "currency": "EGG",
       "credit_account": "Készletek",
       "debit_account": "saját:peti",
-      "organization": "2024 alom",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés",
       "description": "Tojás kivét – 2024 alom, Peti",
-      "entered_key": "egg-sheet:9637155a473afc7aa61f"
+      "entered_key": "egg-sheet:920ab90046485d755c35"
     }
   ]
 }

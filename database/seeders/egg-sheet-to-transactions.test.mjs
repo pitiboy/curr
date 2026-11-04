@@ -5,13 +5,15 @@ import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
+  DEFAULT_SHEET_MEMBER_TO_IDENTIFIER,
+  DISTRIBUTION_ORGANIZATION,
   PRODUCTION_FROM,
-  SALES_FROM,
   buildTransactionsJson,
   parseEggDate,
   parseEggSheetCsv,
   parseHufAmount,
   parseIntegerCell,
+  parseSheetMemberMap,
   resolveLocationOrg,
   sheetRowsToTransactions,
 } from './egg-sheet-to-transactions.mjs';
@@ -50,6 +52,20 @@ describe('resolveLocationOrg', () => {
     assert.equal(resolveLocationOrg('25'), '2025 alom');
     assert.equal(resolveLocationOrg(''), null);
     assert.equal(resolveLocationOrg('99'), undefined);
+  });
+});
+
+describe('parseSheetMemberMap', () => {
+  it('uses defaults when empty', () => {
+    assert.deepEqual(parseSheetMemberMap(''), DEFAULT_SHEET_MEMBER_TO_IDENTIFIER);
+  });
+
+  it('parses JSON and name=identifier lists', () => {
+    assert.deepEqual(parseSheetMemberMap('{"Dávid":"d"}'), { Dávid: 'd' });
+    assert.deepEqual(parseSheetMemberMap('Peti=peti,Gabi=gabi'), {
+      Peti: 'peti',
+      Gabi: 'gabi',
+    });
   });
 });
 
@@ -96,6 +112,17 @@ describe('sheetRowsToTransactions cutoffs', () => {
     const { warnings } = sheetRowsToTransactions(rows);
     assert.ok(warnings.some((w) => w.includes('empty or unmapped location')));
   });
+
+  it('books distribution on Tyúktartás, production on coop', () => {
+    const rows = parseEggSheetCsv(fixtureCsv);
+    const { transactions } = sheetRowsToTransactions(rows);
+    const dist = transactions.find((t) => t.leg.startsWith('distribution:'));
+    const prod = transactions.find((t) => t.leg === 'production');
+    assert.ok(dist);
+    assert.ok(prod);
+    assert.equal(dist.organization, DISTRIBUTION_ORGANIZATION);
+    assert.equal(prod.organization, '2024 alom');
+  });
 });
 
 describe('buildTransactionsJson', () => {
@@ -107,9 +134,29 @@ describe('buildTransactionsJson', () => {
     assert.ok(json.transactions.every((t) => t.entered_key.startsWith('egg-sheet:')));
     const currencies = new Set(json.transactions.map((t) => t.currency));
     assert.ok(currencies.has('EGG'));
-    const withEarlierSales = buildTransactionsJson(rows, { salesFrom: '2026-01-01' });
-    assert.ok(
-      withEarlierSales.json.transactions.some((t) => t.currency === 'HUF'),
+    const saleFixture = sheetRowsToTransactions(
+      [
+        {
+          sheetRow: 1,
+          dateRaw: '10/10/2026',
+          location: '24',
+          collected: 0,
+          collector: '',
+          david: 0,
+          peti: 0,
+          gabi: 0,
+          notes: '',
+          seller: 'Dávid',
+          commissionPerson: '',
+          unitPrice: 60,
+          saleQty: 5,
+          buyer: 'Teszt',
+          revenueHuf: 300,
+          commissionHuf: 0,
+        },
+      ],
+      { salesFrom: '2026-09-01' },
     );
+    assert.ok(saleFixture.transactions.some((t) => t.currency === 'HUF'));
   });
 });

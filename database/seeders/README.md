@@ -119,10 +119,10 @@ Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `k
 
 A `database/seeders/http/common/01`–`11` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak. Ha egy instance alatt nincs `transaction-workflows/` mappa (pl. edizone), a 11-es lépés no-op.
 
-| Lépés | HTTP                                                                                                  | Adat                            |
-| ----- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
-| 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`      |
-| 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json` |
+| Lépés | HTTP                                                                                                  | Adat                                |
+| ----- | ----------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`          |
+| 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json`     |
 | 11    | `common/11-transaction-workflows.http`                                                                | `data/transaction-workflows/*.json` |
 
 Előfeltétel a 09-hez: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
@@ -142,10 +142,31 @@ Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900
 
 A Google Sheet tojás naplóból generált tranzakciók az
 `http/edizone/data/transactions.json` fájlban vannak. A konverter a
-`database/seeders/egg-sheet-to-transactions.mjs` script; a vágóidőpontok a
-fájl tetején állíthatók (`PRODUCTION_FROM`, `SALES_FROM` — az eladások
-korábbra húzásához elég a `SALES_FROM` értékét módosítani, pl.
-`2026-01-01`).
+`database/seeders/egg-sheet-to-transactions.mjs` script. A
+`PRODUCTION_FROM`, `SALES_FROM` és `DISTRIBUTION_FROM` alapértelmezetten
+`2026-09-01` (nyitó készlet nulla; csak ettől a naptól jönnek be sorok,
+eladásokkal együtt). A `SHARES_FROM_2026_09_01` konstans a későbbi
+elszámolási riporthoz rögzíti az 1/3–1/3–1/3 részesedést; a D/P/G kivét
+oszlopok könyvelése ettől független.
+
+**Tag mapping** — az edizone-on már létező tagok; a sheet neveket az
+`EGG_SHEET_MEMBERS` környezeti változó állítja (JSON objektum vagy
+`Név=azonosító` lista, vesszővel elválasztva). Alapértelmezés, ha nincs
+beállítva:
+
+```bash
+# .env vagy shell
+EGG_SHEET_MEMBERS='{"Dávid":"dávid","Peti":"peti","Gabi":"gabi"}'
+# vagy
+EGG_SHEET_MEMBERS='Dávid=dávid,Peti=peti,Gabi=gabi'
+```
+
+Ismeretlen sheet név → figyelmeztetés, az érintett láb kimarad (a
+`transactions.http` továbbra is jelzi, ha a tag runtime nem oldódik fel).
+
+**Szervezet:** termelés a coop org (`2024/2025/2026 alom`); kivét (1300)
+a szülő `Tyúktartás` org (`DISTRIBUTION_ORGANIZATION`), mert a készlet
+ott van nyilvántartva.
 
 JSON generálás (alapértelmezett CSV:
 `database/seeders/fixtures/egg-sheet.csv`, vagy `--url` a nyilvános exportra):

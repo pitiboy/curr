@@ -16,10 +16,20 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// --- Cutoffs (sales can be moved earlier by changing SALES_FROM only) ---
+// --- Cutoffs: only rows on or after these dates are imported (opening stock = 0) ---
 export const PRODUCTION_FROM = '2026-09-01';
 export const SALES_FROM = '2026-09-01';
 export const DISTRIBUTION_FROM = PRODUCTION_FROM;
+
+/**
+ * Share rule from PRODUCTION_FROM (for later stock/settlement reports; does not
+ * change how Dávid/Peti/Gabi withdrawal cells are booked).
+ */
+export const SHARES_FROM_2026_09_01 = {
+  from: PRODUCTION_FROM,
+  members: ['Dávid', 'Peti', 'Gabi'],
+  shareEach: 1 / 3,
+};
 
 /** When Location is empty, skip unless set to e.g. '25'. */
 export const EMPTY_LOCATION_FALLBACK = null;
@@ -31,12 +41,65 @@ export const LOCATION_TO_ORG = {
   Perczel3: null,
 };
 
-/** Sheet name → member identifier (edizone must already have the member). */
-export const SHEET_MEMBER_TO_IDENTIFIER = {
+/**
+ * Parent org for kivét (member ← 1300). Stock is tracked here, not on coops.
+ * Seed name: Tyúktartás (I/4.12.1.2 under Állattenyésztés).
+ */
+export const DISTRIBUTION_ORGANIZATION = 'Tyúktartás';
+
+/** Default sheet name → member identifier when EGG_SHEET_MEMBERS is unset. */
+export const DEFAULT_SHEET_MEMBER_TO_IDENTIFIER = {
   Dávid: 'dávid',
   Peti: 'peti',
   Gabi: 'gabi',
 };
+
+/** @deprecated use DEFAULT_SHEET_MEMBER_TO_IDENTIFIER */
+export const SHEET_MEMBER_TO_IDENTIFIER = DEFAULT_SHEET_MEMBER_TO_IDENTIFIER;
+
+/**
+ * EGG_SHEET_MEMBERS: JSON object or comma-separated `SheetName=identifier` pairs.
+ */
+export function parseSheetMemberMap(raw) {
+  if (raw == null || !String(raw).trim()) {
+    return { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER };
+  }
+  const text = String(raw).trim();
+  if (text.startsWith('{')) {
+    const parsed = JSON.parse(text);
+    if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('JSON must be an object');
+    }
+    return { ...parsed };
+  }
+  const map = {};
+  for (const segment of text.split(',')) {
+    const part = segment.trim();
+    if (!part) continue;
+    const eq = part.indexOf('=');
+    if (eq <= 0) {
+      throw new Error(`expected name=identifier, got ${JSON.stringify(part)}`);
+    }
+    const name = part.slice(0, eq).trim();
+    const identifier = part.slice(eq + 1).trim();
+    if (!name || !identifier) {
+      throw new Error(`expected name=identifier, got ${JSON.stringify(part)}`);
+    }
+    map[name] = identifier;
+  }
+  if (!Object.keys(map).length) {
+    throw new Error('empty mapping');
+  }
+  return map;
+}
+
+export function loadSheetMemberMap(envValue = process.env.EGG_SHEET_MEMBERS) {
+  try {
+    return parseSheetMemberMap(envValue);
+  } catch (error) {
+    throw new Error(`EGG_SHEET_MEMBERS: ${error.message}`);
+  }
+}
 
 export const ACCOUNTS = {
   inventory: 'Készletek',
@@ -225,14 +288,14 @@ export function resolveLocationOrg(location) {
   return undefined;
 }
 
-export function memberRef(sheetName) {
-  const id = SHEET_MEMBER_TO_IDENTIFIER[sheetName];
+export function memberRef(sheetName, memberMap) {
+  const id = memberMap[sheetName];
   if (!id) return null;
   return `saját:${id}`;
 }
 
-export function memberIdentifier(sheetName) {
-  const mapped = SHEET_MEMBER_TO_IDENTIFIER[sheetName];
+export function memberIdentifier(sheetName, memberMap) {
+  const mapped = memberMap[sheetName];
   if (mapped) return mapped;
   return memberIdentifierBase(sheetName);
 }
@@ -269,6 +332,10 @@ export function sheetRowsToTransactions(rows, options = {}) {
   const productionFrom = options.productionFrom ?? PRODUCTION_FROM;
   const salesFrom = options.salesFrom ?? SALES_FROM;
   const distributionFrom = options.distributionFrom ?? DISTRIBUTION_FROM;
+  const memberMap =
+    options.memberMap ?? { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER };
+  const distributionOrg =
+    options.distributionOrganization ?? DISTRIBUTION_ORGANIZATION;
 
   const warnings = [];
   const transactions = [];
@@ -321,19 +388,21 @@ export function sheetRowsToTransactions(rows, options = {}) {
           label === 'Dávid' ? 'david' : label === 'Peti' ? 'peti' : 'gabi';
         const amount = parseIntegerCell(row[field]);
         if (amount <= 0) continue;
-        const debit = memberRef(label);
+        const debit = memberRef(label, memberMap);
         if (!debit) {
-          warnings.push(`row ${row.sheetRow}: unknown member ${label} for distribution`);
+          warnings.push(
+            `row ${row.sheetRow}: no EGG_SHEET_MEMBERS mapping for ${JSON.stringify(label)} (distribution skipped)`,
+          );
           continue;
         }
         transactions.push(
-          baseTxn(row, `distribution:${memberIdentifier(label)}`, {
+          baseTxn(row, `distribution:${memberIdentifier(label, memberMap)}`, {
             date: isoDate,
             amount,
             currency: 'EGG',
             debit_account: debit,
             credit_account: ACCOUNTS.inventory,
-            organization: org,
+            organization: distributionOrg,
             description: `Tojás kivét – ${orgLabel}, ${label}`,
           }),
         );
@@ -359,9 +428,11 @@ export function sheetRowsToTransactions(rows, options = {}) {
       } else if (row.saleQty <= 0) {
         warnings.push(`row ${row.sheetRow}: sale skipped (missing Db qty)`);
       } else {
-        const sellerRef = memberRef(row.seller);
+        const sellerRef = memberRef(row.seller, memberMap);
         if (!sellerRef) {
-          warnings.push(`row ${row.sheetRow}: unknown seller ${JSON.stringify(row.seller)}`);
+          warnings.push(
+            `row ${row.sheetRow}: no EGG_SHEET_MEMBERS mapping for seller ${JSON.stringify(row.seller)} (sale skipped)`,
+          );
         } else {
           transactions.push(
             baseTxn(row, 'sale:egg', {
@@ -390,10 +461,10 @@ export function sheetRowsToTransactions(rows, options = {}) {
           stats.saleRevenue += 1;
 
           if (row.commissionPerson && row.commissionHuf > 0) {
-            const commRef = memberRef(row.commissionPerson);
+            const commRef = memberRef(row.commissionPerson, memberMap);
             if (!commRef) {
               warnings.push(
-                `row ${row.sheetRow}: unknown commission person ${JSON.stringify(row.commissionPerson)}`,
+                `row ${row.sheetRow}: no EGG_SHEET_MEMBERS mapping for ${JSON.stringify(row.commissionPerson)} (commission skipped)`,
               );
             } else {
               transactions.push(
@@ -423,8 +494,11 @@ export function sheetRowsToTransactions(rows, options = {}) {
 }
 
 export function buildTransactionsJson(parsedRows, meta = {}) {
+  const memberMap =
+    meta.memberMap ??
+    (meta.loadMemberMapFromEnv ? loadSheetMemberMap() : { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER });
   const { transactions, warnings, stats, duplicateGroups } =
-    sheetRowsToTransactions(parsedRows, meta);
+    sheetRowsToTransactions(parsedRows, { ...meta, memberMap });
   const source = {
     source:
       meta.source ||
@@ -472,7 +546,10 @@ async function main() {
   const args = process.argv.slice(2);
   const text = await loadCsvText(args);
   const parsed = parseEggSheetCsv(text);
-  const { json, warnings, stats, duplicateGroups } = buildTransactionsJson(parsed);
+  const memberMap = loadSheetMemberMap();
+  const { json, warnings, stats, duplicateGroups } = buildTransactionsJson(parsed, {
+    memberMap,
+  });
 
   let out = DEFAULT_OUT;
   const outArg = args.indexOf('--out');
