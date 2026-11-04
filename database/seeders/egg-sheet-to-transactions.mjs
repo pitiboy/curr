@@ -16,6 +16,10 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const poultryConstants = JSON.parse(
+  readFileSync(resolve(__dirname, 'egg-poultry.constants.json'), 'utf8'),
+);
+
 // --- Cutoffs: only rows on or after these dates are imported (opening stock = 0) ---
 export const PRODUCTION_FROM = '2026-09-01';
 export const SALES_FROM = '2026-09-01';
@@ -41,11 +45,12 @@ export const LOCATION_TO_ORG = {
   Perczel3: null,
 };
 
-/**
- * Parent org for kivét (member ← 1300). Stock is tracked here, not on coops.
- * Seed name: Tyúktartás (I/4.12.1.2 under Állattenyésztés).
- */
-export const DISTRIBUTION_ORGANIZATION = 'Tyúktartás';
+/** Pooled egg stock org (I/4.12.1.2 → Tyúktartás in seed). */
+export const POULTRY_STOCK_ORGANIZATION =
+  poultryConstants.poultryStockOrganizationName;
+
+/** @deprecated use POULTRY_STOCK_ORGANIZATION */
+export const DISTRIBUTION_ORGANIZATION = POULTRY_STOCK_ORGANIZATION;
 
 /** Default sheet name → member identifier when EGG_SHEET_MEMBERS is unset. */
 export const DEFAULT_SHEET_MEMBER_TO_IDENTIFIER = {
@@ -334,12 +339,20 @@ export function sheetRowsToTransactions(rows, options = {}) {
   const distributionFrom = options.distributionFrom ?? DISTRIBUTION_FROM;
   const memberMap =
     options.memberMap ?? { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER };
-  const distributionOrg =
-    options.distributionOrganization ?? DISTRIBUTION_ORGANIZATION;
+  const poultryStockOrg =
+    options.poultryStockOrganization ?? POULTRY_STOCK_ORGANIZATION;
 
   const warnings = [];
   const transactions = [];
-  const stats = { production: 0, distribution: 0, saleEgg: 0, saleRevenue: 0, saleCommission: 0 };
+  const stats = {
+    production: 0,
+    poolTransferCoop: 0,
+    poolTransferParent: 0,
+    distribution: 0,
+    saleEgg: 0,
+    saleRevenue: 0,
+    saleCommission: 0,
+  };
   const duplicateTracker = new Map();
 
   for (const row of rows) {
@@ -380,6 +393,34 @@ export function sheetRowsToTransactions(rows, options = {}) {
         }),
       );
       stats.production += 1;
+
+      transactions.push(
+        baseTxn(row, 'pool-transfer-coop', {
+          date: isoDate,
+          amount: row.collected,
+          currency: 'EGG',
+          debit_account: ACCOUNTS.production,
+          credit_account: ACCOUNTS.inventory,
+          organization: org,
+          description: `Tojás készlet átvezetés (ól) – ${orgLabel} → ${poultryStockOrg}`,
+          transaction_type: 'Átvezetés',
+        }),
+      );
+      stats.poolTransferCoop += 1;
+
+      transactions.push(
+        baseTxn(row, 'pool-transfer-parent', {
+          date: isoDate,
+          amount: row.collected,
+          currency: 'EGG',
+          debit_account: ACCOUNTS.inventory,
+          credit_account: ACCOUNTS.production,
+          organization: poultryStockOrg,
+          description: `Tojás készlet átvezetés (Tyúktartás) – ${orgLabel}`,
+          transaction_type: 'Átvezetés',
+        }),
+      );
+      stats.poolTransferParent += 1;
     }
 
     if (onOrAfter(isoDate, distributionFrom)) {
@@ -402,7 +443,7 @@ export function sheetRowsToTransactions(rows, options = {}) {
             currency: 'EGG',
             debit_account: debit,
             credit_account: ACCOUNTS.inventory,
-            organization: distributionOrg,
+            organization: poultryStockOrg,
             description: `Tojás kivét – ${orgLabel}, ${label}`,
           }),
         );
@@ -441,7 +482,7 @@ export function sheetRowsToTransactions(rows, options = {}) {
               currency: 'EGG',
               debit_account: ACCOUNTS.salesCost,
               credit_account: ACCOUNTS.inventory,
-              organization: org,
+              organization: poultryStockOrg,
               description: `Tojás eladás (készlet) – ${orgLabel}, eladó: ${row.seller}, vevő: ${row.buyer || '—'}`,
             }),
           );
@@ -454,7 +495,7 @@ export function sheetRowsToTransactions(rows, options = {}) {
               currency: 'HUF',
               debit_account: sellerRef,
               credit_account: ACCOUNTS.revenue,
-              organization: org,
+              organization: poultryStockOrg,
               description: `Tojás eladás bevétel – ${orgLabel}, eladó: ${row.seller}, vevő: ${row.buyer || '—'}`,
             }),
           );
@@ -474,7 +515,7 @@ export function sheetRowsToTransactions(rows, options = {}) {
                   currency: 'HUF',
                   debit_account: commRef,
                   credit_account: ACCOUNTS.revenue,
-                  organization: org,
+                  organization: poultryStockOrg,
                   description: `Tojás eladás közreműködői díj – ${orgLabel}, ${row.commissionPerson}`,
                 }),
               );
@@ -559,7 +600,8 @@ async function main() {
 
   console.log(`Wrote ${json.transactions.length} transactions to ${out}`);
   console.log(
-    `Counts: production=${stats.production} distribution=${stats.distribution} ` +
+    `Counts: production=${stats.production} poolCoop=${stats.poolTransferCoop} ` +
+      `poolParent=${stats.poolTransferParent} distribution=${stats.distribution} ` +
       `saleEgg=${stats.saleEgg} saleRevenue=${stats.saleRevenue} saleCommission=${stats.saleCommission}`,
   );
   if (duplicateGroups.length) {

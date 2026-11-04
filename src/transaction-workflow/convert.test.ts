@@ -444,3 +444,64 @@ describe('stepAmount', () => {
     assert.equal(stepAmount(2_080_000, 0.961538), (2_080_000 * 0.961538) / 100);
   });
 });
+
+describe('egg production pool transfer steps', () => {
+  it('resolves coop org from original and fixed Tyúktartás on parent leg', () => {
+    const coop = { documentId: 'org-coop', name: '2025 alom' };
+    const tyuk = { documentId: 'org-tyuk', name: 'Tyúktartás' };
+    const egg = { documentId: 'cur-egg', code: 'EGG' };
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-egg',
+      name: 'Tojás keletkezése',
+      debit_account_code: 1300,
+      credit_account_code: 4500,
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: 'Napi tojás',
+          percent: 100,
+          debit_account: account('1300'),
+          credit_account: account('4500'),
+          currency_type: egg,
+          transaction_type: typeTransfer,
+          organization_from_original: true,
+        },
+        {
+          __component: STEP_RELATED,
+          description: 'Készlet átvezetés (ól)',
+          percent: 100,
+          debit_account: account('4500'),
+          credit_account: account('1300'),
+          currency_type: egg,
+          transaction_type: typeTransfer,
+          organization_from_original: true,
+        },
+        {
+          __component: STEP_RELATED,
+          description: 'Készlet átvezetés (központi)',
+          percent: 100,
+          debit_account: account('1300'),
+          credit_account: account('4500'),
+          currency_type: egg,
+          transaction_type: typeTransfer,
+          organization: tyuk,
+        },
+      ],
+    };
+    const tx: SourceTransaction = {
+      documentId: 'tx-egg',
+      date: '2026-10-01',
+      amount: 12,
+      description: 'Napi tojás',
+      debit_account: account('1300'),
+      credit_account: account('4500'),
+      currency_type: egg,
+      organization: coop,
+    };
+    const expanded = expandWorkflowSteps(wf, tx, new Map());
+    assert.equal(expanded.length, 3);
+    assert.equal(expanded[0]?.organization?.documentId, coop.documentId);
+    assert.equal(expanded[1]?.organization?.documentId, coop.documentId);
+    assert.equal(expanded[2]?.organization?.documentId, tyuk.documentId);
+  });
+});

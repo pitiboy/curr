@@ -158,6 +158,11 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_no_members:
         'No members in organization “%{org}” for this date.',
       distribution_members_failed: 'Could not load the member list.',
+      pool_transfer: {
+        coop: 'Egg stock transfer (coop) — %{organization} → Tyúktartás (%{amount})',
+        parent:
+          'Egg stock transfer (Tyúktartás) — %{organization} (%{amount})',
+      },
       description: {
         egg: 'Daily eggs — %{organization}: %{amount}',
         egg_distribution_internal:

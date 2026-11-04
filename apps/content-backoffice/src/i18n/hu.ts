@@ -159,6 +159,11 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       distribution_no_members:
         'Nincs tag a(z) „%{org}” szervezetben ehhez a naphoz.',
       distribution_members_failed: 'A taglista betöltése nem sikerült.',
+      pool_transfer: {
+        coop: 'Tojás készlet átvezetés (ól) — %{organization} → Tyúktartás (%{amount} db)',
+        parent:
+          'Tojás készlet átvezetés (Tyúktartás) — %{organization} (%{amount} db)',
+      },
       description: {
         egg: 'Napi tojás — %{organization}: %{amount} db',
         egg_distribution_internal:

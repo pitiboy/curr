@@ -12,11 +12,13 @@ import type {
   BulkQuantityWorkflowConfig,
 } from '../types';
 
-/** Members listed on the distribution step (membership.organization). */
-export const DISTRIBUTION_MEMBER_ORG = 'Tyúktartás';
+import { POULTRY_STOCK_ORGANIZATION_NAME } from '../poolTransfer';
 
-/** Hen houses and booking org for distribution legs (parent org under Állattenyésztés). */
-export const PULTRY_PARENT_ORG_NAME = DISTRIBUTION_MEMBER_ORG;
+/** Members listed on the distribution step (membership.organization). */
+export const DISTRIBUTION_MEMBER_ORG = POULTRY_STOCK_ORGANIZATION_NAME;
+
+/** Hen houses under this org; pooled stock and distribution book here. */
+export const PULTRY_PARENT_ORG_NAME = POULTRY_STOCK_ORGANIZATION_NAME;
 
 export {
   CREDIT_ACCOUNT_CODE,

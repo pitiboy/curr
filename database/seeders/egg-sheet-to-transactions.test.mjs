@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   DEFAULT_SHEET_MEMBER_TO_IDENTIFIER,
-  DISTRIBUTION_ORGANIZATION,
+  POULTRY_STOCK_ORGANIZATION,
   PRODUCTION_FROM,
   buildTransactionsJson,
   parseEggDate,
@@ -120,8 +120,25 @@ describe('sheetRowsToTransactions cutoffs', () => {
     const prod = transactions.find((t) => t.leg === 'production');
     assert.ok(dist);
     assert.ok(prod);
-    assert.equal(dist.organization, DISTRIBUTION_ORGANIZATION);
+    assert.equal(dist.organization, POULTRY_STOCK_ORGANIZATION);
     assert.equal(prod.organization, '2024 alom');
+  });
+
+  it('adds pool transfer legs after each production row', () => {
+    const rows = parseEggSheetCsv(fixtureCsv);
+    const { transactions, stats } = sheetRowsToTransactions(rows);
+    assert.equal(stats.production, stats.poolTransferCoop);
+    assert.equal(stats.production, stats.poolTransferParent);
+    const prod = transactions.find((t) => t.leg === 'production');
+    assert.ok(prod);
+    const coopPool = transactions.find(
+      (t) => t.sheet_row === prod.sheet_row && t.leg === 'pool-transfer-coop',
+    );
+    const parentPool = transactions.find(
+      (t) => t.sheet_row === prod.sheet_row && t.leg === 'pool-transfer-parent',
+    );
+    assert.equal(coopPool.organization, prod.organization);
+    assert.equal(parentPool.organization, POULTRY_STOCK_ORGANIZATION);
   });
 });
 

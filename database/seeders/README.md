@@ -164,9 +164,12 @@ EGG_SHEET_MEMBERS='Dávid=dávid,Peti=peti,Gabi=gabi'
 Ismeretlen sheet név → figyelmeztetés, az érintett láb kimarad (a
 `transactions.http` továbbra is jelzi, ha a tag runtime nem oldódik fel).
 
-**Szervezet:** termelés a coop org (`2024/2025/2026 alom`); kivét (1300)
-a szülő `Tyúktartás` org (`DISTRIBUTION_ORGANIZATION`), mert a készlet
-ott van nyilvántartva.
+**Szervezet és készlet:** termelés a coop org-on (`1300`/`4500`); utána két
+átvezetési sor (coop `4500`/`1300`, majd `Tyúktartás` `1300`/`4500`) — a
+modellben tranzakciónként egy `organization` mező van, ezért nem egyetlen
+1300→1300 sor, hanem pár: az ól org 1300 egyenlege nettó nulla, a központi
+készlet a `Tyúktartás` org-on (`egg-poultry.constants.json`). Kivét és
+eladás készletláb szintén a szülő org-on.
 
 JSON generálás (alapértelmezett CSV:
 `database/seeders/fixtures/egg-sheet.csv`, vagy `--url` a nyilvános exportra):

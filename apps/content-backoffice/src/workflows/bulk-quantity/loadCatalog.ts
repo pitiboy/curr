@@ -1,5 +1,12 @@
 import { encodeStrapiQuery } from '../../data/transactionList';
 import type { ContentHttpClient } from '../../data/receiptDraft';
+import {
+  POOL_TRANSFER_COOP_CREDIT_CODE,
+  POOL_TRANSFER_COOP_DEBIT_CODE,
+  POULTRY_STOCK_ORGANIZATION_NAME,
+  poolTransferRefsFromCatalog,
+  type PoolTransferResolvedRefs,
+} from './poolTransfer';
 import type {
   BulkQuantityHenHouse,
   BulkQuantityResolvedRefs,
@@ -69,23 +76,41 @@ export async function loadBulkQuantityCatalog(
 ): Promise<{
   henHouses: BulkQuantityHenHouse[];
   refs: BulkQuantityResolvedRefs | null;
+  poolRefs: PoolTransferResolvedRefs | null;
 }> {
-  const [henHouses, currency, debitAccount, creditAccount, transactionType] =
-    await Promise.all([
-      fetchHenHouses(httpClient, strapiUrl, config.parentOrganizationName),
-      fetchOneByFilter(httpClient, strapiUrl, 'currency-types', {
-        code: { $eq: config.currencyCode },
-      }),
-      fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-        code: { $eq: config.debitAccountCode },
-      }),
-      fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-        code: { $eq: config.creditAccountCode },
-      }),
-      fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
-        name: { $eq: config.transactionTypeName },
-      }),
-    ]);
+  const [
+    henHouses,
+    currency,
+    debitAccount,
+    creditAccount,
+    transactionType,
+    poultryStockOrg,
+    poolCoopOutDebit,
+    poolCoopOutCredit,
+  ] = await Promise.all([
+    fetchHenHouses(httpClient, strapiUrl, config.parentOrganizationName),
+    fetchOneByFilter(httpClient, strapiUrl, 'currency-types', {
+      code: { $eq: config.currencyCode },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
+      code: { $eq: config.debitAccountCode },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
+      code: { $eq: config.creditAccountCode },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
+      name: { $eq: config.transactionTypeName },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'organizations', {
+      name: { $eq: POULTRY_STOCK_ORGANIZATION_NAME },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
+      code: { $eq: POOL_TRANSFER_COOP_DEBIT_CODE },
+    }),
+    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
+      code: { $eq: POOL_TRANSFER_COOP_CREDIT_CODE },
+    }),
+  ]);
 
   const currencyTypeId = currency?.documentId;
   const debitAccountId = debitAccount?.documentId;
@@ -98,16 +123,33 @@ export async function loadBulkQuantityCatalog(
     !creditAccountId ||
     !transactionTypeId
   ) {
-    return { henHouses, refs: null };
+    return { henHouses, refs: null, poolRefs: null };
   }
+
+  const refs = {
+    currencyTypeId,
+    debitAccountId,
+    creditAccountId,
+    transactionTypeId,
+  };
+
+  const parentOrganizationId = poultryStockOrg?.documentId;
+  const poolCoopOutDebitId = poolCoopOutDebit?.documentId;
+  const poolCoopOutCreditId = poolCoopOutCredit?.documentId;
+
+  const poolRefs =
+    parentOrganizationId && poolCoopOutDebitId && poolCoopOutCreditId
+      ? poolTransferRefsFromCatalog(
+          refs,
+          parentOrganizationId,
+          poolCoopOutDebitId,
+          poolCoopOutCreditId,
+        )
+      : null;
 
   return {
     henHouses,
-    refs: {
-      currencyTypeId,
-      debitAccountId,
-      creditAccountId,
-      transactionTypeId,
-    },
+    refs,
+    poolRefs,
   };
 }
