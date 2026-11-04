@@ -253,36 +253,42 @@ export function BulkQuantityEntryPage({
 
     const distribution = config.distribution;
     loadBulkQuantityCatalog(httpClient, STRAPI_URL, config)
-      .then(async ({ henHouses: houses, refs: loadedRefs, poolRefs: loadedPoolRefs }) => {
-        if (!active) {
-          return;
-        }
-        setHenHouses(houses);
-        if (!loadedRefs || !loadedPoolRefs) {
-          setCatalogError(translate('app.bulk_quantity.catalog_missing'));
-          setRefs(null);
-          setPoolRefs(null);
-          return;
-        }
-        setRefs(loadedRefs);
-        setPoolRefs(loadedPoolRefs);
-        if (!distribution) {
-          return;
-        }
-        const distRefs = await loadDistributionRefs(
-          httpClient,
-          STRAPI_URL,
-          distribution,
-          config.currencyCode,
-          eggSaleCurrency,
-        );
-        if (!distRefs) {
-          setCatalogError(translate('app.bulk_quantity.catalog_missing'));
-          setDistributionRefs(null);
-          return;
-        }
-        setDistributionRefs(distRefs);
-      })
+      .then(
+        async ({
+          henHouses: houses,
+          refs: loadedRefs,
+          poolRefs: loadedPoolRefs,
+        }) => {
+          if (!active) {
+            return;
+          }
+          setHenHouses(houses);
+          if (!loadedRefs || !loadedPoolRefs) {
+            setCatalogError(translate('app.bulk_quantity.catalog_missing'));
+            setRefs(null);
+            setPoolRefs(null);
+            return;
+          }
+          setRefs(loadedRefs);
+          setPoolRefs(loadedPoolRefs);
+          if (!distribution) {
+            return;
+          }
+          const distRefs = await loadDistributionRefs(
+            httpClient,
+            STRAPI_URL,
+            distribution,
+            config.currencyCode,
+            eggSaleCurrency,
+          );
+          if (!distRefs) {
+            setCatalogError(translate('app.bulk_quantity.catalog_missing'));
+            setDistributionRefs(null);
+            return;
+          }
+          setDistributionRefs(distRefs);
+        },
+      )
       .catch(() => {
         if (active) {
           setCatalogError(translate('app.bulk_quantity.catalog_missing'));
@@ -581,10 +587,13 @@ export function BulkQuantityEntryPage({
           row: plan,
           date,
           poolRefs,
-          coopOutDescription: translate('app.bulk_quantity.pool_transfer.coop', {
-            organization: plan.organizationName,
-            amount: plan.amount,
-          }),
+          coopOutDescription: translate(
+            'app.bulk_quantity.pool_transfer.coop',
+            {
+              organization: plan.organizationName,
+              amount: plan.amount,
+            },
+          ),
           parentInDescription: translate(
             'app.bulk_quantity.pool_transfer.parent',
             {
@@ -598,9 +607,7 @@ export function BulkQuantityEntryPage({
           const duplicate = duplicates.find(
             (item) => item.row.organizationName === leg.legKey,
           );
-          const action = duplicate
-            ? (globalChoice ?? plan.action)
-            : leg.action;
+          const action = duplicate ? (globalChoice ?? plan.action) : leg.action;
           return {
             ...leg,
             action,
@@ -690,7 +697,12 @@ export function BulkQuantityEntryPage({
       if (duplicates.length > 0) {
         setConflicts(duplicates);
         setGlobalConflictOpen(true);
-        return { ready: false as const, productionPlans, poolLegPlans, legPlans };
+        return {
+          ready: false as const,
+          productionPlans,
+          poolLegPlans,
+          legPlans,
+        };
       }
       return { ready: true as const, productionPlans, poolLegPlans, legPlans };
     }
@@ -700,11 +712,7 @@ export function BulkQuantityEntryPage({
     );
     setConflictChoices(defaultChoices);
     const plans = buildRowPlans(rows, duplicates, defaultChoices);
-    const poolLegPlans = buildPoolLegPlansForRows(
-      plans,
-      date,
-      duplicates,
-    );
+    const poolLegPlans = buildPoolLegPlansForRows(plans, date, duplicates);
     setPendingProductionPlans(plans);
     setPendingPoolLegPlans(poolLegPlans);
     if (duplicates.length > 0) {
@@ -843,11 +851,7 @@ export function BulkQuantityEntryPage({
       }),
     );
     const plans = buildRowPlans(rows, conflicts, conflictChoices);
-    const poolLegPlans = buildPoolLegPlansForRows(
-      plans,
-      submitDate,
-      conflicts,
-    );
+    const poolLegPlans = buildPoolLegPlansForRows(plans, submitDate, conflicts);
     setPendingProductionPlans(plans);
     setPendingPoolLegPlans(poolLegPlans);
     setConflictOpen(false);
@@ -863,11 +867,7 @@ export function BulkQuantityEntryPage({
       failedIds.includes(plan.legKey),
     );
     if (productionRetry.length > 0 || poolRetry.length > 0) {
-      await runProductionAndPool(
-        productionRetry,
-        poolRetry,
-        submitDate,
-      );
+      await runProductionAndPool(productionRetry, poolRetry, submitDate);
     }
     const legRetry = pendingLegPlans.filter((plan) =>
       failedIds.includes(plan.legKey),

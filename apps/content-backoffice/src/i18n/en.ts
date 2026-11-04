@@ -160,8 +160,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_members_failed: 'Could not load the member list.',
       pool_transfer: {
         coop: 'Egg stock transfer (coop) — %{organization} → Tyúktartás (%{amount})',
-        parent:
-          'Egg stock transfer (Tyúktartás) — %{organization} (%{amount})',
+        parent: 'Egg stock transfer (Tyúktartás) — %{organization} (%{amount})',
       },
       description: {
         egg: 'Daily eggs — %{organization}: %{amount}',
