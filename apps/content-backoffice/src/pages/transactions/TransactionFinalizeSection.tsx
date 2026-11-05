@@ -1,10 +1,17 @@
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { useNotify, useRefresh, useTranslate } from 'react-admin';
+import {
+  Confirm,
+  useNotify,
+  useRedirect,
+  useRefresh,
+  useTranslate,
+} from 'react-admin';
 
 import {
+  discardTransaction,
   publishTransaction,
   saveTransactionDraft,
 } from '../../data/dataProvider';
@@ -46,8 +53,11 @@ export function TransactionFinalizeSection({
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
+  const redirect = useRedirect();
   const { getValues, setError, clearErrors } = useFormContext();
   const [saving, setSaving] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
   const savingRef = useRef(false);
 
   const onFinalize = () => {
@@ -87,6 +97,22 @@ export function TransactionFinalizeSection({
       });
   };
 
+  const onDiscardConfirm = () => {
+    if (discarding || savingRef.current) return;
+    setDiscarding(true);
+    void discardTransaction(documentId)
+      .then(() => {
+        notify('app.transactions_discard_done', { type: 'success' });
+        setDiscardOpen(false);
+        redirect('list', 'transactions');
+      })
+      .catch((error: unknown) => {
+        const message = strapiErrorMessage(error);
+        notify(message || 'app.transactions_discard_error', { type: 'error' });
+      })
+      .finally(() => setDiscarding(false));
+  };
+
   return (
     <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
       <Box component="fieldset" sx={reviewFieldset}>
@@ -118,15 +144,35 @@ export function TransactionFinalizeSection({
             {translate('app.transactions_finalize_same_person')}
           </Typography>
         ) : null}
-        <Button
-          disabled={blocked || samePersonBlocked || saving}
-          type="button"
-          variant="contained"
-          onClick={onFinalize}
-        >
-          {translate('app.transactions_finalize')}
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+          <Button
+            disabled={blocked || samePersonBlocked || saving || discarding}
+            type="button"
+            variant="contained"
+            onClick={onFinalize}
+          >
+            {translate('app.transactions_finalize')}
+          </Button>
+          <Button
+            color="error"
+            disabled={saving || discarding}
+            type="button"
+            variant="outlined"
+            onClick={() => setDiscardOpen(true)}
+          >
+            {translate('app.transactions_discard')}
+          </Button>
+        </Stack>
       </Box>
+      <Confirm
+        confirm="app.transactions_discard_confirm"
+        content="app.transactions_discard_body"
+        isOpen={discardOpen}
+        loading={discarding}
+        title="app.transactions_discard_title"
+        onClose={() => !discarding && setDiscardOpen(false)}
+        onConfirm={onDiscardConfirm}
+      />
     </Box>
   );
 }

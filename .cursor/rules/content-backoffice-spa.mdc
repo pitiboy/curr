@@ -14,7 +14,7 @@ Vite + TypeScript + React Admin 5 + `ra-strapi` + MUI. API origin: lokálon `htt
 - `dataentry` és `editor`: `/transactions/create`, a readonly `/transactions` és a `/transactions/:id/show` megtekintés. A create mentés `status=draft`. Publish gomb a create űrlapon nincs.
 - `editor`: az Ellenőrzés menü a `/transactions` listát nyitja, `status=draft` szűrővel. A `dataentry` ezt a menüt nem látja. Külön review lista nincs. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja; a két menüpont nem hagyja rajta a másik szűrőjét.
 - A lista sora nem visz sehova. A státusz oszlop után egy gomb van: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. A listán Szűrők törlése minden szűrőt alapra állít. A listáról nincs create, edit, publish.
-- A megtekintés readonly. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít. Más esetben nincs csatolás és nincs Véglegesít. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`.
+- A megtekintés readonly. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít és Piszkozat törlése (Confirm, dedikált API). Más esetben nincs csatolás, Véglegesít és törlés. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`; a same-person szabály nem tiltja a piszkozat törlését.
 - A lista és a megtekintés mutatja az `entered_by` / `createdAt` értéket, published soron a `published_by` / `publishedAt` értéket is. Ezek nem űrlapmezők.
 - Debit/credit szűrő: `GET /api/backoffice/config` (`accounts.debit_codes` / `accounts.credit_codes` seed), alap `/^5/` és `/^(1|3)/`. A szűrés kliens oldali.
 - Alapnyelv `hu`. Az `en` katalógus is a repóban van.

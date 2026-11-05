@@ -84,6 +84,13 @@ export const enMessages = mergeTranslations(englishMessages, {
       'The attached file is not saved yet. Save the receipt first.',
     transactions_finalize_same_person:
       'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
+    transactions_discard: 'Delete draft',
+    transactions_discard_title: 'Delete draft',
+    transactions_discard_body:
+      'The transaction and its draft receipts will be permanently deleted. This cannot be undone.',
+    transactions_discard_confirm: 'Delete',
+    transactions_discard_done: 'Draft transaction deleted.',
+    transactions_discard_error: 'Could not delete the draft.',
     transactions_leave_title: 'This transaction is still a draft',
     transactions_leave_body: 'Finalizing is still pending. Leave this page?',
     transactions_leave_unsaved_title: 'This transaction is not saved yet',

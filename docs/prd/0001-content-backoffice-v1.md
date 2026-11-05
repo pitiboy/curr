@@ -41,7 +41,7 @@ Csak **Users & Permissions** (Content API). Strapi Admin JWT **nem** része az S
 | Role id      | Ki                     | Jogok az SPA-ban                                                                                               | Backend elvárás                                                         |
 | ------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | `dataentry`  | Adatrögzítő            | Új tranzakció; readonly lista; megtekintés; profil                                                             | `transaction` / `receipt` create & update **csak draft**; nincs publish |
-| `editor`     | Szerkesztő             | Readonly lista; Ellenőrzés menü draft szűrővel; megtekintés, drafton bizonylat csatolása és Véglegesít; profil | Draft olvasás; `status=published` írás engedélyezett                    |
+| `editor`     | Szerkesztő             | Readonly lista; Ellenőrzés menü draft szűrővel; megtekintés, drafton bizonylat csatolása, Véglegesít és **Piszkozat törlése**; profil | Draft olvasás; `status=published` írás engedélyezett; editor-only `discardDraft` (nem általános delete) |
 | Strapi Admin | Fejlesztő / üzemeltető | SPA-n kívül                                                                                                    | Content user kézi létrehozás + invite; Google provider config           |
 
 ### Felhasználókezelés
@@ -73,7 +73,7 @@ A menü v1-ben **csak a tranzakció-domain**. Nincs külön Organizations / Memb
 | -------------------------------- | ------------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Új tranzakció felvitele**      | `/transactions/create`   | `dataentry`             | Create űrlap; mentés mindig **draft**; Publish gomb nincs                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Tranzakciók (readonly lista)** | `/transactions`          | `dataentry` és `editor` | Draft **és** published; receipt oszlop; szűrés statusra és mezőkre; **Szűrők törlése**; nincs sor-kattintás, create, edit, publish. A státusz oszlop után egy gomb: `editor` + draft soron „Ellenőrzés”, egyébként „Megtekintés”. Az `editor` Ellenőrzés menüje ezt a listát `status=draft` szűrővel nyitja; a tranzakciók menü szűrő nélkül. A két menüpont nem hagyja rajta a másik szűrőjét. A `dataentry` az Ellenőrzés menüt nem látja |
-| **Megtekintés**                  | `/transactions/:id/show` | `dataentry` és `editor` | Readonly, azonosító a `documentId`. Tranzakciómezők, bizonylatlinkek, audit. `editor` + draft: bizonylat csatolható, az adatok után **Véglegesít**. Más esetben nincs csatolás és nincs Véglegesít                                                                                                                                                                                                                                          |
+| **Megtekintés**                  | `/transactions/:id/show` | `dataentry` és `editor` | Readonly, azonosító a `documentId`. Tranzakciómezők, bizonylatlinkek, audit. `editor` + draft: bizonylat csatolható, az adatok után **Véglegesít** és **Piszkozat törlése** (Confirm; a draft tranzakció és a kapcsolt draft bizonylatok törlődnek). Más esetben nincs csatolás, nincs Véglegesít és nincs törlés                                                                                                                                                                                                                                          |
 | Bejelentkezés                    | `/login`                 | vendég                  | Email/jelszó + Google                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Profil                           | `/profile`               | mindkét szerep          | Név, email, jelszócsere (local usereknél)                                                                                                                                                                                                                                                                                                                                                                                                   |
 
@@ -103,9 +103,9 @@ Mentés: mindig `status=draft`. `dataentry` nem publisholhat (UI + szerver).
 
 - Route: `/transactions/:id/show`, az azonosító a `documentId`. Külön review lista nincs.
 - Readonly: tranzakció mezők, bizonylatlinkek, `entered_by`, `createdAt`. Published soron `published_by` és `publishedAt` is. A mezők nem szerkeszthetők.
-- `editor` + draft: a bizonylat csatolható. Az adatok után ellenőrző űrlap, azon a **Véglegesít** gomb. Sikeres véglegesítés után a tranzakció published, és minden kapcsolt receipt published verziója is megvan. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`.
-- `dataentry`, és published sor `editor`nál: nincs csatolás, nincs Véglegesít.
-- v1: nincs külön „visszautasítás + kötelező megjegyzés” workflow; a QA a draftot nem véglegesíti. Részletes QA sor, értesítés és a visszautasítás megjegyzése → v2.
+- `editor` + draft: a bizonylat csatolható. Az adatok után ellenőrző űrlap, azon a **Véglegesít** gomb és a másodlagos **Piszkozat törlése** gomb (Confirm). Sikeres véglegesítés után a tranzakció published, és minden kapcsolt receipt published verziója is megvan. A szerver elutasítja a véglegesítést, ha a publikáló az `entered_by`; ugyanez a same-person szabály **nem** tiltja a piszkozat törlését. Sikeres törlés után a draft tranzakció és a kapcsolt draft bizonylatok véglegesen törlődnek; published rekord nem törölhető.
+- `dataentry`, és published sor `editor`nál: nincs csatolás, nincs Véglegesít, nincs Piszkozat törlése.
+- v1: nincs külön „visszautasítás + kötelező megjegyzés” workflow; a QA a draftot nem véglegesíti, vagy **Piszkozat törlése**-vel eltávolítja a hibás piszkozatot. Részletes QA sor, értesítés és a visszautasítás kötelező megjegyzése → v2.
 
 ### 5.3 Readonly lista (mindkét szerep)
 
@@ -209,7 +209,7 @@ Követelmény:
 ### 9.3 Szerepek és jogosultságok
 
 - Létrehozni a `dataentry` és `editor` Roles-t a Users & Permissionsben.
-- Legalább: `transaction`, `receipt`, `organization`, `account` find; create/update a szerep szerint; media upload a receipthez.
+- Legalább: `transaction`, `receipt`, `organization`, `account` find; create/update a szerep szerint; media upload a receipthez. Általános Content API `delete` nincs; az `editor` kap dedikált `discardDraft` actiont draft tranzakcióra (draft receipt cascade), published elutasítással.
 - Google provider engedélyezése + callback URL-ek a `/backoffice` SPA-hoz.
 
 ### 9.4 Média feltöltés
@@ -261,6 +261,9 @@ A create és az update űrlapon ezek a mezők nincsenek. A megtekintés és a re
 10. **Audit**  
     Draft mentés után a tranzakción és a bizonylaton a rögzítő e-mailje és a `createdAt` látszik. Publish után a publikáló e-mailje és a `publishedAt` is. A kliens ezeket a mezőket nem tudja átírni.
 
+11. **Piszkozat törlése (editor)**  
+    Draft megtekintésen az editor látja a **Piszkozat törlése** gombot és a Confirm dialógust. Sikeres törlés után a tranzakció és a kapcsolt draft bizonylatok nincsenek a listán. Published megtekintésen és `dataentry` show-n nincs gomb. A same-person szabály nem tiltja a törlést. Az API elutasítja a nem-draftot, a published bizonylatot és a nem-editor hívást; nyers transaction `delete` jog továbbra sincs a content szerepeken.
+
 ## 11. Kockázatok
 
 | Kockázat                                                | Hatás                          | Mitigáció                                                                                             |
@@ -285,6 +288,7 @@ A create és az update űrlapon ezek a mezők nincsenek. A megtekintés és a re
 - [ ] Profil: név, email, jelszócsere
 - [ ] i18n default `hu`
 - [ ] Manuális deploy a `kor.fejlesztesek.hu/backoffice` pathra dokumentálva
+- [ ] Editor draft megtekintés: **Piszkozat törlése** (Confirm, draft receipt cascade); published / dataentry nélkül; dedikált API, nem általános delete jog
 
 ## 13. Nyitott implementációs részletek (nem blokkolják a PRD-t)
 
