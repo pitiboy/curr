@@ -180,20 +180,16 @@ function AccountRowTemplateSelect({
                   <Typography component="span" variant="body2">
                     {option.label}
                   </Typography>
-                  {option.hasCurrencyRestriction ? (
+                  {option.currencyChipLabel ? (
                     <Chip
-                      label={translate(
-                        'app.account_profile_workflow_chip_currency',
-                      )}
+                      label={option.currencyChipLabel}
                       size="small"
                       variant="outlined"
                     />
                   ) : null}
-                  {option.hasTransactionTypeRestriction ? (
+                  {option.transactionTypeChipLabel ? (
                     <Chip
-                      label={translate(
-                        'app.account_profile_workflow_chip_type',
-                      )}
+                      label={option.transactionTypeChipLabel}
                       size="small"
                       variant="outlined"
                     />

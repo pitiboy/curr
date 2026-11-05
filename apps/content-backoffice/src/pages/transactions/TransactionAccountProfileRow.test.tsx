@@ -21,6 +21,8 @@ const workflow: WorkflowTemplateHeader = {
   name: 'Seed pair',
   debit_account_code: 5200,
   credit_account_code: 1101,
+  currency_type: { documentId: 'cur-egg', code: 'EGG', name: 'Tojás' },
+  transaction_type: { documentId: 'type-1', name: 'Bányászás' },
 };
 
 vi.mock('../../workflows/useBackofficeConfig', () => ({
@@ -142,5 +144,7 @@ describe('TransactionAccountProfileRow', () => {
     expect(
       within(listbox).getByText('Seed pair', { exact: false }),
     ).toBeVisible();
+    expect(within(listbox).getByText('EGG')).toBeVisible();
+    expect(within(listbox).getByText('Bányászás')).toBeVisible();
   });
 });

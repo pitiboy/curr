@@ -1,5 +1,6 @@
 /**
- * convert-service.ts: keep_original write order (original mark, storno, steps).
+ * convert-service.ts: keep_original write order (original mark, storno, steps),
+ * incomplete-source storno publish gate, and partial-failure rollback.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
@@ -58,14 +59,32 @@ const expandableTransaction: SourceTransaction = {
   currency_type: huf,
 };
 
+const completeTransaction: SourceTransaction = {
+  ...expandableTransaction,
+  organization: { documentId: 'org-1' },
+};
+
 type RecordedOp =
-  | { kind: 'update'; documentId: string; converted: string | undefined }
+  | {
+      kind: 'update';
+      documentId: string;
+      converted: string | null | undefined;
+    }
   | { kind: 'create'; converted: string; enteredKey: string }
-  | { kind: 'delete'; documentId: string };
+  | { kind: 'delete'; documentId: string }
+  | { kind: 'publish'; documentId: string };
+
+type BuildOptions = {
+  /** Fail after N successful creates (used to test rollback). */
+  failAfterCreates?: number;
+  /** Throw from publish for the given documentId. */
+  failPublishDocumentId?: string;
+};
 
 function buildConvertStrapi(
   workflow: WorkflowTemplate,
   transaction: SourceTransaction,
+  options: BuildOptions = {},
 ): { strapi: ConvertStrapi; ops: RecordedOp[] } {
   const ops: RecordedOp[] = [];
   let createCounter = 0;
@@ -75,6 +94,12 @@ function buildConvertStrapi(
     findMany: async () => [],
     create: async ({ data }: { data: Record<string, unknown> }) => {
       createCounter += 1;
+      if (
+        options.failAfterCreates != null &&
+        createCounter > options.failAfterCreates
+      ) {
+        throw new Error('forced create failure');
+      }
       ops.push({
         kind: 'create',
         converted: String(data.converted_to_workflow),
@@ -89,13 +114,16 @@ function buildConvertStrapi(
       documentId: string;
       data: Record<string, unknown>;
     }) => {
+      const converted = data.converted_to_workflow;
       ops.push({
         kind: 'update',
         documentId,
         converted:
-          typeof data.converted_to_workflow === 'string'
-            ? data.converted_to_workflow
-            : undefined,
+          converted === null
+            ? null
+            : typeof converted === 'string'
+              ? converted
+              : undefined,
       });
       return {};
     },
@@ -103,7 +131,13 @@ function buildConvertStrapi(
       ops.push({ kind: 'delete', documentId });
       return {};
     },
-    publish: async () => ({}),
+    publish: async ({ documentId }: { documentId: string }) => {
+      ops.push({ kind: 'publish', documentId });
+      if (options.failPublishDocumentId === documentId) {
+        throw new Error('forced publish failure');
+      }
+      return {};
+    },
     unpublish: async () => ({}),
   };
 
@@ -127,7 +161,19 @@ function buildConvertStrapi(
     },
     db: {
       query: () => ({
-        findOne: async () => null,
+        // Complete stored draft → syncSourceAfterConvert may publish.
+        findOne: async () =>
+          transaction.organization
+            ? {
+                date: transaction.date,
+                amount: transaction.amount,
+                description: transaction.description,
+                currency_type: transaction.currency_type,
+                organization: transaction.organization,
+                debit_account: transaction.debit_account,
+                credit_account: transaction.credit_account,
+              }
+            : null,
       }),
     },
     requestContext: {
@@ -145,6 +191,9 @@ function opSignature(op: RecordedOp): string {
   }
   if (op.kind === 'delete') {
     return `delete:${op.documentId}`;
+  }
+  if (op.kind === 'publish') {
+    return `publish:${op.documentId}`;
   }
   return `create:${op.converted}:${op.enteredKey}`;
 }
@@ -192,5 +241,86 @@ describe('convertTransactions keep_original write order', () => {
       `create:${CONVERTED_EXPANDED}:${expandableTransaction.documentId}:step:1`,
       `delete:${expandableTransaction.documentId}`,
     ]);
+  });
+
+  it('keeps incomplete-source storno as draft while publishing complete steps', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      steps_published: true,
+    };
+    const { strapi, ops } = buildConvertStrapi(workflow, expandableTransaction);
+
+    await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: expandableTransaction.documentId,
+    });
+
+    assert.deepEqual(
+      ops.filter((op) => op.kind === 'publish').map(opSignature),
+      ['publish:created-2', 'publish:created-3'],
+    );
+    assert.equal(
+      ops.some(
+        (op) => op.kind === 'publish' && op.documentId === 'created-1',
+      ),
+      false,
+    );
+  });
+
+  it('publishes storno when the source already has the seven publish fields', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      steps_published: true,
+    };
+    const { strapi, ops } = buildConvertStrapi(workflow, completeTransaction);
+
+    await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: completeTransaction.documentId,
+    });
+
+    assert.ok(
+      ops.some(
+        (op) =>
+          op.kind === 'publish' &&
+          op.documentId === completeTransaction.documentId,
+      ),
+    );
+    assert.ok(
+      ops.some(
+        (op) => op.kind === 'publish' && op.documentId === 'created-1',
+      ),
+    );
+  });
+
+  it('rolls back storno and clears original mark when a later step create fails', async () => {
+    const { strapi, ops } = buildConvertStrapi(
+      workflowTwoSteps,
+      expandableTransaction,
+      { failAfterCreates: 1 },
+    );
+
+    await assert.rejects(
+      () =>
+        convertTransactions(strapi, {
+          workflowDocumentId: workflowTwoSteps.documentId,
+          transactionDocumentId: expandableTransaction.documentId,
+        }),
+      /forced create failure/,
+    );
+
+    assert.deepEqual(ops.map(opSignature), [
+      `update:${expandableTransaction.documentId}:${CONVERTED_ORIGINAL}`,
+      `create:${CONVERTED_STORNO}:${expandableTransaction.documentId}:storno`,
+      'delete:created-1',
+      `update:${expandableTransaction.documentId}:`,
+    ]);
+    const clear = ops.find(
+      (op) =>
+        op.kind === 'update' &&
+        op.documentId === expandableTransaction.documentId &&
+        op.converted === null,
+    );
+    assert.ok(clear);
   });
 });

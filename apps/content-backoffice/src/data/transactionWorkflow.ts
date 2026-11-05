@@ -9,8 +9,15 @@ type StrapiWorkflowRow = {
   name?: string | null;
   debit_account_code?: number;
   credit_account_code?: number;
-  currency_type?: { documentId?: string } | null;
-  transaction_type?: { documentId?: string } | null;
+  currency_type?: {
+    documentId?: string;
+    code?: string | null;
+    name?: string | null;
+  } | null;
+  transaction_type?: {
+    documentId?: string;
+    name?: string | null;
+  } | null;
 };
 
 type WorkflowListResponse = {
@@ -21,8 +28,8 @@ type WorkflowListResponse = {
 const WORKFLOW_PAGE_SIZE = 100;
 
 const workflowListPopulate = {
-  currency_type: { fields: ['documentId'] },
-  transaction_type: { fields: ['documentId'] },
+  currency_type: { fields: ['documentId', 'code', 'name'] },
+  transaction_type: { fields: ['documentId', 'name'] },
 };
 
 function toWorkflowHeader(
@@ -37,10 +44,17 @@ function toWorkflowHeader(
     debit_account_code: row.debit_account_code,
     credit_account_code: row.credit_account_code,
     currency_type: row.currency_type?.documentId
-      ? { documentId: row.currency_type.documentId }
+      ? {
+          documentId: row.currency_type.documentId,
+          code: row.currency_type.code ?? null,
+          name: row.currency_type.name ?? null,
+        }
       : null,
     transaction_type: row.transaction_type?.documentId
-      ? { documentId: row.transaction_type.documentId }
+      ? {
+          documentId: row.transaction_type.documentId,
+          name: row.transaction_type.name ?? null,
+        }
       : null,
   };
 }

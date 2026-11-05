@@ -44,8 +44,10 @@ export type AccountRowSelectOption =
       workflow: WorkflowTemplateHeader;
       label: string;
       secondary: string;
-      hasCurrencyRestriction: boolean;
-      hasTransactionTypeRestriction: boolean;
+      /** Concrete currency code/name for the chip; null when unrestricted. */
+      currencyChipLabel: string | null;
+      /** Concrete transaction-type name for the chip; null when unrestricted. */
+      transactionTypeChipLabel: string | null;
     }
   | {
       kind: 'workflows-loading';
@@ -125,7 +127,25 @@ export function decodeAccountRowSelectValue(
 export function workflowTemplateSecondaryText(
   workflow: WorkflowTemplateHeader,
 ): string {
-  return `${workflow.debit_account_code} ← ${workflow.credit_account_code}`;
+  return `${workflow.credit_account_code} → ${workflow.debit_account_code}`;
+}
+
+export function workflowCurrencyChipLabel(
+  workflow: WorkflowTemplateHeader,
+): string | null {
+  if (!workflow.currency_type?.documentId) return null;
+  const code = workflow.currency_type.code?.trim();
+  if (code) return code;
+  const name = workflow.currency_type.name?.trim();
+  return name || null;
+}
+
+export function workflowTransactionTypeChipLabel(
+  workflow: WorkflowTemplateHeader,
+): string | null {
+  if (!workflow.transaction_type?.documentId) return null;
+  const name = workflow.transaction_type.name?.trim();
+  return name || null;
 }
 
 export function buildAccountRowOptions(
@@ -171,10 +191,8 @@ export function buildAccountRowOptions(
       workflow,
       label: workflow.name?.trim() || workflow.documentId,
       secondary: labels.workflowSecondary(workflow),
-      hasCurrencyRestriction: Boolean(workflow.currency_type?.documentId),
-      hasTransactionTypeRestriction: Boolean(
-        workflow.transaction_type?.documentId,
-      ),
+      currencyChipLabel: workflowCurrencyChipLabel(workflow),
+      transactionTypeChipLabel: workflowTransactionTypeChipLabel(workflow),
     });
   }
 

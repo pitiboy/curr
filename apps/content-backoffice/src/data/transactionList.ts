@@ -121,8 +121,15 @@ export type WorkflowTemplateHeader = {
   name?: string | null;
   debit_account_code: number;
   credit_account_code: number;
-  currency_type?: { documentId?: string } | null;
-  transaction_type?: { documentId?: string } | null;
+  currency_type?: {
+    documentId?: string;
+    code?: string | null;
+    name?: string | null;
+  } | null;
+  transaction_type?: {
+    documentId?: string;
+    name?: string | null;
+  } | null;
 };
 
 export type TransactionWorkflowMatchInput = Pick<

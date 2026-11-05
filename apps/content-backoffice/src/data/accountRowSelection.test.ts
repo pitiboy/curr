@@ -10,6 +10,8 @@ import {
   resolveAccountRowSelection,
   resolveCreateWorkflow,
   resolveWorkflowPrefill,
+  workflowCurrencyChipLabel,
+  workflowTransactionTypeChipLabel,
   WORKFLOW_OPTION_PREFIX,
 } from './accountRowSelection';
 import { selectableAccountProfilesWithAll } from './accountProfiles';
@@ -40,7 +42,7 @@ const labels = {
   groupWorkflows: 'Sablonok',
   workflowsLoading: 'Loading…',
   workflowSecondary: (w: WorkflowTemplateHeader) =>
-    `${w.debit_account_code} ← ${w.credit_account_code}`,
+    `${w.credit_account_code} → ${w.debit_account_code}`,
 };
 
 describe('account row select encode/decode', () => {
@@ -103,6 +105,65 @@ describe('buildAccountRowOptions', () => {
   it('omits workflow group rows when empty and not loading', () => {
     const options = buildAccountRowOptions(['cost'], [], labels);
     expect(options.every((row) => row.kind === 'profile')).toBe(true);
+  });
+
+  it('exposes concrete currency and type chip labels on workflow options', () => {
+    const options = buildAccountRowOptions(
+      ['cost'],
+      [
+        {
+          ...workflowA,
+          currency_type: {
+            documentId: 'cur-egg',
+            code: 'EGG',
+            name: 'Tojás',
+          },
+          transaction_type: {
+            documentId: 'type-banyaszas',
+            name: 'Bányászás',
+          },
+        },
+      ],
+      labels,
+    );
+    const workflow = options.find((row) => row.kind === 'workflow');
+    expect(workflow).toMatchObject({
+      kind: 'workflow',
+      currencyChipLabel: 'EGG',
+      transactionTypeChipLabel: 'Bányászás',
+    });
+  });
+});
+
+describe('workflow chip labels', () => {
+  it('prefers currency code and skips unrestricted workflows', () => {
+    expect(workflowCurrencyChipLabel(workflowA)).toBeNull();
+    expect(
+      workflowCurrencyChipLabel({
+        ...workflowA,
+        currency_type: { documentId: 'cur-1', name: 'Forint' },
+      }),
+    ).toBe('Forint');
+    expect(
+      workflowCurrencyChipLabel({
+        ...workflowA,
+        currency_type: {
+          documentId: 'cur-1',
+          code: 'HUF',
+          name: 'Forint',
+        },
+      }),
+    ).toBe('HUF');
+  });
+
+  it('uses transaction type name when restricted', () => {
+    expect(workflowTransactionTypeChipLabel(workflowA)).toBeNull();
+    expect(
+      workflowTransactionTypeChipLabel({
+        ...workflowA,
+        transaction_type: { documentId: 'type-1', name: 'Bányászás' },
+      }),
+    ).toBe('Bányászás');
   });
 });
 

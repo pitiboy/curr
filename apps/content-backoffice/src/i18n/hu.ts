@@ -107,8 +107,6 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A sablon számlakódjai nem egyértelműen találhatók meg — ellenőrizd a számlaválasztókat.',
     account_profile_workflow_dropped:
       'A kiválasztott ügylet-sablon már nem illik a megadott számlákra.',
-    account_profile_workflow_chip_currency: 'Pénznem',
-    account_profile_workflow_chip_type: 'Típus',
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',

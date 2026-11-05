@@ -107,8 +107,6 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Template account codes could not be resolved uniquely — check the account fields.',
     account_profile_workflow_dropped:
       'The selected transaction template no longer matches the chosen accounts.',
-    account_profile_workflow_chip_currency: 'Currency',
-    account_profile_workflow_chip_type: 'Type',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',

@@ -27,7 +27,15 @@ describe('fetchPublishedWorkflows', () => {
               name: 'Ügylet 1',
               debit_account_code: 1520,
               credit_account_code: 1101,
-              currency_type: { documentId: 'cur-kor' },
+              currency_type: {
+                documentId: 'cur-kor',
+                code: 'KOR',
+                name: 'Korona',
+              },
+              transaction_type: {
+                documentId: 'type-banyaszas',
+                name: 'Bányászás',
+              },
             },
           ],
           meta: { pagination: { pageCount: 1 } },
@@ -38,14 +46,27 @@ describe('fetchPublishedWorkflows', () => {
     const params = new URL(seen[0]!).searchParams;
     expect(params.get('status')).toBe('published');
     expect(params.get('populate[currency_type][fields][0]')).toBe('documentId');
+    expect(params.get('populate[currency_type][fields][1]')).toBe('code');
+    expect(params.get('populate[currency_type][fields][2]')).toBe('name');
+    expect(params.get('populate[transaction_type][fields][0]')).toBe(
+      'documentId',
+    );
+    expect(params.get('populate[transaction_type][fields][1]')).toBe('name');
     expect(rows).toEqual([
       {
         documentId: 'wf-1',
         name: 'Ügylet 1',
         debit_account_code: 1520,
         credit_account_code: 1101,
-        currency_type: { documentId: 'cur-kor' },
-        transaction_type: null,
+        currency_type: {
+          documentId: 'cur-kor',
+          code: 'KOR',
+          name: 'Korona',
+        },
+        transaction_type: {
+          documentId: 'type-banyaszas',
+          name: 'Bányászás',
+        },
       },
     ]);
   });
