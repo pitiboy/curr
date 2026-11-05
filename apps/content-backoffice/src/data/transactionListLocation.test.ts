@@ -15,16 +15,16 @@ function filterAsReactAdmin(search: string): Record<string, unknown> {
 }
 
 describe('transactionsMenuTo', () => {
-  it('opens Review on the shared list with draft status and hides originals', () => {
+  it('opens Review on the shared list with draft status and every deal expansion', () => {
     const target = transactionsMenuTo('draft');
     expect(target.pathname).toBe('/transactions');
     expect(filterFromListSearch(target.search)).toEqual({
       status: 'draft',
-      converted_to_workflow: ['none', 'expanded'],
+      converted_to_workflow: ['none', 'expanded', 'storno', 'original'],
     });
     expect(filterAsReactAdmin(target.search)).toEqual({
       status: 'draft',
-      converted_to_workflow: ['none', 'expanded'],
+      converted_to_workflow: ['none', 'expanded', 'storno', 'original'],
     });
     expect(target.search).not.toContain('/transactions/review');
   });
@@ -34,7 +34,7 @@ describe('transactionsMenuTo', () => {
     const all = transactionsMenuTo('all');
     expect(filterFromListSearch(draft.search)).toEqual({
       status: 'draft',
-      converted_to_workflow: ['none', 'expanded'],
+      converted_to_workflow: ['none', 'expanded', 'storno', 'original'],
     });
     expect(filterFromListSearch(all.search)).toEqual({
       converted_to_workflow: ['none', 'expanded'],
