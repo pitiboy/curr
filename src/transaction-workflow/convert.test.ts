@@ -16,6 +16,7 @@ import {
   resolveStepOrganization,
   stepAmount,
   workflowMatchesTransaction,
+  workflowRequiresSourceOrganization,
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert.ts';
@@ -389,6 +390,45 @@ describe('expandWorkflowSteps', () => {
         tx,
       ),
       treasury,
+    );
+  });
+
+  it('requires source organization when any step uses organization_from_original', () => {
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-org-req',
+      name: 'Org from original',
+      debit_account_code: 1500,
+      credit_account_code: 2000,
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: '{1}',
+          percent: 100,
+          debit_account: account('1500'),
+          credit_account: account('2000'),
+          currency_type: huf,
+          organization_from_original: true,
+        },
+      ],
+    };
+    assert.equal(workflowRequiresSourceOrganization(wf), true);
+    assert.equal(workflowRequiresSourceOrganization(workflowAdmin), false);
+
+    const tx: SourceTransaction = {
+      documentId: 'tx-missing-org',
+      date: '2026-10-14',
+      amount: 10_000,
+      description: 'felújítás',
+      debit_account: account('1500'),
+      credit_account: account('2000'),
+      organization: null,
+    };
+    assert.throws(
+      () => expandWorkflowSteps(wf, tx, new Map()),
+      (error: unknown) =>
+        error instanceof TransactionWorkflowError &&
+        error.status === 422 &&
+        error.message.includes('organization is required'),
     );
   });
 

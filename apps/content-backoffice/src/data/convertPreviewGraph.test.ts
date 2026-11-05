@@ -59,11 +59,11 @@ describe('layoutSequenceDiagram', () => {
     ]);
   });
 
-  it('places participants left-to-right by first appearance', () => {
+  it('places participants left-to-right by first appearance (credit then debit)', () => {
     const layout = layoutSequenceDiagram(previewFixture);
     expect(layout.participants.map((row) => row.code)).toEqual([
-      '5440',
       '2000',
+      '5440',
       '1100',
     ]);
     for (let index = 1; index < layout.participants.length; index += 1) {
@@ -71,6 +71,14 @@ describe('layoutSequenceDiagram', () => {
         layout.participants[index - 1]!.x,
       );
     }
+  });
+
+  it('draws messages credit → debit', () => {
+    const layout = layoutSequenceDiagram(previewFixture);
+    expect(layout.messages[0]).toMatchObject({
+      fromId: 'c1',
+      toId: 'd1',
+    });
   });
 
   it('uses member pastel fill for 1101/1001', () => {
@@ -83,8 +91,9 @@ describe('layoutSequenceDiagram', () => {
       },
     };
     const layout = layoutSequenceDiagram(preview);
-    expect(layout.participants[0]?.isMember).toBe(true);
-    expect(layout.participants[0]?.headerFill).toContain('FFE0B2');
+    const member = layout.participants.find((row) => row.code === '1101');
+    expect(member?.isMember).toBe(true);
+    expect(member?.headerFill).toContain('FFE0B2');
   });
 
   it('detects self-loop messages', () => {

@@ -4,13 +4,26 @@ import {
   type WorkflowTemplateHeader,
 } from './transactionList';
 
+type StrapiWorkflowStepRow = {
+  __component?: string | null;
+  organization_from_original?: boolean | null;
+};
+
 type StrapiWorkflowRow = {
   documentId?: string;
   name?: string | null;
   debit_account_code?: number;
   credit_account_code?: number;
-  currency_type?: { documentId?: string } | null;
-  transaction_type?: { documentId?: string } | null;
+  currency_type?: {
+    documentId?: string;
+    code?: string | null;
+    name?: string | null;
+  } | null;
+  transaction_type?: {
+    documentId?: string;
+    name?: string | null;
+  } | null;
+  step?: StrapiWorkflowStepRow[] | null;
 };
 
 type WorkflowListResponse = {
@@ -20,10 +33,31 @@ type WorkflowListResponse = {
 
 const WORKFLOW_PAGE_SIZE = 100;
 
+const stepOrgFromOriginalFields = {
+  fields: ['organization_from_original'],
+} as const;
+
 const workflowListPopulate = {
-  currency_type: { fields: ['documentId'] },
-  transaction_type: { fields: ['documentId'] },
+  currency_type: { fields: ['documentId', 'code', 'name'] },
+  transaction_type: { fields: ['documentId', 'name'] },
+  step: {
+    on: {
+      'workflow.step': stepOrgFromOriginalFields,
+      'workflow.step-member-debit': stepOrgFromOriginalFields,
+      'workflow.step-member-credit': stepOrgFromOriginalFields,
+    },
+  },
 };
+
+/** True when any step copies organization from the source transaction. */
+export function workflowRequiresSourceOrganization(
+  steps:
+    ReadonlyArray<StrapiWorkflowStepRow | null | undefined> | null | undefined,
+): boolean {
+  return (steps ?? []).some(
+    (step) => step?.organization_from_original === true,
+  );
+}
 
 function toWorkflowHeader(
   row: StrapiWorkflowRow,
@@ -37,11 +71,19 @@ function toWorkflowHeader(
     debit_account_code: row.debit_account_code,
     credit_account_code: row.credit_account_code,
     currency_type: row.currency_type?.documentId
-      ? { documentId: row.currency_type.documentId }
+      ? {
+          documentId: row.currency_type.documentId,
+          code: row.currency_type.code ?? null,
+          name: row.currency_type.name ?? null,
+        }
       : null,
     transaction_type: row.transaction_type?.documentId
-      ? { documentId: row.transaction_type.documentId }
+      ? {
+          documentId: row.transaction_type.documentId,
+          name: row.transaction_type.name ?? null,
+        }
       : null,
+    requires_source_organization: workflowRequiresSourceOrganization(row.step),
   };
 }
 
@@ -60,7 +102,7 @@ type ConvertResponse = {
   data?: ConvertTransactionResult[];
 };
 
-/** Loads all published workflow templates (header fields only). */
+/** Loads all published workflow templates (header + org-from-original flag). */
 export async function fetchPublishedWorkflows(
   httpClient: ContentHttpClient,
   strapiUrl: string,

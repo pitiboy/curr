@@ -175,12 +175,13 @@ describe('buildConvertPreview', () => {
       credit_account: account('4500'),
       currency_type: { documentId: egg.documentId },
     };
-    const lookup = new Map<string, { code: string | null; name: string | null }>(
-      [
-        [egg.documentId, { code: null, name: null }],
-        [huf.documentId, { code: 'HUF', name: 'Forint' }],
-      ],
-    );
+    const lookup = new Map<
+      string,
+      { code: string | null; name: string | null }
+    >([
+      [egg.documentId, { code: null, name: null }],
+      [huf.documentId, { code: 'HUF', name: 'Forint' }],
+    ]);
     lookup.set(
       egg.documentId,
       mergeCurrencyLookupRow(lookup.get(egg.documentId), egg),

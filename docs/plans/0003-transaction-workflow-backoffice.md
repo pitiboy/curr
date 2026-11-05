@@ -55,11 +55,11 @@ flowchart LR
 
 ## 2. Fogalomtár
 
-| Fogalom | Jelentés |
-| -------- | -------- |
-| **Match** | Kliens: published sablon fejléc ↔ trx `debit_account.code` / `credit_account.code` (+ opcionális `currency_type` / `transaction_type` documentId); `converted_to_workflow` üres / null. Ugyanaz a szabály, mint a szerver [`workflowMatchesTransaction`](../../src/transaction-workflow/convert.ts) / [`pickMatchingWorkflow`](../../src/transaction-workflow/convert.ts). |
-| **Convert gomb** | Csak `permissions === 'editor'` **és** pontosan egy match. Több sablon → nincs gomb (szerver 409). |
-| **Convert hívás** | `POST /api/transaction-workflows/convert` body: `{ transactionDocumentId, workflowDocumentId }`. |
+| Fogalom           | Jelentés                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Match**         | Kliens: published sablon fejléc ↔ trx `debit_account.code` / `credit_account.code` (+ opcionális `currency_type` / `transaction_type` documentId); `converted_to_workflow` üres / null. Ugyanaz a szabály, mint a szerver [`workflowMatchesTransaction`](../../src/transaction-workflow/convert.ts) / [`pickMatchingWorkflow`](../../src/transaction-workflow/convert.ts). |
+| **Convert gomb**  | Csak `permissions === 'editor'` **és** pontosan egy match. Több sablon → nincs gomb (szerver 409).                                                                                                                                                                                                                                                                         |
+| **Convert hívás** | `POST /api/transaction-workflows/convert` body: `{ transactionDocumentId, workflowDocumentId }`.                                                                                                                                                                                                                                                                           |
 
 ---
 
@@ -67,22 +67,22 @@ flowchart LR
 
 ### 3.1 Katalógus
 
-| Elem | Érték |
-| ---- | ----- |
-| Endpoint | `GET /api/transaction-workflows?status=published` |
-| Jog | `find` — `dataentry` és `editor` (bootstrap); a SPA **csak editor** sessionben hívja a gombhoz |
-| Populate | `currency_type` (legalább `documentId`), `transaction_type` (legalább `documentId`). A `step` dynamic zone **nem** kell a matchhez. |
-| Mezők a matchhez | `documentId`, `name`, `debit_account_code`, `credit_account_code`, `currency_type`, `transaction_type` |
+| Elem             | Érték                                                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Endpoint         | `GET /api/transaction-workflows?status=published`                                                                                   |
+| Jog              | `find` — `dataentry` és `editor` (bootstrap); a SPA **csak editor** sessionben hívja a gombhoz                                      |
+| Populate         | `currency_type` (legalább `documentId`), `transaction_type` (legalább `documentId`). A `step` dynamic zone **nem** kell a matchhez. |
+| Mezők a matchhez | `documentId`, `name`, `debit_account_code`, `credit_account_code`, `currency_type`, `transaction_type`                              |
 
 ### 3.2 Convert
 
-| Elem | Érték |
-| ---- | ----- |
-| Endpoint | `POST /api/transaction-workflows/convert` |
-| Auth | Content JWT; scope `api::transaction-workflow.transaction-workflow.convert` (**csak editor**) |
-| Body | `{ "transactionDocumentId": "<docId>", "workflowDocumentId": "<docId>" }` |
-| Siker | `{ data: [ { transactionDocumentId, workflowDocumentId, stornoDocumentId?, createdDocumentIds } ] }` |
-| Hibák | 400 hiányzó id; 404 nincs published sablon; 409 több sablon / `entered_key`; 422 hiányzó account/org/receipt policy; 403 ha nem editor |
+| Elem     | Érték                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Endpoint | `POST /api/transaction-workflows/convert`                                                                                              |
+| Auth     | Content JWT; scope `api::transaction-workflow.transaction-workflow.convert` (**csak editor**)                                          |
+| Body     | `{ "transactionDocumentId": "<docId>", "workflowDocumentId": "<docId>" }`                                                              |
+| Siker    | `{ data: [ { transactionDocumentId, workflowDocumentId, stornoDocumentId?, createdDocumentIds } ] }`                                   |
+| Hibák    | 400 hiányzó id; 404 nincs published sablon; 409 több sablon / `entered_key`; 422 hiányzó account/org/receipt policy; 403 ha nem editor |
 
 A SPA **nem** küld `steps_published` mezőt.
 
@@ -156,6 +156,7 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
   3. `convertTransaction` az új `documentId`-dal + workflow `documentId`
   4. Siker → lista; hiba → notify (a draft megmaradhat — jelezd)
 - `dataentry` Create: változatlan (nincs match UI, nincs Convert gomb).
+- **Ügylet-sablon választó (2026-11):** a Create „Számlaprofil” MUI Select második csoportja a published `transaction-workflow` sablonokat listázza (`data/accountRowSelection.ts`). Sablon választás prefilleli a két számlát (és opcionálisan a pénznemet / rejtett `transaction_type` mezőt); profil választás viselkedése változatlan. Aktív sablon esetén a preview és a Mentés és ügylet kifejtése a kiválasztott sablon `documentId`-ját használja (nem újramatch). A sablonlista `dataentry` + `editor` sessionben is betölthető prefillel (`TRANSACTION_WORKFLOW_PREFILL_ROLES`); Convert továbbra csak editor.
 
 ---
 
@@ -163,16 +164,16 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 
 [`hu.ts`](../../apps/content-backoffice/src/i18n/hu.ts) és [`en.ts`](../../apps/content-backoffice/src/i18n/en.ts) — `app.*` kulcsok, mindkét katalógusban:
 
-| Kulcs (javaslat) | hu példa |
-| ---------------- | -------- |
-| `transactions_convert` | Ügylet kifejtése |
-| `transactions_convert_save` | Mentés és ügylet kifejtése |
-| `transactions_convert_title` | Ügylet kifejtése: %{name} |
-| `transactions_convert_body` | A tranzakcióból a sablon szerinti sorok készülnek (storno / lépések). Folytatod? |
-| `transactions_convert_confirm` | Kifejtés |
-| `transactions_convert_done` | Az ügylet kifejtve. |
-| `transactions_convert_error` | Az ügylet kifejtése nem sikerült. |
-| `transactions_convert_ambiguous` | Több ügylet-sablon is illik erre a tranzakcióra. |
+| Kulcs (javaslat)                 | hu példa                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `transactions_convert`           | Ügylet kifejtése                                                                 |
+| `transactions_convert_save`      | Mentés és ügylet kifejtése                                                       |
+| `transactions_convert_title`     | Ügylet kifejtése: %{name}                                                        |
+| `transactions_convert_body`      | A tranzakcióból a sablon szerinti sorok készülnek (storno / lépések). Folytatod? |
+| `transactions_convert_confirm`   | Kifejtés                                                                         |
+| `transactions_convert_done`      | Az ügylet kifejtve.                                                              |
+| `transactions_convert_error`     | Az ügylet kifejtése nem sikerült.                                                |
+| `transactions_convert_ambiguous` | Több ügylet-sablon is illik erre a tranzakcióra.                                 |
 
 ---
 
@@ -233,13 +234,13 @@ Siker után: `notify` + `refresh()` (lista / show); Create után navigálás a l
 
 ## Kapcsolódó fájlok
 
-| Útvonal | Szerep |
-| ------- | ------ |
-| [convert.ts route](../../src/api/transaction-workflow/routes/convert.ts) | Convert endpoint |
-| [convert.ts logika](../../src/transaction-workflow/convert.ts) | Match / expand (szerver forrásigazság) |
-| [transactionList.ts](../../apps/content-backoffice/src/data/transactionList.ts) | Típusok + kliens match |
-| [TransactionList.tsx](../../apps/content-backoffice/src/pages/transactions/TransactionList.tsx) | Lista gomb |
-| [TransactionReviewEditor.tsx](../../apps/content-backoffice/src/pages/transactions/TransactionReviewEditor.tsx) | Review gomb |
-| [TransactionCreate.tsx](../../apps/content-backoffice/src/pages/transactions/TransactionCreate.tsx) | Create mentés+convert |
-| [src/index.ts](../../src/index.ts) | `EDITOR_ONLY` convert jog |
-| [0002 plan](./0002-transaction-workflow-content-type.md) | Katalógus + Convert API |
+| Útvonal                                                                                                         | Szerep                                 |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| [convert.ts route](../../src/api/transaction-workflow/routes/convert.ts)                                        | Convert endpoint                       |
+| [convert.ts logika](../../src/transaction-workflow/convert.ts)                                                  | Match / expand (szerver forrásigazság) |
+| [transactionList.ts](../../apps/content-backoffice/src/data/transactionList.ts)                                 | Típusok + kliens match                 |
+| [TransactionList.tsx](../../apps/content-backoffice/src/pages/transactions/TransactionList.tsx)                 | Lista gomb                             |
+| [TransactionReviewEditor.tsx](../../apps/content-backoffice/src/pages/transactions/TransactionReviewEditor.tsx) | Review gomb                            |
+| [TransactionCreate.tsx](../../apps/content-backoffice/src/pages/transactions/TransactionCreate.tsx)             | Create mentés+convert                  |
+| [src/index.ts](../../src/index.ts)                                                                              | `EDITOR_ONLY` convert jog              |
+| [0002 plan](./0002-transaction-workflow-content-type.md)                                                        | Katalógus + Convert API                |

@@ -161,7 +161,7 @@ export function layoutSequenceDiagram(
   >();
 
   for (const frame of frames) {
-    for (const account of [frame.debit, frame.credit]) {
+    for (const account of [frame.credit, frame.debit]) {
       const enriched = accountWithMember(account);
       if (!participantById.has(account.documentId)) {
         participantOrder.push(account.documentId);
@@ -209,8 +209,8 @@ export function layoutSequenceDiagram(
     id: frame.id,
     order: index + 1,
     kind: frame.kind,
-    fromId: frame.debit.documentId,
-    toId: frame.credit.documentId,
+    fromId: frame.credit.documentId,
+    toId: frame.debit.documentId,
     y:
       SEQ_HEADER_HEIGHT +
       SEQ_PADDING_Y +

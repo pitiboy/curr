@@ -18,6 +18,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_confirm: 'Kifejtés',
     transactions_convert_done: 'Az ügylet kifejtve.',
     transactions_convert_error: 'Az ügylet kifejtése nem sikerült.',
+    transactions_convert_organization_required:
+      'Ehhez az ügylet-sablonhoz kötelező a szervezet.',
     transactions_convert_ambiguous:
       'Több ügylet-sablon is illik erre a tranzakcióra.',
     transactions_convert_preview: 'Kifejtés előnézete',
@@ -33,9 +35,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A lépések published státuszúak',
     transactions_convert_preview_steps_draft: 'A lépések draft státuszúak',
     transactions_convert_preview_legend:
-      'A nyíl iránya: terhelési számla → követelési számla (könyvelési irány).',
+      'A nyíl iránya: követelési számla → terhelési számla.',
     transactions_convert_preview_sequence_legend:
-      'Sequence diagram: a számlák felül, szaggatott lifeline; az üzenetek felülről lefelé — nyíl a terhelés → követelés felé (könyvelési irány).',
+      'Sequence diagram: a számlák felül, szaggatott lifeline; az üzenetek felülről lefelé — nyíl a követelés → terhelés felé.',
     transactions_convert_preview_diagram_aria:
       'Számlák közti mozgás: %{summary}',
     transactions_convert_preview_kind: 'Típus',
@@ -97,9 +99,13 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     account_profile_all: 'Minden számla',
     account_profile_cost: 'Költség',
     account_profile_revenue: 'Bevétel',
-    account_profile_egg_production: 'Tojás — termelés',
-    account_profile_egg_internal: 'Tojás — belső továbbosztás',
-    account_profile_egg_sale: 'Tojás — eladás',
+    account_profile_group_profiles: 'Profilok',
+    account_profile_group_workflows: 'Ügylet-sablonok',
+    account_profile_workflows_loading: 'Sablonok betöltése…',
+    account_profile_workflow_prefill_incomplete:
+      'A sablon számlakódjai nem egyértelműen találhatók meg — ellenőrizd a számlaválasztókat.',
+    account_profile_workflow_dropped:
+      'A kiválasztott ügylet-sablon már nem illik a megadott számlákra.',
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',
