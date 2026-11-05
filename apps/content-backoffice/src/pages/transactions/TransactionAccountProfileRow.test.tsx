@@ -1,7 +1,13 @@
-import { render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AccountChoice } from '../../data/accountCodes';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
@@ -104,7 +110,10 @@ function FormShell({
 }
 
 describe('TransactionAccountProfileRow', () => {
+  afterEach(() => cleanup());
+
   it('keeps the legacy profile-only select on Review (no template group)', async () => {
+    const user = userEvent.setup();
     render(
       <FormShell withWorkflowTemplates={false}>
         <TransactionAccountProfileRow
@@ -116,13 +125,14 @@ describe('TransactionAccountProfileRow', () => {
       </FormShell>,
     );
     const select = screen.getByLabelText('app.account_profile');
-    await userEvent.click(select);
+    await user.click(select);
     expect(
       screen.queryByText('app.account_profile_group_workflows'),
     ).toBeNull();
   });
 
   it('lists transaction templates in a second group on Create', async () => {
+    const user = userEvent.setup();
     render(
       <FormShell withWorkflowTemplates={true}>
         <TransactionAccountProfileRow
@@ -137,7 +147,7 @@ describe('TransactionAccountProfileRow', () => {
     const select = screen.getByRole('combobox', {
       name: 'app.account_profile',
     });
-    await userEvent.click(select);
+    await user.click(select);
     const listbox = await screen.findByRole('listbox');
     expect(
       within(listbox).getByText('app.account_profile_group_workflows'),
@@ -147,5 +157,9 @@ describe('TransactionAccountProfileRow', () => {
     ).toBeVisible();
     expect(within(listbox).getByText('EGG')).toBeVisible();
     expect(within(listbox).getByText('Bányászás')).toBeVisible();
+    await user.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).toBeNull();
+    });
   });
 });

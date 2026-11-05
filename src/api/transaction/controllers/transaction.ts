@@ -5,9 +5,40 @@
 import { factories } from '@strapi/strapi';
 import { errors } from '@strapi/utils';
 
+import {
+  discardDraftTransaction,
+  DiscardDraftError,
+  type DiscardDraftStrapi,
+} from '../../../transaction-discard/discard-service';
+
 export default factories.createCoreController(
   'api::transaction.transaction',
   ({ strapi }) => ({
+    async discardDraft(ctx) {
+      const rawId = ctx.params?.id;
+      const documentId = typeof rawId === 'string' ? rawId.trim() : '';
+      try {
+        await discardDraftTransaction(
+          strapi as unknown as DiscardDraftStrapi,
+          documentId,
+        );
+      } catch (error) {
+        if (error instanceof DiscardDraftError) {
+          ctx.status = error.status;
+          ctx.body = {
+            data: null,
+            error: {
+              status: error.status,
+              name: error.name,
+              message: error.message,
+            },
+          };
+          return;
+        }
+        throw error;
+      }
+      ctx.body = { data: { documentId } };
+    },
     async publish(ctx) {
       const rawId = ctx.params?.id;
       const documentId = typeof rawId === 'string' ? rawId.trim() : '';

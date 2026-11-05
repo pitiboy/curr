@@ -35,6 +35,10 @@ describe('shouldConfirmDraftLeave', () => {
   it('stays quiet for a dataentry user', () => {
     expect(shouldConfirmDraftLeave({ ...draft, isEditor: false })).toBe(false);
   });
+
+  it('stays quiet after a successful discard releases leave', () => {
+    expect(shouldConfirmDraftLeave({ ...draft, allowLeave: true })).toBe(false);
+  });
 });
 
 describe('shouldConfirmDirtyCreateLeave', () => {

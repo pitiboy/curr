@@ -12,6 +12,7 @@ import {
   type StrapiTransaction,
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
+import { discardTransactionDraft } from './transactionDiscard';
 import { publishTransactionDraft } from './transactionPublish';
 import { convertTransaction as postConvertTransaction } from './transactionWorkflow';
 import {
@@ -108,6 +109,10 @@ export const dataProvider = withDocumentId({
 
 export function publishTransaction(documentId: string) {
   return publishTransactionDraft(httpClient, STRAPI_URL, documentId);
+}
+
+export function discardTransaction(documentId: string) {
+  return discardTransactionDraft(httpClient, STRAPI_URL, documentId);
 }
 
 export function saveTransactionDraft(

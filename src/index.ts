@@ -59,6 +59,7 @@ const CONTENT_ROLE_ACTIONS = [
 ] as const;
 
 const EDITOR_ONLY_CONTENT_ACTIONS = [
+  'api::transaction.transaction.discardDraft',
   'api::transaction-workflow.transaction-workflow.convert',
   'api::transaction-workflow.transaction-workflow.convertPreview',
 ] as const;
@@ -66,7 +67,13 @@ const EDITOR_ONLY_CONTENT_ACTIONS = [
 const usersPermissionsRolePermissions = {
   'api::transaction': {
     controllers: {
-      transaction: allow(['find', 'findOne', 'create', 'update']),
+      transaction: allow([
+        'find',
+        'findOne',
+        'create',
+        'update',
+        'discardDraft',
+      ]),
     },
   },
   'api::receipt': {

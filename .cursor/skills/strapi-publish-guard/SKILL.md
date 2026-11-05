@@ -80,7 +80,7 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 
 A Content API sanitize leveszi a `role` relációt, ha nincs `role.find`. Azt ne add ki: a `GET /roles` a szereplistát nyitná meg. A `src/extensions/users-permissions/strapi-server.ts` a `/api/users/me` válaszba a hívó saját role-ját teszi vissza (`type` a `ctx.state.user.role`-ból).
 
-Delete, users-permissions user admin és az upload destroy kimarad. A publishhez nincs külön action: az őr dönt.
+Delete, users-permissions user admin és az upload destroy kimarad. A publishhez nincs külön action: az őr dönt. Az `editor` kap editor-only `api::transaction.transaction.discardDraft` jogot (`POST …/actions/discard-draft`): csak draft tranzakció, draft receipt cascade, published elutasítás; nem helyettesíti az általános CRUD delete-et.
 
 A permission rekord a `plugin::users-permissions.permission` query, `action` + `role`. Ismételt bootstrap ne duplikálja a sort.
 

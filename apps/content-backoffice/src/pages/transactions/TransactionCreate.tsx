@@ -1,5 +1,6 @@
+import { Box } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFormState } from 'react-hook-form';
+import { useFormState, useWatch } from 'react-hook-form';
 import type { Middleware } from 'ra-core';
 import {
   AutocompleteInput,
@@ -21,6 +22,8 @@ import {
 
 import { bandedForm, bandedSpanClass } from '../../theme';
 import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
+import { FormIssueAccordion } from './FormIssueAccordion';
+import { collectCreateIssues } from './formIssues';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import {
   TransactionCreateAccountRowFormSync,
@@ -220,6 +223,26 @@ function CreateOrganizationInput() {
   );
 }
 
+function CreateFormIssueAccordion({
+  receiptCards,
+}: {
+  receiptCards: ReceiptCardValue[];
+}) {
+  const translate = useTranslate();
+  const values = useWatch() as Record<string, unknown>;
+  const issues = collectCreateIssues(values ?? {}, receiptCards, translate);
+
+  return (
+    <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
+      <FormIssueAccordion
+        hint={translate('app.transactions_create_issues_hint')}
+        issues={issues}
+        title={translate('app.transactions_create_issues_title')}
+      />
+    </Box>
+  );
+}
+
 function TransactionCreateForm({
   accounts,
   catalogFailed,
@@ -312,6 +335,7 @@ function TransactionCreateForm({
       />
 
       <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
+      <CreateFormIssueAccordion receiptCards={receiptCards} />
     </SimpleForm>
   );
 }

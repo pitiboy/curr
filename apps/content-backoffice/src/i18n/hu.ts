@@ -87,6 +87,21 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A csatolt fájl még nincs mentve. Előbb mentsd a bizonylatot.',
     transactions_finalize_same_person:
       'A módosítások elmentve, a tranzakció piszkozat maradt. A rögzítő nem véglegesítheti a saját tranzakcióját.',
+    form_issues_count: '%{errors} hiba, %{warnings} figyelmeztetés',
+    transactions_create_issues_title: 'Mentés',
+    transactions_create_issues_hint:
+      'A tranzakció piszkozatként mentődik. A csillagos mezőket töltsd ki; a bizonylat most még elhagyható.',
+    transactions_create_no_receipt:
+      'Nincs bizonylat csatolva. Mentéshez nem kell, de ha van nálad, töltsd fel most — véglegesítés után már nem lehet.',
+    transactions_create_account_suggested:
+      '%{field}: még üres. Ellenőrzéskor kötelező lesz — ha tudod, válaszd ki most.',
+    transactions_discard: 'Piszkozat törlése',
+    transactions_discard_title: 'Piszkozat törlése',
+    transactions_discard_body:
+      'A tranzakció és a hozzá csatolt piszkozat bizonylatok véglegesen törlődnek. A művelet nem vonható vissza.',
+    transactions_discard_confirm: 'Törlés',
+    transactions_discard_done: 'A piszkozat tranzakció törölve.',
+    transactions_discard_error: 'A piszkozat törlése sikertelen.',
     transactions_leave_title: 'A tranzakció még piszkozat',
     transactions_leave_body: 'A véglegesítés még hátravan. Elhagyod az oldalt?',
     transactions_leave_unsaved_title: 'A tranzakció még nincs mentve',

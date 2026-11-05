@@ -202,22 +202,31 @@ function ReviewEditableFields({
   );
 }
 
-function DraftLeaveGuard() {
+function DraftLeaveGuard({
+  allowLeaveRef,
+}: {
+  allowLeaveRef: { current: boolean };
+}) {
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (allowLeaveRef.current) return;
       event.preventDefault();
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, []);
+  }, [allowLeaveRef]);
 
   const canBlock = useCanBlock();
   if (!canBlock) return null;
-  return <DraftLeaveBlocker />;
+  return <DraftLeaveBlocker allowLeaveRef={allowLeaveRef} />;
 }
 
-function DraftLeaveBlocker() {
+function DraftLeaveBlocker({
+  allowLeaveRef,
+}: {
+  allowLeaveRef: { current: boolean };
+}) {
   const shouldBlock = useCallback(
     ({
       currentLocation,
@@ -227,12 +236,13 @@ function DraftLeaveBlocker() {
       nextLocation: { pathname: string };
     }) =>
       shouldConfirmDraftLeave({
+        allowLeave: allowLeaveRef.current,
         isEditor: true,
         status: 'draft',
         currentPathname: currentLocation.pathname,
         nextPathname: nextLocation.pathname,
       }),
-    [],
+    [allowLeaveRef],
   );
   const blocker = useBlocker(shouldBlock);
 
@@ -367,6 +377,8 @@ export function TransactionReviewEditor({
       ),
     [record.entered_by, editorEmail, publisherMustDiffer],
   );
+  // Synced before redirect so discard does not race the leave Confirm.
+  const allowLeaveRef = useRef(false);
 
   return (
     <>
@@ -390,7 +402,7 @@ export function TransactionReviewEditor({
         toolbar={false}
         onSubmit={() => undefined}
       >
-        <DraftLeaveGuard />
+        <DraftLeaveGuard allowLeaveRef={allowLeaveRef} />
         <ReviewEditableFields catalog={catalog} />
         <ReceiptAttachEditor
           cards={cards}
@@ -399,6 +411,7 @@ export function TransactionReviewEditor({
         />
         <TransactionConvertSection record={record} />
         <TransactionFinalizeSection
+          allowLeaveRef={allowLeaveRef}
           blocked={blocked}
           documentId={record.documentId}
           missingReceipt={missingReceipt}

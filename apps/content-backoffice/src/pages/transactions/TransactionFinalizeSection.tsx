@@ -1,10 +1,16 @@
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import { useRef, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
-import { useNotify, useRefresh, useTranslate } from 'react-admin';
+import { useFormContext, useWatch } from 'react-hook-form';
+import {
+  Confirm,
+  useNotify,
+  useRedirect,
+  useRefresh,
+  useTranslate,
+} from 'react-admin';
 
 import {
+  discardTransaction,
   publishTransaction,
   saveTransactionDraft,
 } from '../../data/dataProvider';
@@ -13,31 +19,18 @@ import {
   strapiErrorMessage,
 } from '../../data/transactionPublish';
 import { bandedSpanClass } from '../../theme';
+import { FormIssueAccordion } from './FormIssueAccordion';
+import { collectFinalizeIssues } from './formIssues';
 import { transactionPublishFormErrors } from './transactionForm';
 
-const reviewFieldset = {
-  border: 0,
-  m: 0,
-  minWidth: 0,
-  p: 0,
-} as const;
-
-const reviewLegend = {
-  alignItems: 'center',
-  display: 'flex',
-  gap: 0.5,
-  mb: 0.5,
-  px: 0,
-} as const;
-
-const reviewIcon = { fontSize: 20 } as const;
-
 export function TransactionFinalizeSection({
+  allowLeaveRef,
   blocked,
   documentId,
   missingReceipt,
   samePersonBlocked,
 }: {
+  allowLeaveRef: { current: boolean };
   blocked: boolean;
   documentId: string;
   missingReceipt: boolean;
@@ -46,9 +39,19 @@ export function TransactionFinalizeSection({
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
-  const { getValues, setError, clearErrors } = useFormContext();
+  const redirect = useRedirect();
+  const { control, getValues, setError, clearErrors } = useFormContext();
+  const formValues = useWatch({ control }) as Record<string, unknown>;
   const [saving, setSaving] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
   const savingRef = useRef(false);
+
+  const issues = collectFinalizeIssues(
+    formValues ?? {},
+    { blocked, missingReceipt, samePersonBlocked },
+    translate,
+  );
 
   const onFinalize = () => {
     if (blocked || samePersonBlocked || savingRef.current) return;
@@ -87,46 +90,58 @@ export function TransactionFinalizeSection({
       });
   };
 
+  const onDiscardConfirm = () => {
+    if (discarding || savingRef.current) return;
+    setDiscarding(true);
+    void discardTransaction(documentId)
+      .then(() => {
+        allowLeaveRef.current = true;
+        notify('app.transactions_discard_done', { type: 'success' });
+        setDiscardOpen(false);
+        redirect('list', 'transactions');
+      })
+      .catch((error: unknown) => {
+        const message = strapiErrorMessage(error);
+        notify(message || 'app.transactions_discard_error', { type: 'error' });
+      })
+      .finally(() => setDiscarding(false));
+  };
+
   return (
     <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
-      <Box component="fieldset" sx={reviewFieldset}>
-        <Box component="legend" sx={reviewLegend}>
-          <WarningAmberIcon aria-hidden sx={reviewIcon} />
-          <Typography
-            component="span"
-            sx={{ fontWeight: 700 }}
-            variant="subtitle1"
-          >
-            {translate('app.transactions_review')}
-          </Typography>
-        </Box>
-        <Typography sx={{ mb: 1 }} variant="body2">
-          {translate('app.transactions_finalize_hint')}
-        </Typography>
-        {missingReceipt ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_no_receipt')}
-          </Typography>
-        ) : null}
-        {blocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_pending')}
-          </Typography>
-        ) : null}
-        {samePersonBlocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_same_person')}
-          </Typography>
-        ) : null}
+      <FormIssueAccordion
+        hint={translate('app.transactions_finalize_hint')}
+        issues={issues}
+        title={translate('app.transactions_review')}
+      />
+      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
         <Button
-          disabled={blocked || samePersonBlocked || saving}
+          disabled={blocked || samePersonBlocked || saving || discarding}
           type="button"
           variant="contained"
           onClick={onFinalize}
         >
           {translate('app.transactions_finalize')}
         </Button>
-      </Box>
+        <Button
+          color="error"
+          disabled={saving || discarding}
+          type="button"
+          variant="outlined"
+          onClick={() => setDiscardOpen(true)}
+        >
+          {translate('app.transactions_discard')}
+        </Button>
+      </Stack>
+      <Confirm
+        confirm="app.transactions_discard_confirm"
+        content="app.transactions_discard_body"
+        isOpen={discardOpen}
+        loading={discarding}
+        title="app.transactions_discard_title"
+        onClose={() => !discarding && setDiscardOpen(false)}
+        onConfirm={onDiscardConfirm}
+      />
     </Box>
   );
 }
