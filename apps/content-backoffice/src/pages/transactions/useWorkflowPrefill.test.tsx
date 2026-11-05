@@ -38,9 +38,7 @@ function PrefillProbe() {
       <div data-testid="selection-kind">{storedSelection.kind}</div>
       <div data-testid="debit">{String(watch('debit_account') ?? '')}</div>
       <div data-testid="credit">{String(watch('credit_account') ?? '')}</div>
-      <div data-testid="credit-filter">
-        {accountCodeFilters.credit ?? ''}
-      </div>
+      <div data-testid="credit-filter">{accountCodeFilters.credit ?? ''}</div>
       <div data-testid="warnings">{prefillWarningKeys.join(',')}</div>
     </div>
   );
