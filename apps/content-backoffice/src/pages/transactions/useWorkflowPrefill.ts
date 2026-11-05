@@ -86,12 +86,12 @@ export function useWorkflowPrefillOnSelect(
       shouldDirty: true,
       shouldValidate: true,
     });
-    if (prefill.currencyTypeId) {
-      setValue('currency_type', prefill.currencyTypeId, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
+    // Always replace currency: template currency fills, otherwise clear the
+    // previous selection so a prior form value cannot stick to the new template.
+    setValue('currency_type', prefill.currencyTypeId ?? '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     if (prefill.transactionTypeId) {
       setValue(HIDDEN_TRANSACTION_TYPE_FIELD, prefill.transactionTypeId, {
         shouldDirty: true,

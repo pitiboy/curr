@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { AccountChoice } from '../../data/accountCodes';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
@@ -26,12 +26,25 @@ const workflowAmbiguous: WorkflowTemplateHeader = {
   requires_source_organization: false,
 };
 
-function PrefillProbe() {
+const workflowWithCurrency: WorkflowTemplateHeader = {
+  documentId: 'wf-egg',
+  name: 'Egg pair',
+  debit_account_code: 5200,
+  credit_account_code: 1300,
+  currency_type: { documentId: 'cur-egg', code: 'EGG', name: 'Tojás' },
+  requires_source_organization: false,
+};
+
+function PrefillProbe({
+  workflows,
+}: {
+  workflows: WorkflowTemplateHeader[];
+}) {
   const { watch } = useFormContext();
   const { storedSelection } = useTransactionCreateAccountRow();
   const { prefillWarningKeys, accountCodeFilters } = useWorkflowPrefillOnSelect(
     accounts,
-    [workflowAmbiguous],
+    workflows,
   );
 
   return (
@@ -39,6 +52,7 @@ function PrefillProbe() {
       <div data-testid="selection-kind">{storedSelection.kind}</div>
       <div data-testid="debit">{String(watch('debit_account') ?? '')}</div>
       <div data-testid="credit">{String(watch('credit_account') ?? '')}</div>
+      <div data-testid="currency">{String(watch('currency_type') ?? '')}</div>
       <div data-testid="credit-filter">{accountCodeFilters.credit ?? ''}</div>
       <div data-testid="warnings">{prefillWarningKeys.join(',')}</div>
     </div>
@@ -46,13 +60,17 @@ function PrefillProbe() {
 }
 
 describe('useWorkflowPrefillOnSelect', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('clears ambiguous accounts, keeps the template, and exposes a code filter', async () => {
     const Wrapper = ({ children }: { children: React.ReactNode }) => {
       const methods = useForm({
         defaultValues: {
           debit_account: 'debit-5200',
           credit_account: 'credit-1300',
-          currency_type: '',
+          currency_type: 'cur-huf',
         },
       });
       return (
@@ -75,7 +93,7 @@ describe('useWorkflowPrefillOnSelect', () => {
 
     render(
       <Wrapper>
-        <PrefillProbe />
+        <PrefillProbe workflows={[workflowAmbiguous]} />
       </Wrapper>,
     );
 
@@ -88,5 +106,46 @@ describe('useWorkflowPrefillOnSelect', () => {
     expect(screen.getByTestId('debit').textContent).toBe('debit-5200');
     expect(screen.getByTestId('credit').textContent).toBe('');
     expect(screen.getByTestId('credit-filter').textContent).toBe('1101');
+    expect(screen.getByTestId('currency').textContent).toBe('');
+  });
+
+  it('prefills currency when the template has one', async () => {
+    const Wrapper = ({ children }: { children: React.ReactNode }) => {
+      const methods = useForm({
+        defaultValues: {
+          debit_account: '',
+          credit_account: '',
+          currency_type: 'cur-huf',
+        },
+      });
+      return (
+        <TransactionCreateAccountRowProvider
+          accounts={accounts}
+          defaultProfile="cost"
+          initialStoredSelection={{
+            kind: 'workflow',
+            workflowDocumentId: 'wf-egg',
+          }}
+          transactionWorkflows={[workflowWithCurrency]}
+        >
+          <FormProvider {...methods}>
+            <TransactionCreateAccountRowFormSync />
+            {children}
+          </FormProvider>
+        </TransactionCreateAccountRowProvider>
+      );
+    };
+
+    render(
+      <Wrapper>
+        <PrefillProbe workflows={[workflowWithCurrency]} />
+      </Wrapper>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('currency').textContent).toBe('cur-egg');
+    });
+    expect(screen.getByTestId('debit').textContent).toBe('debit-5200');
+    expect(screen.getByTestId('credit').textContent).toBe('credit-1300');
   });
 });
