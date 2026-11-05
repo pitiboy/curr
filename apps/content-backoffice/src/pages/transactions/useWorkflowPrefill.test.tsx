@@ -35,11 +35,7 @@ const workflowWithCurrency: WorkflowTemplateHeader = {
   requires_source_organization: false,
 };
 
-function PrefillProbe({
-  workflows,
-}: {
-  workflows: WorkflowTemplateHeader[];
-}) {
+function PrefillProbe({ workflows }: { workflows: WorkflowTemplateHeader[] }) {
   const { watch } = useFormContext();
   const { storedSelection } = useTransactionCreateAccountRow();
   const { prefillWarningKeys, accountCodeFilters } = useWorkflowPrefillOnSelect(
