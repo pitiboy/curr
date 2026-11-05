@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach } from 'vitest';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -8,7 +8,15 @@ vi.mock('../../theme', () => ({
   bandedSpanClass: 'banded-span',
 }));
 
-import { TransactionFinalizeSection } from './TransactionFinalizeSection';
+import {
+  discardTransaction,
+} from '../../data/dataProvider';
+import {
+  finalizeAccordionTone,
+  TransactionFinalizeSection,
+} from './TransactionFinalizeSection';
+
+const redirect = vi.fn();
 
 vi.mock('react-admin', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-admin')>();
@@ -28,6 +36,12 @@ vi.mock('react-admin', async (importOriginal) => {
             'A csatolt fájl még nincs mentve.',
           'app.transactions_finalize_issues': `${options?.errors ?? 0} hiba, ${options?.warnings ?? 0} figyelmeztetés`,
           'app.transactions_discard': 'Piszkozat törlése',
+          'app.transactions_discard_title': 'Piszkozat törlése',
+          'app.transactions_discard_body':
+            'A tranzakció és a hozzá csatolt piszkozat bizonylatok véglegesen törlődnek.',
+          'app.transactions_discard_confirm': 'Törlés',
+          'app.transactions_discard_done': 'A piszkozat tranzakció törölve.',
+          'ra.action.cancel': 'Mégsem',
           'resources.transactions.fields.date': 'Dátum',
           'resources.transactions.fields.amount': 'Összeg',
           'resources.transactions.fields.currency_type': 'Pénznem',
@@ -41,7 +55,7 @@ vi.mock('react-admin', async (importOriginal) => {
       },
     useNotify: () => vi.fn(),
     useRefresh: () => vi.fn(),
-    useRedirect: () => vi.fn(),
+    useRedirect: () => redirect,
   };
 });
 
@@ -72,64 +86,71 @@ function FormShell({
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
 
-describe('TransactionFinalizeSection', () => {
-  afterEach(() => cleanup());
-
-  it('shows Piszkozat törlése even when same-person publish is blocked', () => {
-    render(
+function renderFinalize(
+  props: Partial<{
+    allowLeaveRef: { current: boolean };
+    blocked: boolean;
+    missingReceipt: boolean;
+    samePersonBlocked: boolean;
+  }> = {},
+) {
+  const allowLeaveRef = props.allowLeaveRef ?? { current: false };
+  return {
+    allowLeaveRef,
+    ...render(
       <FormShell>
         <TransactionFinalizeSection
-          blocked={false}
+          allowLeaveRef={allowLeaveRef}
+          blocked={props.blocked ?? false}
           documentId="tx-doc-1"
-          missingReceipt={false}
-          samePersonBlocked
+          missingReceipt={props.missingReceipt ?? false}
+          samePersonBlocked={props.samePersonBlocked ?? false}
         />
       </FormShell>,
-    );
+    ),
+  };
+}
+
+describe('TransactionFinalizeSection', () => {
+  afterEach(() => {
+    cleanup();
+    redirect.mockReset();
+    vi.mocked(discardTransaction).mockReset();
+  });
+
+  it('shows Piszkozat törlése even when same-person publish is blocked', () => {
+    renderFinalize({ samePersonBlocked: true });
     expect(
       screen.getByRole('button', { name: 'Piszkozat törlése' }),
     ).toBeEnabled();
   });
 
   it('disables Véglegesít when same-person publish is blocked', () => {
-    render(
-      <FormShell>
-        <TransactionFinalizeSection
-          blocked={false}
-          documentId="tx-doc-1"
-          missingReceipt={false}
-          samePersonBlocked
-        />
-      </FormShell>,
-    );
+    renderFinalize({ samePersonBlocked: true });
     expect(
       screen.getAllByRole('button', { name: 'Véglegesít' })[0],
     ).toBeDisabled();
   });
 
-  it('puts finalize blockers in a warning accordion above the buttons', async () => {
+  it('puts review hint and blockers in a warning accordion above the buttons', async () => {
     const user = userEvent.setup();
-    render(
-      <FormShell>
-        <TransactionFinalizeSection
-          blocked={false}
-          documentId="tx-doc-1"
-          missingReceipt
-          samePersonBlocked
-        />
-      </FormShell>,
-    );
+    renderFinalize({ missingReceipt: true, samePersonBlocked: true });
 
     const toggle = screen.getByRole('button', {
-      name: /1 hiba, 1 figyelmeztetés/,
+      name: /Véglegesítés.*1 hiba, 1 figyelmeztetés/,
     });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByTestId('WarningAmberIcon')).toHaveStyle({
+      color: 'rgb(211, 47, 47)',
+    });
+    expect(screen.getByText('Ellenőrizze az adatokat.')).not.toBeVisible();
     expect(
       screen.getByText('A rögzítő nem véglegesítheti a saját tranzakcióját.'),
     ).not.toBeVisible();
 
     await user.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Ellenőrizze az adatokat.')).toBeVisible();
     expect(
       screen.getByText('A rögzítő nem véglegesítheti a saját tranzakcióját.'),
     ).toBeVisible();
@@ -139,22 +160,46 @@ describe('TransactionFinalizeSection', () => {
   });
 
   it('counts missing receipt as warning only', () => {
-    render(
-      <FormShell>
-        <TransactionFinalizeSection
-          blocked={false}
-          documentId="tx-doc-1"
-          missingReceipt
-          samePersonBlocked={false}
-        />
-      </FormShell>,
-    );
+    renderFinalize({ missingReceipt: true });
 
     expect(
-      screen.getByRole('button', { name: /0 hiba, 1 figyelmeztetés/ }),
+      screen.getByRole('button', {
+        name: /Véglegesítés.*0 hiba, 1 figyelmeztetés/,
+      }),
     ).toBeVisible();
     expect(
       screen.getAllByRole('button', { name: 'Véglegesít' })[0],
     ).toBeEnabled();
+    expect(screen.getByTestId('WarningAmberIcon')).toHaveStyle({
+      color: 'rgb(249, 168, 37)',
+    });
+  });
+
+  it('uses error tone when a blocking error is present', () => {
+    renderFinalize({ samePersonBlocked: true });
+    expect(screen.getByTestId('WarningAmberIcon')).toHaveStyle({
+      color: 'rgb(211, 47, 47)',
+    });
+  });
+
+  it('picks accordion tone from error count', () => {
+    expect(finalizeAccordionTone(0)).toBe('warning');
+    expect(finalizeAccordionTone(1)).toBe('error');
+  });
+
+  it('releases the leave guard before redirecting after discard', async () => {
+    const user = userEvent.setup();
+    vi.mocked(discardTransaction).mockResolvedValue(undefined);
+    const { allowLeaveRef } = renderFinalize();
+
+    await user.click(screen.getByRole('button', { name: 'Piszkozat törlése' }));
+    await user.click(
+      screen.getByRole('button', { name: 'app.transactions_discard_confirm' }),
+    );
+
+    await waitFor(() => {
+      expect(allowLeaveRef.current).toBe(true);
+      expect(redirect).toHaveBeenCalledWith('list', 'transactions');
+    });
   });
 });

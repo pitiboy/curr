@@ -34,36 +34,12 @@ import {
   transactionPublishFormErrors,
 } from './transactionForm';
 
-const reviewFieldset = {
-  border: 0,
-  m: 0,
-  minWidth: 0,
-  p: 0,
-} as const;
-
-const reviewLegend = {
-  alignItems: 'center',
-  display: 'flex',
-  gap: 0.5,
-  mb: 0.5,
-  px: 0,
-} as const;
-
 const reviewIcon = { fontSize: 20 } as const;
-
-const issueAccordion = {
-  bgcolor: 'warning.50',
-  border: 1,
-  borderColor: 'warning.light',
-  borderRadius: 1,
-  boxShadow: 'none',
-  mb: 1,
-  '&:before': { display: 'none' },
-} as const;
 
 const issueSummary = {
   '& .MuiAccordionSummary-content': {
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 1,
     my: 1,
   },
@@ -74,12 +50,48 @@ const issueList = {
   pl: 2.5,
 } as const;
 
+/** Red when any error; yellow when only warnings (or none). */
+export function finalizeAccordionTone(
+  errorCount: number,
+): 'error' | 'warning' {
+  return errorCount > 0 ? 'error' : 'warning';
+}
+
+/** Warning: yellow border on white. Error: red wash; icon stays red. */
+const ACCORDION_TONE = {
+  warning: {
+    bgcolor: '#FFFFFF',
+    borderColor: '#F9A825',
+    iconColor: '#F9A825',
+  },
+  error: {
+    bgcolor: '#FFEBEE',
+    borderColor: '#D32F2F',
+    iconColor: '#D32F2F',
+  },
+} as const;
+
+function issueAccordionSx(tone: 'error' | 'warning') {
+  const colors = ACCORDION_TONE[tone];
+  return {
+    bgcolor: colors.bgcolor,
+    backgroundImage: 'none',
+    border: `1px solid ${colors.borderColor}`,
+    borderRadius: 1,
+    boxShadow: 'none',
+    mb: 1,
+    '&:before': { display: 'none' },
+  } as const;
+}
+
 export function TransactionFinalizeSection({
+  allowLeaveRef,
   blocked,
   documentId,
   missingReceipt,
   samePersonBlocked,
 }: {
+  allowLeaveRef: { current: boolean };
   blocked: boolean;
   documentId: string;
   missingReceipt: boolean;
@@ -105,6 +117,7 @@ export function TransactionFinalizeSection({
   const warningCount = issues.filter(
     (issue) => issue.level === 'warning',
   ).length;
+  const tone = finalizeAccordionTone(errorCount);
 
   const onFinalize = () => {
     if (blocked || samePersonBlocked || savingRef.current) return;
@@ -148,6 +161,7 @@ export function TransactionFinalizeSection({
     setDiscarding(true);
     void discardTransaction(documentId)
       .then(() => {
+        allowLeaveRef.current = true;
         notify('app.transactions_discard_done', { type: 'success' });
         setDiscardOpen(false);
         redirect('list', 'transactions');
@@ -161,67 +175,67 @@ export function TransactionFinalizeSection({
 
   return (
     <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
-      <Box component="fieldset" sx={reviewFieldset}>
-        <Box component="legend" sx={reviewLegend}>
-          <WarningAmberIcon aria-hidden sx={reviewIcon} />
-          <Typography
-            component="span"
-            sx={{ fontWeight: 700 }}
-            variant="subtitle1"
-          >
+      <Accordion
+        disableGutters
+        defaultExpanded={false}
+        sx={issueAccordionSx(tone)}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={issueSummary}>
+          <WarningAmberIcon
+            aria-hidden
+            sx={{ ...reviewIcon, color: ACCORDION_TONE[tone].iconColor }}
+          />
+          <Typography component="span" fontWeight={700} variant="subtitle1">
             {translate('app.transactions_review')}
           </Typography>
-        </Box>
-        <Typography sx={{ mb: 1 }} variant="body2">
-          {translate('app.transactions_finalize_hint')}
-        </Typography>
-        {issues.length > 0 ? (
-          <Accordion disableGutters defaultExpanded={false} sx={issueAccordion}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={issueSummary}>
-              <WarningAmberIcon aria-hidden color="warning" sx={reviewIcon} />
-              <Typography component="span" fontWeight={600} variant="body2">
-                {translate('app.transactions_finalize_issues', {
-                  errors: errorCount,
-                  warnings: warningCount,
-                })}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails sx={{ pt: 0 }}>
-              <Box component="ul" sx={issueList}>
-                {issues.map((issue) => (
-                  <Typography
-                    key={`${issue.level}:${issue.message}`}
-                    component="li"
-                    sx={{ mb: 0.5 }}
-                    variant="body2"
-                  >
-                    {issue.message}
-                  </Typography>
-                ))}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        ) : null}
-        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-          <Button
-            disabled={blocked || samePersonBlocked || saving || discarding}
-            type="button"
-            variant="contained"
-            onClick={onFinalize}
-          >
-            {translate('app.transactions_finalize')}
-          </Button>
-          <Button
-            color="error"
-            disabled={saving || discarding}
-            type="button"
-            variant="outlined"
-            onClick={() => setDiscardOpen(true)}
-          >
-            {translate('app.transactions_discard')}
-          </Button>
-        </Stack>
-      </Box>
+          {issues.length > 0 ? (
+            <Typography component="span" fontWeight={600} variant="body2">
+              {translate('app.transactions_finalize_issues', {
+                errors: errorCount,
+                warnings: warningCount,
+              })}
+            </Typography>
+          ) : null}
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 0 }}>
+          <Typography sx={{ mb: issues.length > 0 ? 1 : 0 }} variant="body2">
+            {translate('app.transactions_finalize_hint')}
+          </Typography>
+          {issues.length > 0 ? (
+            <Box component="ul" sx={issueList}>
+              {issues.map((issue) => (
+                <Typography
+                  key={`${issue.level}:${issue.message}`}
+                  component="li"
+                  sx={{ mb: 0.5 }}
+                  variant="body2"
+                >
+                  {issue.message}
+                </Typography>
+              ))}
+            </Box>
+          ) : null}
+        </AccordionDetails>
+      </Accordion>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+        <Button
+          disabled={blocked || samePersonBlocked || saving || discarding}
+          type="button"
+          variant="contained"
+          onClick={onFinalize}
+        >
+          {translate('app.transactions_finalize')}
+        </Button>
+        <Button
+          color="error"
+          disabled={saving || discarding}
+          type="button"
+          variant="outlined"
+          onClick={() => setDiscardOpen(true)}
+        >
+          {translate('app.transactions_discard')}
+        </Button>
+      </Stack>
       <Confirm
         confirm="app.transactions_discard_confirm"
         content="app.transactions_discard_body"
