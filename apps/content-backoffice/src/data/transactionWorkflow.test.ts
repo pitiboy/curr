@@ -4,7 +4,20 @@ import {
   convertTransaction,
   fetchPublishedWorkflows,
   transactionWorkflowConvertUrl,
+  workflowRequiresSourceOrganization,
 } from './transactionWorkflow';
+
+describe('workflowRequiresSourceOrganization', () => {
+  it('is true when any step copies organization from the source', () => {
+    expect(workflowRequiresSourceOrganization(undefined)).toBe(false);
+    expect(
+      workflowRequiresSourceOrganization([
+        { organization_from_original: false },
+        { organization_from_original: true },
+      ]),
+    ).toBe(true);
+  });
+});
 
 describe('transactionWorkflowConvertUrl', () => {
   it('targets the custom convert route', () => {
@@ -15,7 +28,7 @@ describe('transactionWorkflowConvertUrl', () => {
 });
 
 describe('fetchPublishedWorkflows', () => {
-  it('requests published templates with currency and type populated', async () => {
+  it('requests published templates with currency, type, and step org flags', async () => {
     const seen: string[] = [];
     const rows = await fetchPublishedWorkflows(async (url) => {
       seen.push(url);
@@ -36,6 +49,24 @@ describe('fetchPublishedWorkflows', () => {
                 documentId: 'type-banyaszas',
                 name: 'Bányászás',
               },
+              step: [
+                {
+                  __component: 'workflow.step',
+                  organization_from_original: true,
+                },
+              ],
+            },
+            {
+              documentId: 'wf-2',
+              name: 'Fix org',
+              debit_account_code: 1000,
+              credit_account_code: 1900,
+              step: [
+                {
+                  __component: 'workflow.step',
+                  organization_from_original: false,
+                },
+              ],
             },
           ],
           meta: { pagination: { pageCount: 1 } },
@@ -52,6 +83,19 @@ describe('fetchPublishedWorkflows', () => {
       'documentId',
     );
     expect(params.get('populate[transaction_type][fields][1]')).toBe('name');
+    expect(
+      params.get('populate[step][on][workflow.step][fields][0]'),
+    ).toBe('organization_from_original');
+    expect(
+      params.get(
+        'populate[step][on][workflow.step-member-debit][fields][0]',
+      ),
+    ).toBe('organization_from_original');
+    expect(
+      params.get(
+        'populate[step][on][workflow.step-member-credit][fields][0]',
+      ),
+    ).toBe('organization_from_original');
     expect(rows).toEqual([
       {
         documentId: 'wf-1',
@@ -67,6 +111,16 @@ describe('fetchPublishedWorkflows', () => {
           documentId: 'type-banyaszas',
           name: 'Bányászás',
         },
+        requires_source_organization: true,
+      },
+      {
+        documentId: 'wf-2',
+        name: 'Fix org',
+        debit_account_code: 1000,
+        credit_account_code: 1900,
+        currency_type: null,
+        transaction_type: null,
+        requires_source_organization: false,
       },
     ]);
   });

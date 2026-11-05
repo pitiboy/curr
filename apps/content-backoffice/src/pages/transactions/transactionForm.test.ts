@@ -39,6 +39,24 @@ describe('transactionFormErrors', () => {
     );
   });
 
+  it('requires organization when the selected workflow template needs it', () => {
+    expect(
+      transactionFormErrors({ ...draftFilled }, [], translate, {
+        requireOrganization: true,
+      }),
+    ).toEqual({
+      organization: 'ra.validation.required',
+    });
+    expect(
+      transactionFormErrors(
+        { ...draftFilled, organization: 'org-1' },
+        [],
+        translate,
+        { requireOrganization: true },
+      ),
+    ).toEqual({});
+  });
+
   it('accepts zero amount when description and the other draft fields are set', () => {
     expect(
       transactionFormErrors(

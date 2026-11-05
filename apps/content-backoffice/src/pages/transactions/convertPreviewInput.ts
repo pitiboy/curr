@@ -34,6 +34,7 @@ export function inlinePreviewFromCreateForm(
   const credit = formValues.credit_account;
   const currency = formValues.currency_type;
   const transactionType = formValues.transaction_type;
+  const organization = formValues.organization;
 
   if (!date || amount == null) return null;
   if (typeof debit !== 'string' || !debit.trim()) return null;
@@ -55,6 +56,10 @@ export function inlinePreviewFromCreateForm(
     transaction_type:
       typeof transactionType === 'string' && transactionType.trim()
         ? { documentId: transactionType.trim() }
+        : null,
+    organization:
+      typeof organization === 'string' && organization.trim()
+        ? { documentId: organization.trim() }
         : null,
     receiptCount,
   };

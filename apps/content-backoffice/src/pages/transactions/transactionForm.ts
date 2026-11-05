@@ -53,6 +53,14 @@ function requiredErrors(
   return errors;
 }
 
+export type TransactionFormValidateOptions = {
+  /**
+   * When the selected / matched ügylet-sablon uses organization_from_original,
+   * organization is required already on draft create.
+   */
+  requireOrganization?: boolean;
+};
+
 /**
  * SimpleForm `validate` is the react-hook-form resolver, so field-level
  * `validate={required()}` does not run. Those props only draw the asterisk.
@@ -61,8 +69,12 @@ export function transactionFormErrors(
   values: Record<string, unknown>,
   receiptCards: ReceiptCard[],
   translate: (key: string) => string,
+  options: TransactionFormValidateOptions = {},
 ): Record<string, string> {
-  const errors = requiredErrors(values, TRANSACTION_DRAFT_REQUIRED);
+  const sources = options.requireOrganization
+    ? ([...TRANSACTION_DRAFT_REQUIRED, 'organization'] as const)
+    : TRANSACTION_DRAFT_REQUIRED;
+  const errors = requiredErrors(values, sources);
 
   if (receiptCards.some(receiptCardInvalid)) {
     errors.receipt_cards = translate('app.receipt_card_required');
@@ -75,10 +87,12 @@ export function isTransactionCreateFormReady(
   values: Record<string, unknown>,
   receiptCards: ReceiptCard[],
   translate: (key: string) => string,
+  options: TransactionFormValidateOptions = {},
 ): boolean {
   return (
-    Object.keys(transactionFormErrors(values, receiptCards, translate))
-      .length === 0
+    Object.keys(
+      transactionFormErrors(values, receiptCards, translate, options),
+    ).length === 0
   );
 }
 

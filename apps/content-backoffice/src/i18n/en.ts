@@ -18,6 +18,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_confirm: 'Expand',
     transactions_convert_done: 'Deal expanded.',
     transactions_convert_error: 'Could not expand the deal.',
+    transactions_convert_organization_required:
+      'This transaction template requires an organization.',
     transactions_convert_ambiguous:
       'More than one deal template matches this transaction.',
     transactions_convert_preview: 'Preview expansion',

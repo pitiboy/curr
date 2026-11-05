@@ -90,6 +90,7 @@ const workflow = {
   name: 'Selected',
   debit_account_code: 5200,
   credit_account_code: 1101,
+  requires_source_organization: false,
 };
 
 function ToolbarShell({

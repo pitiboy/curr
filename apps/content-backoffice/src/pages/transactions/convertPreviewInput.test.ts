@@ -55,6 +55,21 @@ describe('inlinePreviewFromCreateForm', () => {
     expect(preview?.transaction_type).toEqual({ documentId: 'type-doc' });
   });
 
+  it('includes organization when set on the form', () => {
+    const preview = inlinePreviewFromCreateForm(
+      {
+        date: '2026-01-02',
+        amount: 100,
+        debit_account: 'debit-doc',
+        credit_account: 'credit-doc',
+        currency_type: 'cur-doc',
+        organization: 'org-doc',
+      },
+      [],
+    );
+    expect(preview?.organization).toEqual({ documentId: 'org-doc' });
+  });
+
   it('omits transaction_type when the hidden field is empty', () => {
     const preview = inlinePreviewFromCreateForm(
       {
@@ -67,5 +82,6 @@ describe('inlinePreviewFromCreateForm', () => {
       [],
     );
     expect(preview?.transaction_type).toBeNull();
+    expect(preview?.organization).toBeNull();
   });
 });

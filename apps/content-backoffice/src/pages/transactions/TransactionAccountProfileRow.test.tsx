@@ -23,6 +23,7 @@ const workflow: WorkflowTemplateHeader = {
   credit_account_code: 1101,
   currency_type: { documentId: 'cur-egg', code: 'EGG', name: 'Tojás' },
   transaction_type: { documentId: 'type-1', name: 'Bányászás' },
+  requires_source_organization: false,
 };
 
 vi.mock('../../workflows/useBackofficeConfig', () => ({

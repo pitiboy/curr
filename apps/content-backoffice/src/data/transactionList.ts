@@ -130,6 +130,11 @@ export type WorkflowTemplateHeader = {
     documentId?: string;
     name?: string | null;
   } | null;
+  /**
+   * True when any step uses `organization_from_original` — Create must set
+   * organization, and Convert rejects an empty source org.
+   */
+  requires_source_organization: boolean;
 };
 
 export type TransactionWorkflowMatchInput = Pick<

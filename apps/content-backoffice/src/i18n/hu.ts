@@ -18,6 +18,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_confirm: 'Kifejtés',
     transactions_convert_done: 'Az ügylet kifejtve.',
     transactions_convert_error: 'Az ügylet kifejtése nem sikerült.',
+    transactions_convert_organization_required:
+      'Ehhez az ügylet-sablonhoz kötelező a szervezet.',
     transactions_convert_ambiguous:
       'Több ügylet-sablon is illik erre a tranzakcióra.',
     transactions_convert_preview: 'Kifejtés előnézete',

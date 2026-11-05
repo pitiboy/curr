@@ -23,6 +23,7 @@ const workflowAmbiguous: WorkflowTemplateHeader = {
   name: 'Ambiguous credit',
   debit_account_code: 5200,
   credit_account_code: 1101,
+  requires_source_organization: false,
 };
 
 function PrefillProbe() {

@@ -35,7 +35,10 @@ import {
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 import { useOptionalTransactionCreateAccountRow } from './TransactionCreateAccountRowContext';
 
-function useCreateFormReady(receiptCards: ReceiptCardValue[]): boolean {
+function useCreateFormReady(
+  receiptCards: ReceiptCardValue[],
+  requireOrganization: boolean,
+): boolean {
   const translate = useTranslate();
   const values = useWatch();
   return useMemo(
@@ -44,9 +47,16 @@ function useCreateFormReady(receiptCards: ReceiptCardValue[]): boolean {
         (values ?? {}) as Record<string, unknown>,
         receiptCards,
         translate,
+        { requireOrganization },
       ),
-    [receiptCards, translate, values],
+    [receiptCards, requireOrganization, translate, values],
   );
+}
+
+function organizationValueMissing(value: unknown): boolean {
+  if (value == null || value === '') return true;
+  if (typeof value === 'string') return value.trim() === '';
+  return false;
 }
 
 export function TransactionCreateToolbar({
@@ -69,8 +79,14 @@ export function TransactionCreateToolbar({
   const creditId = useWatch({ name: 'credit_account' });
   const currencyId = useWatch({ name: 'currency_type' });
   const transactionTypeId = useWatch({ name: 'transaction_type' });
+  const organizationId = useWatch({ name: 'organization' });
   const values = useWatch();
-  const formReady = useCreateFormReady(receiptCards);
+  const requireOrganizationForSave =
+    accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
+  const formReady = useCreateFormReady(
+    receiptCards,
+    requireOrganizationForSave,
+  );
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -126,12 +142,26 @@ export function TransactionCreateToolbar({
     };
   }, [inlineTransaction, workflow]);
 
+  const requireOrganizationForConvert =
+    workflow?.requires_source_organization === true;
+  const convertNeedsOrganization =
+    requireOrganizationForConvert &&
+    organizationValueMissing(organizationId);
+
   const onSaveAndConvert = () => {
     if (!workflow || busy) return;
     const formValues = (values ?? {}) as Record<string, unknown>;
-    const errors = transactionFormErrors(formValues, receiptCards, translate);
+    const errors = transactionFormErrors(formValues, receiptCards, translate, {
+      requireOrganization:
+        requireOrganizationForSave || requireOrganizationForConvert,
+    });
     if (Object.keys(errors).length > 0) {
-      notify('ra.message.invalid_form', { type: 'warning' });
+      notify(
+        convertNeedsOrganization
+          ? 'app.transactions_convert_organization_required'
+          : 'ra.message.invalid_form',
+        { type: 'warning' },
+      );
       return;
     }
     setBusy(true);
@@ -169,6 +199,7 @@ export function TransactionCreateToolbar({
   };
 
   const actionsDisabled = busy || !formReady;
+  const convertDisabled = actionsDisabled || convertNeedsOrganization;
 
   return (
     <Toolbar>
@@ -181,16 +212,20 @@ export function TransactionCreateToolbar({
       {workflow ? (
         <Stack direction="row" spacing={1} sx={{ ml: 1 }}>
           <TransactionConvertPreviewButton
-            disabled={!previewInput || !formReady}
-            disabledReasonKey="app.transactions_convert_preview_disabled"
+            disabled={!previewInput || convertDisabled}
+            disabledReasonKey={
+              convertNeedsOrganization
+                ? 'app.transactions_convert_organization_required'
+                : 'app.transactions_convert_preview_disabled'
+            }
             previewInput={previewInput}
             workflow={workflow}
           />
           <Button
-            disabled={actionsDisabled}
+            disabled={convertDisabled}
             variant="contained"
             onClick={() => {
-              if (!formReady || busy) return;
+              if (convertDisabled) return;
               setOpen(true);
             }}
           >
@@ -223,7 +258,10 @@ export function TransactionCreateToolbarGate({
   receiptCards: ReceiptCardValue[];
 }) {
   const { permissions, isPending } = usePermissions();
-  const formReady = useCreateFormReady(receiptCards);
+  const accountRow = useOptionalTransactionCreateAccountRow();
+  const requireOrganization =
+    accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
+  const formReady = useCreateFormReady(receiptCards, requireOrganization);
   if (!isPending && permissions === 'editor') {
     return (
       <TransactionCreateToolbar
