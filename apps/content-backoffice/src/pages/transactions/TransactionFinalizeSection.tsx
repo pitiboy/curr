@@ -1,14 +1,4 @@
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Button,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import { useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import {
@@ -29,58 +19,9 @@ import {
   strapiErrorMessage,
 } from '../../data/transactionPublish';
 import { bandedSpanClass } from '../../theme';
-import {
-  collectFinalizeIssues,
-  transactionPublishFormErrors,
-} from './transactionForm';
-
-const reviewIcon = { fontSize: 20 } as const;
-
-const issueSummary = {
-  '& .MuiAccordionSummary-content': {
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 1,
-    my: 1,
-  },
-} as const;
-
-const issueList = {
-  m: 0,
-  pl: 2.5,
-} as const;
-
-/** Red when any error; yellow when only warnings (or none). */
-export function finalizeAccordionTone(errorCount: number): 'error' | 'warning' {
-  return errorCount > 0 ? 'error' : 'warning';
-}
-
-/** Warning: yellow border on white. Error: red wash; icon stays red. */
-const ACCORDION_TONE = {
-  warning: {
-    bgcolor: '#FFFFFF',
-    borderColor: '#F9A825',
-    iconColor: '#F9A825',
-  },
-  error: {
-    bgcolor: '#FFEBEE',
-    borderColor: '#D32F2F',
-    iconColor: '#D32F2F',
-  },
-} as const;
-
-function issueAccordionSx(tone: 'error' | 'warning') {
-  const colors = ACCORDION_TONE[tone];
-  return {
-    bgcolor: colors.bgcolor,
-    backgroundImage: 'none',
-    border: `1px solid ${colors.borderColor}`,
-    borderRadius: 1,
-    boxShadow: 'none',
-    mb: 1,
-    '&:before': { display: 'none' },
-  } as const;
-}
+import { FormIssueAccordion } from './FormIssueAccordion';
+import { collectFinalizeIssues } from './formIssues';
+import { transactionPublishFormErrors } from './transactionForm';
 
 export function TransactionFinalizeSection({
   allowLeaveRef,
@@ -111,11 +52,6 @@ export function TransactionFinalizeSection({
     { blocked, missingReceipt, samePersonBlocked },
     translate,
   );
-  const errorCount = issues.filter((issue) => issue.level === 'error').length;
-  const warningCount = issues.filter(
-    (issue) => issue.level === 'warning',
-  ).length;
-  const tone = finalizeAccordionTone(errorCount);
 
   const onFinalize = () => {
     if (blocked || samePersonBlocked || savingRef.current) return;
@@ -173,48 +109,11 @@ export function TransactionFinalizeSection({
 
   return (
     <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
-      <Accordion
-        disableGutters
-        defaultExpanded={false}
-        sx={issueAccordionSx(tone)}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={issueSummary}>
-          <WarningAmberIcon
-            aria-hidden
-            sx={{ ...reviewIcon, color: ACCORDION_TONE[tone].iconColor }}
-          />
-          <Typography component="span" fontWeight={700} variant="subtitle1">
-            {translate('app.transactions_review')}
-          </Typography>
-          {issues.length > 0 ? (
-            <Typography component="span" fontWeight={600} variant="body2">
-              {translate('app.transactions_finalize_issues', {
-                errors: errorCount,
-                warnings: warningCount,
-              })}
-            </Typography>
-          ) : null}
-        </AccordionSummary>
-        <AccordionDetails sx={{ pt: 0 }}>
-          <Typography sx={{ mb: issues.length > 0 ? 1 : 0 }} variant="body2">
-            {translate('app.transactions_finalize_hint')}
-          </Typography>
-          {issues.length > 0 ? (
-            <Box component="ul" sx={issueList}>
-              {issues.map((issue) => (
-                <Typography
-                  key={`${issue.level}:${issue.message}`}
-                  component="li"
-                  sx={{ mb: 0.5 }}
-                  variant="body2"
-                >
-                  {issue.message}
-                </Typography>
-              ))}
-            </Box>
-          ) : null}
-        </AccordionDetails>
-      </Accordion>
+      <FormIssueAccordion
+        hint={translate('app.transactions_finalize_hint')}
+        issues={issues}
+        title={translate('app.transactions_review')}
+      />
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
         <Button
           disabled={blocked || samePersonBlocked || saving || discarding}

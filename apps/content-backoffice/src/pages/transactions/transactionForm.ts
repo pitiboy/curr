@@ -78,63 +78,6 @@ export function transactionPublishFormErrors(
   return requiredErrors(values, TRANSACTION_PUBLISH_REQUIRED);
 }
 
-type Translate = (key: string, options?: Record<string, unknown>) => string;
-
-export type FinalizeIssue = {
-  level: 'error' | 'warning';
-  message: string;
-};
-
-/**
- * Human-readable finalize blockers / warnings for the review accordion.
- * Errors: missing publish fields, unsaved receipt, same-person.
- * Warnings: no receipt attached.
- */
-export function collectFinalizeIssues(
-  values: Record<string, unknown>,
-  {
-    blocked,
-    missingReceipt,
-    samePersonBlocked,
-  }: {
-    blocked: boolean;
-    missingReceipt: boolean;
-    samePersonBlocked: boolean;
-  },
-  translate: Translate,
-): FinalizeIssue[] {
-  const issues: FinalizeIssue[] = [];
-  const formErrors = transactionPublishFormErrors(values, translate);
-  for (const field of TRANSACTION_PUBLISH_REQUIRED) {
-    const message = formErrors[field];
-    if (!message) continue;
-    const label = translate(`resources.transactions.fields.${field}`);
-    issues.push({
-      level: 'error',
-      message: `${label}: ${translate(message)}`,
-    });
-  }
-  if (blocked) {
-    issues.push({
-      level: 'error',
-      message: translate('app.transactions_finalize_pending'),
-    });
-  }
-  if (samePersonBlocked) {
-    issues.push({
-      level: 'error',
-      message: translate('app.transactions_finalize_same_person'),
-    });
-  }
-  if (missingReceipt) {
-    issues.push({
-      level: 'warning',
-      message: translate('app.transactions_finalize_no_receipt'),
-    });
-  }
-  return issues;
-}
-
 function relationDefault(value: unknown): string | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const documentId = (value as { documentId?: string }).documentId;

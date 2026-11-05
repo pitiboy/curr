@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  collectFinalizeIssues,
   transactionFormErrors,
   transactionPublishFormErrors,
 } from './transactionForm';
@@ -84,53 +83,5 @@ describe('transactionPublishFormErrors', () => {
       credit_account: 'ra.validation.required',
     });
     expect(transactionPublishFormErrors(publishFilled, translate)).toEqual({});
-  });
-});
-
-describe('collectFinalizeIssues', () => {
-  const labels: Record<string, string> = {
-    'resources.transactions.fields.organization': 'Szervezet',
-    'resources.transactions.fields.debit_account': 'Költség számla',
-    'resources.transactions.fields.credit_account': 'Kifizető számla',
-    'ra.validation.required': 'Kötelező',
-    'app.transactions_finalize_pending': 'Mentetlen bizonylat.',
-    'app.transactions_finalize_same_person': 'Saját rögzítés.',
-    'app.transactions_finalize_no_receipt': 'Nincs bizonylat.',
-  };
-  const t = (key: string) => labels[key] ?? key;
-
-  it('lists missing publish fields as errors and no-receipt as warning', () => {
-    expect(
-      collectFinalizeIssues(
-        draftFilled,
-        {
-          blocked: true,
-          missingReceipt: true,
-          samePersonBlocked: true,
-        },
-        t,
-      ),
-    ).toEqual([
-      { level: 'error', message: 'Szervezet: Kötelező' },
-      { level: 'error', message: 'Költség számla: Kötelező' },
-      { level: 'error', message: 'Kifizető számla: Kötelező' },
-      { level: 'error', message: 'Mentetlen bizonylat.' },
-      { level: 'error', message: 'Saját rögzítés.' },
-      { level: 'warning', message: 'Nincs bizonylat.' },
-    ]);
-  });
-
-  it('returns empty when the publish form is complete and gates are clear', () => {
-    expect(
-      collectFinalizeIssues(
-        publishFilled,
-        {
-          blocked: false,
-          missingReceipt: false,
-          samePersonBlocked: false,
-        },
-        t,
-      ),
-    ).toEqual([]);
   });
 });

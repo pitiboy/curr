@@ -9,10 +9,7 @@ vi.mock('../../theme', () => ({
 }));
 
 import { discardTransaction } from '../../data/dataProvider';
-import {
-  finalizeAccordionTone,
-  TransactionFinalizeSection,
-} from './TransactionFinalizeSection';
+import { TransactionFinalizeSection } from './TransactionFinalizeSection';
 
 const redirect = vi.fn();
 
@@ -32,7 +29,7 @@ vi.mock('react-admin', async (importOriginal) => {
             'Ehhez a tranzakcióhoz nincs csatolt bizonylat.',
           'app.transactions_finalize_pending':
             'A csatolt fájl még nincs mentve.',
-          'app.transactions_finalize_issues': `${options?.errors ?? 0} hiba, ${options?.warnings ?? 0} figyelmeztetés`,
+          'app.form_issues_count': `${options?.errors ?? 0} hiba, ${options?.warnings ?? 0} figyelmeztetés`,
           'app.transactions_discard': 'Piszkozat törlése',
           'app.transactions_discard_title': 'Piszkozat törlése',
           'app.transactions_discard_body':
@@ -130,59 +127,13 @@ describe('TransactionFinalizeSection', () => {
     ).toBeDisabled();
   });
 
-  it('puts review hint and blockers in a warning accordion above the buttons', async () => {
-    const user = userEvent.setup();
+  it('wires the shared issue accordion above the buttons', () => {
     renderFinalize({ missingReceipt: true, samePersonBlocked: true });
-
-    const toggle = screen.getByRole('button', {
-      name: /Véglegesítés.*1 hiba, 1 figyelmeztetés/,
-    });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByTestId('WarningAmberIcon')).toHaveStyle({
-      color: 'rgb(211, 47, 47)',
-    });
-    expect(screen.getByText('Ellenőrizze az adatokat.')).not.toBeVisible();
-    expect(
-      screen.getByText('A rögzítő nem véglegesítheti a saját tranzakcióját.'),
-    ).not.toBeVisible();
-
-    await user.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Ellenőrizze az adatokat.')).toBeVisible();
-    expect(
-      screen.getByText('A rögzítő nem véglegesítheti a saját tranzakcióját.'),
-    ).toBeVisible();
-    expect(
-      screen.getByText('Ehhez a tranzakcióhoz nincs csatolt bizonylat.'),
-    ).toBeVisible();
-  });
-
-  it('counts missing receipt as warning only', () => {
-    renderFinalize({ missingReceipt: true });
-
     expect(
       screen.getByRole('button', {
-        name: /Véglegesítés.*0 hiba, 1 figyelmeztetés/,
+        name: /Véglegesítés.*1 hiba, 1 figyelmeztetés/,
       }),
     ).toBeVisible();
-    expect(
-      screen.getAllByRole('button', { name: 'Véglegesít' })[0],
-    ).toBeEnabled();
-    expect(screen.getByTestId('WarningAmberIcon')).toHaveStyle({
-      color: 'rgb(249, 168, 37)',
-    });
-  });
-
-  it('uses error tone when a blocking error is present', () => {
-    renderFinalize({ samePersonBlocked: true });
-    expect(screen.getByTestId('WarningAmberIcon')).toHaveStyle({
-      color: 'rgb(211, 47, 47)',
-    });
-  });
-
-  it('picks accordion tone from error count', () => {
-    expect(finalizeAccordionTone(0)).toBe('warning');
-    expect(finalizeAccordionTone(1)).toBe('error');
   });
 
   it('releases the leave guard before redirecting after discard', async () => {

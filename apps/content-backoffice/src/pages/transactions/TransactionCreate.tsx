@@ -1,5 +1,6 @@
+import { Box } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFormState } from 'react-hook-form';
+import { useFormState, useWatch } from 'react-hook-form';
 import type { Middleware } from 'ra-core';
 import {
   AutocompleteInput,
@@ -20,6 +21,8 @@ import {
 } from 'react-admin';
 
 import { bandedForm, bandedSpanClass } from '../../theme';
+import { FormIssueAccordion } from './FormIssueAccordion';
+import { collectCreateIssues } from './formIssues';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
 import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
@@ -285,7 +288,28 @@ export function TransactionCreate() {
         />
 
         <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
+        <CreateFormIssueAccordion receiptCards={receiptCards} />
       </SimpleForm>
     </Create>
+  );
+}
+
+function CreateFormIssueAccordion({
+  receiptCards,
+}: {
+  receiptCards: ReceiptCardValue[];
+}) {
+  const translate = useTranslate();
+  const values = useWatch() as Record<string, unknown>;
+  const issues = collectCreateIssues(values ?? {}, receiptCards, translate);
+
+  return (
+    <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
+      <FormIssueAccordion
+        hint={translate('app.transactions_create_issues_hint')}
+        issues={issues}
+        title={translate('app.transactions_create_issues_title')}
+      />
+    </Box>
   );
 }

@@ -84,7 +84,12 @@ export const enMessages = mergeTranslations(englishMessages, {
       'The attached file is not saved yet. Save the receipt first.',
     transactions_finalize_same_person:
       'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
-    transactions_finalize_issues: '%{errors} error(s), %{warnings} warning(s)',
+    form_issues_count: '%{errors} error(s), %{warnings} warning(s)',
+    transactions_create_issues_title: 'Save',
+    transactions_create_issues_hint:
+      'The transaction is saved as a draft. Starred fields are required; a receipt is optional.',
+    transactions_create_no_receipt:
+      'No receipt is attached. It is optional for saving; you can still upload one before finalizing.',
     transactions_discard: 'Delete draft',
     transactions_discard_title: 'Delete draft',
     transactions_discard_body:
