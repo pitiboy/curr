@@ -633,24 +633,21 @@ export function BulkQuantityEntryPage({
         { linkFollowingRowsToFirstSuccess: true },
       );
       setResults((previous) => mergeRowResults(previous, productionResults));
-      const mergedProduction = [...priorProductionResults, ...productionResults];
+      const mergedProduction = [
+        ...priorProductionResults,
+        ...productionResults,
+      ];
       const submissionAnchor = submissionAnchorDocumentId(mergedProduction);
-      const productionByOrg = productionAnchorByOrganizationId(mergedProduction);
+      const productionByOrg =
+        productionAnchorByOrganizationId(mergedProduction);
       if (poolLegPlans.length > 0) {
         await runLegPlans(
-          attachPoolLegAnchors(
-            poolLegPlans,
-            productionByOrg,
-            submissionAnchor,
-          ),
+          attachPoolLegAnchors(poolLegPlans, productionByOrg, submissionAnchor),
         );
       }
       if (distributionLegPlans.length > 0) {
         await runLegPlans(
-          attachDistributionLegAnchors(
-            distributionLegPlans,
-            submissionAnchor,
-          ),
+          attachDistributionLegAnchors(distributionLegPlans, submissionAnchor),
         );
       }
       setSaving(false);
@@ -898,7 +895,11 @@ export function BulkQuantityEntryPage({
     const legRetry = pendingLegPlans.filter((plan) =>
       failedIds.includes(plan.legKey),
     );
-    if (productionRetry.length > 0 || poolRetry.length > 0 || legRetry.length > 0) {
+    if (
+      productionRetry.length > 0 ||
+      poolRetry.length > 0 ||
+      legRetry.length > 0
+    ) {
       await runProductionAndPool(
         productionRetry,
         poolRetry,
