@@ -84,8 +84,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       'The attached file is not saved yet. Save the receipt first.',
     transactions_finalize_same_person:
       'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
-    transactions_finalize_issues:
-      '%{errors} error(s), %{warnings} warning(s)',
+    transactions_finalize_issues: '%{errors} error(s), %{warnings} warning(s)',
     transactions_discard: 'Delete draft',
     transactions_discard_title: 'Delete draft',
     transactions_discard_body:

@@ -177,15 +177,8 @@ export function TransactionFinalizeSection({
         </Typography>
         {issues.length > 0 ? (
           <Accordion disableGutters defaultExpanded={false} sx={issueAccordion}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              sx={issueSummary}
-            >
-              <WarningAmberIcon
-                aria-hidden
-                color="warning"
-                sx={reviewIcon}
-              />
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={issueSummary}>
+              <WarningAmberIcon aria-hidden color="warning" sx={reviewIcon} />
               <Typography component="span" fontWeight={600} variant="body2">
                 {translate('app.transactions_finalize_issues', {
                   errors: errorCount,

@@ -14,34 +14,31 @@ vi.mock('react-admin', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-admin')>();
   return {
     ...actual,
-    useTranslate: () => (
-      key: string,
-      options?: { errors?: number; warnings?: number },
-    ) => {
-      const hu: Record<string, string> = {
-        'app.transactions_review': 'Véglegesítés',
-        'app.transactions_finalize_hint': 'Ellenőrizze az adatokat.',
-        'app.transactions_finalize': 'Véglegesít',
-        'app.transactions_finalize_same_person':
-          'A rögzítő nem véglegesítheti a saját tranzakcióját.',
-        'app.transactions_finalize_no_receipt':
-          'Ehhez a tranzakcióhoz nincs csatolt bizonylat.',
-        'app.transactions_finalize_pending':
-          'A csatolt fájl még nincs mentve.',
-        'app.transactions_finalize_issues':
-          `${options?.errors ?? 0} hiba, ${options?.warnings ?? 0} figyelmeztetés`,
-        'app.transactions_discard': 'Piszkozat törlése',
-        'resources.transactions.fields.date': 'Dátum',
-        'resources.transactions.fields.amount': 'Összeg',
-        'resources.transactions.fields.currency_type': 'Pénznem',
-        'resources.transactions.fields.description': 'Leírás',
-        'resources.transactions.fields.organization': 'Szervezet',
-        'resources.transactions.fields.debit_account': 'Költség számla',
-        'resources.transactions.fields.credit_account': 'Kifizető számla',
-        'ra.validation.required': 'Kötelező',
-      };
-      return hu[key] ?? key;
-    },
+    useTranslate:
+      () => (key: string, options?: { errors?: number; warnings?: number }) => {
+        const hu: Record<string, string> = {
+          'app.transactions_review': 'Véglegesítés',
+          'app.transactions_finalize_hint': 'Ellenőrizze az adatokat.',
+          'app.transactions_finalize': 'Véglegesít',
+          'app.transactions_finalize_same_person':
+            'A rögzítő nem véglegesítheti a saját tranzakcióját.',
+          'app.transactions_finalize_no_receipt':
+            'Ehhez a tranzakcióhoz nincs csatolt bizonylat.',
+          'app.transactions_finalize_pending':
+            'A csatolt fájl még nincs mentve.',
+          'app.transactions_finalize_issues': `${options?.errors ?? 0} hiba, ${options?.warnings ?? 0} figyelmeztetés`,
+          'app.transactions_discard': 'Piszkozat törlése',
+          'resources.transactions.fields.date': 'Dátum',
+          'resources.transactions.fields.amount': 'Összeg',
+          'resources.transactions.fields.currency_type': 'Pénznem',
+          'resources.transactions.fields.description': 'Leírás',
+          'resources.transactions.fields.organization': 'Szervezet',
+          'resources.transactions.fields.debit_account': 'Költség számla',
+          'resources.transactions.fields.credit_account': 'Kifizető számla',
+          'ra.validation.required': 'Kötelező',
+        };
+        return hu[key] ?? key;
+      },
     useNotify: () => vi.fn(),
     useRefresh: () => vi.fn(),
     useRedirect: () => vi.fn(),
@@ -156,6 +153,8 @@ describe('TransactionFinalizeSection', () => {
     expect(
       screen.getByRole('button', { name: /0 hiba, 1 figyelmeztetés/ }),
     ).toBeVisible();
-    expect(screen.getAllByRole('button', { name: 'Véglegesít' })[0]).toBeEnabled();
+    expect(
+      screen.getAllByRole('button', { name: 'Véglegesít' })[0],
+    ).toBeEnabled();
   });
 });
