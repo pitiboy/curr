@@ -1,0 +1,22 @@
+{
+  "buildPath": "code",
+  "hook": {
+    "quiet": true
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [
+      "src/**",
+      "database/**",
+      "types/**",
+      "config/**",
+      "docs/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "apps/content-backoffice/**/*.test.*"
+    ],
+    "ignoreValues": []
+  }
+}

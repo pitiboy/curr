@@ -71,3 +71,11 @@ vitest.config.*.timestamp*
 # Playwright
 test-results/
 playwright-report/
+
+# Impeccable (local / generated)
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/
+.impeccable/live/
