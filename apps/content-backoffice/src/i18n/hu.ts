@@ -85,6 +85,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A csatolt fájl még nincs mentve. Előbb mentsd a bizonylatot.',
     transactions_finalize_same_person:
       'A módosítások elmentve, a tranzakció piszkozat maradt. A rögzítő nem véglegesítheti a saját tranzakcióját.',
+    transactions_finalize_issues:
+      '%{errors} hiba, %{warnings} figyelmeztetés',
     transactions_discard: 'Piszkozat törlése',
     transactions_discard_title: 'Piszkozat törlése',
     transactions_discard_body:

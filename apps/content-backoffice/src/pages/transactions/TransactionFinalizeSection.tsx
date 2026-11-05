@@ -1,7 +1,16 @@
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { useRef, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import {
   Confirm,
   useNotify,
@@ -20,7 +29,10 @@ import {
   strapiErrorMessage,
 } from '../../data/transactionPublish';
 import { bandedSpanClass } from '../../theme';
-import { transactionPublishFormErrors } from './transactionForm';
+import {
+  collectFinalizeIssues,
+  transactionPublishFormErrors,
+} from './transactionForm';
 
 const reviewFieldset = {
   border: 0,
@@ -39,6 +51,29 @@ const reviewLegend = {
 
 const reviewIcon = { fontSize: 20 } as const;
 
+const issueAccordion = {
+  bgcolor: 'warning.50',
+  border: 1,
+  borderColor: 'warning.light',
+  borderRadius: 1,
+  boxShadow: 'none',
+  mb: 1,
+  '&:before': { display: 'none' },
+} as const;
+
+const issueSummary = {
+  '& .MuiAccordionSummary-content': {
+    alignItems: 'center',
+    gap: 1,
+    my: 1,
+  },
+} as const;
+
+const issueList = {
+  m: 0,
+  pl: 2.5,
+} as const;
+
 export function TransactionFinalizeSection({
   blocked,
   documentId,
@@ -54,11 +89,22 @@ export function TransactionFinalizeSection({
   const notify = useNotify();
   const refresh = useRefresh();
   const redirect = useRedirect();
-  const { getValues, setError, clearErrors } = useFormContext();
+  const { control, getValues, setError, clearErrors } = useFormContext();
+  const formValues = useWatch({ control }) as Record<string, unknown>;
   const [saving, setSaving] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const savingRef = useRef(false);
+
+  const issues = collectFinalizeIssues(
+    formValues ?? {},
+    { blocked, missingReceipt, samePersonBlocked },
+    translate,
+  );
+  const errorCount = issues.filter((issue) => issue.level === 'error').length;
+  const warningCount = issues.filter(
+    (issue) => issue.level === 'warning',
+  ).length;
 
   const onFinalize = () => {
     if (blocked || samePersonBlocked || savingRef.current) return;
@@ -129,20 +175,39 @@ export function TransactionFinalizeSection({
         <Typography sx={{ mb: 1 }} variant="body2">
           {translate('app.transactions_finalize_hint')}
         </Typography>
-        {missingReceipt ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_no_receipt')}
-          </Typography>
-        ) : null}
-        {blocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_pending')}
-          </Typography>
-        ) : null}
-        {samePersonBlocked ? (
-          <Typography sx={{ fontWeight: 600, mb: 1 }} variant="body2">
-            {translate('app.transactions_finalize_same_person')}
-          </Typography>
+        {issues.length > 0 ? (
+          <Accordion disableGutters defaultExpanded={false} sx={issueAccordion}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={issueSummary}
+            >
+              <WarningAmberIcon
+                aria-hidden
+                color="warning"
+                sx={reviewIcon}
+              />
+              <Typography component="span" fontWeight={600} variant="body2">
+                {translate('app.transactions_finalize_issues', {
+                  errors: errorCount,
+                  warnings: warningCount,
+                })}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ pt: 0 }}>
+              <Box component="ul" sx={issueList}>
+                {issues.map((issue) => (
+                  <Typography
+                    key={`${issue.level}:${issue.message}`}
+                    component="li"
+                    sx={{ mb: 0.5 }}
+                    variant="body2"
+                  >
+                    {issue.message}
+                  </Typography>
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
         ) : null}
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
           <Button
