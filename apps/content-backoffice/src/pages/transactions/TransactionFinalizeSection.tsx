@@ -51,9 +51,7 @@ const issueList = {
 } as const;
 
 /** Red when any error; yellow when only warnings (or none). */
-export function finalizeAccordionTone(
-  errorCount: number,
-): 'error' | 'warning' {
+export function finalizeAccordionTone(errorCount: number): 'error' | 'warning' {
   return errorCount > 0 ? 'error' : 'warning';
 }
 

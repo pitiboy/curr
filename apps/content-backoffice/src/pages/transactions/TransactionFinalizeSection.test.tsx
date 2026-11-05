@@ -8,9 +8,7 @@ vi.mock('../../theme', () => ({
   bandedSpanClass: 'banded-span',
 }));
 
-import {
-  discardTransaction,
-} from '../../data/dataProvider';
+import { discardTransaction } from '../../data/dataProvider';
 import {
   finalizeAccordionTone,
   TransactionFinalizeSection,
