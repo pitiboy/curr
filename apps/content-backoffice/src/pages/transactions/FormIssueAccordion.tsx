@@ -9,11 +9,7 @@ import {
 } from '@mui/material';
 import { useTranslate } from 'react-admin';
 
-import {
-  formIssueCounts,
-  formIssueTone,
-  type FormIssue,
-} from './formIssues';
+import { formIssueCounts, formIssueTone, type FormIssue } from './formIssues';
 
 const iconSx = { fontSize: 20 } as const;
 

@@ -21,8 +21,13 @@ const labels: Record<string, string> = {
   'app.transactions_finalize_same_person': 'Saját rögzítés.',
   'app.transactions_finalize_no_receipt': 'Nincs bizonylat.',
   'app.transactions_create_no_receipt': 'Nincs bizonylat (create).',
+  'app.transactions_create_account_suggested': '%{field}: javasolt számla.',
 };
-const t = (key: string) => labels[key] ?? key;
+const t = (key: string, options?: Record<string, unknown>) => {
+  const template = labels[key] ?? key;
+  if (options?.field == null) return template;
+  return template.replace('%{field}', String(options.field));
+};
 
 const draftFilled = {
   date: '2026-10-15',
@@ -95,11 +100,13 @@ describe('collectFinalizeIssues', () => {
 });
 
 describe('collectCreateIssues', () => {
-  it('lists missing draft fields as errors and no file as warning', () => {
+  it('lists missing draft fields as errors and soft account/receipt warnings', () => {
     expect(collectCreateIssues({ description: 'x' }, [], t)).toEqual([
       { level: 'error', message: 'Dátum: Kötelező' },
       { level: 'error', message: 'Összeg: Kötelező' },
       { level: 'error', message: 'Pénznem: Kötelező' },
+      { level: 'warning', message: 'Költség számla: javasolt számla.' },
+      { level: 'warning', message: 'Kifizető számla: javasolt számla.' },
       { level: 'warning', message: 'Nincs bizonylat (create).' },
     ]);
   });
@@ -107,15 +114,41 @@ describe('collectCreateIssues', () => {
   it('flags invalid receipt cards without the empty-receipt warning', () => {
     const file = new File(['pdf'], 'bill.pdf');
     expect(
-      collectCreateIssues(draftFilled, [{ file, vendor: '', receiptTypeId: '' }], t),
-    ).toEqual([{ level: 'error', message: 'Eladó és típus kötelező.' }]);
+      collectCreateIssues(
+        draftFilled,
+        [{ file, vendor: '', receiptTypeId: '' }],
+        t,
+      ),
+    ).toEqual([
+      { level: 'error', message: 'Eladó és típus kötelező.' },
+      { level: 'warning', message: 'Költség számla: javasolt számla.' },
+      { level: 'warning', message: 'Kifizető számla: javasolt számla.' },
+    ]);
   });
 
-  it('is quiet on errors when the draft quartet is filled and a file is attached', () => {
+  it('warns only about empty accounts when the draft quartet and receipt are set', () => {
     const file = new File(['pdf'], 'bill.pdf');
     expect(
       collectCreateIssues(
         draftFilled,
+        [{ file, vendor: 'Bolt', receiptTypeId: 'type-1' }],
+        t,
+      ),
+    ).toEqual([
+      { level: 'warning', message: 'Költség számla: javasolt számla.' },
+      { level: 'warning', message: 'Kifizető számla: javasolt számla.' },
+    ]);
+  });
+
+  it('skips account warnings when both accounts are chosen', () => {
+    const file = new File(['pdf'], 'bill.pdf');
+    expect(
+      collectCreateIssues(
+        {
+          ...draftFilled,
+          debit_account: 'deb-1',
+          credit_account: 'cre-1',
+        },
         [{ file, vendor: 'Bolt', receiptTypeId: 'type-1' }],
         t,
       ),

@@ -88,9 +88,11 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     form_issues_count: '%{errors} hiba, %{warnings} figyelmeztetés',
     transactions_create_issues_title: 'Mentés',
     transactions_create_issues_hint:
-      'A tranzakció piszkozatként kerül mentésre. A csillagos mezők kötelezőek; a bizonylat opcionális.',
+      'A tranzakció piszkozatként mentődik. A csillagos mezőket töltsd ki; a bizonylat most még elhagyható.',
     transactions_create_no_receipt:
-      'Nincs csatolt bizonylat. Mentéshez nem kötelező; véglegesítés előtt még fel lehet tölteni.',
+      'Nincs bizonylat csatolva. Mentéshez nem kell, de ha van nálad, töltsd fel most — véglegesítés után már nem lehet.',
+    transactions_create_account_suggested:
+      '%{field}: még üres. Ellenőrzéskor kötelező lesz — ha tudod, válaszd ki most.',
     transactions_discard: 'Piszkozat törlése',
     transactions_discard_title: 'Piszkozat törlése',
     transactions_discard_body:

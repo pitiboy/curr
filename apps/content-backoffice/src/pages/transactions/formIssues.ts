@@ -50,9 +50,17 @@ function labeledFieldErrors(
   return issues;
 }
 
+function isBlankAccount(value: unknown): boolean {
+  if (value == null) return true;
+  if (typeof value === 'string') return !value.trim();
+  return false;
+}
+
+const CREATE_ACCOUNT_SUGGESTIONS = ['debit_account', 'credit_account'] as const;
+
 /**
  * Create draft: draft quartet + invalid receipt cards as errors;
- * no file attached as warning.
+ * empty accounts / no file as soft warnings (accounts only required at review).
  */
 export function collectCreateIssues(
   values: Record<string, unknown>,
@@ -73,6 +81,16 @@ export function collectCreateIssues(
     issues.push({
       level: 'error',
       message: formErrors.receipt_cards,
+    });
+  }
+  for (const field of CREATE_ACCOUNT_SUGGESTIONS) {
+    if (!isBlankAccount(values[field])) continue;
+    const label = translate(`resources.transactions.fields.${field}`);
+    issues.push({
+      level: 'warning',
+      message: translate('app.transactions_create_account_suggested', {
+        field: label,
+      }),
     });
   }
   const hasReceiptFile = receiptCards.some(
