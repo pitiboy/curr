@@ -83,18 +83,14 @@ describe('fetchPublishedWorkflows', () => {
       'documentId',
     );
     expect(params.get('populate[transaction_type][fields][1]')).toBe('name');
+    expect(params.get('populate[step][on][workflow.step][fields][0]')).toBe(
+      'organization_from_original',
+    );
     expect(
-      params.get('populate[step][on][workflow.step][fields][0]'),
+      params.get('populate[step][on][workflow.step-member-debit][fields][0]'),
     ).toBe('organization_from_original');
     expect(
-      params.get(
-        'populate[step][on][workflow.step-member-debit][fields][0]',
-      ),
-    ).toBe('organization_from_original');
-    expect(
-      params.get(
-        'populate[step][on][workflow.step-member-credit][fields][0]',
-      ),
+      params.get('populate[step][on][workflow.step-member-credit][fields][0]'),
     ).toBe('organization_from_original');
     expect(rows).toEqual([
       {

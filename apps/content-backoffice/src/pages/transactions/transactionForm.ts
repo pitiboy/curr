@@ -90,9 +90,8 @@ export function isTransactionCreateFormReady(
   options: TransactionFormValidateOptions = {},
 ): boolean {
   return (
-    Object.keys(
-      transactionFormErrors(values, receiptCards, translate, options),
-    ).length === 0
+    Object.keys(transactionFormErrors(values, receiptCards, translate, options))
+      .length === 0
   );
 }
 

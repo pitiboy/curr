@@ -145,8 +145,7 @@ export function TransactionCreateToolbar({
   const requireOrganizationForConvert =
     workflow?.requires_source_organization === true;
   const convertNeedsOrganization =
-    requireOrganizationForConvert &&
-    organizationValueMissing(organizationId);
+    requireOrganizationForConvert && organizationValueMissing(organizationId);
 
   const onSaveAndConvert = () => {
     if (!workflow || busy) return;

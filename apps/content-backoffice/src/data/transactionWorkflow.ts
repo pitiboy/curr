@@ -51,7 +51,8 @@ const workflowListPopulate = {
 
 /** True when any step copies organization from the source transaction. */
 export function workflowRequiresSourceOrganization(
-  steps: ReadonlyArray<StrapiWorkflowStepRow | null | undefined> | null | undefined,
+  steps:
+    ReadonlyArray<StrapiWorkflowStepRow | null | undefined> | null | undefined,
 ): boolean {
   return (steps ?? []).some(
     (step) => step?.organization_from_original === true,
