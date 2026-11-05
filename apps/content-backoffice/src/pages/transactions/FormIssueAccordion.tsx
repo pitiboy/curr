@@ -75,7 +75,11 @@ export function FormIssueAccordion({
           aria-hidden
           sx={{ ...iconSx, color: TONE[tone].iconColor }}
         />
-        <Typography component="span" sx={{ fontWeight: 700 }} variant="subtitle1">
+        <Typography
+          component="span"
+          sx={{ fontWeight: 700 }}
+          variant="subtitle1"
+        >
           {title}
         </Typography>
         {issues.length > 0 ? (
