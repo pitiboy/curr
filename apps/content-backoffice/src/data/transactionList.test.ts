@@ -376,6 +376,7 @@ const ugyelet1Template: WorkflowTemplateHeader = {
   name: 'Ügylet 1',
   debit_account_code: 1520,
   credit_account_code: 1101,
+  requires_source_organization: false,
 };
 
 describe('workflowMatchesTransaction', () => {

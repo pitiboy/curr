@@ -45,10 +45,10 @@ export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
               {translate('app.transactions_convert_preview_description')}
             </TableCell>
             <TableCell>
-              {translate('app.transactions_convert_preview_debit')}
+              {translate('app.transactions_convert_preview_credit')}
             </TableCell>
             <TableCell>
-              {translate('app.transactions_convert_preview_credit')}
+              {translate('app.transactions_convert_preview_debit')}
             </TableCell>
             <TableCell align="right">
               {translate('app.transactions_convert_preview_amount')}
@@ -67,14 +67,14 @@ export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
             <TableCell>{preview.original.description}</TableCell>
             <TableCell>
               {accountLabel(
-                preview.original.debit.code,
-                preview.original.debit.name,
+                preview.original.credit.code,
+                preview.original.credit.name,
               )}
             </TableCell>
             <TableCell>
               {accountLabel(
-                preview.original.credit.code,
-                preview.original.credit.name,
+                preview.original.debit.code,
+                preview.original.debit.name,
               )}
             </TableCell>
             <TableCell align="right">
@@ -101,10 +101,10 @@ export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
               </TableCell>
               <TableCell>{movement.description}</TableCell>
               <TableCell>
-                {accountLabel(movement.debit.code, movement.debit.name)}
+                {accountLabel(movement.credit.code, movement.credit.name)}
               </TableCell>
               <TableCell>
-                {accountLabel(movement.credit.code, movement.credit.name)}
+                {accountLabel(movement.debit.code, movement.debit.name)}
               </TableCell>
               <TableCell align="right">
                 {formatAmount(movement.amount)}

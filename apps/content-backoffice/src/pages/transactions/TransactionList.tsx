@@ -6,7 +6,6 @@ import type { Theme } from '@mui/material/styles';
 import {
   AutocompleteInput,
   Datagrid,
-  DateField,
   DateInput,
   FilterButton,
   FunctionField,
@@ -45,7 +44,7 @@ import {
 import { bandedRow } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
-import { dateFieldProps } from './dateField';
+import { TransactionDateValue } from './dateField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionBulkApproveButton } from './TransactionBulkApproveButton';
 import { TransactionConvertField } from './TransactionConvertField';
@@ -268,7 +267,13 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
 
   const columns = [
     <NumberField key="entryId" source="entryId" />,
-    <DateField key="date" source="date" {...dateFieldProps(locale)} />,
+    <FunctionField
+      key="date"
+      render={(record: RaRecord) => (
+        <TransactionDateValue locale={locale} value={record.date} />
+      )}
+      source="date"
+    />,
     <FunctionField
       key="vendor"
       render={(record: RaRecord) => firstReceiptVendor(record.receipts)}
@@ -336,18 +341,30 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       sortBy="receipts"
       source="receipts"
     />,
-    <DateField
+    <FunctionField
       key="createdAt"
+      render={(record: RaRecord) => (
+        <TransactionDateValue
+          locale={locale}
+          showTime
+          value={record.createdAt}
+        />
+      )}
       source="createdAt"
-      {...dateFieldProps(locale, true)}
     />,
     <TextField key="entered_by" emptyText="—" source="entered_by" />,
     <TextField key="published_by" emptyText="—" source="published_by" />,
-    <DateField
+    <FunctionField
       key="publishedAt"
-      emptyText="—"
+      render={(record: RaRecord) => (
+        <TransactionDateValue
+          emptyText="—"
+          locale={locale}
+          showTime
+          value={record.publishedAt}
+        />
+      )}
       source="publishedAt"
-      {...dateFieldProps(locale, true)}
     />,
   ];
 

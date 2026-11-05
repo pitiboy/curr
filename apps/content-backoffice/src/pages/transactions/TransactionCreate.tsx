@@ -21,9 +21,15 @@ import {
 } from 'react-admin';
 
 import { bandedForm, bandedSpanClass } from '../../theme';
+import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { FormIssueAccordion } from './FormIssueAccordion';
 import { collectCreateIssues } from './formIssues';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
+import {
+  TransactionCreateAccountRowFormSync,
+  TransactionCreateAccountRowProvider,
+  useOptionalTransactionCreateAccountRow,
+} from './TransactionCreateAccountRowContext';
 import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { transactionFormErrors } from './transactionForm';
@@ -196,101 +202,24 @@ function CreateLeaveBlocker({
   );
 }
 
-/** Dataentry create. Save always goes out as a draft; there is no publish action. */
-export function TransactionCreate() {
-  const catalog = useAccountCatalog();
-  const translate = useTranslate();
-  const [receiptCards, setReceiptCards] = useState<ReceiptCardValue[]>([]);
-  const [saveSucceeded, setSaveSucceeded] = useState(false);
-  const saveSucceededRef = useRef(false);
-  const onSaveSucceeded = useCallback(() => {
-    saveSucceededRef.current = true;
-    setSaveSucceeded(true);
-  }, []);
-
+function CreateOrganizationInput() {
+  const accountRow = useOptionalTransactionCreateAccountRow();
+  const requireOrganization =
+    accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
   return (
-    <Create
-      redirect="list"
-      resource="transactions"
-      title="app.transactions_create"
-      transform={(data) => ({
-        ...data,
-        receipt_cards: receiptCards,
-      })}
+    <ReferenceInput
+      perPage={100}
+      reference="organizations"
+      sort={{ field: 'name', order: 'ASC' }}
+      source="organization"
     >
-      <SimpleForm
-        defaultValues={{ date: todayLocalIsoDate() }}
-        sx={bandedForm}
-        toolbar={
-          <TransactionCreateToolbarGate
-            accounts={catalog.accounts}
-            onSaveSucceeded={onSaveSucceeded}
-            receiptCards={receiptCards}
-          />
-        }
-        validate={(values) =>
-          transactionFormErrors(
-            values as Record<string, unknown>,
-            receiptCards,
-            translate,
-          )
-        }
-      >
-        <CreateSaveSucceededMarker onSaveSucceeded={onSaveSucceeded} />
-        <CreateLeaveGuard
-          receiptCardCount={receiptCards.length}
-          saveSucceeded={saveSucceeded}
-          saveSucceededRef={saveSucceededRef}
-        />
-
-        <DateInput fullWidth source="date" validate={required()} />
-        <ReferenceInput
-          perPage={100}
-          reference="organizations"
-          sort={{ field: 'name', order: 'ASC' }}
-          source="organization"
-        >
-          <AutocompleteInput
-            filterToQuery={nameFilterToQuery}
-            fullWidth
-            optionText="name"
-          />
-        </ReferenceInput>
-
-        <NumberInput fullWidth source="amount" validate={required()} />
-        <ReferenceInput
-          perPage={100}
-          reference="currency-types"
-          sort={{ field: 'code', order: 'ASC' }}
-          source="currency_type"
-        >
-          <AutocompleteInput
-            filterToQuery={codeOrNameFilterToQuery}
-            fullWidth
-            optionText={currencyOptionText}
-            validate={required()}
-          />
-        </ReferenceInput>
-
-        <TextInput
-          className={bandedSpanClass}
-          fullWidth
-          multiline
-          source="description"
-          validate={required()}
-        />
-
-        <TransactionAccountProfileRow
-          accounts={catalog.accounts}
-          defaultProfile="cost"
-          failed={catalog.failed}
-          isPending={catalog.isPending}
-        />
-
-        <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
-        <CreateFormIssueAccordion receiptCards={receiptCards} />
-      </SimpleForm>
-    </Create>
+      <AutocompleteInput
+        filterToQuery={nameFilterToQuery}
+        fullWidth
+        optionText="name"
+        validate={requireOrganization ? required() : undefined}
+      />
+    </ReferenceInput>
   );
 }
 
@@ -311,5 +240,146 @@ function CreateFormIssueAccordion({
         title={translate('app.transactions_create_issues_title')}
       />
     </Box>
+  );
+}
+
+function TransactionCreateForm({
+  accounts,
+  catalogFailed,
+  catalogPending,
+  onSaveSucceeded,
+  receiptCards,
+  saveSucceeded,
+  saveSucceededRef,
+  setReceiptCards,
+  workflows,
+  workflowsLoading,
+}: {
+  accounts: ReturnType<typeof useAccountCatalog>['accounts'];
+  catalogFailed: boolean;
+  catalogPending: boolean;
+  onSaveSucceeded: () => void;
+  receiptCards: ReceiptCardValue[];
+  saveSucceeded: boolean;
+  saveSucceededRef: { current: boolean };
+  setReceiptCards: (cards: ReceiptCardValue[]) => void;
+  workflows: ReturnType<typeof useTransactionWorkflowCatalog>['workflows'];
+  workflowsLoading: boolean;
+}) {
+  const translate = useTranslate();
+  const accountRow = useOptionalTransactionCreateAccountRow();
+  const requireOrganization =
+    accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
+
+  return (
+    <SimpleForm
+      defaultValues={{ date: todayLocalIsoDate() }}
+      sx={bandedForm}
+      toolbar={
+        <TransactionCreateToolbarGate
+          accounts={accounts}
+          onSaveSucceeded={onSaveSucceeded}
+          receiptCards={receiptCards}
+        />
+      }
+      validate={(values) =>
+        transactionFormErrors(
+          values as Record<string, unknown>,
+          receiptCards,
+          translate,
+          { requireOrganization },
+        )
+      }
+    >
+      <TransactionCreateAccountRowFormSync />
+      <CreateSaveSucceededMarker onSaveSucceeded={onSaveSucceeded} />
+      <CreateLeaveGuard
+        receiptCardCount={receiptCards.length}
+        saveSucceeded={saveSucceeded}
+        saveSucceededRef={saveSucceededRef}
+      />
+
+      <DateInput fullWidth source="date" validate={required()} />
+      <CreateOrganizationInput />
+
+      <NumberInput fullWidth source="amount" validate={required()} />
+      <ReferenceInput
+        perPage={100}
+        reference="currency-types"
+        sort={{ field: 'code', order: 'ASC' }}
+        source="currency_type"
+      >
+        <AutocompleteInput
+          filterToQuery={codeOrNameFilterToQuery}
+          fullWidth
+          optionText={currencyOptionText}
+          validate={required()}
+        />
+      </ReferenceInput>
+
+      <TextInput
+        className={bandedSpanClass}
+        fullWidth
+        multiline
+        source="description"
+        validate={required()}
+      />
+
+      <TransactionAccountProfileRow
+        accounts={accounts}
+        defaultProfile="cost"
+        failed={catalogFailed}
+        isPending={catalogPending}
+        transactionWorkflowTemplates={workflows}
+        transactionWorkflowsLoading={workflowsLoading}
+      />
+
+      <ReceiptRail cards={receiptCards} onChange={setReceiptCards} />
+      <CreateFormIssueAccordion receiptCards={receiptCards} />
+    </SimpleForm>
+  );
+}
+
+/** Dataentry create. Save always goes out as a draft; there is no publish action. */
+export function TransactionCreate() {
+  const catalog = useAccountCatalog();
+  const workflowCatalog = useTransactionWorkflowCatalog();
+  const [receiptCards, setReceiptCards] = useState<ReceiptCardValue[]>([]);
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
+  const saveSucceededRef = useRef(false);
+  const onSaveSucceeded = useCallback(() => {
+    saveSucceededRef.current = true;
+    setSaveSucceeded(true);
+  }, []);
+
+  return (
+    <Create
+      redirect="list"
+      resource="transactions"
+      title="app.transactions_create"
+      transform={(data) => ({
+        ...data,
+        receipt_cards: receiptCards,
+      })}
+    >
+      <TransactionCreateAccountRowProvider
+        accounts={catalog.accounts}
+        defaultProfile="cost"
+        transactionWorkflows={workflowCatalog.workflows}
+      >
+        <TransactionCreateForm
+          accounts={catalog.accounts}
+          catalogFailed={catalog.failed}
+          catalogPending={catalog.isPending}
+          onSaveSucceeded={onSaveSucceeded}
+          receiptCards={receiptCards}
+          saveSucceeded={saveSucceeded}
+          saveSucceededRef={saveSucceededRef}
+          setReceiptCards={setReceiptCards}
+          workflows={workflowCatalog.workflows}
+          workflowsLoading={workflowCatalog.loading}
+        />
+      </TransactionCreateAccountRowProvider>
+    </Create>
   );
 }

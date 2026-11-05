@@ -61,7 +61,7 @@ function renderMessageArrow(
     );
   }
 
-  // Debit → credit; arrowhead always at credit (to) lifeline.
+  // Credit → debit; arrowhead always at debit (to) lifeline.
   const xFrom = from.centerX;
   const xTo = to.centerX;
   const lineY = y;
