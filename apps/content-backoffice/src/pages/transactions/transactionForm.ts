@@ -70,6 +70,18 @@ export function transactionFormErrors(
   return errors;
 }
 
+/** True when draft-required fields (and receipt cards) allow create / convert. */
+export function isTransactionCreateFormReady(
+  values: Record<string, unknown>,
+  receiptCards: ReceiptCard[],
+  translate: (key: string) => string,
+): boolean {
+  return (
+    Object.keys(transactionFormErrors(values, receiptCards, translate))
+      .length === 0
+  );
+}
+
 /** Editor Véglegesít: mind a hét tranzakciómező kitöltése kötelező. */
 export function transactionPublishFormErrors(
   values: Record<string, unknown>,

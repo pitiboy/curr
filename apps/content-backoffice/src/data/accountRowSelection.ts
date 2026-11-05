@@ -69,6 +69,13 @@ export type WorkflowPrefillResult = {
   warningKeys: string[];
   /** False when account codes could not be resolved uniquely — not a guaranteed Convert match. */
   accountsResolved: boolean;
+  /**
+   * Exact ledger code for the debit picker when the template code is missing or
+   * ambiguous (e.g. many member `1001` / `1101` rows). Null when uniquely filled.
+   */
+  debitAccountCodeFilter: string | null;
+  /** Same as debitAccountCodeFilter for the credit side. */
+  creditAccountCodeFilter: string | null;
 };
 
 export type ResolvedAccountRowSelection = {
@@ -233,18 +240,22 @@ export function resolveWorkflowPrefill(
 
   let debitAccountId: string | null = null;
   let creditAccountId: string | null = null;
+  let debitAccountCodeFilter: string | null = null;
+  let creditAccountCodeFilter: string | null = null;
   let accountsResolved = true;
 
   if (debit.status === 'ok') {
     debitAccountId = debit.id;
   } else {
     accountsResolved = false;
+    debitAccountCodeFilter = String(workflow.debit_account_code);
     warningKeys.push('app.account_profile_workflow_prefill_incomplete');
   }
   if (credit.status === 'ok') {
     creditAccountId = credit.id;
   } else {
     accountsResolved = false;
+    creditAccountCodeFilter = String(workflow.credit_account_code);
     if (
       !warningKeys.includes('app.account_profile_workflow_prefill_incomplete')
     ) {
@@ -266,6 +277,8 @@ export function resolveWorkflowPrefill(
     transactionTypeId,
     warningKeys,
     accountsResolved,
+    debitAccountCodeFilter,
+    creditAccountCodeFilter,
   };
 }
 
@@ -358,6 +371,18 @@ export function resolveAccountRowSelection(params: {
     };
   }
 
+  // Prefill runs after selection; until it finishes (or when codes are
+  // ambiguous), keep the template selected so stale form accounts cannot drop
+  // it and clear the incomplete-prefill warning.
+  if (!prefillOk) {
+    return {
+      effectiveSelection: storedSelection,
+      filterProfile: '',
+      workflowDropped: false,
+      activeWorkflow: null,
+    };
+  }
+
   const debitCode = parseLedgerAccountCode(
     matchInput.debit_account?.code ?? null,
   );
@@ -378,15 +403,6 @@ export function resolveAccountRowSelection(params: {
       effectiveSelection: { kind: 'profile', profile: lastProfile },
       filterProfile: lastProfile,
       workflowDropped: true,
-      activeWorkflow: null,
-    };
-  }
-
-  if (!prefillOk) {
-    return {
-      effectiveSelection: storedSelection,
-      filterProfile: '',
-      workflowDropped: false,
       activeWorkflow: null,
     };
   }

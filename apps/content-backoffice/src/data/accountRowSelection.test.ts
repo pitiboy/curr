@@ -182,6 +182,8 @@ describe('resolveWorkflowPrefill', () => {
     expect(result.currencyTypeId).toBe('cur-huf');
     expect(result.transactionTypeId).toBeNull();
     expect(result.accountsResolved).toBe(true);
+    expect(result.debitAccountCodeFilter).toBeNull();
+    expect(result.creditAccountCodeFilter).toBeNull();
   });
 
   it('warns and skips guess on ambiguous account codes', () => {
@@ -189,6 +191,8 @@ describe('resolveWorkflowPrefill', () => {
     expect(result.creditAccountId).toBeNull();
     expect(result.debitAccountId).toBe('d1');
     expect(result.accountsResolved).toBe(false);
+    expect(result.debitAccountCodeFilter).toBeNull();
+    expect(result.creditAccountCodeFilter).toBe('1101');
     expect(result.warningKeys).toContain(
       'app.account_profile_workflow_prefill_incomplete',
     );
@@ -244,6 +248,26 @@ describe('resolveAccountRowSelection', () => {
       profile: 'cost',
     });
     expect(resolved.workflowDropped).toBe(true);
+    expect(resolved.activeWorkflow).toBeNull();
+  });
+
+  it('keeps the template while prefill is incomplete even if form codes mismatch', () => {
+    const resolved = resolveAccountRowSelection({
+      storedSelection: { kind: 'workflow', workflowDocumentId: 'wf-a' },
+      lastProfile: 'cost',
+      workflows: [workflowA],
+      matchInput: {
+        ...matchInput,
+        debit_account: { code: '9999' },
+        credit_account: { code: '8888' },
+      },
+      prefillAccountsResolved: false,
+    });
+    expect(resolved.effectiveSelection).toEqual({
+      kind: 'workflow',
+      workflowDocumentId: 'wf-a',
+    });
+    expect(resolved.workflowDropped).toBe(false);
     expect(resolved.activeWorkflow).toBeNull();
   });
 });

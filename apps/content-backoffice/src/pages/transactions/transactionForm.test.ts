@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isTransactionCreateFormReady,
   transactionFormErrors,
   transactionPublishFormErrors,
 } from './transactionForm';
@@ -72,6 +73,19 @@ describe('transactionFormErrors', () => {
       description: 'ra.validation.required',
       receipt_cards: 'app.receipt_card_required',
     });
+  });
+});
+
+describe('isTransactionCreateFormReady', () => {
+  it('is false while amount or description is empty', () => {
+    expect(
+      isTransactionCreateFormReady(
+        { ...draftFilled, amount: undefined, description: '' },
+        [],
+        translate,
+      ),
+    ).toBe(false);
+    expect(isTransactionCreateFormReady(draftFilled, [], translate)).toBe(true);
   });
 });
 

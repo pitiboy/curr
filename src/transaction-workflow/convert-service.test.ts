@@ -260,9 +260,7 @@ describe('convertTransactions keep_original write order', () => {
       ['publish:created-2', 'publish:created-3'],
     );
     assert.equal(
-      ops.some(
-        (op) => op.kind === 'publish' && op.documentId === 'created-1',
-      ),
+      ops.some((op) => op.kind === 'publish' && op.documentId === 'created-1'),
       false,
     );
   });
@@ -287,9 +285,7 @@ describe('convertTransactions keep_original write order', () => {
       ),
     );
     assert.ok(
-      ops.some(
-        (op) => op.kind === 'publish' && op.documentId === 'created-1',
-      ),
+      ops.some((op) => op.kind === 'publish' && op.documentId === 'created-1'),
     );
   });
 

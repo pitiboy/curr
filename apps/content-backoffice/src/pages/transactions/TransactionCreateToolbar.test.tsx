@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../data/dataProvider', () => ({
   createNewTransactionDraft: vi.fn(),
@@ -10,6 +10,15 @@ vi.mock('../../data/dataProvider', () => ({
 const usePermissions = vi.fn();
 const useTransactionWorkflowCatalog = vi.fn();
 
+const formValues = {
+  date: '2026-01-01',
+  amount: 10 as number | undefined,
+  debit_account: 'debit-5200',
+  credit_account: 'credit-1101',
+  currency_type: 'cur-1',
+  description: 'x',
+};
+
 vi.mock('react-admin', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-admin')>();
   return {
@@ -18,7 +27,11 @@ vi.mock('react-admin', async (importOriginal) => {
     useTranslate: () => (key: string) => key,
     useNotify: () => vi.fn(),
     useRedirect: () => vi.fn(),
-    SaveButton: () => <button type="button">Mentés</button>,
+    SaveButton: ({ disabled }: { disabled?: boolean }) => (
+      <button disabled={disabled} type="button">
+        Mentés
+      </button>
+    ),
   };
 });
 
@@ -28,7 +41,11 @@ vi.mock('../../workflows/useTransactionWorkflowCatalog', () => ({
 }));
 
 vi.mock('./TransactionConvertPreviewButton', () => ({
-  TransactionConvertPreviewButton: () => <button type="button">Preview</button>,
+  TransactionConvertPreviewButton: ({ disabled }: { disabled?: boolean }) => (
+    <button disabled={disabled} type="button">
+      Preview
+    </button>
+  ),
 }));
 
 // Direct ConvertConfirmDialog → ConvertPreviewPanel → useConvertPreview → ra-strapi.
@@ -47,20 +64,11 @@ vi.mock('react-hook-form', async (importOriginal) => {
     ...actual,
     useWatch: (args?: { name?: string }) => {
       const name = args?.name;
-      if (name === 'debit_account') return 'debit-5200';
-      if (name === 'credit_account') return 'credit-1101';
-      if (name === 'currency_type') return 'cur-1';
+      if (name === 'debit_account') return formValues.debit_account;
+      if (name === 'credit_account') return formValues.credit_account;
+      if (name === 'currency_type') return formValues.currency_type;
       if (name === 'transaction_type') return undefined;
-      if (name === undefined) {
-        return {
-          date: '2026-01-01',
-          amount: 10,
-          debit_account: 'debit-5200',
-          credit_account: 'credit-1101',
-          currency_type: 'cur-1',
-          description: 'x',
-        };
-      }
+      if (name === undefined) return { ...formValues };
       return undefined;
     },
   };
@@ -112,7 +120,13 @@ function ToolbarShell({
 }
 
 describe('TransactionCreateToolbar', () => {
-  it('shows convert actions for an active selected workflow template', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  beforeEach(() => {
+    formValues.amount = 10;
+    formValues.description = 'x';
     usePermissions.mockReturnValue({ permissions: 'editor', isPending: false });
     useTransactionWorkflowCatalog.mockReturnValue({
       workflows: [workflow],
@@ -120,7 +134,9 @@ describe('TransactionCreateToolbar', () => {
       matchFor: () => null,
       isEditor: true,
     });
+  });
 
+  it('shows convert actions for an active selected workflow template', () => {
     render(
       <ToolbarShell
         storedSelection={{
@@ -132,6 +148,26 @@ describe('TransactionCreateToolbar', () => {
 
     expect(
       screen.getByRole('button', { name: 'app.transactions_convert_save' }),
-    ).toBeVisible();
+    ).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Mentés' })).toBeEnabled();
+  });
+
+  it('disables save and convert while amount or description is empty', () => {
+    formValues.amount = undefined;
+    formValues.description = '';
+
+    render(
+      <ToolbarShell
+        storedSelection={{
+          kind: 'workflow',
+          workflowDocumentId: 'wf-selected',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Mentés' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'app.transactions_convert_save' }),
+    ).toBeDisabled();
   });
 });

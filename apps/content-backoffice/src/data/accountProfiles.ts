@@ -102,8 +102,19 @@ export function accountChoicesForProfile(
   profile: AccountProfile,
   selectedId: unknown,
   patterns: AccountCodePatterns = DEFAULT_ACCOUNT_CODE_PATTERNS,
+  /** When set (workflow incomplete prefill), restrict to this exact ledger code. */
+  exactCode?: string | null,
 ): AccountChoice[] {
-  const filtered = filterAccountsByProfile(accounts, kind, profile, patterns);
+  const filtered =
+    exactCode != null && exactCode !== ''
+      ? sortAccountChoices(
+          accounts.filter(
+            (account) =>
+              normalizeAccountCode(account.code) ===
+              normalizeAccountCode(exactCode),
+          ),
+        )
+      : filterAccountsByProfile(accounts, kind, profile, patterns);
   if (selectedId === null || selectedId === undefined || selectedId === '') {
     return filtered;
   }

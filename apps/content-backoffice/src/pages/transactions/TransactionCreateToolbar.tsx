@@ -28,9 +28,26 @@ import {
 import type { ReceiptCardValue } from './ReceiptFields';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { inlinePreviewFromCreateForm } from './convertPreviewInput';
-import { transactionFormErrors } from './transactionForm';
+import {
+  isTransactionCreateFormReady,
+  transactionFormErrors,
+} from './transactionForm';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 import { useOptionalTransactionCreateAccountRow } from './TransactionCreateAccountRowContext';
+
+function useCreateFormReady(receiptCards: ReceiptCardValue[]): boolean {
+  const translate = useTranslate();
+  const values = useWatch();
+  return useMemo(
+    () =>
+      isTransactionCreateFormReady(
+        (values ?? {}) as Record<string, unknown>,
+        receiptCards,
+        translate,
+      ),
+    [receiptCards, translate, values],
+  );
+}
 
 export function TransactionCreateToolbar({
   accounts,
@@ -53,6 +70,7 @@ export function TransactionCreateToolbar({
   const currencyId = useWatch({ name: 'currency_type' });
   const transactionTypeId = useWatch({ name: 'transaction_type' });
   const values = useWatch();
+  const formReady = useCreateFormReady(receiptCards);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -150,9 +168,11 @@ export function TransactionCreateToolbar({
       .finally(() => setBusy(false));
   };
 
+  const actionsDisabled = busy || !formReady;
+
   return (
     <Toolbar>
-      <SaveButton disabled={busy} />
+      <SaveButton disabled={actionsDisabled} />
       {showAmbiguityAlert ? (
         <Alert severity="warning" sx={{ ml: 1, py: 0 }} variant="outlined">
           {translate('app.transactions_convert_ambiguous')}
@@ -161,15 +181,18 @@ export function TransactionCreateToolbar({
       {workflow ? (
         <Stack direction="row" spacing={1} sx={{ ml: 1 }}>
           <TransactionConvertPreviewButton
-            disabled={!previewInput}
+            disabled={!previewInput || !formReady}
             disabledReasonKey="app.transactions_convert_preview_disabled"
             previewInput={previewInput}
             workflow={workflow}
           />
           <Button
-            disabled={busy}
+            disabled={actionsDisabled}
             variant="contained"
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              if (!formReady || busy) return;
+              setOpen(true);
+            }}
           >
             {translate('app.transactions_convert_save')}
           </Button>
@@ -200,6 +223,7 @@ export function TransactionCreateToolbarGate({
   receiptCards: ReceiptCardValue[];
 }) {
   const { permissions, isPending } = usePermissions();
+  const formReady = useCreateFormReady(receiptCards);
   if (!isPending && permissions === 'editor') {
     return (
       <TransactionCreateToolbar
@@ -211,7 +235,7 @@ export function TransactionCreateToolbarGate({
   }
   return (
     <Toolbar>
-      <SaveButton />
+      <SaveButton disabled={!formReady} />
     </Toolbar>
   );
 }

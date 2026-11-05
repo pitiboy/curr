@@ -76,6 +76,26 @@ describe('filterAccountsByProfile', () => {
     );
     expect(choices.map((row) => row.id)).toContain('revenue');
   });
+
+  it('restricts choices to an exact ledger code when provided', () => {
+    const withDupes: AccountChoice[] = [
+      ...accounts,
+      { id: 'private-2', code: '1001', name: 'Másik saját' },
+    ];
+    const choices = accountChoicesForProfile(
+      withDupes,
+      'credit',
+      '',
+      '',
+      undefined,
+      '1001',
+    );
+    expect(choices.map((row) => row.code)).toEqual(['1001', '1001']);
+    expect(choices.map((row) => row.id).sort()).toEqual([
+      'private',
+      'private-2',
+    ]);
+  });
 });
 
 describe('selectableAccountProfiles', () => {

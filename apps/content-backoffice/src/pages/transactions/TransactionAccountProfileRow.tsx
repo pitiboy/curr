@@ -43,6 +43,13 @@ import { useWorkflowPrefillOnSelect } from './useWorkflowPrefill';
 
 const requiredMark = required();
 
+const accountRowGroupHeaderSx = {
+  bgcolor: 'lightgray',
+  borderBottom: 1,
+  borderColor: 'divider',
+  lineHeight: '36px',
+} as const;
+
 function AccountProfileSelect({
   allowedProfiles,
   profile,
@@ -140,14 +147,18 @@ function AccountRowTemplateSelect({
           if (decoded) onSelectionChange(decoded);
         }}
       >
-        <ListSubheader>{optionLabels.groupProfiles}</ListSubheader>
+        <ListSubheader sx={accountRowGroupHeaderSx}>
+          {optionLabels.groupProfiles}
+        </ListSubheader>
         {profileOptions.map((option) => (
           <MenuItem key={option.value} value={option.value}>
             {translate(option.labelKey)}
           </MenuItem>
         ))}
         {showWorkflowGroup ? (
-          <ListSubheader>{optionLabels.groupWorkflows}</ListSubheader>
+          <ListSubheader sx={accountRowGroupHeaderSx}>
+            {optionLabels.groupWorkflows}
+          </ListSubheader>
         ) : null}
         {workflowOptions.map((option) => {
           if (option.kind === 'workflows-loading') {
@@ -209,6 +220,7 @@ function AccountRowTemplateSelect({
 
 function ProfileAccountInput({
   accounts,
+  exactCode,
   failed,
   isPending,
   kind,
@@ -218,6 +230,8 @@ function ProfileAccountInput({
   source,
 }: {
   accounts: AccountChoice[];
+  /** Workflow incomplete-prefill: only show accounts with this ledger code. */
+  exactCode?: string | null;
   failed: boolean;
   isPending: boolean;
   kind: 'debit' | 'credit';
@@ -234,6 +248,7 @@ function ProfileAccountInput({
     profile,
     selectedId,
     patterns,
+    exactCode,
   ).map((account) => ({
     id: account.id,
     name: accountChoiceLabel(account),
@@ -278,7 +293,7 @@ function TransactionAccountProfileRowWithWorkflows({
   const { enabled, ready } = useBackofficeConfig();
   const patterns = useAccountCodePatterns();
   const { resolved, setStoredSelection } = useTransactionCreateAccountRow();
-  const { prefillWarningKeys } = useWorkflowPrefillOnSelect(
+  const { prefillWarningKeys, accountCodeFilters } = useWorkflowPrefillOnSelect(
     accounts,
     transactionWorkflows,
   );
@@ -327,6 +342,7 @@ function TransactionAccountProfileRowWithWorkflows({
       </Box>
       <ProfileAccountInput
         accounts={accounts}
+        exactCode={accountCodeFilters.credit}
         failed={failed}
         isPending={isPending}
         kind="credit"
@@ -337,6 +353,7 @@ function TransactionAccountProfileRowWithWorkflows({
       />
       <ProfileAccountInput
         accounts={accounts}
+        exactCode={accountCodeFilters.debit}
         failed={failed}
         isPending={isPending}
         kind="debit"

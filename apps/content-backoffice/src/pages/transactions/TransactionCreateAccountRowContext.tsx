@@ -88,7 +88,10 @@ export function TransactionCreateAccountRowProvider({
     );
   const [lastProfile, setLastProfile] =
     useState<AccountProfile>(defaultProfile);
-  const [prefillAccountsResolved, setPrefillAccountsResolved] = useState(true);
+  // Workflow initial selection must wait for prefill before match-based drop.
+  const [prefillAccountsResolved, setPrefillAccountsResolved] = useState(
+    () => initialStoredSelection?.kind !== 'workflow',
+  );
   const [resolved, setResolvedState] =
     useState<ResolvedAccountRowSelection>(defaultResolved);
   const publishResolved = useCallback((next: ResolvedAccountRowSelection) => {
@@ -100,6 +103,11 @@ export function TransactionCreateAccountRowProvider({
   const setStoredSelection = useCallback((selection: AccountRowSelection) => {
     if (selection.kind === 'profile') {
       setLastProfile(selection.profile);
+      setPrefillAccountsResolved(true);
+    } else {
+      // Block match-based drop until useWorkflowPrefillOnSelect applies/clears
+      // accounts for this template (avoids losing the incomplete-prefill warning).
+      setPrefillAccountsResolved(false);
     }
     setStoredSelectionState(selection);
   }, []);
