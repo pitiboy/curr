@@ -33,7 +33,6 @@ import {
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { bandedSpanClass } from '../../theme';
 import { useAccountCodePatterns } from '../../workflows/useAccountCodePatterns';
-import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 import { AccountFieldLabel } from './accountField';
 import {
   useOptionalTransactionCreateAccountRow,
@@ -290,7 +289,6 @@ function TransactionAccountProfileRowWithWorkflows({
   workflowsLoading: boolean;
 }) {
   const translate = useTranslate();
-  const { enabled, ready } = useBackofficeConfig();
   const patterns = useAccountCodePatterns();
   const { resolved, setStoredSelection } = useTransactionCreateAccountRow();
   const { prefillWarningKeys, accountCodeFilters } = useWorkflowPrefillOnSelect(
@@ -298,10 +296,7 @@ function TransactionAccountProfileRowWithWorkflows({
     transactionWorkflows,
   );
 
-  const allowedProfiles = useMemo(
-    () => selectableAccountProfilesWithAll(enabled, ready),
-    [enabled, ready],
-  );
+  const allowedProfiles = useMemo(() => selectableAccountProfilesWithAll(), []);
 
   useEffect(() => {
     if (
@@ -379,12 +374,8 @@ function TransactionAccountProfileRowLegacy({
   isPending: boolean;
   requireAccounts?: boolean;
 }) {
-  const { enabled, ready } = useBackofficeConfig();
   const patterns = useAccountCodePatterns();
-  const allowedProfiles = useMemo(
-    () => selectableAccountProfilesWithAll(enabled, ready),
-    [enabled, ready],
-  );
+  const allowedProfiles = useMemo(() => selectableAccountProfilesWithAll(), []);
   const [profile, setProfile] = useState<AccountProfile>(defaultProfile);
 
   useEffect(() => {

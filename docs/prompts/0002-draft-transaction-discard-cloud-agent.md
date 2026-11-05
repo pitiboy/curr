@@ -10,23 +10,23 @@ Ez **implementáló** feladat: backend guarded discard, SPA gomb + Confirm, i18n
 
 ## Miért
 
-A `publisher_must_differ` miatt a saját rögzítésű draftot a rögzítő nem véglegesítheti; a PRD v1 „visszautasítás” eddig csak annyi volt, hogy a QA nem publishol. Beragadt / hibás piszkozatoknak kell escape hatch. A Users & Permissions mátrix ma **szándékosan nem ad `delete` jogot** (`src/index.ts` → `CONTENT_ROLE_ACTIONS`, komment: *no delete*). Ne kapcsold be a nyers CRUD `DELETE`-et minden tranzakcióra.
+A `publisher_must_differ` miatt a saját rögzítésű draftot a rögzítő nem véglegesítheti; a PRD v1 „visszautasítás” eddig csak annyi volt, hogy a QA nem publishol. Beragadt / hibás piszkozatoknak kell escape hatch. A Users & Permissions mátrix ma **szándékosan nem ad `delete` jogot** (`src/index.ts` → `CONTENT_ROLE_ACTIONS`, komment: _no delete_). Ne kapcsold be a nyers CRUD `DELETE`-et minden tranzakcióra.
 
 ## Kötelező döntések (ne kérdezz újra)
 
-| Döntés | Érték |
-| ------ | ----- |
-| Hol | `TransactionFinalizeSection` mellett / ugyanabban a Véglegesítés fieldsetben, másodlagos `color="error"` / `outlined` gomb |
-| Láthatóság | csak `editor` + `status === 'draft'` (Review Editor út) |
-| Same-person | a publish tiltás **ne** tiltsa a törlést |
-| Confirm | react-admin `Confirm` (mint leave / convert); szöveg: tranzakció + csatolt bizonylatok törlődnek |
-| Siker után | navigálj a listára (`/transactions` vagy a draft szűrős ellenőrzés listára — konzisztensen a meglévő redirect mintával) |
-| Backend | **dedikált** discard művelet (convert mintájára), ne nyers `api::transaction.transaction.delete` jog mindenkinek |
-| Cascade | draft tranzakció + kapcsolt draft receipt-ek; lehetőleg a feltöltött media is; published receipt/tranzakció → 403 |
-| Convert / storno | ha a rekord még draft és nincs published gyerek-lánc kötelezettség, törölhető; published / nem-draft → elutasít |
-| Lista / bulk | nincs |
-| dataentry | nincs UI, nincs discard API jog (csak editor) |
-| Nyelv | gomb: **Piszkozat törlése** (ne „számla”); `hu` + `en` i18n |
+| Döntés           | Érték                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Hol              | `TransactionFinalizeSection` mellett / ugyanabban a Véglegesítés fieldsetben, másodlagos `color="error"` / `outlined` gomb |
+| Láthatóság       | csak `editor` + `status === 'draft'` (Review Editor út)                                                                    |
+| Same-person      | a publish tiltás **ne** tiltsa a törlést                                                                                   |
+| Confirm          | react-admin `Confirm` (mint leave / convert); szöveg: tranzakció + csatolt bizonylatok törlődnek                           |
+| Siker után       | navigálj a listára (`/transactions` vagy a draft szűrős ellenőrzés listára — konzisztensen a meglévő redirect mintával)    |
+| Backend          | **dedikált** discard művelet (convert mintájára), ne nyers `api::transaction.transaction.delete` jog mindenkinek           |
+| Cascade          | draft tranzakció + kapcsolt draft receipt-ek; lehetőleg a feltöltött media is; published receipt/tranzakció → 403          |
+| Convert / storno | ha a rekord még draft és nincs published gyerek-lánc kötelezettség, törölhető; published / nem-draft → elutasít            |
+| Lista / bulk     | nincs                                                                                                                      |
+| dataentry        | nincs UI, nincs discard API jog (csak editor)                                                                              |
+| Nyelv            | gomb: **Piszkozat törlése** (ne „számla”); `hu` + `en` i18n                                                                |
 
 ## Kontextus (repo)
 

@@ -76,7 +76,7 @@ describe('account row select encode/decode', () => {
 
 describe('buildAccountRowOptions', () => {
   it('lists profiles in gated order and sorts workflows by Hungarian name', () => {
-    const profiles = selectableAccountProfilesWithAll([], true);
+    const profiles = selectableAccountProfilesWithAll();
     const options = buildAccountRowOptions(
       profiles,
       [workflowB, workflowA],
