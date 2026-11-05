@@ -22,8 +22,8 @@ const poultryConstants = JSON.parse(
 );
 
 // --- Cutoffs: only rows on or after these dates are imported (opening stock = 0) ---
-export const PRODUCTION_FROM = '2026-09-01';
-export const SALES_FROM = '2026-09-01';
+export const PRODUCTION_FROM = '2026-10-01';
+export const SALES_FROM = '2026-10-01';
 export const DISTRIBUTION_FROM = PRODUCTION_FROM;
 
 /**
@@ -116,14 +116,8 @@ export const ACCOUNTS = {
 
 export const HEADER_MARKERS = ['Date', 'Location', 'Collected'];
 
-const DEFAULT_CSV = resolve(
-  __dirname,
-  'fixtures/egg-sheet.csv',
-);
-const DEFAULT_OUT = resolve(
-  __dirname,
-  'http/edizone/data/transactions.json',
-);
+const DEFAULT_CSV = resolve(__dirname, 'fixtures/egg-sheet.csv');
+const DEFAULT_OUT = resolve(__dirname, 'http/edizone/data/transactions.json');
 
 const DISTRIBUTION_MEMBERS = [
   { column: 'Dávid', label: 'Dávid' },
@@ -338,8 +332,9 @@ export function sheetRowsToTransactions(rows, options = {}) {
   const productionFrom = options.productionFrom ?? PRODUCTION_FROM;
   const salesFrom = options.salesFrom ?? SALES_FROM;
   const distributionFrom = options.distributionFrom ?? DISTRIBUTION_FROM;
-  const memberMap =
-    options.memberMap ?? { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER };
+  const memberMap = options.memberMap ?? {
+    ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER,
+  };
   const poultryStockOrg =
     options.poultryStockOrganization ?? POULTRY_STOCK_ORGANIZATION;
 
@@ -360,14 +355,18 @@ export function sheetRowsToTransactions(rows, options = {}) {
     const isoDate = parseEggDate(row.dateRaw);
     if (!isoDate) {
       if (row.dateRaw.trim()) {
-        warnings.push(`row ${row.sheetRow}: invalid date ${JSON.stringify(row.dateRaw)}`);
+        warnings.push(
+          `row ${row.sheetRow}: invalid date ${JSON.stringify(row.dateRaw)}`,
+        );
       }
       continue;
     }
 
     let org = resolveLocationOrg(row.location);
     if (org === undefined) {
-      warnings.push(`row ${row.sheetRow}: unknown location ${JSON.stringify(row.location)}, skipped`);
+      warnings.push(
+        `row ${row.sheetRow}: unknown location ${JSON.stringify(row.location)}, skipped`,
+      );
       continue;
     }
     if (org === null) {
@@ -538,7 +537,9 @@ export function sheetRowsToTransactions(rows, options = {}) {
 export function buildTransactionsJson(parsedRows, meta = {}) {
   const memberMap =
     meta.memberMap ??
-    (meta.loadMemberMapFromEnv ? loadSheetMemberMap() : { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER });
+    (meta.loadMemberMapFromEnv
+      ? loadSheetMemberMap()
+      : { ...DEFAULT_SHEET_MEMBER_TO_IDENTIFIER });
   const { transactions, warnings, stats, duplicateGroups } =
     sheetRowsToTransactions(parsedRows, { ...meta, memberMap });
   const source = {
@@ -590,9 +591,12 @@ async function main() {
   const text = await loadCsvText(args);
   const parsed = parseEggSheetCsv(text);
   const memberMap = loadSheetMemberMap();
-  const { json, warnings, stats, duplicateGroups } = buildTransactionsJson(parsed, {
-    memberMap,
-  });
+  const { json, warnings, stats, duplicateGroups } = buildTransactionsJson(
+    parsed,
+    {
+      memberMap,
+    },
+  );
 
   let out = DEFAULT_OUT;
   const outArg = args.indexOf('--out');
@@ -615,7 +619,10 @@ async function main() {
   }
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
   main().catch((error) => {
     console.error(error);
     process.exit(1);
