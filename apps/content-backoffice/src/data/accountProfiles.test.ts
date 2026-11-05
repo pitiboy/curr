@@ -67,10 +67,6 @@ describe('filterAccountsByProfile', () => {
 describe('selectableAccountProfiles', () => {
   it('always offers all, cost, and revenue', () => {
     expect(selectableAccountProfiles()).toEqual(['cost', 'revenue']);
-    expect(selectableAccountProfilesWithAll()).toEqual([
-      '',
-      'cost',
-      'revenue',
-    ]);
+    expect(selectableAccountProfilesWithAll()).toEqual(['', 'cost', 'revenue']);
   });
 });
