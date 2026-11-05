@@ -1,41 +1,73 @@
-import type { ConvertPreview, PreviewMovement } from './convertPreview';
+import type { ConvertPreview, PreviewAccount } from './convertPreview';
 
 export const MEMBER_LEDGER_CODES = new Set(['1101', '1001']);
-export const PREVIEW_NODE_WIDTH = 128;
-export const PREVIEW_NODE_HEIGHT = 44;
-export const PREVIEW_COLUMN_GAP = 96;
-export const PREVIEW_ROW_GAP = 52;
-export const PREVIEW_DIAGRAM_PADDING = 16;
-export const PREVIEW_EDGE_LABEL_MAX = 48;
-export const PREVIEW_DESCRIPTION_MAX = 64;
 
-export type MovementGraphNode = {
+/** Layout constants (sequencediagram.org-style lifelines). */
+export const SEQ_PADDING_X = 20;
+export const SEQ_PADDING_Y = 16;
+export const SEQ_PARTICIPANT_MIN_WIDTH = 108;
+export const SEQ_PARTICIPANT_GAP = 28;
+export const SEQ_HEADER_HEIGHT = 56;
+export const SEQ_MESSAGE_ROW_HEIGHT = 64;
+export const SEQ_SELF_LOOP_WIDTH = 36;
+export const SEQ_ARROW_LABEL_MAX = 56;
+export const SEQ_DESCRIPTION_MAX = 40;
+
+/** Pastel participant header fills (by column index). */
+export const SEQ_PASTEL_HEADER_FILLS = [
+  '#E3F2FD',
+  '#E8F5E9',
+  '#F3E5F5',
+  '#FFF3E0',
+  '#FCE4EC',
+  '#E0F7FA',
+  '#F1F8E9',
+  '#EDE7F6',
+] as const;
+
+export const SEQ_PASTEL_MEMBER_FILL = '#FFE0B2';
+
+export type MovementSequenceKind = 'original' | 'storno' | 'step';
+
+export type SequenceParticipant = {
   id: string;
   code: string;
   name: string | null;
-  column: 'debit' | 'credit';
-  x: number;
-  y: number;
   isMember: boolean;
+  column: number;
+  x: number;
+  width: number;
+  centerX: number;
+  headerFill: string;
 };
 
-export type MovementGraphEdge = {
+export type SequenceMessage = {
   id: string;
+  order: number;
+  kind: MovementSequenceKind;
   fromId: string;
   toId: string;
+  y: number;
   label: string;
-  kind: PreviewMovement['kind'] | 'original';
-  stepIndex: number | null;
+  description: string;
+  selfLoop: boolean;
 };
 
-export type MovementGraphLayout = {
+export type SequenceDiagramLayout = {
   width: number;
   height: number;
-  nodes: MovementGraphNode[];
-  edges: MovementGraphEdge[];
+  participants: SequenceParticipant[];
+  messages: SequenceMessage[];
 };
 
-type AccountColumn = MovementGraphNode['column'];
+function accountWithMember(account: PreviewAccount): PreviewAccount & {
+  isMember: boolean;
+} {
+  return {
+    ...account,
+    isMember: MEMBER_LEDGER_CODES.has(account.code),
+  };
+}
 
 function truncate(text: string, max: number): string {
   const trimmed = text.trim();
@@ -43,137 +75,186 @@ function truncate(text: string, max: number): string {
   return `${trimmed.slice(0, max - 1)}…`;
 }
 
-function accountNodeId(documentId: string, column: AccountColumn): string {
-  return `${column}:${documentId}`;
-}
-
-function registerNode(
-  map: Map<string, MovementGraphNode>,
-  account: { documentId: string; code: string; name: string | null },
-  column: AccountColumn,
-): string {
-  const id = accountNodeId(account.documentId, column);
-  if (!map.has(id)) {
-    map.set(id, {
-      id,
-      code: account.code,
-      name: account.name,
-      column,
-      x: 0,
-      y: 0,
-      isMember: MEMBER_LEDGER_CODES.has(account.code),
-    });
-  }
-  return id;
-}
-
-function edgeLabel(
+export function formatSequenceAmount(
   amount: number,
   currencyCode: string | null,
-  stepIndex: number | null,
-  percent: number | null,
 ): string {
   const currency = currencyCode ?? '?';
-  const base = `${amount.toLocaleString('hu-HU')} ${currency}`;
-  if (stepIndex != null) {
-    const order = `#${stepIndex + 1}`;
-    if (percent != null) {
-      return truncate(`${order} ${base} (${percent}%)`, PREVIEW_EDGE_LABEL_MAX);
-    }
-    return truncate(`${order} ${base}`, PREVIEW_EDGE_LABEL_MAX);
-  }
-  return truncate(base, PREVIEW_EDGE_LABEL_MAX);
+  return `${amount.toLocaleString('hu-HU', { maximumFractionDigits: 4 })} ${currency}`;
 }
 
-function layoutColumns(nodes: MovementGraphNode[]): void {
-  const debitNodes = nodes.filter((node) => node.column === 'debit');
-  const creditNodes = nodes.filter((node) => node.column === 'credit');
-  const debitX = PREVIEW_DIAGRAM_PADDING;
-  const creditX =
-    PREVIEW_DIAGRAM_PADDING + PREVIEW_NODE_WIDTH + PREVIEW_COLUMN_GAP;
-
-  debitNodes.forEach((node, index) => {
-    node.x = debitX;
-    node.y = PREVIEW_DIAGRAM_PADDING + index * PREVIEW_ROW_GAP;
-  });
-  creditNodes.forEach((node, index) => {
-    node.x = creditX;
-    node.y = PREVIEW_DIAGRAM_PADDING + index * PREVIEW_ROW_GAP;
-  });
-}
-
-export function layoutMovementGraph(
-  preview: ConvertPreview,
-): MovementGraphLayout {
-  const nodeMap = new Map<string, MovementGraphNode>();
-  const edges: MovementGraphEdge[] = [];
-
-  const originalDebit = registerNode(nodeMap, preview.original.debit, 'debit');
-  const originalCredit = registerNode(
-    nodeMap,
-    preview.original.credit,
-    'credit',
+function messageLabel(
+  kind: MovementSequenceKind,
+  order: number,
+  amount: number,
+  currencyCode: string | null,
+  percent: number | null,
+  stepIndex: number | null,
+): string {
+  const amountPart = formatSequenceAmount(amount, currencyCode);
+  const prefix =
+    kind === 'original'
+      ? 'Orig'
+      : kind === 'storno'
+        ? 'Storno'
+        : stepIndex != null
+          ? `#${stepIndex + 1}`
+          : `#${order}`;
+  const percentPart = percent != null ? ` (${percent}%)` : '';
+  return truncate(
+    `${prefix}: ${amountPart}${percentPart}`,
+    SEQ_ARROW_LABEL_MAX,
   );
-  edges.push({
-    id: 'original',
-    fromId: originalDebit,
-    toId: originalCredit,
-    label: edgeLabel(
-      preview.original.amount,
-      preview.original.currency.code,
-      null,
-      null,
-    ),
-    kind: 'original',
-    stepIndex: null,
-  });
+}
 
+type FrameSource = {
+  id: string;
+  kind: MovementSequenceKind;
+  stepIndex: number | null;
+  description: string;
+  amount: number;
+  currencyCode: string | null;
+  percent: number | null;
+  debit: PreviewAccount;
+  credit: PreviewAccount;
+};
+
+function collectFrames(preview: ConvertPreview): FrameSource[] {
+  const frames: FrameSource[] = [
+    {
+      id: 'original',
+      kind: 'original',
+      stepIndex: null,
+      description: preview.original.description,
+      amount: preview.original.amount,
+      currencyCode: preview.original.currency.code,
+      percent: null,
+      debit: preview.original.debit,
+      credit: preview.original.credit,
+    },
+  ];
   for (const movement of preview.movements) {
-    const fromId = registerNode(nodeMap, movement.debit, 'debit');
-    const toId = registerNode(nodeMap, movement.credit, 'credit');
-    edges.push({
+    frames.push({
       id: `${movement.kind}-${movement.index ?? 'storno'}`,
-      fromId,
-      toId,
-      label: edgeLabel(
-        movement.amount,
-        movement.currency.code,
-        movement.kind === 'step' ? movement.index : null,
-        movement.percent,
-      ),
       kind: movement.kind,
       stepIndex: movement.index,
+      description: movement.description,
+      amount: movement.amount,
+      currencyCode: movement.currency.code,
+      percent: movement.percent,
+      debit: movement.debit,
+      credit: movement.credit,
     });
   }
-
-  const nodes = [...nodeMap.values()].sort((left, right) => {
-    if (left.column !== right.column) {
-      return left.column === 'debit' ? -1 : 1;
-    }
-    return left.code.localeCompare(right.code, 'hu');
-  });
-
-  layoutColumns(nodes);
-
-  const maxRows = Math.max(
-    nodes.filter((node) => node.column === 'debit').length,
-    nodes.filter((node) => node.column === 'credit').length,
-    1,
-  );
-  const width =
-    PREVIEW_DIAGRAM_PADDING * 2 + PREVIEW_NODE_WIDTH * 2 + PREVIEW_COLUMN_GAP;
-  const height =
-    PREVIEW_DIAGRAM_PADDING * 2 +
-    PREVIEW_NODE_HEIGHT +
-    (maxRows - 1) * PREVIEW_ROW_GAP;
-
-  return { width, height, nodes, edges };
+  return frames;
 }
 
-export function movementGraphAriaSummary(preview: ConvertPreview): string {
-  const parts = [
-    `${preview.original.amount} ${preview.original.currency.code ?? ''}`.trim(),
-    `${preview.movements.length} movements`,
-  ];
-  return parts.join(', ');
+/** UML-style sequence: participants on top, messages top-to-bottom. */
+export function layoutSequenceDiagram(
+  preview: ConvertPreview,
+): SequenceDiagramLayout {
+  const frames = collectFrames(preview);
+  const participantOrder: string[] = [];
+  const participantById = new Map<
+    string,
+    PreviewAccount & { isMember: boolean }
+  >();
+
+  for (const frame of frames) {
+    for (const account of [frame.debit, frame.credit]) {
+      const enriched = accountWithMember(account);
+      if (!participantById.has(account.documentId)) {
+        participantOrder.push(account.documentId);
+        participantById.set(account.documentId, enriched);
+      }
+    }
+  }
+
+  let pastelIndex = 0;
+  const participants: SequenceParticipant[] = participantOrder.map(
+    (documentId, column) => {
+      const account = participantById.get(documentId)!;
+      const nameLen = account.name?.length ?? 0;
+      const width = Math.max(
+        SEQ_PARTICIPANT_MIN_WIDTH,
+        48 + account.code.length * 8 + Math.min(nameLen, 18) * 5,
+      );
+      const headerFill = account.isMember
+        ? SEQ_PASTEL_MEMBER_FILL
+        : SEQ_PASTEL_HEADER_FILLS[
+            pastelIndex++ % SEQ_PASTEL_HEADER_FILLS.length
+          ]!;
+      return {
+        id: documentId,
+        code: account.code,
+        name: account.name,
+        isMember: account.isMember,
+        column,
+        x: 0,
+        width,
+        centerX: 0,
+        headerFill,
+      };
+    },
+  );
+
+  let cursorX = SEQ_PADDING_X;
+  for (const participant of participants) {
+    participant.x = cursorX;
+    participant.centerX = cursorX + participant.width / 2;
+    cursorX += participant.width + SEQ_PARTICIPANT_GAP;
+  }
+
+  const messages: SequenceMessage[] = frames.map((frame, index) => ({
+    id: frame.id,
+    order: index + 1,
+    kind: frame.kind,
+    fromId: frame.debit.documentId,
+    toId: frame.credit.documentId,
+    y:
+      SEQ_HEADER_HEIGHT +
+      SEQ_PADDING_Y +
+      index * SEQ_MESSAGE_ROW_HEIGHT +
+      SEQ_MESSAGE_ROW_HEIGHT / 2,
+    label: messageLabel(
+      frame.kind,
+      index + 1,
+      frame.amount,
+      frame.currencyCode,
+      frame.percent,
+      frame.stepIndex,
+    ),
+    description: truncate(frame.description, SEQ_DESCRIPTION_MAX),
+    selfLoop: frame.debit.documentId === frame.credit.documentId,
+  }));
+
+  const width = cursorX - SEQ_PARTICIPANT_GAP + SEQ_PADDING_X;
+  const height =
+    SEQ_HEADER_HEIGHT +
+    SEQ_PADDING_Y * 2 +
+    frames.length * SEQ_MESSAGE_ROW_HEIGHT;
+
+  return { width, height, participants, messages };
+}
+
+/** @deprecated Timeline cards; sequence layout uses layoutSequenceDiagram. */
+export function buildMovementSequence(preview: ConvertPreview) {
+  return collectFrames(preview).map((frame, index) => ({
+    id: frame.id,
+    order: index + 1,
+    kind: frame.kind,
+    stepIndex: frame.stepIndex,
+    description: frame.description,
+    amount: frame.amount,
+    currencyCode: frame.currencyCode,
+    percent: frame.percent,
+    debit: accountWithMember(frame.debit),
+    credit: accountWithMember(frame.credit),
+    stepColorKey: 'primary' as const,
+  }));
+}
+
+export function movementSequenceAriaSummary(preview: ConvertPreview): string {
+  const layout = layoutSequenceDiagram(preview);
+  return `${layout.messages.length} messages, ${layout.participants.length} accounts`;
 }

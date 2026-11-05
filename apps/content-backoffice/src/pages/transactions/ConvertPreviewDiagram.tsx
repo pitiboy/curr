@@ -3,14 +3,108 @@ import { useTranslate } from 'react-admin';
 
 import type { ConvertPreview } from '../../data/convertPreview';
 import {
-  layoutMovementGraph,
-  movementGraphAriaSummary,
-  PREVIEW_NODE_HEIGHT,
-  PREVIEW_NODE_WIDTH,
+  layoutSequenceDiagram,
+  movementSequenceAriaSummary,
+  SEQ_HEADER_HEIGHT,
+  SEQ_MESSAGE_ROW_HEIGHT,
+  SEQ_PADDING_Y,
+  SEQ_SELF_LOOP_WIDTH,
+  type SequenceMessage,
+  type SequenceParticipant,
 } from '../../data/convertPreviewGraph';
 
-function nodeLabel(code: string, name: string | null): string {
-  return name ? `${code} ${name}` : code;
+function messageStroke(
+  kind: SequenceMessage['kind'],
+  themeStroke: string,
+  themeInfo: string,
+  themeError: string,
+): string {
+  if (kind === 'original') return themeInfo;
+  if (kind === 'storno') return themeError;
+  return themeStroke;
+}
+
+function renderMessageArrow(
+  message: SequenceMessage,
+  participants: SequenceParticipant[],
+  stroke: string,
+) {
+  const from = participants.find((row) => row.id === message.fromId);
+  const to = participants.find((row) => row.id === message.toId);
+  if (!from || !to) return null;
+
+  const y = message.y;
+
+  if (message.selfLoop) {
+    const loopX = from.centerX + SEQ_SELF_LOOP_WIDTH;
+    return (
+      <g key={message.id}>
+        <path
+          d={`M ${from.centerX} ${y} H ${loopX} V ${y - 18} H ${from.centerX + 8}`}
+          fill="none"
+          markerEnd="url(#seq-arrow)"
+          stroke={stroke}
+          strokeWidth={1.75}
+        />
+        <text
+          fill={stroke}
+          fontSize={11}
+          fontWeight={600}
+          textAnchor="middle"
+          x={(from.centerX + loopX) / 2}
+          y={y - 22}
+        >
+          <title>{message.label}</title>
+          {message.label}
+        </text>
+      </g>
+    );
+  }
+
+  // Debit → credit; arrowhead always at credit (to) lifeline.
+  const xFrom = from.centerX;
+  const xTo = to.centerX;
+  const lineY = y;
+  const tipGap = 6;
+  const x1 = xFrom;
+  const x2 = xTo > xFrom ? xTo - tipGap : xTo + tipGap;
+
+  return (
+    <g key={message.id}>
+      <line
+        markerEnd="url(#seq-arrow)"
+        stroke={stroke}
+        strokeWidth={1.75}
+        x1={x1}
+        x2={x2}
+        y1={lineY}
+        y2={lineY}
+      />
+      <text
+        fill={stroke}
+        fontSize={11}
+        fontWeight={600}
+        textAnchor="middle"
+        x={(xFrom + xTo) / 2}
+        y={lineY - 8}
+      >
+        <title>{message.label}</title>
+        {message.label}
+      </text>
+      {message.description ? (
+        <text
+          fill="#666"
+          fontSize={10}
+          textAnchor="middle"
+          x={(xFrom + xTo) / 2}
+          y={lineY + 14}
+        >
+          <title>{message.description}</title>
+          {message.description}
+        </text>
+      ) : null}
+    </g>
+  );
 }
 
 export function ConvertPreviewDiagram({
@@ -20,111 +114,105 @@ export function ConvertPreviewDiagram({
 }) {
   const theme = useTheme();
   const translate = useTranslate();
-  const layout = layoutMovementGraph(preview);
-  const memberFill = theme.palette.warning.light;
-  const memberStroke = theme.palette.warning.dark;
-  const nodeFill = theme.palette.background.paper;
-  const nodeStroke = theme.palette.divider;
-  const edgeColor = theme.palette.text.secondary;
+  const layout = layoutSequenceDiagram(preview);
+  const lifelineBottom =
+    SEQ_HEADER_HEIGHT +
+    SEQ_PADDING_Y +
+    layout.messages.length * SEQ_MESSAGE_ROW_HEIGHT;
+
+  const strokeDefault = theme.palette.text.primary;
+  const strokeInfo = theme.palette.info.main;
+  const strokeError = theme.palette.error.main;
 
   return (
-    <Box sx={{ mt: 1 }}>
+    <Box sx={{ mt: 1, overflowX: 'auto' }}>
       <Typography color="text.secondary" variant="caption">
-        {translate('app.transactions_convert_preview_legend')}
+        {translate('app.transactions_convert_preview_sequence_legend')}
       </Typography>
       <Box
         aria-label={translate('app.transactions_convert_preview_diagram_aria', {
-          summary: movementGraphAriaSummary(preview),
+          summary: movementSequenceAriaSummary(preview),
         })}
         component="svg"
         role="img"
-        sx={{ width: '100%', maxWidth: layout.width, display: 'block' }}
+        sx={{
+          display: 'block',
+          minWidth: layout.width,
+          width: '100%',
+          maxWidth: layout.width,
+          mt: 1,
+        }}
         viewBox={`0 0 ${layout.width} ${layout.height}`}
       >
         <defs>
           <marker
-            id="preview-arrow"
-            markerHeight="8"
-            markerUnits="strokeWidth"
-            markerWidth="8"
+            id="seq-arrow"
+            markerHeight="10"
+            markerUnits="userSpaceOnUse"
+            markerWidth="10"
             orient="auto"
-            refX="6"
-            refY="3"
+            refX="10"
+            refY="5"
+            viewBox="0 0 10 10"
           >
-            <path d="M0,0 L0,6 L6,3 z" fill={edgeColor} />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
           </marker>
         </defs>
-        {layout.edges.map((edge) => {
-          const from = layout.nodes.find((node) => node.id === edge.fromId);
-          const to = layout.nodes.find((node) => node.id === edge.toId);
-          if (!from || !to) return null;
-          const x1 = from.x + PREVIEW_NODE_WIDTH;
-          const y1 = from.y + PREVIEW_NODE_HEIGHT / 2;
-          const x2 = to.x;
-          const y2 = to.y + PREVIEW_NODE_HEIGHT / 2;
-          const midX = (x1 + x2) / 2;
-          return (
-            <g key={edge.id}>
-              <line
-                markerEnd="url(#preview-arrow)"
-                stroke={edgeColor}
-                strokeWidth={1.5}
-                x1={x1}
-                x2={x2}
-                y1={y1}
-                y2={y2}
-              />
-              <text
-                fill={edgeColor}
-                fontSize={11}
-                textAnchor="middle"
-                x={midX}
-                y={Math.min(y1, y2) - 6}
-              >
-                <title>{edge.label}</title>
-                {edge.label}
-              </text>
-            </g>
-          );
-        })}
-        {layout.nodes.map((node) => (
-          <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
+
+        {layout.participants.map((participant) => (
+          <g key={participant.id}>
             <rect
-              fill={node.isMember ? memberFill : nodeFill}
-              height={PREVIEW_NODE_HEIGHT}
-              rx={6}
-              stroke={node.isMember ? memberStroke : nodeStroke}
-              strokeWidth={1.5}
-              width={PREVIEW_NODE_WIDTH}
+              fill={participant.headerFill}
+              height={SEQ_HEADER_HEIGHT - 4}
+              rx={8}
+              stroke={participant.isMember ? '#FFB74D' : '#B0BEC5'}
+              strokeWidth={1}
+              width={participant.width}
+              x={participant.x}
+              y={2}
             />
             <text
-              dominantBaseline="middle"
-              fill={theme.palette.text.primary}
-              fontSize={12}
-              fontWeight={600}
+              fontSize={13}
+              fontWeight={700}
               textAnchor="middle"
-              x={PREVIEW_NODE_WIDTH / 2}
-              y={PREVIEW_NODE_HEIGHT / 2 - 6}
+              x={participant.centerX}
+              y={22}
             >
-              {node.code}
+              {participant.code}
             </text>
-            {node.name ? (
+            {participant.name ? (
               <text
-                dominantBaseline="middle"
-                fill={theme.palette.text.secondary}
+                fill="#546E7A"
                 fontSize={10}
                 textAnchor="middle"
-                x={PREVIEW_NODE_WIDTH / 2}
-                y={PREVIEW_NODE_HEIGHT / 2 + 10}
+                x={participant.centerX}
+                y={38}
               >
-                <title>{nodeLabel(node.code, node.name)}</title>
-                {node.name.length > 18
-                  ? `${node.name.slice(0, 17)}…`
-                  : node.name}
+                <title>{participant.name}</title>
+                {participant.name.length > 22
+                  ? `${participant.name.slice(0, 21)}…`
+                  : participant.name}
               </text>
             ) : null}
+            <line
+              stroke="#CFD8DC"
+              strokeDasharray="4 4"
+              strokeWidth={1}
+              x1={participant.centerX}
+              x2={participant.centerX}
+              y1={SEQ_HEADER_HEIGHT}
+              y2={lifelineBottom}
+            />
           </g>
         ))}
+
+        {layout.messages.map((message) =>
+          renderMessageArrow(
+            message,
+            layout.participants,
+            messageStroke(message.kind, strokeDefault, strokeInfo, strokeError),
+          ),
+        )}
       </Box>
     </Box>
   );

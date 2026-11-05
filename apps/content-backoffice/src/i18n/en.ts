@@ -34,6 +34,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_steps_draft: 'Generated steps stay draft',
     transactions_convert_preview_legend:
       'Arrow direction: debit account → credit account (ledger flow).',
+    transactions_convert_preview_sequence_legend:
+      'Sequence diagram: accounts as headers with lifelines; messages top-to-bottom — arrow debit → credit (ledger flow).',
     transactions_convert_preview_diagram_aria: 'Account movements: %{summary}',
     transactions_convert_preview_kind: 'Kind',
     transactions_convert_preview_kind_original: 'Original',

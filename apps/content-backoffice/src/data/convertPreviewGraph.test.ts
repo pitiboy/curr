@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ConvertPreview } from './convertPreview';
-import { layoutMovementGraph } from './convertPreviewGraph';
+import {
+  formatSequenceAmount,
+  layoutSequenceDiagram,
+} from './convertPreviewGraph';
 
 const previewFixture: ConvertPreview = {
   workflow: {
@@ -46,22 +49,69 @@ const previewFixture: ConvertPreview = {
   warnings: [],
 };
 
-describe('layoutMovementGraph', () => {
-  it('dedupes accounts and orders debit column before credit', () => {
-    const layout = layoutMovementGraph(previewFixture);
-    const debitCodes = layout.nodes
-      .filter((node) => node.column === 'debit')
-      .map((node) => node.code);
-    expect(debitCodes).toEqual(['5440']);
-    expect(layout.nodes.some((node) => node.code === '1100')).toBe(true);
-    expect(layout.edges.some((edge) => edge.kind === 'original')).toBe(true);
-    expect(layout.edges.filter((edge) => edge.kind === 'step')).toHaveLength(1);
+describe('layoutSequenceDiagram', () => {
+  it('orders messages original then storno then step', () => {
+    const layout = layoutSequenceDiagram(previewFixture);
+    expect(layout.messages.map((row) => row.kind)).toEqual([
+      'original',
+      'storno',
+      'step',
+    ]);
   });
 
-  it('labels step edges with order and percent', () => {
-    const layout = layoutMovementGraph(previewFixture);
-    const stepEdge = layout.edges.find((edge) => edge.kind === 'step');
-    expect(stepEdge?.label).toContain('#1');
-    expect(stepEdge?.label).toContain('60');
+  it('places participants left-to-right by first appearance', () => {
+    const layout = layoutSequenceDiagram(previewFixture);
+    expect(layout.participants.map((row) => row.code)).toEqual([
+      '5440',
+      '2000',
+      '1100',
+    ]);
+    for (let index = 1; index < layout.participants.length; index += 1) {
+      expect(layout.participants[index]!.x).toBeGreaterThan(
+        layout.participants[index - 1]!.x,
+      );
+    }
+  });
+
+  it('uses member pastel fill for 1101/1001', () => {
+    const preview: ConvertPreview = {
+      ...previewFixture,
+      movements: [],
+      original: {
+        ...previewFixture.original,
+        debit: { documentId: 'm', code: '1101', name: 'Tag' },
+      },
+    };
+    const layout = layoutSequenceDiagram(preview);
+    expect(layout.participants[0]?.isMember).toBe(true);
+    expect(layout.participants[0]?.headerFill).toContain('FFE0B2');
+  });
+
+  it('detects self-loop messages', () => {
+    const preview: ConvertPreview = {
+      ...previewFixture,
+      movements: [
+        {
+          kind: 'step',
+          index: 0,
+          description: 'loop',
+          amount: 1,
+          currency: { documentId: 'cur', code: 'HUF', name: null },
+          debit: { documentId: 'same', code: '1001', name: null },
+          credit: { documentId: 'same', code: '1001', name: null },
+          percent: 100,
+          copyReceipt: false,
+          organizationDocumentId: null,
+        },
+      ],
+    };
+    const layout = layoutSequenceDiagram(preview);
+    expect(layout.messages.at(-1)?.selfLoop).toBe(true);
+  });
+});
+
+describe('formatSequenceAmount', () => {
+  it('includes currency code', () => {
+    expect(formatSequenceAmount(324, 'EGG')).toContain('EGG');
   });
 });

@@ -1,5 +1,5 @@
 import { Alert, Button, Stack, Toolbar } from '@mui/material';
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useWatch } from 'react-hook-form';
 import {
   SaveButton,
@@ -26,16 +26,11 @@ import {
   useTransactionWorkflowCatalog,
 } from '../../workflows/useTransactionWorkflowCatalog';
 import type { ReceiptCardValue } from './ReceiptFields';
+import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { inlinePreviewFromCreateForm } from './convertPreviewInput';
 import { transactionFormErrors } from './transactionForm';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 import { useOptionalTransactionCreateAccountRow } from './TransactionCreateAccountRowContext';
-
-const ConvertConfirmDialog = lazy(() =>
-  import('./ConvertConfirmDialog').then((module) => ({
-    default: module.ConvertConfirmDialog,
-  })),
-);
 
 export function TransactionCreateToolbar({
   accounts,
@@ -163,10 +158,10 @@ export function TransactionCreateToolbar({
           {translate('app.transactions_convert_ambiguous')}
         </Alert>
       ) : null}
-      {workflow && previewInput ? (
+      {workflow ? (
         <Stack direction="row" spacing={1} sx={{ ml: 1 }}>
           <TransactionConvertPreviewButton
-            disabled={!inlineTransaction}
+            disabled={!previewInput}
             disabledReasonKey="app.transactions_convert_preview_disabled"
             previewInput={previewInput}
             workflow={workflow}
@@ -179,17 +174,15 @@ export function TransactionCreateToolbar({
             {translate('app.transactions_convert_save')}
           </Button>
           {open ? (
-            <Suspense fallback={null}>
-              <ConvertConfirmDialog
-                confirmLabelKey="app.transactions_convert_save"
-                loading={busy}
-                open={open}
-                previewInput={previewInput}
-                workflow={workflow}
-                onClose={() => !busy && setOpen(false)}
-                onConfirm={onSaveAndConvert}
-              />
-            </Suspense>
+            <ConvertConfirmDialog
+              confirmLabelKey="app.transactions_convert_save"
+              loading={busy}
+              open={open}
+              previewInput={previewInput}
+              workflow={workflow}
+              onClose={() => !busy && setOpen(false)}
+              onConfirm={onSaveAndConvert}
+            />
           ) : null}
         </Stack>
       ) : null}

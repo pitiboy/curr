@@ -1,25 +1,43 @@
 {
-  "name": "Tojás keletkezése és eladása",
-  "debit_account_code": 1300,
+  "name": "Tojás keletkezése és egyből eladása",
+  "debit_account_code": 1001,
   "credit_account_code": 4500,
   "currency": "EGG",
   "steps": [
     {
-      "description": "Keletkezés",
+      "description": "Napi tojás",
       "percent": 100,
       "debit_code": "1300",
       "credit_code": "4500",
       "currency": "EGG",
-      "organization": "Tojóól",
+      "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "Készletcsökkenés",
+      "description": "Tojás eladás (tojás)",
       "percent": 100,
-      "debit_code": "5600",
+      "debit_code": "1001",
       "credit_code": "1300",
       "currency": "EGG",
-      "organization": "Tojóól",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Tojás eladás (kp befizetés)",
+      "percent": 100,
+      "debit_code": "1000",
+      "credit_code": "1001",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Készpénz"
+    },
+    {
+      "description": "Tojás eladás (bevétel)",
+      "percent": 100,
+      "debit_code": "4000",
+      "credit_code": "1000",
+      "currency": "HUF",
+      "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     }
   ]

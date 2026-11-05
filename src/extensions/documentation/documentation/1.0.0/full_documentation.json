@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-11-03T19:49:37.009Z"
+    "x-generation-date": "2026-11-05T21:09:20.720Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -11323,11 +11323,15 @@
         "properties": {
           "data": {
             "required": [
+              "name",
               "membership_type",
               "valid_from"
             ],
             "type": "object",
             "properties": {
+              "name": {
+                "type": "string"
+              },
               "organization": {
                 "oneOf": [
                   {
@@ -11339,16 +11343,19 @@
                 ],
                 "example": "string or id"
               },
-              "member": {
-                "oneOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ],
-                "example": "string or id"
+              "members": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "example": "string or id"
+                }
               },
               "membership_type": {
                 "oneOf": [
@@ -11429,6 +11436,7 @@
       "Membership": {
         "type": "object",
         "required": [
+          "name",
           "membership_type",
           "valid_from"
         ],
@@ -11446,11 +11454,17 @@
           "documentId": {
             "type": "string"
           },
+          "name": {
+            "type": "string"
+          },
           "organization": {
             "$ref": "#/components/schemas/Organization"
           },
-          "member": {
-            "$ref": "#/components/schemas/Member"
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Member"
+            }
           },
           "membership_type": {
             "$ref": "#/components/schemas/MembershipType"

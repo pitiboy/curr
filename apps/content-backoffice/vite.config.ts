@@ -4,4 +4,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   base: '/backoffice/',
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react-admin', 'ra-core'],
+  },
 });

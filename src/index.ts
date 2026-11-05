@@ -8,6 +8,7 @@ import {
 import { createPublishPolicyLoader } from './backoffice-features/policy';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
+import { registerMembershipValidFromFormDefault } from './membership-valid-from-default';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
 
@@ -59,7 +60,7 @@ const CONTENT_ROLE_ACTIONS = [
 
 const EDITOR_ONLY_CONTENT_ACTIONS = [
   'api::transaction-workflow.transaction-workflow.convert',
-  'api::transaction-workflow.transaction-workflow.convert-preview',
+  'api::transaction-workflow.transaction-workflow.convertPreview',
 ] as const;
 
 const usersPermissionsRolePermissions = {
@@ -139,7 +140,7 @@ const usersPermissionsRolePermissions = {
         'find',
         'findOne',
         'convert',
-        'convert-preview',
+        'convertPreview',
       ]),
     },
   },
@@ -457,5 +458,6 @@ export default {
     await migrateLegalPagesToStaticPages(strapi);
     await ensureStaticPageLocales(strapi);
     await ensurePublicStaticPagePermissions(strapi);
+    registerMembershipValidFromFormDefault(strapi);
   },
 };

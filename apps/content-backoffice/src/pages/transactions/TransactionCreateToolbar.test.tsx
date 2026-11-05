@@ -31,6 +31,16 @@ vi.mock('./TransactionConvertPreviewButton', () => ({
   TransactionConvertPreviewButton: () => <button type="button">Preview</button>,
 }));
 
+// Direct ConvertConfirmDialog → ConvertPreviewPanel → useConvertPreview → ra-strapi.
+// ra-strapi's CJS build fails under Vitest ESM; Gate test uses the same stub.
+vi.mock('../../workflows/useConvertPreview', () => ({
+  useConvertPreview: () => ({
+    preview: null,
+    loading: false,
+    error: null,
+  }),
+}));
+
 vi.mock('react-hook-form', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-hook-form')>();
   return {
