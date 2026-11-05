@@ -2,9 +2,10 @@
  * Convert API Strapi layer: load templates/transactions, expand, then create/publish/delete.
  * keep_original: mark source original, then storno + step rows (related_transaction -> original);
  * converted_to_workflow: original on source, storno on storno, expanded on steps.
- * Generated rows follow steps_published. The source is published only when it
- * already meets the seven publish-required fields; draft v1 may omit
- * organization / accounts, same as a plain Save.
+ * Generated step rows follow steps_published. Source and storno publish only when
+ * they meet the seven publish-required fields (incomplete draft v1 may omit
+ * organization / accounts); otherwise they stay draft while steps may still publish.
+ * Partial keep_original failure rolls back created rows and clears the source mark.
  * keep_original false: delete original, step chain; receipt only on copy_receipt steps.
  */
 import {
@@ -273,11 +274,60 @@ async function createTransactionRow(
   if (published) {
     // Convert generates + publishes as the same editor; SAME_PERSON would 403
     // and leave orphans keyed by entered_key.
-    await withPublishGuardLinked(strapi, () =>
-      api.publish({ documentId: created.documentId }),
-    );
+    try {
+      await withPublishGuardLinked(strapi, () =>
+        api.publish({ documentId: created.documentId }),
+      );
+    } catch (error) {
+      // Drop the draft so a failed publish does not strand an entered_key row.
+      try {
+        await api.delete({ documentId: created.documentId });
+      } catch {
+        // Best-effort cleanup; rethrow the publish error.
+      }
+      throw error;
+    }
   }
   return created.documentId;
+}
+
+/** Best-effort undo after a failed keep_original convert mid-flight. */
+async function rollbackKeepOriginalConvert(
+  strapi: ConvertStrapi,
+  sourceDocumentId: string,
+  createdDocumentIds: string[],
+): Promise<void> {
+  const api = documentsApi(strapi, TRANSACTION_UID);
+  for (const documentId of [...createdDocumentIds].reverse()) {
+    try {
+      await api.delete({ documentId });
+    } catch {
+      // Best-effort: continue clearing the rest.
+    }
+  }
+  try {
+    await api.update({
+      documentId: sourceDocumentId,
+      data: { converted_to_workflow: null },
+      status: 'draft',
+    });
+  } catch {
+    // Best-effort: caller still rethrows the original convert error.
+  }
+}
+
+function stornoPublishFields(
+  stornoShape: ReturnType<typeof buildStornoRowShape>,
+): Record<string, unknown> {
+  return {
+    date: stornoShape.date,
+    amount: stornoShape.amount,
+    description: stornoShape.description,
+    currency_type: stornoShape.currency_type,
+    organization: stornoShape.organization,
+    debit_account: stornoShape.debit_account,
+    credit_account: stornoShape.credit_account,
+  };
 }
 
 async function loadDraftForPublishCheck(
@@ -386,44 +436,62 @@ export async function convertTransactions(
     const createdDocumentIds: string[] = [];
 
     if (keepOriginal) {
-      await syncSourceAfterConvert(strapi, transaction.documentId, published);
-
       const stornoShape = buildStornoRowShape(transaction);
-
-      stornoDocumentId = await createTransactionRow(
-        strapi,
-        {
-          date: stornoShape.date,
-          amount: stornoShape.amount,
-          description: stornoShape.description,
-          debit_account: stornoShape.debit_account?.documentId,
-          credit_account: stornoShape.credit_account?.documentId,
-          currency_type: stornoShape.currency_type.documentId,
-          ...(stornoShape.organization?.documentId
-            ? { organization: stornoShape.organization.documentId }
-            : {}),
-          transaction_type: stornoShape.transaction_type?.documentId,
-          related_transaction: stornoShape.related_transaction.documentId,
-          entered_key: stornoShape.entered_key,
-          converted_to_workflow: CONVERTED_STORNO,
-        },
+      // Mirror the source gate: incomplete draft must not force-publish storno
+      // (publish-guard 400 would otherwise leave original+storno orphans).
+      const publishStorno = shouldPublishConvertedSource(
+        stornoPublishFields(stornoShape),
         published,
       );
+      const rollbackIds: string[] = [];
 
-      for (const row of expanded) {
-        const copyReceipts = row.copy_receipt ? receiptIds : [];
-        const documentId = await createTransactionRow(
+      try {
+        await syncSourceAfterConvert(strapi, transaction.documentId, published);
+
+        stornoDocumentId = await createTransactionRow(
           strapi,
-          transactionWritePayload(
-            row,
-            transaction,
-            transaction.documentId,
-            published,
-            copyReceipts,
-          ),
-          published,
+          {
+            date: stornoShape.date,
+            amount: stornoShape.amount,
+            description: stornoShape.description,
+            debit_account: stornoShape.debit_account?.documentId,
+            credit_account: stornoShape.credit_account?.documentId,
+            currency_type: stornoShape.currency_type.documentId,
+            ...(stornoShape.organization?.documentId
+              ? { organization: stornoShape.organization.documentId }
+              : {}),
+            transaction_type: stornoShape.transaction_type?.documentId,
+            related_transaction: stornoShape.related_transaction.documentId,
+            entered_key: stornoShape.entered_key,
+            converted_to_workflow: CONVERTED_STORNO,
+          },
+          publishStorno,
         );
-        createdDocumentIds.push(documentId);
+        rollbackIds.push(stornoDocumentId);
+
+        for (const row of expanded) {
+          const copyReceipts = row.copy_receipt ? receiptIds : [];
+          const documentId = await createTransactionRow(
+            strapi,
+            transactionWritePayload(
+              row,
+              transaction,
+              transaction.documentId,
+              published,
+              copyReceipts,
+            ),
+            published,
+          );
+          rollbackIds.push(documentId);
+          createdDocumentIds.push(documentId);
+        }
+      } catch (error) {
+        await rollbackKeepOriginalConvert(
+          strapi,
+          transaction.documentId,
+          rollbackIds,
+        );
+        throw error;
       }
     } else {
       let previousRelated: string | null = null;

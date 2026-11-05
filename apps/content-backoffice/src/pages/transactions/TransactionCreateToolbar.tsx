@@ -9,33 +9,54 @@ import {
   useTranslate,
 } from 'react-admin';
 
+import {
+  buildTransactionWorkflowMatchInput,
+  profileModeMatchCount,
+  resolveCreateWorkflow,
+} from '../../data/accountRowSelection';
 import type { AccountChoice } from '../../data/accountCodes';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import {
   createNewTransactionDraft,
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
-import { countMatchingWorkflows } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
 } from '../../workflows/useTransactionWorkflowCatalog';
 import type { ReceiptCardValue } from './ReceiptFields';
-import { inlinePreviewFromCreateForm } from './convertPreviewInput';
-import { transactionFormErrors } from './transactionForm';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
+import { inlinePreviewFromCreateForm } from './convertPreviewInput';
+import {
+  isTransactionCreateFormReady,
+  transactionFormErrors,
+} from './transactionForm';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
+import { useOptionalTransactionCreateAccountRow } from './TransactionCreateAccountRowContext';
 
-/** ReferenceInput stores account documentId; match uses ledger codes from the catalog. */
-function accountCodeByDocumentId(
-  accounts: AccountChoice[],
-  documentId: unknown,
-): string | null {
-  if (typeof documentId !== 'string' || !documentId.trim()) return null;
-  const row = accounts.find((account) => String(account.id) === documentId);
-  const code = row?.code;
-  return typeof code === 'string' && code.trim() ? code.trim() : null;
+function useCreateFormReady(
+  receiptCards: ReceiptCardValue[],
+  requireOrganization: boolean,
+): boolean {
+  const translate = useTranslate();
+  const values = useWatch();
+  return useMemo(
+    () =>
+      isTransactionCreateFormReady(
+        (values ?? {}) as Record<string, unknown>,
+        receiptCards,
+        translate,
+        { requireOrganization },
+      ),
+    [receiptCards, requireOrganization, translate, values],
+  );
+}
+
+function organizationValueMissing(value: unknown): boolean {
+  if (value == null || value === '') return true;
+  if (typeof value === 'string') return value.trim() === '';
+  return false;
 }
 
 export function TransactionCreateToolbar({
@@ -50,37 +71,59 @@ export function TransactionCreateToolbar({
   const translate = useTranslate();
   const notify = useNotify();
   const redirect = useRedirect();
-  const { permissions, isPending } = usePermissions();
-  const {
-    matchFor,
-    workflows,
-    loading: catalogLoading,
-  } = useTransactionWorkflowCatalog();
+  const { isPending } = usePermissions();
+  const accountRow = useOptionalTransactionCreateAccountRow();
+  const { workflows, loading: catalogLoading } =
+    useTransactionWorkflowCatalog();
   const debitId = useWatch({ name: 'debit_account' });
   const creditId = useWatch({ name: 'credit_account' });
   const currencyId = useWatch({ name: 'currency_type' });
+  const transactionTypeId = useWatch({ name: 'transaction_type' });
+  const organizationId = useWatch({ name: 'organization' });
   const values = useWatch();
+  const requireOrganizationForSave =
+    accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
+  const formReady = useCreateFormReady(
+    receiptCards,
+    requireOrganizationForSave,
+  );
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const matchInput = useMemo(
-    () => ({
-      debit_account: { code: accountCodeByDocumentId(accounts, debitId) },
-      credit_account: { code: accountCodeByDocumentId(accounts, creditId) },
-      currency_type:
-        typeof currencyId === 'string' && currencyId
-          ? { documentId: currencyId }
-          : null,
-    }),
-    [accounts, creditId, currencyId, debitId],
+    () =>
+      buildTransactionWorkflowMatchInput({
+        accounts,
+        debitAccountDocumentId: debitId,
+        creditAccountDocumentId: creditId,
+        currencyTypeDocumentId: currencyId,
+        transactionTypeDocumentId: transactionTypeId,
+      }),
+    [accounts, creditId, currencyId, debitId, transactionTypeId],
   );
 
+  const createWorkflowResolution = useMemo(
+    () =>
+      resolveCreateWorkflow({
+        activeWorkflow: accountRow?.resolved.activeWorkflow ?? null,
+        workflows,
+        matchInput,
+      }),
+    [accountRow?.resolved.activeWorkflow, matchInput, workflows],
+  );
+
+  const workflow = !isPending ? createWorkflowResolution.workflow : null;
+
   const matchCount =
-    !catalogLoading && !isPending && permissions === 'editor'
-      ? countMatchingWorkflows(workflows, matchInput)
+    !catalogLoading && !isPending
+      ? profileModeMatchCount(workflows, matchInput)
       : 0;
-  const workflow =
-    !isPending && permissions === 'editor' ? matchFor(matchInput) : null;
+
+  const showAmbiguityAlert =
+    !catalogLoading &&
+    !isPending &&
+    !accountRow?.resolved.activeWorkflow &&
+    matchCount > 1;
 
   const inlineTransaction = useMemo(
     () =>
@@ -99,12 +142,25 @@ export function TransactionCreateToolbar({
     };
   }, [inlineTransaction, workflow]);
 
+  const requireOrganizationForConvert =
+    workflow?.requires_source_organization === true;
+  const convertNeedsOrganization =
+    requireOrganizationForConvert && organizationValueMissing(organizationId);
+
   const onSaveAndConvert = () => {
     if (!workflow || busy) return;
     const formValues = (values ?? {}) as Record<string, unknown>;
-    const errors = transactionFormErrors(formValues, receiptCards, translate);
+    const errors = transactionFormErrors(formValues, receiptCards, translate, {
+      requireOrganization:
+        requireOrganizationForSave || requireOrganizationForConvert,
+    });
     if (Object.keys(errors).length > 0) {
-      notify('ra.message.invalid_form', { type: 'warning' });
+      notify(
+        convertNeedsOrganization
+          ? 'app.transactions_convert_organization_required'
+          : 'ra.message.invalid_form',
+        { type: 'warning' },
+      );
       return;
     }
     setBusy(true);
@@ -132,6 +188,7 @@ export function TransactionCreateToolbar({
         const message = strapiErrorMessage(error);
         if (message.includes('transaction-workflow not found')) {
           invalidateTransactionWorkflowCatalog();
+          accountRow?.resetToProfileAfterStaleWorkflow();
         }
         notify(message || translate('app.transactions_convert_error'), {
           type: 'error',
@@ -140,10 +197,13 @@ export function TransactionCreateToolbar({
       .finally(() => setBusy(false));
   };
 
+  const actionsDisabled = busy || !formReady;
+  const convertDisabled = actionsDisabled || convertNeedsOrganization;
+
   return (
     <Toolbar>
-      <SaveButton disabled={busy} />
-      {matchCount > 1 ? (
+      <SaveButton disabled={actionsDisabled} />
+      {showAmbiguityAlert ? (
         <Alert severity="warning" sx={{ ml: 1, py: 0 }} variant="outlined">
           {translate('app.transactions_convert_ambiguous')}
         </Alert>
@@ -151,15 +211,22 @@ export function TransactionCreateToolbar({
       {workflow ? (
         <Stack direction="row" spacing={1} sx={{ ml: 1 }}>
           <TransactionConvertPreviewButton
-            disabled={!previewInput}
-            disabledReasonKey="app.transactions_convert_preview_disabled"
+            disabled={!previewInput || convertDisabled}
+            disabledReasonKey={
+              convertNeedsOrganization
+                ? 'app.transactions_convert_organization_required'
+                : 'app.transactions_convert_preview_disabled'
+            }
             previewInput={previewInput}
             workflow={workflow}
           />
           <Button
-            disabled={busy}
+            disabled={convertDisabled}
             variant="contained"
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              if (convertDisabled) return;
+              setOpen(true);
+            }}
           >
             {translate('app.transactions_convert_save')}
           </Button>
@@ -190,6 +257,10 @@ export function TransactionCreateToolbarGate({
   receiptCards: ReceiptCardValue[];
 }) {
   const { permissions, isPending } = usePermissions();
+  const accountRow = useOptionalTransactionCreateAccountRow();
+  const requireOrganization =
+    accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
+  const formReady = useCreateFormReady(receiptCards, requireOrganization);
   if (!isPending && permissions === 'editor') {
     return (
       <TransactionCreateToolbar
@@ -201,7 +272,7 @@ export function TransactionCreateToolbarGate({
   }
   return (
     <Toolbar>
-      <SaveButton />
+      <SaveButton disabled={!formReady} />
     </Toolbar>
   );
 }

@@ -18,6 +18,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_confirm: 'Expand',
     transactions_convert_done: 'Deal expanded.',
     transactions_convert_error: 'Could not expand the deal.',
+    transactions_convert_organization_required:
+      'This transaction template requires an organization.',
     transactions_convert_ambiguous:
       'More than one deal template matches this transaction.',
     transactions_convert_preview: 'Preview expansion',
@@ -33,9 +35,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Generated steps are published',
     transactions_convert_preview_steps_draft: 'Generated steps stay draft',
     transactions_convert_preview_legend:
-      'Arrow direction: debit account → credit account (ledger flow).',
+      'Arrow direction: credit account → debit account.',
     transactions_convert_preview_sequence_legend:
-      'Sequence diagram: accounts as headers with lifelines; messages top-to-bottom — arrow debit → credit (ledger flow).',
+      'Sequence diagram: accounts as headers with lifelines; messages top-to-bottom — arrow credit → debit.',
     transactions_convert_preview_diagram_aria: 'Account movements: %{summary}',
     transactions_convert_preview_kind: 'Kind',
     transactions_convert_preview_kind_original: 'Original',
@@ -100,9 +102,13 @@ export const enMessages = mergeTranslations(englishMessages, {
     account_profile_all: 'All accounts',
     account_profile_cost: 'Expense',
     account_profile_revenue: 'Revenue',
-    account_profile_egg_production: 'Eggs — production',
-    account_profile_egg_internal: 'Eggs — internal distribution',
-    account_profile_egg_sale: 'Eggs — sale',
+    account_profile_group_profiles: 'Profiles',
+    account_profile_group_workflows: 'Transaction templates',
+    account_profile_workflows_loading: 'Loading templates…',
+    account_profile_workflow_prefill_incomplete:
+      'Template account codes could not be resolved uniquely — check the account fields.',
+    account_profile_workflow_dropped:
+      'The selected transaction template no longer matches the chosen accounts.',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',

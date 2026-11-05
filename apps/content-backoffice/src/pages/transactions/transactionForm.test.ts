@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isTransactionCreateFormReady,
   transactionFormErrors,
   transactionPublishFormErrors,
 } from './transactionForm';
@@ -38,6 +39,24 @@ describe('transactionFormErrors', () => {
     );
   });
 
+  it('requires organization when the selected workflow template needs it', () => {
+    expect(
+      transactionFormErrors({ ...draftFilled }, [], translate, {
+        requireOrganization: true,
+      }),
+    ).toEqual({
+      organization: 'ra.validation.required',
+    });
+    expect(
+      transactionFormErrors(
+        { ...draftFilled, organization: 'org-1' },
+        [],
+        translate,
+        { requireOrganization: true },
+      ),
+    ).toEqual({});
+  });
+
   it('accepts zero amount when description and the other draft fields are set', () => {
     expect(
       transactionFormErrors(
@@ -72,6 +91,19 @@ describe('transactionFormErrors', () => {
       description: 'ra.validation.required',
       receipt_cards: 'app.receipt_card_required',
     });
+  });
+});
+
+describe('isTransactionCreateFormReady', () => {
+  it('is false while amount or description is empty', () => {
+    expect(
+      isTransactionCreateFormReady(
+        { ...draftFilled, amount: undefined, description: '' },
+        [],
+        translate,
+      ),
+    ).toBe(false);
+    expect(isTransactionCreateFormReady(draftFilled, [], translate)).toBe(true);
   });
 });
 

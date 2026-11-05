@@ -3,7 +3,7 @@
  * Match: published sablon fejléc kódok + opcionális pénznem/típus,
  * converted_to_workflow üres (null) — original/expanded/storno nem matchel.
  * Expand: step percent → összeg, {original.*}/{1} leírás;
- * organization_from_original vagy step org (üres marad üres);
+ * organization_from_original (forrás org kötelező) vagy step org (üres marad üres);
  * tagi oldal forrás trx / testvér számlából.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat).
  */
@@ -321,6 +321,15 @@ export function expandDescription(
   });
 }
 
+/** True when any step copies organization from the source transaction. */
+export function workflowRequiresSourceOrganization(
+  workflow: Pick<WorkflowTemplate, 'step'>,
+): boolean {
+  return (workflow.step ?? []).some(
+    (step) => step?.organization_from_original === true,
+  );
+}
+
 export function resolveStepOrganization(
   step: Pick<
     NormalizedWorkflowStep,
@@ -423,6 +432,15 @@ export function expandWorkflowSteps(
   const steps = workflow.step ?? [];
   if (!steps.length) {
     throw new TransactionWorkflowError('Workflow has no steps', 422);
+  }
+  if (
+    workflowRequiresSourceOrganization(workflow) &&
+    !transaction.organization?.documentId
+  ) {
+    throw new TransactionWorkflowError(
+      'Source transaction organization is required by this workflow template',
+      422,
+    );
   }
 
   return steps.map((step, index) => {

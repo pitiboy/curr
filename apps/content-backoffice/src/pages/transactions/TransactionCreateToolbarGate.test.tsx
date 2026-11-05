@@ -18,7 +18,11 @@ vi.mock('react-admin', async (importOriginal) => {
     useTranslate: () => (key: string) => key,
     useNotify: () => vi.fn(),
     useRedirect: () => vi.fn(),
-    SaveButton: () => <button type="button">Mentés</button>,
+    SaveButton: ({ disabled }: { disabled?: boolean }) => (
+      <button disabled={disabled} type="button">
+        Mentés
+      </button>
+    ),
   };
 });
 
@@ -36,9 +40,18 @@ vi.mock('../../workflows/useConvertPreview', () => ({
   }),
 }));
 
-vi.mock('react-hook-form', () => ({
-  useWatch: () => undefined,
-}));
+vi.mock('react-hook-form', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-hook-form')>();
+  return {
+    ...actual,
+    useWatch: () => ({
+      date: '2026-01-01',
+      amount: 10,
+      currency_type: 'cur-1',
+      description: 'ok',
+    }),
+  };
+});
 
 describe('TransactionCreateToolbarGate', () => {
   it('shows only save for dataentry (no convert CTA)', () => {
