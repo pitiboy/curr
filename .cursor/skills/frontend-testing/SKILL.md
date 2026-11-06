@@ -38,7 +38,7 @@ Do **not** use Playwright for helpers that belong in node Vitest. Do **not** add
 - Config: `/workspace/playwright.config.ts`, specs under `/workspace/e2e/`.
 - Script: root `npm run test:e2e` (not lefthook, not required CI job).
 - **Green without Strapi:** `webServer` builds and runs `vite preview`; login smoke checks Hungarian login UI (§10.1 shell).
-- **Full stack (local):** Strapi sqlite + seed + `npm run dev:f`, set env from `.env.e2e.example`, then run tagged specs (`@full-stack`). See `docs/ci/testing.md`.
+- **Full stack (local):** Strapi sqlite + seed + `npm run dev:f`, copy `.env.e2e.example` → `.env.e2e`, then run `@full-stack` specs in `e2e/backoffice-roles.spec.ts` (menu, list, editor finalize/discard). Config loads `.env.e2e` automatically. See `docs/ci/testing.md`.
 
 ### E2E blocker note (cloud / CI)
 
