@@ -455,7 +455,6 @@ function ReportBody({
                   focus,
                 ),
               ),
-              stack: 'payments',
               color: seriesColors[index % seriesColors.length],
             }))}
             slotProps={{ legend: { direction: 'horizontal' } }}
