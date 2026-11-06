@@ -1,0 +1,20 @@
+---
+description: Prettier formázás agent által módosított fájlokon (pre-commit egyezés).
+globs:
+alwaysApply: true
+---
+
+# Prettier az AI által érintett fájlokon
+
+A pre-commit (`lefthook.yml`) commit előtt **Prettierrel** formázza a stage-elt fájlokat (`*.{js,ts,tsx,json,md,yml,yaml,css,html}`, kivéve `package-lock.json`). Az AI ne hagyjon olyan kódot, amit a hooknak először "javítania" kell.
+
+**Kötelező:** Ha ebben a munkamenetben **létrejött vagy érdemben megváltozott** ilyen kiterjesztésű fájl, a változtatások véglegesítése előtt a **repo gyökeréből** futtasd a Prettiert az **összes érintett fájl elérési útjára**:
+
+```bash
+npx prettier --write path/to/a.ts path/to/b.tsx
+```
+
+- Több fájl esetén mindegyik útját add meg ugyanabban a parancsban.
+- Ha az egész content-backoffice fa formázása kell (ritkán), használható a gyökérben: `npm run format` — ez a `package.json` `format` scriptjének hatókörébe eső fájlokra ír.
+
+Cél: a diff **azonnal** egyezzen azzal, amit a pre-commit Prettier lépés is produkálna.

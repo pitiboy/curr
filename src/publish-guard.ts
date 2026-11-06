@@ -1,5 +1,17 @@
 import { errors } from '@strapi/utils';
 
+import {
+  DEFAULT_PUBLISH_POLICY,
+  readPublishPolicy,
+  type PublishPolicy,
+} from './publish-policy';
+
+export {
+  DEFAULT_PUBLISH_POLICY,
+  readPublishPolicy,
+  type PublishPolicy,
+} from './publish-policy';
+
 const TRANSACTION_UID = 'api::transaction.transaction';
 const RECEIPT_UID = 'api::receipt.receipt';
 
@@ -40,23 +52,6 @@ export type TransactionPublishRequiredField =
   (typeof TRANSACTION_PUBLISH_REQUIRED_FIELDS)[number];
 
 export type TransactionRequiredField = TransactionDraftRequiredField;
-
-export type PublishPolicy = {
-  /** `draft`: create/update cannot publish. `published`: an editor may save as published. */
-  defaultStatus: 'draft' | 'published';
-  /** When true, entered_by and the publisher must be different people. */
-  publisherMustDiffer: boolean;
-};
-
-export const DEFAULT_PUBLISH_POLICY: PublishPolicy = {
-  defaultStatus: 'draft',
-  publisherMustDiffer: true,
-};
-
-/** Default policy when no database rows exist or the table is unavailable. */
-export function readPublishPolicy(): PublishPolicy {
-  return { ...DEFAULT_PUBLISH_POLICY };
-}
 
 export type ContentActor = {
   roleType: string;
@@ -102,6 +97,8 @@ type RequestState = {
     auth?: { strategy?: { name?: string } };
     user?: { id?: number | string };
     publishGuardLinked?: boolean;
+    /** Set with `publishGuardLinked` for egg-production auto-finalize (`?eggAuto=1`). */
+    eggWorkflowAutoFinalize?: boolean;
   };
 };
 
@@ -146,6 +143,8 @@ export function guardEffect(
     policy?: PublishPolicy;
     enteredBy?: string | null;
     linkedPublish?: boolean;
+    /** Transaction publish from egg workflow with `?eggAuto=1` (dataentry may finalize). */
+    eggWorkflowAutoFinalize?: boolean;
   },
 ): GuardEffect {
   if (!GUARDED_UIDS.has(uid)) {
@@ -159,7 +158,19 @@ export function guardEffect(
     action === 'unpublish' ||
     (writing && status === 'published');
 
-  if (actor && actor.roleType !== 'editor' && publishing) {
+  const dataentryEggAutoPublish =
+    uid === TRANSACTION_UID &&
+    action === 'publish' &&
+    actor?.roleType === 'dataentry' &&
+    options?.linkedPublish === true &&
+    options?.eggWorkflowAutoFinalize === true;
+
+  if (
+    actor &&
+    actor.roleType !== 'editor' &&
+    publishing &&
+    !dataentryEggAutoPublish
+  ) {
     return { type: 'forbid', message: PUBLISH_FORBIDDEN };
   }
 
@@ -185,6 +196,7 @@ export function guardEffect(
   }
 
   const editorPublishing = actor.roleType === 'editor' && publishing;
+  const dataentryEggPublishing = dataentryEggAutoPublish && publishing;
   const email = actor.email.length > 0 ? actor.email : undefined;
 
   return {
@@ -195,11 +207,15 @@ export function guardEffect(
     draftPublishedBy:
       action === 'publish' && actor.roleType === 'editor'
         ? (email ?? null)
-        : action === 'unpublish' && actor.roleType === 'editor'
-          ? null
-          : undefined,
+        : action === 'publish' && dataentryEggAutoPublish
+          ? (email ?? null)
+          : action === 'unpublish' && actor.roleType === 'editor'
+            ? null
+            : undefined,
     publishLinkedReceipt:
-      uid === TRANSACTION_UID && editorPublishing && action !== 'unpublish',
+      uid === TRANSACTION_UID &&
+      (editorPublishing || dataentryEggPublishing) &&
+      action !== 'unpublish',
   };
 }
 
@@ -356,13 +372,24 @@ async function writeDraftPublishedBy(
 export async function withPublishGuardLinked<T>(
   strapi: Pick<PublishGuardStrapi, 'requestContext'>,
   run: () => Promise<T>,
+  options?: { eggWorkflowAuto?: boolean },
 ): Promise<T> {
   const state = strapi.requestContext.get()?.state;
-  if (state) state.publishGuardLinked = true;
+  if (state) {
+    state.publishGuardLinked = true;
+    if (options?.eggWorkflowAuto) {
+      state.eggWorkflowAutoFinalize = true;
+    }
+  }
   try {
     return await run();
   } finally {
-    if (state) state.publishGuardLinked = false;
+    if (state) {
+      state.publishGuardLinked = false;
+      if (options?.eggWorkflowAuto) {
+        state.eggWorkflowAutoFinalize = false;
+      }
+    }
   }
 }
 
@@ -455,9 +482,7 @@ export function shouldPublishConvertedSource(
   storedDraft: Record<string, unknown> | null | undefined,
   stepsPublished: boolean,
 ): boolean {
-  return (
-    stepsPublished && missingStoredPublishFields(storedDraft).length === 0
-  );
+  return stepsPublished && missingStoredPublishFields(storedDraft).length === 0;
 }
 
 async function assertStoredTransactionPublishable(
@@ -508,6 +533,8 @@ export function registerPublishGuard(
     const actor = await contentApiActor(strapi);
     const requestState = strapi.requestContext.get()?.state;
     const linkedPublish = requestState?.publishGuardLinked === true;
+    const eggWorkflowAutoFinalize =
+      requestState?.eggWorkflowAutoFinalize === true;
     const status = context.params?.status;
     const writing = context.action === 'create' || context.action === 'update';
     const needsCreator =
@@ -521,6 +548,7 @@ export function registerPublishGuard(
       policy,
       enteredBy,
       linkedPublish,
+      eggWorkflowAutoFinalize,
     });
 
     if (effect.type === 'forbid') {

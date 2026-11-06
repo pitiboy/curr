@@ -59,6 +59,17 @@ describe('guardEffect', () => {
     }
   });
 
+  it('allows dataentry transaction publish when egg workflow auto-finalize (linked + flag)', () => {
+    const effect = guardEffect(transaction, 'publish', undefined, dataentry, {
+      linkedPublish: true,
+      eggWorkflowAutoFinalize: true,
+    });
+    assert.equal(effect.type, 'allow');
+    if (effect.type !== 'allow') return;
+    assert.equal(effect.draftPublishedBy, dataentry.email);
+    assert.equal(effect.publishLinkedReceipt, true);
+  });
+
   it('treats a missing document-service status as draft for dataentry', () => {
     const effect = guardEffect(transaction, 'create', undefined, dataentry);
     assert.equal(effect.type, 'allow');

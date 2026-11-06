@@ -12,12 +12,28 @@ import type {
   DistributionTransactionLegPlan,
 } from './types';
 
+export type BulkQuantityAfterSaveContext = {
+  documentId: string;
+  wasUpdate: boolean;
+};
+
+export type BulkQuantityAfterSaveOutcome =
+  | { status: 'ok'; note?: string }
+  | { status: 'skipped'; reason?: string }
+  | { status: 'error'; message: string };
+
 export async function executeRowPlans(
   dataProvider: DataProvider,
   plans: readonly BulkQuantityRowPlan[],
   buildPayload: (plan: BulkQuantityRowPlan) => Record<string, unknown>,
+  options?: {
+    onAfterSuccessfulSave?: (
+      ctx: BulkQuantityAfterSaveContext,
+    ) => Promise<BulkQuantityAfterSaveOutcome>;
+  },
 ): Promise<BulkQuantityRowResult[]> {
   const results: BulkQuantityRowResult[] = [];
+  const onAfter = options?.onAfterSuccessfulSave;
   for (const plan of plans) {
     const payload = withRelatedTransactionDocumentId(
       buildPayload(plan),
@@ -26,11 +42,36 @@ export async function executeRowPlans(
     try {
       if (plan.action === 'update' && plan.updateDocumentId) {
         await saveTransactionDraft(plan.updateDocumentId, payload);
+        const documentId = plan.updateDocumentId;
+        let note: string | undefined;
+        if (onAfter) {
+          const outcome = await onAfter({
+            documentId,
+            wasUpdate: true,
+          });
+          if (outcome.status === 'error') {
+            results.push({
+              organizationId: plan.organizationId,
+              organizationName: plan.organizationName,
+              status: 'error',
+              documentId,
+              message: outcome.message,
+            });
+            continue;
+          }
+          if (outcome.status === 'skipped' && outcome.reason) {
+            note = outcome.reason;
+          }
+          if (outcome.status === 'ok' && outcome.note) {
+            note = outcome.note;
+          }
+        }
         results.push({
           organizationId: plan.organizationId,
           organizationName: plan.organizationName,
           status: 'success',
-          documentId: plan.updateDocumentId,
+          documentId,
+          message: note,
         });
       } else {
         const { data } = await dataProvider.create('transactions', {
@@ -40,11 +81,35 @@ export async function executeRowPlans(
           typeof data.documentId === 'string'
             ? data.documentId
             : String(data.id ?? '');
+        let note: string | undefined;
+        if (onAfter && documentId) {
+          const outcome = await onAfter({
+            documentId,
+            wasUpdate: false,
+          });
+          if (outcome.status === 'error') {
+            results.push({
+              organizationId: plan.organizationId,
+              organizationName: plan.organizationName,
+              status: 'error',
+              documentId,
+              message: outcome.message,
+            });
+            continue;
+          }
+          if (outcome.status === 'skipped' && outcome.reason) {
+            note = outcome.reason;
+          }
+          if (outcome.status === 'ok' && outcome.note) {
+            note = outcome.note;
+          }
+        }
         results.push({
           organizationId: plan.organizationId,
           organizationName: plan.organizationName,
           status: 'success',
           documentId,
+          message: note,
         });
       }
     } catch (error) {
@@ -66,6 +131,9 @@ export async function executeRowPlansSequentially(
   buildPayload: (plan: BulkQuantityRowPlan) => Record<string, unknown>,
   options?: {
     linkFollowingRowsToFirstSuccess?: boolean;
+    onAfterSuccessfulSave?: (
+      ctx: BulkQuantityAfterSaveContext,
+    ) => Promise<BulkQuantityAfterSaveOutcome>;
   },
 ): Promise<BulkQuantityRowResult[]> {
   let eventAnchorDocumentId: string | undefined;
@@ -78,6 +146,7 @@ export async function executeRowPlansSequentially(
       dataProvider,
       [{ ...plan, relatedTransactionDocumentId: relatedId }],
       buildPayload,
+      { onAfterSuccessfulSave: options?.onAfterSuccessfulSave },
     );
     results.push(...batch);
     if (
@@ -125,8 +194,14 @@ export function attachDistributionLegAnchors(
 export async function executeLegPlans(
   dataProvider: DataProvider,
   plans: readonly DistributionTransactionLegPlan[],
+  options?: {
+    onAfterSuccessfulSave?: (
+      ctx: BulkQuantityAfterSaveContext,
+    ) => Promise<BulkQuantityAfterSaveOutcome>;
+  },
 ): Promise<BulkQuantityRowResult[]> {
   const results: BulkQuantityRowResult[] = [];
+  const onAfter = options?.onAfterSuccessfulSave;
   for (const plan of plans) {
     const payload = withRelatedTransactionDocumentId(
       plan.payload,
@@ -135,11 +210,36 @@ export async function executeLegPlans(
     try {
       if (plan.action === 'update' && plan.updateDocumentId) {
         await saveTransactionDraft(plan.updateDocumentId, payload);
+        const documentId = plan.updateDocumentId;
+        let note: string | undefined;
+        if (onAfter) {
+          const outcome = await onAfter({
+            documentId,
+            wasUpdate: true,
+          });
+          if (outcome.status === 'error') {
+            results.push({
+              organizationId: plan.legKey,
+              organizationName: plan.memberName,
+              status: 'error',
+              documentId,
+              message: outcome.message,
+            });
+            continue;
+          }
+          if (outcome.status === 'skipped' && outcome.reason) {
+            note = outcome.reason;
+          }
+          if (outcome.status === 'ok' && outcome.note) {
+            note = outcome.note;
+          }
+        }
         results.push({
           organizationId: plan.legKey,
           organizationName: plan.memberName,
           status: 'success',
-          documentId: plan.updateDocumentId,
+          documentId,
+          message: note,
         });
       } else {
         const { data } = await dataProvider.create('transactions', {
@@ -149,11 +249,35 @@ export async function executeLegPlans(
           typeof data.documentId === 'string'
             ? data.documentId
             : String(data.id ?? '');
+        let note: string | undefined;
+        if (onAfter && documentId) {
+          const outcome = await onAfter({
+            documentId,
+            wasUpdate: false,
+          });
+          if (outcome.status === 'error') {
+            results.push({
+              organizationId: plan.legKey,
+              organizationName: plan.memberName,
+              status: 'error',
+              documentId,
+              message: outcome.message,
+            });
+            continue;
+          }
+          if (outcome.status === 'skipped' && outcome.reason) {
+            note = outcome.reason;
+          }
+          if (outcome.status === 'ok' && outcome.note) {
+            note = outcome.note;
+          }
+        }
         results.push({
           organizationId: plan.legKey,
           organizationName: plan.memberName,
           status: 'success',
           documentId,
+          message: note,
         });
       }
     } catch (error) {

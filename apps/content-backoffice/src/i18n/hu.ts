@@ -124,6 +124,15 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A sablon számlakódjai nem egyértelműen találhatók meg — ellenőrizd a számlaválasztókat.',
     account_profile_workflow_dropped:
       'A kiválasztott ügylet-sablon már nem illik a megadott számlákra.',
+    reports: {
+      transaction_status: {
+        label: 'Tranzakciók',
+        /** Megfelel a könyvekben közzétett (published) nézetnek — alapértelmezett. */
+        preview: 'Közzétéve (éles könyvek)',
+        draft: 'Piszkozat',
+        all: 'Mind (piszkozat + közzétett)',
+      },
+    },
     egg_inventory: {
       menu: 'Tojás készlet',
       title: 'Tojás készletkimutatás',
@@ -242,6 +251,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       no_rows: 'Adj meg legalább egy nem nulla darabszámot.',
       invalid_quantity: 'Egész szám, 0 vagy nagyobb.',
       results_heading: 'Mentés eredménye',
+      auto_publish_done: 'Mentve és közzétéve.',
+      auto_publish_done_after_update: 'Frissítve és közzétéve.',
+      auto_publish_failed: 'Közzététel nem sikerült.',
       retry_failed: 'Sikertelen sorok újrapróbálása',
       conflict_title: 'Már van rögzítés erre a napra',
       conflict_body:

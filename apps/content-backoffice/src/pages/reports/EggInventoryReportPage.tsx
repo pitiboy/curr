@@ -38,6 +38,11 @@ import type {
   EggMemberRow,
   EggTimeseriesPoint,
 } from './eggInventory/types';
+import { ReportTransactionStatusFilterControl } from './components/ReportTransactionStatusFilter';
+import {
+  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  type ReportTransactionStatusFilter as ReportTxStatusMode,
+} from './shared/reportTransactionStatus';
 import { useEggInventoryReport } from './eggInventory/useEggInventoryReport';
 
 const RANGE_PRESETS: DateRangePreset[] = [
@@ -70,7 +75,12 @@ function formatMoney(n: number, currency: string): string {
 export function EggInventoryReportPage() {
   const translate = useTranslate();
   const [range, setRange] = useState<DateRangePreset>('thisMonth');
-  const { status, report, reload } = useEggInventoryReport(range);
+  const [transactionStatus, setTransactionStatus] =
+    useState<ReportTxStatusMode>(REPORT_TRANSACTION_STATUS_FILTER_DEFAULT);
+  const { status, report, reload } = useEggInventoryReport(
+    range,
+    transactionStatus,
+  );
 
   return (
     <Box sx={{ p: 2, maxWidth: 1100 }}>
@@ -84,22 +94,33 @@ export function EggInventoryReportPage() {
         </Typography>
       </Stack>
 
-      <ToggleButtonGroup
-        color="primary"
-        exclusive
-        onChange={(_e, value: DateRangePreset | null) => {
-          if (value) setRange(value);
-        }}
-        size="small"
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
         sx={{ mb: 2, flexWrap: 'wrap' }}
-        value={range}
       >
-        {RANGE_PRESETS.map((preset) => (
-          <ToggleButton key={preset} value={preset}>
-            {translate(`app.egg_inventory.range.${preset}`)}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+        <ToggleButtonGroup
+          color="primary"
+          exclusive
+          onChange={(_e, value: DateRangePreset | null) => {
+            if (value) setRange(value);
+          }}
+          size="small"
+          sx={{ flexWrap: 'wrap' }}
+          value={range}
+        >
+          {RANGE_PRESETS.map((preset) => (
+            <ToggleButton key={preset} value={preset}>
+              {translate(`app.egg_inventory.range.${preset}`)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+
+        <ReportTransactionStatusFilterControl
+          onChange={setTransactionStatus}
+          value={transactionStatus}
+        />
+      </Stack>
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (

@@ -1,6 +1,6 @@
 import { loadBackofficeFeatureRows } from './load';
 import { publishPolicyFromFeatures } from './parse';
-import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-guard';
+import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-policy';
 
 export function createPublishPolicyLoader(strapi: {
   documents: (uid: string) => {

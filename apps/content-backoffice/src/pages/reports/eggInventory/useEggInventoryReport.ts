@@ -10,6 +10,10 @@ import type {
   EggInventoryReport,
   EggInventoryStatus,
 } from './types';
+import {
+  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  type ReportTransactionStatusFilter,
+} from '../shared/reportTransactionStatus';
 
 export type EggInventoryQuery = {
   status: EggInventoryStatus;
@@ -20,6 +24,7 @@ export type EggInventoryQuery = {
 
 export function useEggInventoryReport(
   preset: DateRangePreset,
+  transactionStatus: ReportTransactionStatusFilter = REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
 ): EggInventoryQuery {
   const config = useBackofficeConfig();
   const saleCurrency = eggSaleCurrencyForWorkflow(
@@ -27,7 +32,7 @@ export function useEggInventoryReport(
     EGG_PRODUCTION_WORKFLOW_ID,
   );
   const [reloadToken, setReloadToken] = useState(0);
-  const requestKey = `${preset}:${saleCurrency}:${reloadToken}`;
+  const requestKey = `${preset}:${saleCurrency}:${transactionStatus}:${reloadToken}`;
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
   const [report, setReport] = useState<EggInventoryReport | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -41,13 +46,15 @@ export function useEggInventoryReport(
       };
     }
 
-    fetchEggInventoryReport(preset, { saleCurrency })
+    fetchEggInventoryReport(preset, { saleCurrency, transactionStatus })
       .then((data) => {
         if (!active) return;
         setReport(data);
         setFailed(false);
         setErrorMessage(null);
-        setResolvedKey(`${preset}:${saleCurrency}:${reloadToken}`);
+        setResolvedKey(
+          `${preset}:${saleCurrency}:${transactionStatus}:${reloadToken}`,
+        );
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -56,13 +63,15 @@ export function useEggInventoryReport(
         setErrorMessage(
           err instanceof Error ? err.message : 'egg inventory load failed',
         );
-        setResolvedKey(`${preset}:${saleCurrency}:${reloadToken}`);
+        setResolvedKey(
+          `${preset}:${saleCurrency}:${transactionStatus}:${reloadToken}`,
+        );
       });
 
     return () => {
       active = false;
     };
-  }, [preset, reloadToken, saleCurrency, config.ready]);
+  }, [preset, reloadToken, saleCurrency, transactionStatus, config.ready]);
 
   const status: EggInventoryStatus = !config.ready
     ? 'loading'

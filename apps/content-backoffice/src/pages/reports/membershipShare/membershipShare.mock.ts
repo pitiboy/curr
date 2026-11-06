@@ -21,13 +21,14 @@ function members(rows: MembershipMemberRow[]): MembershipMemberRow[] {
 
 function makeReport(
   rows: MembershipMemberRow[],
-  paymentCount: number,
+  sharePaymentCount: number,
+  pocketPaymentCount: number,
   history: MembershipHistoryPoint[],
   historyCurrency = 'HUF',
 ): MembershipShareReport {
   const byMember = members(rows);
   return {
-    kpis: buildKpis(byMember, paymentCount),
+    kpis: buildKpis(byMember, sharePaymentCount, pocketPaymentCount, 'both'),
     byMember,
     historyCurrency,
     history,
@@ -77,7 +78,8 @@ const REPORTS: Record<DateRangePreset, MembershipShareReport | null> = {
         pocketByCurrency: [],
       },
     ],
-    47,
+    28,
+    19,
     [
       {
         period: '2024-01',
@@ -159,7 +161,8 @@ const REPORTS: Record<DateRangePreset, MembershipShareReport | null> = {
         pocketByCurrency: [],
       },
     ],
-    9,
+    5,
+    4,
     [
       {
         period: '2026-11-03',
@@ -205,7 +208,8 @@ const REPORTS: Record<DateRangePreset, MembershipShareReport | null> = {
         pocketByCurrency: [],
       },
     ],
-    6,
+    4,
+    2,
     [
       {
         period: '2026-10-05',
@@ -254,7 +258,8 @@ const REPORTS: Record<DateRangePreset, MembershipShareReport | null> = {
         pocketByCurrency: [{ currency: 'HUF', amount: 9_000 }],
       },
     ],
-    22,
+    14,
+    8,
     [
       {
         period: '2026-01',

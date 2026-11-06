@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { fetchMembershipShareReport } from './membershipShare.fetch';
 import { filterReportByFocus } from './membershipShare.helpers';
+import {
+  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  type ReportTransactionStatusFilter,
+} from '../shared/reportTransactionStatus';
 import type {
   DateRangePreset,
   LedgerFocus,
@@ -19,9 +23,10 @@ export type MembershipShareQuery = {
 export function useMembershipShareReport(
   preset: DateRangePreset,
   focus: LedgerFocus,
+  transactionStatus: ReportTransactionStatusFilter = REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
 ): MembershipShareQuery {
   const [reloadToken, setReloadToken] = useState(0);
-  const requestKey = `${preset}:${focus}:${reloadToken}`;
+  const requestKey = `${preset}:${focus}:${transactionStatus}:${reloadToken}`;
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
   const [report, setReport] = useState<MembershipShareReport | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,13 +35,15 @@ export function useMembershipShareReport(
   useEffect(() => {
     let active = true;
 
-    fetchMembershipShareReport(preset)
+    fetchMembershipShareReport(preset, { transactionStatus })
       .then((data) => {
         if (!active) return;
         setReport(data ? filterReportByFocus(data, focus) : null);
         setFailed(false);
         setErrorMessage(null);
-        setResolvedKey(`${preset}:${focus}:${reloadToken}`);
+        setResolvedKey(
+          `${preset}:${focus}:${transactionStatus}:${reloadToken}`,
+        );
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -45,13 +52,15 @@ export function useMembershipShareReport(
         setErrorMessage(
           err instanceof Error ? err.message : 'membership-share load failed',
         );
-        setResolvedKey(`${preset}:${focus}:${reloadToken}`);
+        setResolvedKey(
+          `${preset}:${focus}:${transactionStatus}:${reloadToken}`,
+        );
       });
 
     return () => {
       active = false;
     };
-  }, [preset, focus, reloadToken]);
+  }, [preset, focus, transactionStatus, reloadToken]);
 
   const status: MembershipShareStatus =
     resolvedKey !== requestKey

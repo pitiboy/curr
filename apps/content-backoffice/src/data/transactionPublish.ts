@@ -4,16 +4,22 @@ import type { ContentHttpClient } from './receiptDraft';
 export function transactionPublishUrl(
   strapiUrl: string,
   documentId: string,
+  options?: { eggAuto?: boolean },
 ): string {
-  return `${strapiUrl}/api/transactions/${encodeURIComponent(documentId)}/actions/publish`;
+  const base = `${strapiUrl}/api/transactions/${encodeURIComponent(documentId)}/actions/publish`;
+  if (options?.eggAuto) {
+    return `${base}?eggAuto=1`;
+  }
+  return base;
 }
 
 export async function publishTransactionDraft(
   httpClient: ContentHttpClient,
   strapiUrl: string,
   documentId: string,
+  options?: { eggAuto?: boolean },
 ): Promise<void> {
-  await httpClient(transactionPublishUrl(strapiUrl, documentId), {
+  await httpClient(transactionPublishUrl(strapiUrl, documentId, options), {
     method: 'POST',
     body: JSON.stringify({}),
   });
