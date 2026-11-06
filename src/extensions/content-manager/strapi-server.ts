@@ -41,7 +41,10 @@ function getStrapi(): StrapiLike {
   return (globalThis as { strapi: StrapiLike }).strapi;
 }
 
-function sanitizeBodyForUid(uid: string, body: ConfigurationBody): ConfigurationBody {
+function sanitizeBodyForUid(
+  uid: string,
+  body: ConfigurationBody,
+): ConfigurationBody {
   const schema = getStrapi().getModel(uid);
   if (!schema?.attributes) {
     return body;

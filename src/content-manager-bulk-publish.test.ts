@@ -86,11 +86,11 @@ describe('patchDocumentManagerBulkActions', () => {
     };
 
     patchDocumentManagerBulkActions(manager, strapi);
-    const count = await manager.publishMany('api::transaction.transaction', [
-      'd1',
-      'd2',
-      'd3',
-    ], 'hu');
+    const count = await manager.publishMany(
+      'api::transaction.transaction',
+      ['d1', 'd2', 'd3'],
+      'hu',
+    );
 
     assert.equal(transactions, 1);
     assert.equal(count, 3);
@@ -136,7 +136,11 @@ describe('patchDocumentManagerBulkActions', () => {
     patchDocumentManagerBulkActions(manager, strapi);
     await assert.rejects(
       () =>
-        manager.publishMany('api::transaction.transaction', ['ok', 'bad'], 'hu'),
+        manager.publishMany(
+          'api::transaction.transaction',
+          ['ok', 'bad'],
+          'hu',
+        ),
       /Missing required fields/,
     );
     assert.equal(rolledBack, true);
