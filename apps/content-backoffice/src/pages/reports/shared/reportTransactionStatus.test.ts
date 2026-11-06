@@ -8,10 +8,7 @@ import {
 
 describe('transactionStatusQuery', () => {
   it.each<
-    [
-      ReportTransactionStatusFilter,
-      ReturnType<typeof transactionStatusQuery>,
-    ]
+    [ReportTransactionStatusFilter, ReturnType<typeof transactionStatusQuery>]
   >([
     ['draft', { status: 'draft', publicationFilter: 'never-published' }],
     ['preview', { status: 'published' }],
