@@ -1,9 +1,9 @@
 /**
- * Strapi Admin `bulkPublish` / `bulkUnpublish` (document-manager) runs
- * `Promise.all` of `documents().publish|unpublish` inside one shared knex
- * transaction. When any item fails (e.g. incomplete draft + strictRelations),
- * the outer trx rolls back while sibling publishes are still querying →
- * "Transaction query already complete" and an uncaught process crash.
+ * Strapi Admin bulk document actions (document-manager) run
+ * `Promise.all` of `documents().publish|unpublish|delete` inside one shared
+ * knex transaction. When any item fails, the outer trx rolls back while
+ * sibling writes are still querying → "Transaction query already complete"
+ * and an uncaught process crash.
  *
  * Keep the shared transaction (all-or-nothing) but process documentIds
  * one-by-one so a failure cannot race completed-trx queries.
@@ -30,12 +30,22 @@ type DocumentManagerLike = {
     uid: string,
     opts?: { locale?: unknown; populate?: unknown },
   ) => Promise<unknown>;
+  delete: (
+    documentId: string,
+    uid: string,
+    opts?: Record<string, unknown>,
+  ) => Promise<unknown>;
   publishMany: (
     uid: string,
     documentIds: string[],
     locale: unknown,
   ) => Promise<number>;
   unpublishMany: (
+    documentIds: string[],
+    uid: string,
+    opts?: Record<string, unknown>,
+  ) => Promise<{ count: number }>;
+  deleteMany: (
     documentIds: string[],
     uid: string,
     opts?: Record<string, unknown>,
@@ -54,7 +64,8 @@ type StrapiWithDbTransaction = {
 };
 
 /**
- * Replace stock parallel bulk publish/unpublish on a document-manager instance.
+ * Replace stock parallel bulk publish / unpublish / delete on a
+ * document-manager instance.
  */
 export function patchDocumentManagerBulkActions(
   manager: DocumentManagerLike,
@@ -86,6 +97,15 @@ export function patchDocumentManagerBulkActions(
       });
     });
     return { count: countFlatEntries(unpublishedEntries) };
+  };
+
+  manager.deleteMany = async (documentIds, uid, opts = {}) => {
+    const deletedEntries = await strapi.db.transaction(async () => {
+      return mapDocumentIdsSequentially(documentIds, (documentId) =>
+        manager.delete(documentId, uid, opts),
+      );
+    });
+    return { count: deletedEntries.length };
   };
 
   return manager;

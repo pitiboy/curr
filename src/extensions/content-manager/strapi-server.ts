@@ -79,9 +79,9 @@ function withSanitizedLayouts(original: CmController): CmController {
  * fields (createdAt/…) or removed attributes. CM yup rejects those names.
  * Strip them before the stock validators run.
  *
- * Also: Admin bulkPublish/unpublish must not Promise.all inside one knex
- * transaction (incomplete draft → sibling queries on a rolled-back trx →
- * process crash). See content-manager-bulk-publish.ts.
+ * Also: Admin bulkPublish / bulkUnpublish / bulkDelete must not Promise.all
+ * inside one knex transaction (one failure → sibling queries on a rolled-back
+ * trx → process crash). See content-manager-bulk-publish.ts.
  */
 module.exports = (plugin: ContentManagerPlugin) => {
   plugin.controllers['content-types'].updateContentTypeConfiguration =
