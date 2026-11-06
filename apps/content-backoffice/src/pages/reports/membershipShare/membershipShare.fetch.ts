@@ -103,22 +103,26 @@ async function loadTransactions(
   const dateFilter: Record<string, string> = { $lte: bounds.to };
   if (bounds.from) dateFilter.$gte = bounds.from;
 
-  const rows = await loadReportTransactions<TxRow>(httpClient, transactionStatus, {
-    filters: {
-      $and: [
-        { date: dateFilter },
-        {
-          credit_account: {
-            code: {
-              $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
+  const rows = await loadReportTransactions<TxRow>(
+    httpClient,
+    transactionStatus,
+    {
+      filters: {
+        $and: [
+          { date: dateFilter },
+          {
+            credit_account: {
+              code: {
+                $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
+              },
             },
           },
-        },
-      ],
+        ],
+      },
+      populate: reportPopulate,
+      sort: ['date:asc'],
     },
-    populate: reportPopulate,
-    sort: ['date:asc'],
-  });
+  );
 
   return rows
     .map(mapTx)

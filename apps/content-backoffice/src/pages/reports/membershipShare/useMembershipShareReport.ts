@@ -41,7 +41,9 @@ export function useMembershipShareReport(
         setReport(data ? filterReportByFocus(data, focus) : null);
         setFailed(false);
         setErrorMessage(null);
-        setResolvedKey(`${preset}:${focus}:${transactionStatus}:${reloadToken}`);
+        setResolvedKey(
+          `${preset}:${focus}:${transactionStatus}:${reloadToken}`,
+        );
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -50,7 +52,9 @@ export function useMembershipShareReport(
         setErrorMessage(
           err instanceof Error ? err.message : 'membership-share load failed',
         );
-        setResolvedKey(`${preset}:${focus}:${transactionStatus}:${reloadToken}`);
+        setResolvedKey(
+          `${preset}:${focus}:${transactionStatus}:${reloadToken}`,
+        );
       });
 
     return () => {

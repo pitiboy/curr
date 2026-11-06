@@ -17,10 +17,15 @@ type Props = {
 };
 
 /** Shared MUI Select for report transaction publication scope (`draft` / `preview` / `all`). */
-export function ReportTransactionStatusFilterControl({ value, onChange }: Props) {
+export function ReportTransactionStatusFilterControl({
+  value,
+  onChange,
+}: Props) {
   const translate = useTranslate();
 
-  const handleChange = (event: SelectChangeEvent<ReportTransactionStatusFilter>) => {
+  const handleChange = (
+    event: SelectChangeEvent<ReportTransactionStatusFilter>,
+  ) => {
     onChange(event.target.value as ReportTransactionStatusFilter);
   };
 
