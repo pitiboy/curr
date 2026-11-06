@@ -2,11 +2,11 @@ import { config as loadDotenv } from 'dotenv';
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
+import { e2eStrapiUrl, PREVIEW_BACKOFFICE_URL } from './e2e/preview-url';
+
 loadDotenv({ path: path.resolve(process.cwd(), '.env.e2e') });
 
-const previewPort = 4173;
-// Use IPv4 loopback: on some systems `localhost` resolves to ::1 first while Vite binds 127.0.0.1 only.
-const previewBase = `http://127.0.0.1:${previewPort}/backoffice/`;
+const previewBase = `${PREVIEW_BACKOFFICE_URL}/`;
 
 export default defineConfig({
   globalSetup: path.resolve(process.cwd(), 'e2e/global-setup.ts'),
@@ -30,7 +30,10 @@ export default defineConfig({
     command:
       'npm run build --prefix apps/content-backoffice && npm run preview:e2e --prefix apps/content-backoffice',
     url: `${previewBase}login`,
-    reuseExistingServer: !process.env.CI,
+    // Reusing a running preview skips the build, so the bundle may lack VITE_STRAPI_URL. Opt in only.
+    reuseExistingServer: process.env.E2E_REUSE_PREVIEW === '1',
     timeout: 300_000,
+    // SPA is served from :4173, the API stays on :1337.
+    env: { ...process.env, VITE_STRAPI_URL: e2eStrapiUrl() },
   },
 });

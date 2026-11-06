@@ -31,25 +31,27 @@ npx playwright install chromium
 **Login shell (no API):** builds the SPA and opens the login route on `vite preview` (`playwright.config.ts` uses `http://127.0.0.1:4173/backoffice/` so Chromium does not resolve `localhost` to IPv6 while the server listens on IPv4 only).
 
 ```bash
-npm run test:e2e:login-shell
-# equivalent (note the double -- before --grep):
 npm run test:e2e -- --grep "login shell"
 ```
 
-`vite preview` for e2e binds **`127.0.0.1:4173`** (`preview:e2e`) so Playwright’s health check matches; **`npm run test:e2e -- grep`** (one dash) is wrong — it runs `playwright test grep …`, not `--grep`.
-
-**Full stack (@full-stack):** requires Strapi on sqlite, seeded `dataentry` / `editor` users, and env copied from `.env.e2e.example` → `.env.e2e` (never commit). `playwright.config.ts` and `e2e/global-setup.ts` load `.env.e2e` so worker processes see `E2E_*` (not only the config process). Otherwise export vars manually:
+**Full stack (@full-stack):** requires Strapi on sqlite, seeded `dataentry` / `editor` users, and env copied from `.env.e2e.example` → `.env.e2e` (never commit; `E2E_*_EMAIL` must be emails — the login input is `type="email"`). `playwright.config.ts` and `e2e/global-setup.ts` load `.env.e2e` so worker processes see `E2E_*` (not only the config process). Playwright builds the SPA with `VITE_STRAPI_URL=$E2E_STRAPI_URL` and serves it via `vite preview` on `127.0.0.1:4173` — the default `E2E_BACKOFFICE_URL`. Otherwise export vars manually:
 
 ```bash
 set -a && source .env.e2e && set +a   # optional if the file exists
 npm run dev                           # Strapi (1337)
-npm run dev:f                         # Vite backoffice (5173)
 npm run test:e2e -- --grep "@full-stack"
 ```
 
-Specs in `e2e/backoffice-roles.spec.ts` cover dataentry menu gates, readonly list, editor review/finalize UI, and discard presence. They **skip** when `E2E_DATAENTRY_EMAIL` or `E2E_STRAPI_URL` is unset (typical cloud VM without a seeded stack), or when `E2E_BACKOFFICE_URL`’s host:port is closed (e.g. you ran `npm run test:e2e` without `npm run dev:f` — the login shell tests use Playwright’s preview on another port). Prefer **`127.0.0.1` in `E2E_BACKOFFICE_URL`** if you hit odd localhost/IPv6 behaviour; the reachability check normalizes `localhost` to IPv4.
+Specs in `e2e/backoffice-roles.spec.ts` cover dataentry menu gates, readonly list, editor review/finalize UI, and discard presence. They **skip** when `E2E_DATAENTRY_EMAIL` or `E2E_STRAPI_URL` is unset (typical cloud VM without a seeded stack), or when `E2E_BACKOFFICE_URL`’s host:port is closed. `localhost` in `E2E_*_URL` is rewritten to `127.0.0.1` (Vite/Strapi listen on IPv4 only).
 
-**All tests (`npm run test:e2e`):** without Vite on 5173, `@full-stack` is skipped, not failed; use `--grep "login shell"` for preview-only smoke.
+How the specs stay stable:
+
+- **Auth rate limit:** Strapi allows 10 `POST /api/auth/local` per minute per IP (all users share it). `e2e/global-setup.ts` logs each user in once via the API and caches the JWT in `node_modules/.cache/e2e/sessions.json` (re-validated via `/api/users/me`); `loginBackoffice` injects it into localStorage. Only `@10.1` uses the real form (`{ viaUi: true }`). Delete the cache file to force fresh logins.
+- **Hash routes:** react-admin uses a HashRouter — navigate with `backofficeRoute('transactions/create')`, not `/backoffice/transactions/create`.
+- **Strapi watcher:** `config/admin.ts` `watchIgnoreFiles` covers `e2e/`, `test-results/`, `playwright-report/`; otherwise `strapi develop` restarts mid-run.
+- **Stale preview:** a running preview is reused only with `E2E_REUSE_PREVIEW=1` (otherwise the bundle could lack `VITE_STRAPI_URL`).
+
+**All tests (`npm run test:e2e`):** without `.env.e2e`, `@full-stack` is skipped, not failed; use `--grep "login shell"` for preview-only smoke.
 
 **Blockers:** no Google OAuth in e2e (email/password only); publish success is not asserted when seed `entered_by` would block same-person finalize.
 
