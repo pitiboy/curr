@@ -37,7 +37,10 @@
   {
     "key": "egg-production",
     "enabled": false,
-    "config": { "saleCurrency": "HUF" }
+    "config": {
+      "saleCurrency": "HUF",
+      "initialPublicationStatus": "draft"
+    }
   },
   {
     "key": "membership-share",

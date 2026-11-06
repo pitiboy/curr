@@ -5,6 +5,8 @@
 import { factories } from '@strapi/strapi';
 import { errors } from '@strapi/utils';
 
+import { loadBackofficeFeatureRows } from '../../../backoffice-features/load';
+import { withPublishGuardLinked } from '../../../publish-guard';
 import {
   discardDraftTransaction,
   DiscardDraftError,
@@ -46,10 +48,30 @@ export default factories.createCoreController(
         ctx.badRequest('Missing document id');
         return;
       }
+      const wantsEggAuto =
+        ctx.query?.eggAuto === '1' || ctx.query?.eggAuto === 'true';
+      let eggAutoFinalize = false;
+      if (wantsEggAuto) {
+        const rows = await loadBackofficeFeatureRows(
+          strapi as Parameters<typeof loadBackofficeFeatureRows>[0],
+        );
+        const egg = rows.find((r) => r.key === 'egg-production');
+        const raw = egg?.config?.initialPublicationStatus;
+        eggAutoFinalize =
+          typeof raw === 'string' && raw.trim().toLowerCase() === 'published';
+      }
       try {
-        await strapi.documents('api::transaction.transaction').publish({
-          documentId,
-        });
+        const runPublish = () =>
+          strapi.documents('api::transaction.transaction').publish({
+            documentId,
+          });
+        if (eggAutoFinalize) {
+          await withPublishGuardLinked(strapi, runPublish, {
+            eggWorkflowAuto: true,
+          });
+        } else {
+          await runPublish();
+        }
       } catch (error) {
         // Route auth turns a thrown ForbiddenError into a generic 403 and
         // drops the guard message. Write the response here so the client

@@ -251,6 +251,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       no_rows: 'Adj meg legalább egy nem nulla darabszámot.',
       invalid_quantity: 'Egész szám, 0 vagy nagyobb.',
       results_heading: 'Mentés eredménye',
+      auto_publish_done: 'Mentve és közzétéve.',
+      auto_publish_done_after_update: 'Frissítve és közzétéve.',
+      auto_publish_failed: 'Közzététel nem sikerült.',
       retry_failed: 'Sikertelen sorok újrapróbálása',
       conflict_title: 'Már van rögzítés erre a napra',
       conflict_body:

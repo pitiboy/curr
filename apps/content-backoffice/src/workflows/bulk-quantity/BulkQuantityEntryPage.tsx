@@ -31,7 +31,12 @@ import {
 } from 'react-admin';
 
 import { STRAPI_URL } from '../../config';
-import { eggSaleCurrencyForWorkflow } from '../parseBackofficeConfig';
+import { publishTransaction } from '../../data/dataProvider';
+import { strapiErrorMessage } from '../../data/transactionPublish';
+import {
+  eggProductionInitialPublicationStatus,
+  eggSaleCurrencyForWorkflow,
+} from '../parseBackofficeConfig';
 import { useBackofficeConfig } from '../useBackofficeConfig';
 import { bandedForm } from '../../theme';
 import {
@@ -49,8 +54,8 @@ import {
   legToTransactionPayload,
 } from './distributionPlans';
 import {
-  findDuplicateForRow,
-  findDuplicateForTransaction,
+  collectBulkQuantityDuplicates,
+  type DuplicateLookupCheck,
 } from './duplicateFetch';
 import { loadBulkQuantityCatalog } from './loadCatalog';
 import {
@@ -77,6 +82,7 @@ import { submissionAnchorDocumentId } from '../../../../../src/transaction-event
 import {
   attachDistributionLegAnchors,
   attachPoolLegAnchors,
+  type BulkQuantityAfterSaveOutcome,
   executeLegPlans,
   executeRowPlansSequentially,
   productionAnchorByOrganizationId,
@@ -205,6 +211,8 @@ export function BulkQuantityEntryPage({
     backofficeConfig,
     config.workflowId,
   );
+  const eggInitialPublication =
+    eggProductionInitialPublicationStatus(backofficeConfig);
   const hasDistribution = Boolean(config.distribution);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -252,6 +260,24 @@ export function BulkQuantityEntryPage({
   const [distributionLoadError, setDistributionLoadError] = useState<
     string | null
   >(null);
+  /** Remounts SimpleForm so react-hook-form state resets after a full successful save. */
+  const [bulkFormKey, setBulkFormKey] = useState(0);
+
+  const resetAfterFullSuccess = useCallback(() => {
+    setQuantities({});
+    setMemberQuantities({});
+    setResults([]);
+    setConflicts([]);
+    setConflictChoices({});
+    setPendingProductionPlans([]);
+    setPendingPoolLegPlans([]);
+    setPendingLegPlans([]);
+    setConflictOpen(false);
+    setGlobalConflictOpen(false);
+    setActiveStep(0);
+    setFormDate(todayIsoDate());
+    setBulkFormKey((previous) => previous + 1);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -311,6 +337,34 @@ export function BulkQuantityEntryPage({
       active = false;
     };
   }, [config, eggSaleCurrency, translate]);
+
+  const buildAfterSave = useCallback(
+    async (ctx: {
+      documentId: string;
+      wasUpdate: boolean;
+    }): Promise<BulkQuantityAfterSaveOutcome> => {
+      if (eggInitialPublication !== 'published') {
+        return { status: 'ok' };
+      }
+      try {
+        await publishTransaction(ctx.documentId, { eggAuto: true });
+        return {
+          status: 'ok',
+          note: ctx.wasUpdate
+            ? translate('app.bulk_quantity.auto_publish_done_after_update')
+            : translate('app.bulk_quantity.auto_publish_done'),
+        };
+      } catch (error) {
+        return {
+          status: 'error',
+          message:
+            strapiErrorMessage(error) ||
+            translate('app.bulk_quantity.auto_publish_failed'),
+        };
+      }
+    },
+    [eggInitialPublication, translate],
+  );
 
   const refreshDistributionContext = useCallback(
     async (isoDate: string) => {
@@ -415,13 +469,16 @@ export function BulkQuantityEntryPage({
   );
 
   const runLegPlans = useCallback(
-    async (plans: DistributionTransactionLegPlan[]) => {
-      setSaving(true);
-      const batch = await executeLegPlans(dataProvider, plans);
+    async (
+      plans: DistributionTransactionLegPlan[],
+    ): Promise<BulkQuantityRowResult[]> => {
+      const batch = await executeLegPlans(dataProvider, plans, {
+        onAfterSuccessfulSave: buildAfterSave,
+      });
       setResults((previous) => mergeRowResults(previous, batch));
-      setSaving(false);
+      return batch;
     },
-    [dataProvider],
+    [buildAfterSave, dataProvider],
   );
 
   const resolveDate = (value: unknown): string | null => {
@@ -501,19 +558,17 @@ export function BulkQuantityEntryPage({
     if (!refs) {
       return [];
     }
-    const duplicates: BulkQuantityDuplicate[] = [];
+    const checks: DuplicateLookupCheck[] = [];
     const rows = rowsFromQuantities(henHouses, quantities);
     for (const row of rows) {
-      const duplicate = await findDuplicateForRow(httpClient, STRAPI_URL, {
-        date,
-        row,
+      checks.push({
+        organizationId: row.organizationId,
+        organizationLabel: row.organizationName,
+        amount: row.amount,
         currencyTypeId: refs.currencyTypeId,
         debitAccountId: refs.debitAccountId,
         creditAccountId: refs.creditAccountId,
       });
-      if (duplicate) {
-        duplicates.push(duplicate);
-      }
       if (poolRefs) {
         const poolLegs = buildPoolTransferLegPlans({
           row,
@@ -524,47 +579,31 @@ export function BulkQuantityEntryPage({
           action: 'insert',
         });
         for (const leg of poolLegs) {
-          const poolDup = await findDuplicateForTransaction(
-            httpClient,
-            STRAPI_URL,
-            {
-              date,
-              organizationId: String(leg.payload.organization),
-              organizationLabel: leg.legKey,
-              amount: row.amount,
-              currencyTypeId: String(leg.payload.currency_type),
-              debitAccountId: String(leg.payload.debit_account),
-              creditAccountId: String(leg.payload.credit_account),
-            },
-          );
-          if (poolDup) {
-            duplicates.push(poolDup);
-          }
+          checks.push({
+            organizationId: String(leg.payload.organization),
+            organizationLabel: leg.legKey,
+            amount: row.amount,
+            currencyTypeId: String(leg.payload.currency_type),
+            debitAccountId: String(leg.payload.debit_account),
+            creditAccountId: String(leg.payload.credit_account),
+          });
         }
       }
     }
     if (includeDistribution && config.distribution && distributionRefs) {
       const { legs } = buildLegPayloads(date, rate);
       for (const leg of legs) {
-        const duplicate = await findDuplicateForTransaction(
-          httpClient,
-          STRAPI_URL,
-          {
-            date,
-            organizationId: leg.organizationId,
-            organizationLabel: leg.legKey,
-            amount: leg.amount,
-            currencyTypeId: leg.currencyTypeId,
-            debitAccountId: leg.debitAccountId,
-            creditAccountId: leg.creditAccountId,
-          },
-        );
-        if (duplicate) {
-          duplicates.push(duplicate);
-        }
+        checks.push({
+          organizationId: leg.organizationId,
+          organizationLabel: leg.legKey,
+          amount: leg.amount,
+          currencyTypeId: leg.currencyTypeId,
+          debitAccountId: leg.debitAccountId,
+          creditAccountId: leg.creditAccountId,
+        });
       }
     }
-    return duplicates;
+    return collectBulkQuantityDuplicates(httpClient, STRAPI_URL, date, checks);
   };
 
   const buildPoolLegPlansForRows = useCallback(
@@ -630,7 +669,10 @@ export function BulkQuantityEntryPage({
         dataProvider,
         productionPlans,
         (plan) => buildProductionPayload(plan, date),
-        { linkFollowingRowsToFirstSuccess: true },
+        {
+          linkFollowingRowsToFirstSuccess: true,
+          onAfterSuccessfulSave: buildAfterSave,
+        },
       );
       setResults((previous) => mergeRowResults(previous, productionResults));
       const mergedProduction = [
@@ -640,19 +682,42 @@ export function BulkQuantityEntryPage({
       const submissionAnchor = submissionAnchorDocumentId(mergedProduction);
       const productionByOrg =
         productionAnchorByOrganizationId(mergedProduction);
+      let poolBatch: BulkQuantityRowResult[] = [];
+      let distributionBatch: BulkQuantityRowResult[] = [];
       if (poolLegPlans.length > 0) {
-        await runLegPlans(
+        poolBatch = await runLegPlans(
           attachPoolLegAnchors(poolLegPlans, productionByOrg, submissionAnchor),
         );
       }
       if (distributionLegPlans.length > 0) {
-        await runLegPlans(
+        distributionBatch = await runLegPlans(
           attachDistributionLegAnchors(distributionLegPlans, submissionAnchor),
         );
       }
       setSaving(false);
+
+      const legBatches = [...poolBatch, ...distributionBatch];
+      const expectedSteps =
+        productionPlans.length +
+        poolLegPlans.length +
+        distributionLegPlans.length;
+      if (
+        expectedSteps > 0 &&
+        productionResults.length === productionPlans.length &&
+        legBatches.length ===
+          poolLegPlans.length + distributionLegPlans.length &&
+        failedRowIds([...productionResults, ...legBatches]).length === 0
+      ) {
+        resetAfterFullSuccess();
+      }
     },
-    [buildProductionPayload, dataProvider, runLegPlans],
+    [
+      buildAfterSave,
+      buildProductionPayload,
+      dataProvider,
+      resetAfterFullSuccess,
+      runLegPlans,
+    ],
   );
 
   const buildSavePlans = (
@@ -949,6 +1014,7 @@ export function BulkQuantityEntryPage({
       ) : null}
 
       <SimpleForm
+        key={bulkFormKey}
         defaultValues={{ date: todayIsoDate(), _bulkRowCount: 0 }}
         sx={bandedForm}
         toolbar={
@@ -1118,7 +1184,7 @@ export function BulkQuantityEntryPage({
               severity={row.status === 'success' ? 'success' : 'error'}
             >
               {row.organizationName}
-              {row.status === 'error' && row.message ? `: ${row.message}` : ''}
+              {row.message ? `: ${row.message}` : ''}
             </Alert>
           ))}
           {failedIds.length > 0 ? (

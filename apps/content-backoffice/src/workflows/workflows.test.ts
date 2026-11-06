@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { buildBackofficeConfigFromRows } from '../../../../src/api/backoffice/config';
 import { workflowConfigFromKeys } from '../../../../src/api/backoffice/workflows';
-import { parseBackofficeConfig } from './parseBackofficeConfig';
+import {
+  eggProductionInitialPublicationStatus,
+  parseBackofficeConfig,
+} from './parseBackofficeConfig';
 import { visibleWorkflowForms } from './effectiveWorkflows';
 import { eggDailyEntryConfig } from './bulk-quantity/configs/eggDailyEntry.config';
 import { EGG_PRODUCTION_WORKFLOW_ID } from './bulk-quantity/eggDailyEntry.constants';
@@ -24,6 +27,52 @@ describe('buildBackofficeConfigFromRows', () => {
       enabled: ['member-fee'],
       available: ['member-fee', 'egg-production'],
     });
+  });
+});
+
+describe('eggProductionInitialPublicationStatus', () => {
+  it('defaults to draft and reads published from config regardless of workflow enabled', () => {
+    expect(eggProductionInitialPublicationStatus(parseBackofficeConfig(null))).toBe(
+      'draft',
+    );
+    expect(
+      eggProductionInitialPublicationStatus(
+        parseBackofficeConfig({
+          enabled: [],
+          available: [],
+          publisherMustDiffer: true,
+          debitCodesPattern: '/^5/',
+          creditCodesPattern: '/^(1|3)/',
+          appTitle: '',
+          eggSaleCurrency: 'HUF',
+          features: {
+            'egg-production': {
+              enabled: false,
+              config: { initialPublicationStatus: 'published' },
+            },
+          },
+        }),
+      ),
+    ).toBe('published');
+    expect(
+      eggProductionInitialPublicationStatus(
+        parseBackofficeConfig({
+          enabled: [EGG_PRODUCTION_WORKFLOW_ID],
+          available: [EGG_PRODUCTION_WORKFLOW_ID],
+          publisherMustDiffer: true,
+          debitCodesPattern: '/^5/',
+          creditCodesPattern: '/^(1|3)/',
+          appTitle: '',
+          eggSaleCurrency: 'HUF',
+          features: {
+            'egg-production': {
+              enabled: true,
+              config: { initialPublicationStatus: 'published' },
+            },
+          },
+        }),
+      ),
+    ).toBe('published');
   });
 });
 

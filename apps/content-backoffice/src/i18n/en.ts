@@ -249,6 +249,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       no_rows: 'Enter at least one non-zero quantity.',
       invalid_quantity: 'Whole number, 0 or greater.',
       results_heading: 'Save results',
+      auto_publish_done: 'Saved and published.',
+      auto_publish_done_after_update: 'Updated and published.',
+      auto_publish_failed: 'Publishing failed.',
       retry_failed: 'Retry failed rows',
       conflict_title: 'Entry already exists for this day',
       conflict_body:

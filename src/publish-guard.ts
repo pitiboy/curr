@@ -97,6 +97,8 @@ type RequestState = {
     auth?: { strategy?: { name?: string } };
     user?: { id?: number | string };
     publishGuardLinked?: boolean;
+    /** Set with `publishGuardLinked` for egg-production auto-finalize (`?eggAuto=1`). */
+    eggWorkflowAutoFinalize?: boolean;
   };
 };
 
@@ -141,6 +143,8 @@ export function guardEffect(
     policy?: PublishPolicy;
     enteredBy?: string | null;
     linkedPublish?: boolean;
+    /** Transaction publish from egg workflow with `?eggAuto=1` (dataentry may finalize). */
+    eggWorkflowAutoFinalize?: boolean;
   },
 ): GuardEffect {
   if (!GUARDED_UIDS.has(uid)) {
@@ -154,7 +158,14 @@ export function guardEffect(
     action === 'unpublish' ||
     (writing && status === 'published');
 
-  if (actor && actor.roleType !== 'editor' && publishing) {
+  const dataentryEggAutoPublish =
+    uid === TRANSACTION_UID &&
+    action === 'publish' &&
+    actor?.roleType === 'dataentry' &&
+    options?.linkedPublish === true &&
+    options?.eggWorkflowAutoFinalize === true;
+
+  if (actor && actor.roleType !== 'editor' && publishing && !dataentryEggAutoPublish) {
     return { type: 'forbid', message: PUBLISH_FORBIDDEN };
   }
 
@@ -180,6 +191,7 @@ export function guardEffect(
   }
 
   const editorPublishing = actor.roleType === 'editor' && publishing;
+  const dataentryEggPublishing = dataentryEggAutoPublish && publishing;
   const email = actor.email.length > 0 ? actor.email : undefined;
 
   return {
@@ -190,11 +202,15 @@ export function guardEffect(
     draftPublishedBy:
       action === 'publish' && actor.roleType === 'editor'
         ? (email ?? null)
-        : action === 'unpublish' && actor.roleType === 'editor'
-          ? null
-          : undefined,
+        : action === 'publish' && dataentryEggAutoPublish
+          ? (email ?? null)
+          : action === 'unpublish' && actor.roleType === 'editor'
+            ? null
+            : undefined,
     publishLinkedReceipt:
-      uid === TRANSACTION_UID && editorPublishing && action !== 'unpublish',
+      uid === TRANSACTION_UID &&
+      (editorPublishing || dataentryEggPublishing) &&
+      action !== 'unpublish',
   };
 }
 
@@ -351,13 +367,24 @@ async function writeDraftPublishedBy(
 export async function withPublishGuardLinked<T>(
   strapi: Pick<PublishGuardStrapi, 'requestContext'>,
   run: () => Promise<T>,
+  options?: { eggWorkflowAuto?: boolean },
 ): Promise<T> {
   const state = strapi.requestContext.get()?.state;
-  if (state) state.publishGuardLinked = true;
+  if (state) {
+    state.publishGuardLinked = true;
+    if (options?.eggWorkflowAuto) {
+      state.eggWorkflowAutoFinalize = true;
+    }
+  }
   try {
     return await run();
   } finally {
-    if (state) state.publishGuardLinked = false;
+    if (state) {
+      state.publishGuardLinked = false;
+      if (options?.eggWorkflowAuto) {
+        state.eggWorkflowAutoFinalize = false;
+      }
+    }
   }
 }
 
@@ -503,6 +530,8 @@ export function registerPublishGuard(
     const actor = await contentApiActor(strapi);
     const requestState = strapi.requestContext.get()?.state;
     const linkedPublish = requestState?.publishGuardLinked === true;
+    const eggWorkflowAutoFinalize =
+      requestState?.eggWorkflowAutoFinalize === true;
     const status = context.params?.status;
     const writing = context.action === 'create' || context.action === 'update';
     const needsCreator =
@@ -516,6 +545,7 @@ export function registerPublishGuard(
       policy,
       enteredBy,
       linkedPublish,
+      eggWorkflowAutoFinalize,
     });
 
     if (effect.type === 'forbid') {
