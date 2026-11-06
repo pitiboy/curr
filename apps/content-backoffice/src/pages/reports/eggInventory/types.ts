@@ -27,6 +27,8 @@ export type EggTimeseriesPoint = {
   /** Distributed in this bucket (aligned with production periods). */
   distributedInternal: number;
   distributedSale: number;
+  /** memberId → total EGG (internal+sale) in this bucket — for grouped member bars. */
+  byMemberTotal: Record<string, number>;
 };
 
 export type EggAlomRow = {
@@ -43,6 +45,10 @@ export type EggMemberRow = {
   accountLabel: string;
   internalQty: number;
   saleQty: number;
+  /** Sale revenue in `saleCurrency` (0 when saleQty is 0). */
+  saleRevenue: number;
+  /** ISO-ish currency code for saleRevenue (mock/API: usually HUF). */
+  saleCurrency: string;
 };
 
 export type EggInventoryReport = {

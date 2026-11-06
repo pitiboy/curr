@@ -134,13 +134,15 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       alom_name: 'Alom',
       members_title: 'Tagi egyenleg',
       members_subtitle:
-        'Belső és eladás idősorban (ugyanaz a skála, mint a termelésnél), alatta a teljes időszak tagarányai.',
+        'Tagonkénti oszlopok egymás mellett, ugyanazzal az időskálával, mint a termelés; alatta a teljes időszak belső/eladás arányai.',
       pie_internal: 'Belső arány tagonként',
       pie_sale: 'Eladás arány tagonként',
       pie_empty: 'Nincs adat ehhez a kördiagramhoz.',
       member_name: 'Tag',
       member_account: 'Számla',
-      member_total: 'Összesen',
+      sale_qty: 'Eladás (db)',
+      sale_revenue: 'Eladás bevétel',
+      member_total: 'Összesen (db)',
       empty:
         'Nincs megjeleníthető tojásforgalom ebben az időszakban. Válassz másik tartományt.',
       error: 'A kimutatás betöltése nem sikerült.',

@@ -55,6 +55,18 @@ function formatQty(n: number): string {
   return new Intl.NumberFormat('hu-HU').format(n);
 }
 
+function formatMoney(n: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat('hu-HU', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(n);
+  } catch {
+    return `${formatQty(n)} ${currency}`;
+  }
+}
+
 export function EggInventoryReportPage() {
   const translate = useTranslate();
   const [range, setRange] = useState<DateRangePreset>('thisMonth');
@@ -217,11 +229,8 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
         ) : (
           <Stack spacing={2}>
             <MemberTimelineChart
-              internalColor={theme.palette.primary.main}
-              internalLabel={translate('app.egg_inventory.kpi.internal')}
+              members={byMember}
               periods={periods}
-              saleColor={theme.palette.warning.main}
-              saleLabel={translate('app.egg_inventory.kpi.sale')}
               timeseries={timeseries}
             />
             <Box
@@ -257,7 +266,10 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                     {translate('app.egg_inventory.kpi.internal')}
                   </TableCell>
                   <TableCell align="right">
-                    {translate('app.egg_inventory.kpi.sale')}
+                    {translate('app.egg_inventory.sale_qty')}
+                  </TableCell>
+                  <TableCell align="right">
+                    {translate('app.egg_inventory.sale_revenue')}
                   </TableCell>
                   <TableCell align="right">
                     {translate('app.egg_inventory.member_total')}
@@ -282,6 +294,17 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                     </TableCell>
                     <TableCell align="right">
                       {formatQty(row.saleQty)}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography
+                        component="span"
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                        variant="body2"
+                      >
+                        {row.saleQty > 0
+                          ? formatMoney(row.saleRevenue, row.saleCurrency)
+                          : '—'}
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
                       {formatQty(memberTotal(row))}
@@ -356,43 +379,38 @@ function ProductionBarTrendChart({
   );
 }
 
+const MEMBER_BAR_COLORS = [
+  '#346C3E',
+  '#C47B2C',
+  '#2F6F8F',
+  '#8B5A2B',
+  '#5C6B4A',
+  '#A65D57',
+] as const;
+
 function MemberTimelineChart({
   timeseries,
   periods,
-  internalLabel,
-  saleLabel,
-  internalColor,
-  saleColor,
+  members,
 }: {
   timeseries: EggTimeseriesPoint[];
   periods: string[];
-  internalLabel: string;
-  saleLabel: string;
-  internalColor: string;
-  saleColor: string;
+  members: EggMemberRow[];
 }) {
   return (
     <ChartsContainer
       height={CHART_HEIGHT}
       margin={CHART_MARGIN}
-      series={[
-        {
-          type: 'bar',
-          id: 'member-internal',
-          label: internalLabel,
-          data: timeseries.map((p) => p.distributedInternal),
-          stack: 'dist',
-          color: internalColor,
-        },
-        {
-          type: 'bar',
-          id: 'member-sale',
-          label: saleLabel,
-          data: timeseries.map((p) => p.distributedSale),
-          stack: 'dist',
-          color: saleColor,
-        },
-      ]}
+      series={members.map((member, index) => ({
+        type: 'bar' as const,
+        id: member.memberId,
+        label: member.memberName,
+        data: timeseries.map(
+          (point) => point.byMemberTotal[member.memberId] ?? 0,
+        ),
+        // No stack → grouped bars side-by-side per period.
+        color: MEMBER_BAR_COLORS[index % MEMBER_BAR_COLORS.length],
+      }))}
       xAxis={[
         {
           id: 'period',
