@@ -874,6 +874,10 @@ export interface ApiOrganizationOrganization
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    content_users: Schema.Attribute.Relation<
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     parent: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
@@ -1746,6 +1750,10 @@ export interface PluginUsersPermissionsUser
       }>;
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    organizations: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::organization.organization'
+    >;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     role: Schema.Attribute.Relation<
       'manyToOne',
