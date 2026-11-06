@@ -14,7 +14,9 @@ export type EggInventoryQuery = {
   reload: () => void;
 };
 
-export function useEggInventoryReport(preset: DateRangePreset): EggInventoryQuery {
+export function useEggInventoryReport(
+  preset: DateRangePreset,
+): EggInventoryQuery {
   const [reloadToken, setReloadToken] = useState(0);
   const requestKey = `${preset}:${reloadToken}`;
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);

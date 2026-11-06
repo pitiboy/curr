@@ -7,11 +7,7 @@
  */
 
 export type DateRangePreset =
-  | 'all'
-  | 'thisMonth'
-  | 'lastMonth'
-  | 'last7'
-  | 'thisYear';
+  'all' | 'thisMonth' | 'lastMonth' | 'last7' | 'thisYear';
 
 /** Which member ledger(s) the report focuses on. */
 export type LedgerFocus = 'share' | 'pocket' | 'both';
@@ -64,8 +60,4 @@ export type MembershipShareReport = {
   history: MembershipHistoryPoint[];
 };
 
-export type MembershipShareStatus =
-  | 'loading'
-  | 'success'
-  | 'empty'
-  | 'error';
+export type MembershipShareStatus = 'loading' | 'success' | 'empty' | 'error';

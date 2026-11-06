@@ -513,13 +513,7 @@ function KpiTile({
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Box>
       <Typography component="h2" sx={{ mb: 1 }} variant="subtitle1">

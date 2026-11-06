@@ -9,11 +9,7 @@
  */
 
 export type DateRangePreset =
-  | 'all'
-  | 'thisMonth'
-  | 'lastMonth'
-  | 'last7'
-  | 'thisYear';
+  'all' | 'thisMonth' | 'lastMonth' | 'last7' | 'thisYear';
 
 export type EggInventoryKpis = {
   produced: number;
@@ -56,8 +52,4 @@ export type EggInventoryReport = {
   byMember: EggMemberRow[];
 };
 
-export type EggInventoryStatus =
-  | 'loading'
-  | 'success'
-  | 'empty'
-  | 'error';
+export type EggInventoryStatus = 'loading' | 'success' | 'empty' | 'error';

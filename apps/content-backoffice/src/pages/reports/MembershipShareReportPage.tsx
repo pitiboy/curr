@@ -171,10 +171,9 @@ function ReportBody({
 
   const currencies = [
     ...new Set(
-      mergeCurrencyAmounts(
-        kpis.shareByCurrency,
-        kpis.pocketByCurrency,
-      ).map((row) => row.currency),
+      mergeCurrencyAmounts(kpis.shareByCurrency, kpis.pocketByCurrency).map(
+        (row) => row.currency,
+      ),
     ),
   ].sort();
   const primaryCurrency = currencies[0] ?? 'HUF';
@@ -208,20 +207,19 @@ function ReportBody({
             color: theme.palette.warning.main,
           },
         ].filter((row) => row.value > 0)
-      : (focus === 'share'
-          ? kpis.shareByCurrency
-          : kpis.pocketByCurrency
-        ).map((row, index) => ({
-          id: row.currency,
-          label: row.currency,
-          value: row.amount,
-          color:
-            index === 0
-              ? theme.palette.primary.main
-              : index === 1
-                ? theme.palette.secondary.main
-                : theme.palette.info.main,
-        }));
+      : (focus === 'share' ? kpis.shareByCurrency : kpis.pocketByCurrency).map(
+          (row, index) => ({
+            id: row.currency,
+            label: row.currency,
+            value: row.amount,
+            color:
+              index === 0
+                ? theme.palette.primary.main
+                : index === 1
+                  ? theme.palette.secondary.main
+                  : theme.palette.info.main,
+          }),
+        );
 
   return (
     <Stack spacing={3}>
@@ -362,11 +360,7 @@ function ReportBody({
       </Box>
 
       <Section title={translate('app.membership_share.members_title')}>
-        <Typography
-          color="text.secondary"
-          sx={{ mb: 1.5 }}
-          variant="body2"
-        >
+        <Typography color="text.secondary" sx={{ mb: 1.5 }} variant="body2">
           {translate('app.membership_share.members_subtitle')}
         </Typography>
         {byMember.length === 0 ? (
@@ -438,11 +432,7 @@ function ReportBody({
           currency: historyCurrency,
         })}
       >
-        <Typography
-          color="text.secondary"
-          sx={{ mb: 1.5 }}
-          variant="body2"
-        >
+        <Typography color="text.secondary" sx={{ mb: 1.5 }} variant="body2">
           {translate('app.membership_share.history_subtitle')}
         </Typography>
         {history.length === 0 ? (
@@ -456,15 +446,14 @@ function ReportBody({
             series={byMember.map((member, index) => ({
               id: member.memberId,
               label: member.memberName,
-              data: history.map(
-                (point) =>
-                  historyAmountForFocus(
-                    point.byMember[member.memberId] ?? {
-                      share: 0,
-                      pocket: 0,
-                    },
-                    focus,
-                  ),
+              data: history.map((point) =>
+                historyAmountForFocus(
+                  point.byMember[member.memberId] ?? {
+                    share: 0,
+                    pocket: 0,
+                  },
+                  focus,
+                ),
               ),
               stack: 'payments',
               color: seriesColors[index % seriesColors.length],
@@ -511,13 +500,7 @@ function AmountCell({
   );
 }
 
-function KpiTile({
-  label,
-  valueLabel,
-}: {
-  label: string;
-  valueLabel: string;
-}) {
+function KpiTile({ label, valueLabel }: { label: string; valueLabel: string }) {
   return (
     <Paper
       elevation={0}
@@ -542,13 +525,7 @@ function KpiTile({
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Box>
       <Typography component="h2" sx={{ mb: 1 }} variant="subtitle1">

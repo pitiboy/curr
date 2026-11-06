@@ -186,8 +186,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       history_title: 'Payments over time (%{currency})',
       history_subtitle:
         'When each member made a capital payment — period on the axis, member by colour.',
-      empty:
-        'No member payments for this period. Try another range or ledger.',
+      empty: 'No member payments for this period. Try another range or ledger.',
       error: 'Could not load the report.',
       retry: 'Retry',
     },

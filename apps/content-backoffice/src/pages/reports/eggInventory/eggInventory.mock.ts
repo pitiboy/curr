@@ -80,10 +80,7 @@ function assertConsistent(report: EggInventoryReport): EggInventoryReport {
     0,
   );
   const seriesSale = timeseries.reduce((s, p) => s + p.distributedSale, 0);
-  if (
-    seriesInternal !== kpis.internalTotal ||
-    seriesSale !== kpis.saleTotal
-  ) {
+  if (seriesInternal !== kpis.internalTotal || seriesSale !== kpis.saleTotal) {
     throw new Error('egg mock: timeseries distribution mismatch KPI');
   }
   return report;
@@ -127,9 +124,7 @@ function series(
 ): EggTimeseriesPoint[] {
   return points.map(({ period, values, internal, sale }) => ({
     period,
-    byAlom: Object.fromEntries(
-      ALOMS.map((name, i) => [name, values[i] ?? 0]),
-    ),
+    byAlom: Object.fromEntries(ALOMS.map((name, i) => [name, values[i] ?? 0])),
     distributedInternal: internal,
     distributedSale: sale,
   }));
@@ -163,7 +158,12 @@ const REPORTS: Record<DateRangePreset, EggInventoryReport | null> = {
         saleQty: 220,
       },
       { memberId: 'm-eva', memberName: 'Éva', internalQty: 40, saleQty: 180 },
-      { memberId: 'm-norbi', memberName: 'Norbi', internalQty: 0, saleQty: 180 },
+      {
+        memberId: 'm-norbi',
+        memberName: 'Norbi',
+        internalQty: 0,
+        saleQty: 180,
+      },
     ]),
   }),
 

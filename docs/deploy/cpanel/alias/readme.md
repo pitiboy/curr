@@ -20,7 +20,7 @@ Az elsődleges `server.js` a repó gyökerében lévő indító. Az alias `serve
 cPanel menüfeliratok: **angol (magyar)**. DotRollon a domainkezelő a **Domains (Domain nevek)** ikon; a régi „Tartományok / Aldomainek” külön menü nincs.
 
 1. **Domains (Domain nevek)** → **Create a New Domain (Új domain létrehozása)**: `edizone.fejlesztesek.hu` (típus: **Registered Domain**). A Node.js űrlap csak a már létező tartományokat listázza.
-   - A **Share document root** jelölőnégyzet felirata DotRollon pl.: *A dokumentum gyökerének (`/home/…/public_html`) megosztása a(z) “fejlesztesek.hu”.* Angolul: *If the document root is shared, the new domain will serve the same content as “fejlesztesek.hu”.* **Hagyd kikapcsolva.** Bekapcsolva a domain a fő `fejlesztesek.hu` tartalmát szolgálná ki, nem külön Passenger/Node alkalmazást; a beállítás létrehozás után **nem változtatható**.
+   - A **Share document root** jelölőnégyzet felirata DotRollon pl.: _A dokumentum gyökerének (`/home/…/public_html`) megosztása a(z) “fejlesztesek.hu”._ Angolul: _If the document root is shared, the new domain will serve the same content as “fejlesztesek.hu”._ **Hagyd kikapcsolva.** Bekapcsolva a domain a fő `fejlesztesek.hu` tartalmát szolgálná ki, nem külön Passenger/Node alkalmazást; a beállítás létrehozás után **nem változtatható**.
    - Kikapcsolva a **Document Root (Dokumentum kezdőkönyvtár)** mező szerkeszthető (pl. `public_html/edizone`). Ez csak a domain statikus gyökere a cPanelben; a Strapi alias a **Setup Node.js App** gyökerében fut (`node/kor-edizone`), nem ebben a mappában.
 2. **Setup Node.js App (Node.js alkalmazás beállítása)** → új alkalmazás. Verzió **22.23.3**, mód **Production**, gyökér `node/kor-edizone`, URL `edizone.fejlesztesek.hu` üres útvonallal, indító fájl `server.js`. A 22-es főverzió kötelező: a közös modulok ehhez a Node-hoz tartoznak.
 3. A **File Manager (Fájlkezelő)**-rel másold ennek a mappának a `package.json` és `server.js` fájlját a `node/kor-edizone` gyökérbe. A cPanel enélkül a `package.json` nélkül nem indítja az alkalmazást. A fájl üres váz, függőség nélkül.
@@ -39,7 +39,7 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
   - Létező példák ugyanitt: `neondb` (Neon default), `curr_zep` (kor), `curr_edizone` (edizone).
   - **Új alias (ajánlott, ugyanez a minta):**
     1. [Neon Console](https://console.neon.tech) → project `curr-zep` → **Databases** → **New database** (név pl. `curr_teszt_kor`; owner: `neondb_owner`).
-    2. **Connection string** (ugyanitt, meglévő DB-hez is): a project / branch nézetben a fekete **Connect** gomb (felső nav vagy a compute kártyán) → megnyílik a *Connect to your branch* dialóg.
+    2. **Connection string** (ugyanitt, meglévő DB-hez is): a project / branch nézetben a fekete **Connect** gomb (felső nav vagy a compute kártyán) → megnyílik a _Connect to your branch_ dialóg.
        - Branch: `production`
        - Database: az alias DB neve (pl. `curr_teszt_kor` — ne `neondb` / `curr_zep`)
        - Role: `neondb_owner`

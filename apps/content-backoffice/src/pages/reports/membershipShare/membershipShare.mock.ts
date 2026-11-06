@@ -7,10 +7,7 @@ import type {
   MembershipShareKpis,
   MembershipShareReport,
 } from './types';
-import {
-  MEMBER_POCKET_ACCOUNT_CODE,
-  MEMBER_SHARE_ACCOUNT_CODE,
-} from './types';
+import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
 
 /** Ledger codes used when a real aggregator is wired. */
 export const MEMBERSHIP_SHARE_ACCOUNT_CODES = {
@@ -70,9 +67,7 @@ export function sortMembersByFocus(
 ): MembershipMemberRow[] {
   return [...rows]
     .filter((row) => memberFocusTotal(row, focus) > 0)
-    .sort(
-      (a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus),
-    );
+    .sort((a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus));
 }
 
 function buildKpis(
@@ -86,14 +81,15 @@ function buildKpis(
     pocketByCurrency: mergeCurrencyAmounts(
       ...byMember.map((row) => row.pocketByCurrency),
     ),
-    memberCount: byMember.filter(
-      (row) => memberFocusTotal(row, 'both') > 0,
-    ).length,
+    memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') > 0)
+      .length,
     paymentCount,
   };
 }
 
-function assertConsistent(report: MembershipShareReport): MembershipShareReport {
+function assertConsistent(
+  report: MembershipShareReport,
+): MembershipShareReport {
   const { kpis, byMember, history, historyCurrency } = report;
   const shareFromMembers = mergeCurrencyAmounts(
     ...byMember.map((row) => row.shareByCurrency),
@@ -130,8 +126,8 @@ function assertConsistent(report: MembershipShareReport): MembershipShareReport 
   }
   for (const row of byMember) {
     const expectedShare =
-      row.shareByCurrency.find((c) => c.currency === historyCurrency)
-        ?.amount ?? 0;
+      row.shareByCurrency.find((c) => c.currency === historyCurrency)?.amount ??
+      0;
     const expectedPocket =
       row.pocketByCurrency.find((c) => c.currency === historyCurrency)
         ?.amount ?? 0;

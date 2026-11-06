@@ -45,9 +45,7 @@ export function useMembershipShareReport(
         setReport(null);
         setFailed(true);
         setErrorMessage(
-          err instanceof Error
-            ? err.message
-            : 'membership-share load failed',
+          err instanceof Error ? err.message : 'membership-share load failed',
         );
         setResolvedKey(`${preset}:${focus}:${reloadToken}`);
       });
