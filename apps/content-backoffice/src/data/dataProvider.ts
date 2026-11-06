@@ -107,8 +107,11 @@ export const dataProvider = withDocumentId({
       : strapiProvider.create(resource, params),
 } as DataProvider);
 
-export function publishTransaction(documentId: string) {
-  return publishTransactionDraft(httpClient, STRAPI_URL, documentId);
+export function publishTransaction(
+  documentId: string,
+  options?: { eggAuto?: boolean },
+) {
+  return publishTransactionDraft(httpClient, STRAPI_URL, documentId, options);
 }
 
 export function discardTransaction(documentId: string) {

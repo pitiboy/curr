@@ -123,3 +123,23 @@ export function eggSaleCurrencyForWorkflow(
       : undefined;
   return fromWorkflow ?? config.eggSaleCurrency;
 }
+
+const EGG_PRODUCTION_WORKFLOW_ID = 'egg-production';
+
+/**
+ * `egg-production` Settings `config.initialPublicationStatus`: whether the bulk workflow
+ * calls POST .../actions/publish after each successful save. Independent of the workflow
+ * menu `enabled` flag (Strapi still controls menu visibility). Default `draft`.
+ * After save the client calls publish with `eggAuto=1`; the server allows
+ * `dataentry` or `editor` for that path when this flag is on.
+ */
+export function eggProductionInitialPublicationStatus(
+  config: BackofficeConfigResponse,
+): 'draft' | 'published' {
+  const row = config.features[EGG_PRODUCTION_WORKFLOW_ID];
+  if (!row) return 'draft';
+  const raw = row.config?.initialPublicationStatus;
+  if (typeof raw !== 'string') return 'draft';
+  const normalized = raw.trim().toLowerCase();
+  return normalized === 'published' ? 'published' : 'draft';
+}

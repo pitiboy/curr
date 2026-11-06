@@ -30,6 +30,14 @@ export type MembershipShareKpis = {
   pocketByCurrency: CurrencyAmount[];
   /** Member count with any credit in range for the active focus. */
   memberCount: number;
+  /** Credits to 1101 (részjegy) in the selected publication scope. */
+  sharePaymentCount: number;
+  /** Credits to 1001 (zseb) in the selected publication scope. */
+  pocketPaymentCount: number;
+  /**
+   * Befizetések száma for the current ledger focus: share + pocket in „both”,
+   * otherwise the focused leg only (matches charts and member rows).
+   */
   paymentCount: number;
 };
 

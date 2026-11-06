@@ -11,7 +11,7 @@ import type {
   BackofficeFeatureRow,
   BackofficeFeatureState,
 } from './types';
-import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-guard';
+import { DEFAULT_PUBLISH_POLICY, type PublishPolicy } from '../publish-policy';
 
 export function isBackofficeSettingKey(key: string): boolean {
   return BACKOFFICE_SETTING_PREFIXES.some((prefix) => key.startsWith(prefix));

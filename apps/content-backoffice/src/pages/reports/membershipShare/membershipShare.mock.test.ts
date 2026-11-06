@@ -42,6 +42,7 @@ describe('membership-share mock consistency', () => {
     expect(base).not.toBeNull();
     if (!base) return;
     const filtered = filterReportByFocus(base, 'share');
+    expect(filtered.kpis.paymentCount).toBe(base.kpis.sharePaymentCount);
     expect(filtered.kpis.pocketByCurrency).toEqual([]);
     expect(
       filtered.byMember.every((row) => row.pocketByCurrency.length === 0),

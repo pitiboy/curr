@@ -1,8 +1,6 @@
 import { strapiHttpClient } from 'ra-strapi';
 
-import { STRAPI_URL } from '../../../config';
 import type { ContentHttpClient } from '../../../data/receiptDraft';
-import { encodeStrapiQuery } from '../../../data/transactionList';
 
 import {
   aggregateMembershipShareReport,
@@ -12,14 +10,12 @@ import {
 import { boundsForPreset } from './dateRange';
 import type { DateRangePreset, MembershipShareReport } from './types';
 import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
-
-const PAGE_SIZE = 100;
-const MAX_PAGES = 50;
-
-type ListResponse<T> = {
-  data?: T[];
-  meta?: { pagination?: { pageCount?: number } };
-};
+import {
+  fetchStrapiList,
+  loadReportTransactions,
+  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  type ReportTransactionStatusFilter,
+} from '../shared/reportTransactionStatus';
 
 type MemberRow = {
   documentId?: string;
@@ -53,33 +49,10 @@ function parseAmount(value: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-async function fetchAllPages<T>(
-  httpClient: ContentHttpClient,
-  path: string,
-  queryBase: Record<string, unknown>,
-): Promise<T[]> {
-  const rows: T[] = [];
-  let page = 1;
-  let pageCount = 1;
-  do {
-    const query = encodeStrapiQuery({
-      ...queryBase,
-      pagination: { page, pageSize: PAGE_SIZE, withCount: true },
-    });
-    const { json } = (await httpClient(`${STRAPI_URL}${path}?${query}`)) as {
-      json: ListResponse<T>;
-    };
-    rows.push(...(json.data ?? []));
-    pageCount = json.meta?.pagination?.pageCount ?? 1;
-    page += 1;
-  } while (page <= pageCount && page <= MAX_PAGES);
-  return rows;
-}
-
 async function loadMembers(
   httpClient: ContentHttpClient,
 ): Promise<MembershipShareMemberRef[]> {
-  const rows = await fetchAllPages<MemberRow>(httpClient, '/api/members', {
+  const rows = await fetchStrapiList<MemberRow>(httpClient, '/api/members', {
     fields: ['documentId', 'name'],
     populate: {
       account: { fields: ['documentId', 'code'] },
@@ -124,28 +97,32 @@ function mapTx(row: TxRow): MembershipShareTx | null {
 async function loadTransactions(
   httpClient: ContentHttpClient,
   preset: DateRangePreset,
+  transactionStatus: ReportTransactionStatusFilter,
 ): Promise<MembershipShareTx[]> {
   const bounds = boundsForPreset(preset);
   const dateFilter: Record<string, string> = { $lte: bounds.to };
   if (bounds.from) dateFilter.$gte = bounds.from;
 
-  const rows = await fetchAllPages<TxRow>(httpClient, '/api/transactions', {
-    status: 'published',
-    filters: {
-      $and: [
-        { date: dateFilter },
-        {
-          credit_account: {
-            code: {
-              $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
+  const rows = await loadReportTransactions<TxRow>(
+    httpClient,
+    transactionStatus,
+    {
+      filters: {
+        $and: [
+          { date: dateFilter },
+          {
+            credit_account: {
+              code: {
+                $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
+              },
             },
           },
-        },
-      ],
+        ],
+      },
+      populate: reportPopulate,
+      sort: ['date:asc'],
     },
-    populate: reportPopulate,
-    sort: ['date:asc'],
-  });
+  );
 
   return rows
     .map(mapTx)
@@ -153,18 +130,23 @@ async function loadTransactions(
 }
 
 /**
- * Load published 1101/1001 inflows from the Content API and aggregate.
+ * Load 1101/1001 inflows from the Content API and aggregate.
  * Returns null when the range has no matching payments.
  */
 export async function fetchMembershipShareReport(
   preset: DateRangePreset,
-  options: { httpClient?: ContentHttpClient } = {},
+  options: {
+    httpClient?: ContentHttpClient;
+    transactionStatus?: ReportTransactionStatusFilter;
+  } = {},
 ): Promise<MembershipShareReport | null> {
   const httpClient = options.httpClient ?? strapiHttpClient();
+  const transactionStatus =
+    options.transactionStatus ?? REPORT_TRANSACTION_STATUS_FILTER_DEFAULT;
 
   const [members, txs] = await Promise.all([
     loadMembers(httpClient),
-    loadTransactions(httpClient, preset),
+    loadTransactions(httpClient, preset, transactionStatus),
   ]);
 
   return aggregateMembershipShareReport(txs, members, preset);

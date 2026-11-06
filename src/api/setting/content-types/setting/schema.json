@@ -36,7 +36,7 @@
       "required": false,
       "metadatas": {
         "label": "Config (JSON)",
-        "description": "Plugin- vagy beállítás-specifikus értékek (pl. regex minta, saleCurrency)."
+        "description": "Plugin- vagy beállítás-specifikus értékek (pl. regex minta, saleCurrency). Workflow `egg-production`: `saleCurrency`, valamint `initialPublicationStatus`: `\"draft\"` (alap) vagy `\"published\"` — utóbbinál a bulk űrlap mentés után `.../actions/publish?eggAuto=1` (`dataentry` vagy `editor`; a szerver ellenőrzi a beállítást)."
       }
     }
   }

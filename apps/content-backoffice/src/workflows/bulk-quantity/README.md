@@ -1,6 +1,8 @@
 # Bulk quantity entry workflows
 
-Reusable **bulk quantity entry** for deal-style forms: one shared date and one numeric input per child organization under a configured parent org. Each non-zero row becomes its own draft `transaction` via the normal content-backoffice data provider.
+Reusable **bulk quantity entry** for deal-style forms: one shared date and one numeric input per child organization under a configured parent org. Each non-zero row becomes its own `transaction` via the normal content-backoffice data provider (draft by default).
+
+For the **`egg-production`** Settings row, optional JSON `initialPublicationStatus`: `"draft"` (default) or `"published"`. When `"published"`, successful creates/updates call `POST /api/transactions/:documentId/actions/publish?eggAuto=1` (`dataentry` or `editor`). The server verifies the Setting row still requests `published`, then runs publish with linked context so the same user can finalize; manual list „Véglegesítés” stays under the usual `publisher_must_differ` rules (no `eggAuto`).
 
 Optional **distribution** (second wizard step) allocates the day’s total quantity to members of a configured organization. The egg daily entry workflow uses this; other resources (fruit, pigs) can reuse the same config shape.
 
