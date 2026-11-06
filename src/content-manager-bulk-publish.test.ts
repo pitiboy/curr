@@ -59,7 +59,7 @@ describe('patchDocumentManagerBulkActions', () => {
     let maxInFlight = 0;
     let transactions = 0;
 
-    const manager = {
+    const manager = fakeManager({
       publish: async (documentId: string) => {
         order.push(`start:${documentId}`);
         inFlight += 1;
@@ -69,21 +69,11 @@ describe('patchDocumentManagerBulkActions', () => {
         order.push(`end:${documentId}`);
         return [{ documentId }];
       },
-      publishMany: async () => 0,
-      unpublishMany: async () => ({ count: 0 }),
-    };
+    });
 
-    const strapi = {
-      db: {
-        transaction: async <T>(cb: () => Promise<T>) => {
-          transactions += 1;
-          return cb();
-        },
-      },
-      documents: () => ({
-        unpublish: async () => ({ entries: [] }),
-      }),
-    };
+    const strapi = fakeStrapi(() => {
+      transactions += 1;
+    });
 
     patchDocumentManagerBulkActions(manager, strapi);
     const count = await manager.publishMany(
@@ -107,31 +97,17 @@ describe('patchDocumentManagerBulkActions', () => {
 
   it('rolls the shared transaction back when a later publish fails', async () => {
     let rolledBack = false;
-    const manager = {
+    const manager = fakeManager({
       publish: async (documentId: string) => {
         if (documentId === 'bad') {
           throw new Error('Missing required fields');
         }
         return [{ documentId }];
       },
-      publishMany: async () => 0,
-      unpublishMany: async () => ({ count: 0 }),
-    };
-    const strapi = {
-      db: {
-        transaction: async <T>(cb: () => Promise<T>) => {
-          try {
-            return await cb();
-          } catch (error) {
-            rolledBack = true;
-            throw error;
-          }
-        },
-      },
-      documents: () => ({
-        unpublish: async () => ({ entries: [] }),
-      }),
-    };
+    });
+    const strapi = fakeStrapi(undefined, () => {
+      rolledBack = true;
+    });
 
     patchDocumentManagerBulkActions(manager, strapi);
     await assert.rejects(
@@ -145,4 +121,67 @@ describe('patchDocumentManagerBulkActions', () => {
     );
     assert.equal(rolledBack, true);
   });
+
+  it('deletes inside one transaction without overlapping deletes', async () => {
+    const order: string[] = [];
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const manager = fakeManager({
+      delete: async (documentId: string) => {
+        order.push(`start:${documentId}`);
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await Promise.resolve();
+        inFlight -= 1;
+        order.push(`end:${documentId}`);
+        return {};
+      },
+    });
+    const strapi = fakeStrapi();
+
+    patchDocumentManagerBulkActions(manager, strapi);
+    const result = await manager.deleteMany(
+      ['d1', 'd2'],
+      'api::transaction.transaction',
+    );
+
+    assert.equal(result.count, 2);
+    assert.equal(maxInFlight, 1);
+    assert.deepEqual(order, ['start:d1', 'end:d1', 'start:d2', 'end:d2']);
+  });
 });
+
+function fakeManager(
+  overrides: Partial<{
+    publish: (documentId: string) => Promise<unknown>;
+    delete: (documentId: string) => Promise<unknown>;
+  }> = {},
+) {
+  return {
+    publish:
+      overrides.publish ?? (async (documentId: string) => [{ documentId }]),
+    delete: overrides.delete ?? (async () => ({})),
+    publishMany: async () => 0,
+    unpublishMany: async () => ({ count: 0 }),
+    deleteMany: async () => ({ count: 0 }),
+  };
+}
+
+function fakeStrapi(onTransaction?: () => void, onRollback?: () => void) {
+  return {
+    db: {
+      transaction: async <T>(cb: () => Promise<T>) => {
+        onTransaction?.();
+        try {
+          return await cb();
+        } catch (error) {
+          onRollback?.();
+          throw error;
+        }
+      },
+    },
+    documents: () => ({
+      unpublish: async () => ({ entries: [] }),
+    }),
+  };
+}
