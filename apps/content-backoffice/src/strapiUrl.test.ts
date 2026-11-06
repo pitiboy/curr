@@ -20,4 +20,23 @@ describe('resolveStrapiUrl', () => {
       }),
     ).toBe('https://edizone.fejlesztesek.hu');
   });
+
+  it('prefers envUrl over window origin (e2e preview)', () => {
+    expect(
+      resolveStrapiUrl({
+        dev: false,
+        windowOrigin: 'http://127.0.0.1:4173',
+        envUrl: 'http://127.0.0.1:1337',
+      }),
+    ).toBe('http://127.0.0.1:1337');
+  });
+
+  it('strips trailing slash from envUrl', () => {
+    expect(
+      resolveStrapiUrl({
+        dev: false,
+        envUrl: 'http://127.0.0.1:1337/',
+      }),
+    ).toBe('http://127.0.0.1:1337');
+  });
 });

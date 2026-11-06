@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "preview:e2e": "vite preview --port 4173 --strictPort",
+    "preview:e2e": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "pretest": "node scripts/patch-mui9-text-field-props.mjs",
     "test": "vitest run",
     "postinstall": "node scripts/patch-mui9-text-field-props.mjs"

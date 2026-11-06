@@ -20,5 +20,14 @@ export default ({ env }) => ({
   // Browser tab brand for /admin (runtime; shared admin build). Like FAVICON_PATH:
   // set per alias in cPanel, not in the shared .env. Default: KÖR.
   appTitle: env('ADMIN_APP_TITLE', 'KÖR'),
-  watchIgnoreFiles: ['**/apps', '**/docs', '**/apps/**', '**/docs/**'],
+  // e2e/ test output must not restart `strapi develop` mid Playwright run.
+  watchIgnoreFiles: [
+    '**/apps',
+    '**/docs',
+    '**/apps/**',
+    '**/docs/**',
+    '**/e2e/**',
+    '**/test-results/**',
+    '**/playwright-report/**',
+  ],
 });
