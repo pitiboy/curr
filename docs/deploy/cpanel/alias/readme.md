@@ -20,7 +20,7 @@ Az elsődleges `server.js` a repó gyökerében lévő indító. Az alias `serve
 cPanel menüfeliratok: **angol (magyar)**. DotRollon a domainkezelő a **Domains (Domain nevek)** ikon; a régi „Tartományok / Aldomainek” külön menü nincs.
 
 1. **Domains (Domain nevek)** → **Create a New Domain (Új domain létrehozása)**: `edizone.fejlesztesek.hu` (típus: **Registered Domain**). A Node.js űrlap csak a már létező tartományokat listázza.
-   - A **Share document root** jelölőnégyzet felirata DotRollon pl.: *A dokumentum gyökerének (`/home/…/public_html`) megosztása a(z) “fejlesztesek.hu”.* Angolul: *If the document root is shared, the new domain will serve the same content as “fejlesztesek.hu”.* **Hagyd kikapcsolva.** Bekapcsolva a domain a fő `fejlesztesek.hu` tartalmát szolgálná ki, nem külön Passenger/Node alkalmazást; a beállítás létrehozás után **nem változtatható**.
+   - A **Share document root** jelölőnégyzet felirata DotRollon pl.: _A dokumentum gyökerének (`/home/…/public_html`) megosztása a(z) “fejlesztesek.hu”._ Angolul: _If the document root is shared, the new domain will serve the same content as “fejlesztesek.hu”._ **Hagyd kikapcsolva.** Bekapcsolva a domain a fő `fejlesztesek.hu` tartalmát szolgálná ki, nem külön Passenger/Node alkalmazást; a beállítás létrehozás után **nem változtatható**.
    - Kikapcsolva a **Document Root (Dokumentum kezdőkönyvtár)** mező szerkeszthető (pl. `public_html/edizone`). Ez csak a domain statikus gyökere a cPanelben; a Strapi alias a **Setup Node.js App** gyökerében fut (`node/kor-edizone`), nem ebben a mappában.
 2. **Setup Node.js App (Node.js alkalmazás beállítása)** → új alkalmazás. Verzió **22.23.3**, mód **Production**, gyökér `node/kor-edizone`, URL `edizone.fejlesztesek.hu` üres útvonallal, indító fájl `server.js`. A 22-es főverzió kötelező: a közös modulok ehhez a Node-hoz tartoznak.
 3. A **File Manager (Fájlkezelő)**-rel másold ennek a mappának a `package.json` és `server.js` fájlját a `node/kor-edizone` gyökérbe. A cPanel enélkül a `package.json` nélkül nem indítja az alkalmazást. A fájl üres váz, függőség nélkül.
@@ -39,7 +39,7 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
   - Létező példák ugyanitt: `neondb` (Neon default), `curr_zep` (kor), `curr_edizone` (edizone).
   - **Új alias (ajánlott, ugyanez a minta):**
     1. [Neon Console](https://console.neon.tech) → project `curr-zep` → **Databases** → **New database** (név pl. `curr_teszt_kor`; owner: `neondb_owner`).
-    2. **Connection string** (ugyanitt, meglévő DB-hez is): a project / branch nézetben a fekete **Connect** gomb (felső nav vagy a compute kártyán) → megnyílik a *Connect to your branch* dialóg.
+    2. **Connection string** (ugyanitt, meglévő DB-hez is): a project / branch nézetben a fekete **Connect** gomb (felső nav vagy a compute kártyán) → megnyílik a _Connect to your branch_ dialóg.
        - Branch: `production`
        - Database: az alias DB neve (pl. `curr_teszt_kor` — ne `neondb` / `curr_zep`)
        - Role: `neondb_owner`
@@ -56,7 +56,7 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
   5. cPanel env: `CLOUDINARY_UPLOAD_PRESET` = a preset neve; `CLOUDINARY_FOLDER` = ugyanaz a folder string, mint a presetben.
 - `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok aliasonként. Generálás a repo gyökeréből: `node scripts/generate-secrets.js` (stdout `KEY=value` sorok; másold a cPanel env-be)
 - `ADMIN_APP_TITLE` — Strapi Admin böngészőfül brand (pl. `EdiZone`). Runtime, nem a közös `.env`-be; hiányzik → `KÖR`
-- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-daily-entry` enabled).
+- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-production` enabled — űrlap + tojáskészlet kimutatás).
 - Google OAuth — ugyanaz a Web application kliens, mint a kornál (új kliens nem kell). Részletes háttér: [backoffice-google-oauth.md](../../backoffice-google-oauth.md).
   1. [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients) → nyisd meg a meglévő **Web application** klienst (ugyanaz a projekt, mint a kornál).
   2. **Authorised redirect URIs** → **Add URI**: `https://<alias-domain>/api/connect/google/callback` (pl. `https://edizone.fejlesztesek.hu/api/connect/google/callback` vagy `https://teszt-kor.fejlesztesek.hu/api/connect/google/callback`). A kor és a localhost URI-k maradjanak. **Save**.

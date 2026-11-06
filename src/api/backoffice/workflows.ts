@@ -8,7 +8,7 @@ export type BackofficeWorkflowConfig = {
 /** @deprecated Catalog is database-driven; kept for tests that assert menu order of seeded ids. */
 export const LEGACY_WORKFLOW_MENU_ORDER = [
   'member-fee',
-  'egg-daily-entry',
+  'egg-production',
 ] as const;
 
 /**

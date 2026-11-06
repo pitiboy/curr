@@ -831,7 +831,7 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     valid_from: Schema.Attribute.DateTime &
       Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'2026-11-05T22:19:53.602Z'>;
+      Schema.Attribute.DefaultTo<'2026-11-06T00:35:19.595Z'>;
     valid_to: Schema.Attribute.DateTime;
   };
 }

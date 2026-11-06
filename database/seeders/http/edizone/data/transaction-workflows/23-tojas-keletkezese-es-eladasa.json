@@ -14,12 +14,30 @@
       "transaction_type": "Átvezetés"
     },
     {
+      "description": "Készlet átvezetés ól → Tyúktartás (ól)",
+      "percent": 100,
+      "debit_code": "4500",
+      "credit_code": "1300",
+      "currency": "EGG",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Készlet átvezetés ól → Tyúktartás (központi)",
+      "percent": 100,
+      "debit_code": "1300",
+      "credit_code": "4500",
+      "currency": "EGG",
+      "organization": "Tyúktartás",
+      "transaction_type": "Átvezetés"
+    },
+    {
       "description": "Tojás eladás (tojás)",
       "percent": 100,
       "debit_code": "1001",
       "credit_code": "1300",
       "currency": "EGG",
-      "organization": "{original.organization}",
+      "organization": "Tyúktartás",
       "transaction_type": "Átvezetés"
     },
     {

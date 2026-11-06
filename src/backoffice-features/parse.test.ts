@@ -11,7 +11,7 @@ import {
 describe('isBackofficeSettingKey', () => {
   it('treats dotted content and accounts keys as settings', () => {
     assert.equal(isBackofficeSettingKey('content.default_status'), true);
-    assert.equal(isBackofficeSettingKey('egg-daily-entry'), false);
+    assert.equal(isBackofficeSettingKey('egg-production'), false);
   });
 });
 
@@ -48,18 +48,18 @@ describe('buildBackofficeConfigFromFeatures', () => {
       },
       { key: 'member-fee', enabled: false, config: {} },
       {
-        key: 'egg-daily-entry',
+        key: 'egg-production',
         enabled: true,
         config: { saleCurrency: 'EUR' },
       },
     ]);
 
-    assert.deepEqual(config.enabled, ['egg-daily-entry']);
-    assert.deepEqual(config.available, ['member-fee', 'egg-daily-entry']);
+    assert.deepEqual(config.enabled, ['egg-production']);
+    assert.deepEqual(config.available, ['member-fee', 'egg-production']);
     assert.equal(config.publisherMustDiffer, false);
     assert.equal(config.debitCodesPattern, '/^6/');
     assert.equal(config.appTitle, 'KÖR');
-    assert.equal(config.features['egg-daily-entry']?.enabled, true);
+    assert.equal(config.features['egg-production']?.enabled, true);
   });
 });
 

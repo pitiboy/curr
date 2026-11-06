@@ -327,7 +327,7 @@ Seedből hiányzik: `EGG`, `4500`, `1900`, és a Tojóól szervezeti csomópont.
 
 ### Napi tojás rögzítés (edizone backoffice)
 
-Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-daily-entry` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
+Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-production` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
 
 Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Könyvelés soronként:
 
@@ -335,7 +335,7 @@ Mentésenként egy tranzakció jön létre nem nulla soronként, piszkozatként,
 | ---------------- | -------------------------------------------------- | ------ | ------- | --------------- | ----------- |
 | `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab  | EGG     | az adott tyúkól | `Átvezetés` |
 
-Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A workflow kapcsoló a **Settings** collection `egg-daily-entry` sorában van (edizone seed: enabled; kor: disabled). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
+Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A workflow kapcsoló a **Settings** collection `egg-production` sorában van (edizone seed: enabled; kor: disabled); ugyanez kapcsolja a **Tojás készlet** kimutatást is. Régi `egg-daily-entry` kulcs → migráció: [`database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js`](../database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
 
 ### Napi tojás továbbosztás (edizone backoffice, 2. lépés)
 

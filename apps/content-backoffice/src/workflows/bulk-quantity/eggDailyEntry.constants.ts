@@ -1,6 +1,10 @@
 import { MEMBER_PRIVATE_ACCOUNT_CODE } from './memberAccounts';
 
-export const EGG_DAILY_ENTRY_WORKFLOW_ID = 'egg-daily-entry';
+/** Settings feature flag + workflow id (gates form menu and egg inventory report). */
+export const EGG_PRODUCTION_WORKFLOW_ID = 'egg-production';
+
+/** @deprecated Use {@link EGG_PRODUCTION_WORKFLOW_ID}. */
+export const EGG_DAILY_ENTRY_WORKFLOW_ID = EGG_PRODUCTION_WORKFLOW_ID;
 
 /** Bulk quantity production write (inventory debit, egg revenue credit). */
 export const EGG_PRODUCTION_DEBIT_ACCOUNT_CODE = '1300';

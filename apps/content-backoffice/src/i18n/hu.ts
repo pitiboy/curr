@@ -51,6 +51,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_currency: 'Pénznem',
     transactions_convert_preview_steps_total:
       'Lépések összege: %{steps} (eredeti: %{original})',
+    transactions_related_children: '%{count} kapcsolódó sor',
+    transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
+    transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
     transactions_none: 'Nincs tranzakció.',
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',
@@ -121,6 +124,91 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A sablon számlakódjai nem egyértelműen találhatók meg — ellenőrizd a számlaválasztókat.',
     account_profile_workflow_dropped:
       'A kiválasztott ügylet-sablon már nem illik a megadott számlákra.',
+    egg_inventory: {
+      menu: 'Tojás készlet',
+      title: 'Tojás készletkimutatás',
+      subtitle:
+        'Mennyi tojás termelődött, ment ki (belső / eladás), és mennyi maradt a választott időszakban.',
+      range: {
+        all: 'Összes',
+        thisMonth: 'Ez a hónap',
+        lastMonth: 'Előző hónap',
+        last7: 'Elmúlt 7 nap',
+        thisYear: 'Ez az év',
+      },
+      kpi: {
+        produced: 'Termelt',
+        distributed: 'Kiosztott',
+        remaining: 'Maradvány',
+        internal: 'Belső',
+        sale: 'Eladás',
+      },
+      timeseries_title: 'Mennyiség idősor (alom szerint)',
+      trend_total: 'Összesen (trend)',
+      alom_title: 'Alom bontás',
+      alom_name: 'Alom',
+      members_title: 'Tagi egyenleg',
+      members_subtitle:
+        'Tagonkénti oszlopok egymás mellett, ugyanazzal az időskálával, mint a termelés; alatta a teljes időszak belső/eladás arányai.',
+      pie_internal: 'Belső arány tagonként',
+      pie_sale: 'Eladás arány tagonként',
+      pie_empty: 'Nincs adat ehhez a kördiagramhoz.',
+      member_name: 'Tag',
+      member_account: 'Számla',
+      sale_qty: 'Eladás (db)',
+      sale_revenue: 'Eladás bevétel',
+      member_total: 'Összesen (db)',
+      empty:
+        'Nincs megjeleníthető tojásforgalom ebben az időszakban. Válassz másik tartományt.',
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+    },
+    membership_share: {
+      menu: 'Részjegy kimutatás',
+      title: 'Tagi részjegy és zseb',
+      subtitle:
+        'Mennyi tagi befizetés érkezett a 1101 részjegy- és a 1001 zsebszámlákra a választott időszakban, pénznemenként és tagonként.',
+      range: {
+        all: 'Összes',
+        thisMonth: 'Ez a hónap',
+        lastMonth: 'Előző hónap',
+        last7: 'Elmúlt 7 nap',
+        thisYear: 'Ez az év',
+      },
+      focus: {
+        both: 'Mindkettő',
+        share: '1101 részjegy',
+        pocket: '1001 zseb',
+      },
+      ledger: {
+        share: '1101 részjegy',
+        pocket: '1001 zseb',
+      },
+      kpi: {
+        share: '%{code} részjegy · %{currency}',
+        pocket: '%{code} zseb · %{currency}',
+        members: 'Érintett tagok',
+        payments: 'Befizetések száma',
+      },
+      bar_title: 'Tagonkénti összeg (%{currency})',
+      pie_title_ledgers: '1101 / 1001 arány (%{currency})',
+      pie_title_currencies: 'Pénznem szerinti bontás',
+      members_title: 'Tagi bontás',
+      members_subtitle:
+        'Részjegy (1101) és zseb (1001) befizetések tagonként, pénznemenként — a pénznemek nem adódnak össze.',
+      member_name: 'Tag',
+      col: {
+        share: '%{code} · %{currency}',
+        pocket: '%{code} · %{currency}',
+      },
+      history_title: 'Befizetések időben (%{currency})',
+      history_subtitle:
+        'Mikor történt a vagyoni befizetés tagonként — időszakonként egymás melletti oszlopok, színenként a tag.',
+      empty:
+        'Nincs megjeleníthető tagi befizetés ebben az időszakban. Válassz másik tartományt vagy számlát.',
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+    },
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',
@@ -142,8 +230,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     feature_flags_empty: 'Nincs kapcsolható ügylet.',
     feature_flags_reset: 'Szerver szerinti lista',
     workflows: {
-      'egg-daily-entry': 'Napi tojás rögzítés',
+      'egg-production': 'Napi tojás rögzítés',
       'member-fee': 'Tagdíj',
+      'membership-share': 'Részjegy kimutatás',
     },
     bulk_quantity: {
       save: 'Mentés',
@@ -180,6 +269,11 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       distribution_no_members:
         'Nincs tag a(z) „%{org}” szervezetben ehhez a naphoz.',
       distribution_members_failed: 'A taglista betöltése nem sikerült.',
+      pool_transfer: {
+        coop: 'Tojás készlet átvezetés (ól) — %{organization} → Tyúktartás (%{amount} db)',
+        parent:
+          'Tojás készlet átvezetés (Tyúktartás) — %{organization} (%{amount} db)',
+      },
       description: {
         egg: 'Napi tojás — %{organization}: %{amount} db',
         egg_distribution_internal:
@@ -270,6 +364,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         status: 'Státusz',
         converted_to_workflow: 'Ügylet bontás',
         receipt: 'Bizonylat',
+        related_group: 'Kapcsolt tranzakciók',
       },
     },
     organizations: {

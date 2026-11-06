@@ -119,10 +119,10 @@ Setting keys use dotted prefixes (`content.`, `accounts.`, `app.`); any other `k
 
 A `database/seeders/http/common/01`–`11` fájlok futnak az `npm run seed:http:kor:local` és `seed:http:edizone:local` parancsokkal. Az adat JSON-ok a `kor/data` és `edizone/data` mappákban vannak. Ha egy instance alatt nincs `transaction-workflows/` mappa (pl. edizone), a 11-es lépés no-op.
 
-| Lépés | HTTP                                                                                                  | Adat                            |
-| ----- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
-| 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`      |
-| 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json` |
+| Lépés | HTTP                                                                                                  | Adat                                |
+| ----- | ----------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 09    | `common/09-currency-rates.http` (vagy `kor/09-currency-rates.http`, `edizone/09-currency-rates.http`) | `data/currency-rates.json`          |
+| 10    | `common/10-backoffice-features.http`                                                                  | `data/backoffice-features.json`     |
 | 11    | `common/11-transaction-workflows.http`                                                                | `data/transaction-workflows/*.json` |
 
 Előfeltétel a 09-hez: a 04-es pénznem seed (`currency-types.json`) már bent legyen.
@@ -137,6 +137,72 @@ npm run seed:http:kor:transaction-workflows -- prod
 ```
 
 Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A seed a `debit_code`/`credit_code` alapján választ komponenst: fix T/K → `workflow.step`; tagi debit → `step-member-debit`; tagi credit → `step-member-credit`. A `description` mezőben `{original.<mező>}` / `{1}` sablonok a Convertben oldódnak; `"organization": "{original.organization}"` → `organization_from_original` (üres forrás → üres). A Content API dynamic zone itemjeiben a `__component` mezőnek az objektum első kulcsának kell lennie (különben Strapi 5: `Invalid key __component at step`). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
+
+## Tojás napló import (edizone)
+
+A Google Sheet tojás naplóból generált tranzakciók az
+`http/edizone/data/transactions.json` fájlban vannak. A konverter a
+`database/seeders/egg-sheet-to-transactions.mjs` script. A
+`PRODUCTION_FROM`, `SALES_FROM` és `DISTRIBUTION_FROM` alapértelmezetten
+`2026-09-01` (nyitó készlet nulla; csak ettől a naptól jönnek be sorok,
+eladásokkal együtt). A `SHARES_FROM_2026_09_01` konstans a későbbi
+elszámolási riporthoz rögzíti az 1/3–1/3–1/3 részesedést; a D/P/G kivét
+oszlopok könyvelése ettől független.
+
+**Tag mapping** — az edizone-on már létező tagok; a sheet neveket az
+`EGG_SHEET_MEMBERS` környezeti változó állítja (JSON objektum vagy
+`Név=azonosító` lista, vesszővel elválasztva). Alapértelmezés, ha nincs
+beállítva:
+
+```bash
+# .env vagy shell
+EGG_SHEET_MEMBERS='{"Dávid":"dávid","Peti":"peti","Gabi":"gabi"}'
+# vagy
+EGG_SHEET_MEMBERS='Dávid=dávid,Peti=peti,Gabi=gabi'
+```
+
+Ismeretlen sheet név → figyelmeztetés, az érintett láb kimarad (a
+`transactions.http` továbbra is jelzi, ha a tag runtime nem oldódik fel).
+
+**Kapcsolt tranzakciók:** ugyanahhoz a sheet sorhoz tartozó lábak (termelés,
+átvezetés, kivét, eladás) a meglévő `related_transaction` mezővel kapcsolódnak
+a sor **termelés** tranzakciójához (`related_transaction_entered_key` a
+JSON-ban; http import feloldja `entered_key` alapján). Ugyanaz a minta, mint
+az ügylet-kifejtésnél (`convert-service`).
+
+**Szervezet és készlet:** termelés a coop org-on (`1300`/`4500`); utána két
+átvezetési sor (coop `4500`/`1300`, majd `Tyúktartás` `1300`/`4500`) — a
+modellben tranzakciónként egy `organization` mező van, ezért nem egyetlen
+1300→1300 sor, hanem pár: az ól org 1300 egyenlege nettó nulla, a központi
+készlet a `Tyúktartás` org-on (`egg-poultry.constants.json`). Kivét és
+eladás készletláb szintén a szülő org-on.
+
+JSON generálás (alapértelmezett CSV:
+`database/seeders/fixtures/egg-sheet.csv`, vagy `--url` a nyilvános exportra):
+
+```bash
+npm run seed:egg:transactions:generate
+node database/seeders/egg-sheet-to-transactions.mjs --csv /path/to/egg.csv
+```
+
+HttpYac feltöltés piszkozatként (nem része a 01–09 körnek; előfeltétel: edizone
+01–09 seed, tagok a sheetben szereplő azonosítókkal):
+
+```bash
+npm run seed:http:edizone:transactions -- local
+npm run seed:http:edizone:transactions -- prod
+```
+
+Reset csak az `egg-sheet:` előtagú import sorokra (`importKeyPrefix` a JSON-ban):
+
+```bash
+npm run seed:http:edizone:transactions:reset:local
+npm run seed:http:edizone:transactions:reset -- prod
+```
+
+Token: `database/seeders/http/http-client.private.env.json` (edizone Full access).
+
+Unit tesztek: `npm run test:seeders`.
 
 ## Transaction import (kor)
 

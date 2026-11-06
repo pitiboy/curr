@@ -30,7 +30,11 @@
   if (typeof keyPrefix !== "string" || !keyPrefix) {
     throw new Error("keyPrefix is missing in " + file);
   }
-  const importPrefix = "excel:";
+  const importPrefix =
+    typeof source.importKeyPrefix === "string" && source.importKeyPrefix
+      ? source.importKeyPrefix
+      : "excel:";
+  exports.resetImportKeyPrefix = importPrefix;
 
   function isImported(row) {
     const key = typeof row.entered_key === "string" ? row.entered_key : "";
@@ -125,7 +129,10 @@
 
   exports.reset = resetImported();
 }}
-GET {{baseUrl}}/api/transactions?status=draft&filters[entered_key][$startsWith]=excel:&fields[0]=entered_key&pagination[pageSize]=1
+{{
+  exports.resetPrefixEncoded = encodeURIComponent(resetImportKeyPrefix || "excel:");
+}}
+GET {{baseUrl}}/api/transactions?status=draft&filters[entered_key][$startsWith]={{resetPrefixEncoded}}&fields[0]=entered_key&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 X-Reset: {{reset}}
 Accept: application/json

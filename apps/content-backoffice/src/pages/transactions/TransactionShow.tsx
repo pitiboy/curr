@@ -157,6 +157,13 @@ function TransactionShowContent({
           source="converted_to_workflow"
           translateChoice
         />
+        <FunctionField
+          label="resources.transactions.fields.related_group"
+          render={(row: RaRecord) =>
+            formatRelatedGroup(row, locales, translate)
+          }
+          source="related_transactions"
+        />
 
         <FunctionField
           label={<AccountFieldLabel kind="credit" />}
@@ -208,6 +215,32 @@ function hasSavedReceipts(receipts: unknown): boolean {
   return (
     Array.isArray(receipts) && receipts.some((item) => receiptIsPresent(item))
   );
+}
+
+function formatRelatedGroup(
+  row: RaRecord,
+  locales: string,
+  translate: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  const children = row.related_transactions;
+  const parent = row.related_transaction;
+  if (Array.isArray(children) && children.length > 0) {
+    return translate('app.transactions_related_children', {
+      count: children.length,
+    });
+  }
+  if (parent && typeof parent === 'object') {
+    const amount = (parent as { amount?: unknown }).amount;
+    const date = (parent as { date?: string }).date;
+    if (date || amount != null) {
+      return translate('app.transactions_related_parent', {
+        date: date ?? '—',
+        amount: formatAmount(amount, locales),
+      });
+    }
+    return translate('app.transactions_related_parent_short');
+  }
+  return '—';
 }
 
 function formatAmount(value: unknown, locales: string): string {

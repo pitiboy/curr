@@ -61,6 +61,8 @@ export type BulkQuantityConflictChoice = 'insert' | 'update';
 export type BulkQuantityRowPlan = BulkQuantityRow & {
   action: BulkQuantityConflictChoice;
   updateDocumentId?: string;
+  /** Event anchor for related_transaction (e.g. first production in the same submit). */
+  relatedTransactionDocumentId?: string;
 };
 
 export type BulkQuantityRowResult = {
@@ -103,4 +105,5 @@ export type DistributionTransactionLegPlan = {
   action: BulkQuantityGlobalConflictChoice;
   updateDocumentId?: string;
   payload: Record<string, unknown>;
+  relatedTransactionDocumentId?: string;
 };

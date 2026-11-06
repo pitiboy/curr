@@ -50,6 +50,9 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_currency: 'Currency',
     transactions_convert_preview_steps_total:
       'Step total: %{steps} (original: %{original})',
+    transactions_related_children: '%{count} linked transaction(s)',
+    transactions_related_parent: 'Linked to: %{date} / %{amount}',
+    transactions_related_parent_short: 'Linked to another transaction',
     transactions_none: 'No transactions.',
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',
@@ -121,6 +124,89 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Template account codes could not be resolved uniquely — check the account fields.',
     account_profile_workflow_dropped:
       'The selected transaction template no longer matches the chosen accounts.',
+    egg_inventory: {
+      menu: 'Egg inventory',
+      title: 'Egg inventory report',
+      subtitle:
+        'How many eggs were produced, distributed (internal / sale), and left in stock for the selected period.',
+      range: {
+        all: 'All time',
+        thisMonth: 'This month',
+        lastMonth: 'Last month',
+        last7: 'Last 7 days',
+        thisYear: 'This year',
+      },
+      kpi: {
+        produced: 'Produced',
+        distributed: 'Distributed',
+        remaining: 'Remaining',
+        internal: 'Internal',
+        sale: 'Sale',
+      },
+      timeseries_title: 'Quantity over time (by flock)',
+      trend_total: 'Total (trend)',
+      alom_title: 'Breakdown by flock',
+      alom_name: 'Flock',
+      members_title: 'Member balances',
+      members_subtitle:
+        'Grouped bars per member on the same timeline as production; pies show each member’s internal/sale share for the full period.',
+      pie_internal: 'Internal share by member',
+      pie_sale: 'Sale share by member',
+      pie_empty: 'No data for this pie chart.',
+      member_name: 'Member',
+      member_account: 'Account',
+      sale_qty: 'Sale (qty)',
+      sale_revenue: 'Sale revenue',
+      member_total: 'Total (qty)',
+      empty: 'No egg traffic for this period. Try another date range.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
+    membership_share: {
+      menu: 'Share capital report',
+      title: 'Member share and pocket',
+      subtitle:
+        'How much members paid into 1101 share-capital and 1001 pocket ledgers in the selected period, by currency and by member.',
+      range: {
+        all: 'All time',
+        thisMonth: 'This month',
+        lastMonth: 'Last month',
+        last7: 'Last 7 days',
+        thisYear: 'This year',
+      },
+      focus: {
+        both: 'Both',
+        share: '1101 share',
+        pocket: '1001 pocket',
+      },
+      ledger: {
+        share: '1101 share',
+        pocket: '1001 pocket',
+      },
+      kpi: {
+        share: '%{code} share · %{currency}',
+        pocket: '%{code} pocket · %{currency}',
+        members: 'Members involved',
+        payments: 'Payment count',
+      },
+      bar_title: 'Amount by member (%{currency})',
+      pie_title_ledgers: '1101 / 1001 mix (%{currency})',
+      pie_title_currencies: 'Breakdown by currency',
+      members_title: 'By member',
+      members_subtitle:
+        'Share (1101) and pocket (1001) payments per member, per currency — currencies are never summed.',
+      member_name: 'Member',
+      col: {
+        share: '%{code} · %{currency}',
+        pocket: '%{code} · %{currency}',
+      },
+      history_title: 'Payments over time (%{currency})',
+      history_subtitle:
+        'When each member made a capital payment — grouped bars per period, one colour per member.',
+      empty: 'No member payments for this period. Try another range or ledger.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
@@ -142,8 +228,9 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
     workflows: {
-      'egg-daily-entry': 'Daily egg entry',
+      'egg-production': 'Daily egg entry',
       'member-fee': 'Member fee',
+      'membership-share': 'Share capital report',
     },
     bulk_quantity: {
       save: 'Save',
@@ -179,6 +266,10 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_no_members:
         'No members in organization “%{org}” for this date.',
       distribution_members_failed: 'Could not load the member list.',
+      pool_transfer: {
+        coop: 'Egg stock transfer (coop) — %{organization} → Tyúktartás (%{amount})',
+        parent: 'Egg stock transfer (Tyúktartás) — %{organization} (%{amount})',
+      },
       description: {
         egg: 'Daily eggs — %{organization}: %{amount}',
         egg_distribution_internal:
@@ -269,6 +360,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         status: 'Status',
         converted_to_workflow: 'Deal expansion',
         receipt: 'Receipt',
+        related_group: 'Linked transactions',
       },
     },
     organizations: {
