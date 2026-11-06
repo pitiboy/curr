@@ -1,3 +1,4 @@
+import { patchDocumentManagerBulkActions } from '../../content-manager-bulk-publish';
 import {
   sanitizeConfigurationLayouts,
   type ConfigurationBody,
@@ -11,6 +12,10 @@ type CmContext = {
 
 type CmController = (ctx: CmContext) => Promise<unknown>;
 
+type DocumentManagerFactory = (params: {
+  strapi: unknown;
+}) => Record<string, unknown>;
+
 type ContentManagerPlugin = {
   controllers: {
     'content-types': {
@@ -19,6 +24,9 @@ type ContentManagerPlugin = {
     components: {
       updateComponentConfiguration: CmController;
     };
+  };
+  services: {
+    'document-manager': DocumentManagerFactory;
   };
 };
 
@@ -67,6 +75,10 @@ function withSanitizedLayouts(original: CmController): CmController {
  * Admin Configure the view can PUT layouts.edit that still include system
  * fields (createdAt/…) or removed attributes. CM yup rejects those names.
  * Strip them before the stock validators run.
+ *
+ * Also: Admin bulkPublish/unpublish must not Promise.all inside one knex
+ * transaction (incomplete draft → sibling queries on a rolled-back trx →
+ * process crash). See content-manager-bulk-publish.ts.
  */
 module.exports = (plugin: ContentManagerPlugin) => {
   plugin.controllers['content-types'].updateContentTypeConfiguration =
@@ -78,6 +90,13 @@ module.exports = (plugin: ContentManagerPlugin) => {
     withSanitizedLayouts(
       plugin.controllers.components.updateComponentConfiguration,
     );
+
+  const createDocumentManager = plugin.services['document-manager'];
+  plugin.services['document-manager'] = ({ strapi }) =>
+    patchDocumentManagerBulkActions(
+      createDocumentManager({ strapi }) as never,
+      strapi as never,
+    ) as unknown as Record<string, unknown>;
 
   return plugin;
 };
