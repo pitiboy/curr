@@ -32,9 +32,9 @@ describe('buildBackofficeConfigFromRows', () => {
 
 describe('eggProductionInitialPublicationStatus', () => {
   it('defaults to draft and reads published from config regardless of workflow enabled', () => {
-    expect(eggProductionInitialPublicationStatus(parseBackofficeConfig(null))).toBe(
-      'draft',
-    );
+    expect(
+      eggProductionInitialPublicationStatus(parseBackofficeConfig(null)),
+    ).toBe('draft');
     expect(
       eggProductionInitialPublicationStatus(
         parseBackofficeConfig({

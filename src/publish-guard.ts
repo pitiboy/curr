@@ -165,7 +165,12 @@ export function guardEffect(
     options?.linkedPublish === true &&
     options?.eggWorkflowAutoFinalize === true;
 
-  if (actor && actor.roleType !== 'editor' && publishing && !dataentryEggAutoPublish) {
+  if (
+    actor &&
+    actor.roleType !== 'editor' &&
+    publishing &&
+    !dataentryEggAutoPublish
+  ) {
     return { type: 'forbid', message: PUBLISH_FORBIDDEN };
   }
 
@@ -477,9 +482,7 @@ export function shouldPublishConvertedSource(
   storedDraft: Record<string, unknown> | null | undefined,
   stepsPublished: boolean,
 ): boolean {
-  return (
-    stepsPublished && missingStoredPublishFields(storedDraft).length === 0
-  );
+  return stepsPublished && missingStoredPublishFields(storedDraft).length === 0;
 }
 
 async function assertStoredTransactionPublishable(
