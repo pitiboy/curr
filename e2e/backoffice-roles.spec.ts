@@ -59,15 +59,15 @@ test.describe('@full-stack', () => {
     );
 
     await page.goto(`${backofficeBase()}/transactions/create`);
-    await expect(
-      page.getByRole('button', { name: /^mentés$/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /^mentés$/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /véglegesít/i })).toHaveCount(
       0,
     );
   });
 
-  test('transaction list is view-only for dataentry @10.6', async ({ page }) => {
+  test('transaction list is view-only for dataentry @10.6', async ({
+    page,
+  }) => {
     test.skip(missingFullStackEnv(), fullStackSkipReason);
     test.skip(
       skipBecauseUnreachable,
@@ -115,7 +115,9 @@ test.describe('@full-stack', () => {
       .click();
     await expect(page.getByRole('table')).toBeVisible({ timeout: 20_000 });
 
-    const reviewRow = page.getByRole('button', { name: /^Véglegesítés$/i }).first();
+    const reviewRow = page
+      .getByRole('button', { name: /^Véglegesítés$/i })
+      .first();
     await expect(reviewRow).toBeVisible({ timeout: 20_000 });
     await reviewRow.click();
 
@@ -141,7 +143,10 @@ test.describe('@full-stack', () => {
       .getByRole('navigation')
       .getByRole('link', { name: /^Véglegesítés$/i })
       .click();
-    await page.getByRole('button', { name: /^Véglegesítés$/i }).first().click();
+    await page
+      .getByRole('button', { name: /^Véglegesítés$/i })
+      .first()
+      .click();
     await expect(
       page.getByRole('button', { name: /^Piszkozat törlése$/i }),
     ).toBeVisible();
@@ -152,7 +157,10 @@ test.describe('@full-stack', () => {
       process.env.E2E_DATAENTRY_PASSWORD ?? '',
     );
     await page.goto(`${backofficeBase()}/transactions`);
-    await page.getByRole('button', { name: /^Megtekintés$/i }).first().click();
+    await page
+      .getByRole('button', { name: /^Megtekintés$/i })
+      .first()
+      .click();
     await expect(
       page.getByRole('button', { name: /^Piszkozat törlése$/i }),
     ).toHaveCount(0);

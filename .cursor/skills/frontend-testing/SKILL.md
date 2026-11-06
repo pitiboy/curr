@@ -12,11 +12,11 @@ Scope: v1 backoffice SPA only (`apps/content-backoffice`). Not PRD §8, not v2.
 
 ## Which runner
 
-| Layer | Tool | Files | When |
-| ----- | ---- | ----- | ---- |
-| Pure logic | Vitest, `environment: 'node'` | `**/*.test.ts` | data helpers, URL builders, workflow match, form validation |
-| UI slice | Vitest + `jsdom` + `@testing-library/react` + `user-event` | `**/*.test.tsx` | Role-gated toolbar, finalize CTA, receipt hints |
-| Smoke / acceptance | Playwright | repo `e2e/*.spec.ts` | Login shell, draft create, publish UI gates (needs stack) |
+| Layer              | Tool                                                       | Files                | When                                                        |
+| ------------------ | ---------------------------------------------------------- | -------------------- | ----------------------------------------------------------- |
+| Pure logic         | Vitest, `environment: 'node'`                              | `**/*.test.ts`       | data helpers, URL builders, workflow match, form validation |
+| UI slice           | Vitest + `jsdom` + `@testing-library/react` + `user-event` | `**/*.test.tsx`      | Role-gated toolbar, finalize CTA, receipt hints             |
+| Smoke / acceptance | Playwright                                                 | repo `e2e/*.spec.ts` | Login shell, draft create, publish UI gates (needs stack)   |
 
 Do **not** use Playwright for helpers that belong in node Vitest. Do **not** add Cypress, Puppeteer, or Selenium.
 
@@ -54,7 +54,8 @@ cd apps/content-backoffice && npm test
 cd apps/content-backoffice && npm test
 
 # E2E login shell (preview only)
-npm run test:e2e -- --grep "login shell"
+npm run test:e2e:login-shell
+# or: npm run test:e2e -- --grep "login shell"  (needs the double --)
 
 # E2E full stack (after Strapi seed + .env.e2e)
 npm run test:e2e -- --grep "@full-stack"

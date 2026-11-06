@@ -31,8 +31,12 @@ npx playwright install chromium
 **Login shell (no API):** builds the SPA and opens the login route on `vite preview` (`playwright.config.ts` uses `http://127.0.0.1:4173/backoffice/` so Chromium does not resolve `localhost` to IPv6 while the server listens on IPv4 only).
 
 ```bash
+npm run test:e2e:login-shell
+# equivalent (note the double -- before --grep):
 npm run test:e2e -- --grep "login shell"
 ```
+
+`vite preview` for e2e binds **`127.0.0.1:4173`** (`preview:e2e`) so Playwright’s health check matches; **`npm run test:e2e -- grep`** (one dash) is wrong — it runs `playwright test grep …`, not `--grep`.
 
 **Full stack (@full-stack):** requires Strapi on sqlite, seeded `dataentry` / `editor` users, and env copied from `.env.e2e.example` → `.env.e2e` (never commit). `playwright.config.ts` and `e2e/global-setup.ts` load `.env.e2e` so worker processes see `E2E_*` (not only the config process). Otherwise export vars manually:
 

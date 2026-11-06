@@ -72,5 +72,7 @@ export async function loginBackoffice(
   // `getByLabel(/jelszó/)` matches MUI’s show-password button (“Jelszó megjelenítése”) — strict mode fails.
   await page.locator('input[name="password"]').fill(password);
   await page.getByRole('button', { name: /bejelentkezés|sign in/i }).click();
-  await page.getByRole('navigation').waitFor({ state: 'visible', timeout: 20_000 });
+  await page
+    .getByRole('navigation')
+    .waitFor({ state: 'visible', timeout: 20_000 });
 }
