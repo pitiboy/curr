@@ -1,5 +1,17 @@
 import { errors } from '@strapi/utils';
 
+import {
+  DEFAULT_PUBLISH_POLICY,
+  readPublishPolicy,
+  type PublishPolicy,
+} from './publish-policy';
+
+export {
+  DEFAULT_PUBLISH_POLICY,
+  readPublishPolicy,
+  type PublishPolicy,
+} from './publish-policy';
+
 const TRANSACTION_UID = 'api::transaction.transaction';
 const RECEIPT_UID = 'api::receipt.receipt';
 
@@ -40,23 +52,6 @@ export type TransactionPublishRequiredField =
   (typeof TRANSACTION_PUBLISH_REQUIRED_FIELDS)[number];
 
 export type TransactionRequiredField = TransactionDraftRequiredField;
-
-export type PublishPolicy = {
-  /** `draft`: create/update cannot publish. `published`: an editor may save as published. */
-  defaultStatus: 'draft' | 'published';
-  /** When true, entered_by and the publisher must be different people. */
-  publisherMustDiffer: boolean;
-};
-
-export const DEFAULT_PUBLISH_POLICY: PublishPolicy = {
-  defaultStatus: 'draft',
-  publisherMustDiffer: true,
-};
-
-/** Default policy when no database rows exist or the table is unavailable. */
-export function readPublishPolicy(): PublishPolicy {
-  return { ...DEFAULT_PUBLISH_POLICY };
-}
 
 export type ContentActor = {
   roleType: string;

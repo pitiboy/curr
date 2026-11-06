@@ -1,8 +1,6 @@
 import { strapiHttpClient } from 'ra-strapi';
 
-import { STRAPI_URL } from '../../../config';
 import type { ContentHttpClient } from '../../../data/receiptDraft';
-import { encodeStrapiQuery } from '../../../data/transactionList';
 import {
   DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE,
   DISTRIBUTION_SALE_CASH_ACCOUNT_CODE,
@@ -19,14 +17,12 @@ import {
 } from './eggInventory.aggregate';
 import { boundsForPreset } from './dateRange';
 import type { DateRangePreset, EggInventoryReport } from './types';
-
-const PAGE_SIZE = 100;
-const MAX_PAGES = 50;
-
-type ListResponse<T> = {
-  data?: T[];
-  meta?: { pagination?: { pageCount?: number } };
-};
+import {
+  fetchStrapiList,
+  loadReportTransactions,
+  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  type ReportTransactionStatusFilter,
+} from '../shared/reportTransactionStatus';
 
 type OrgRow = {
   documentId?: string;
@@ -68,33 +64,10 @@ function parseAmount(value: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-async function fetchAllPages<T>(
-  httpClient: ContentHttpClient,
-  path: string,
-  queryBase: Record<string, unknown>,
-): Promise<T[]> {
-  const rows: T[] = [];
-  let page = 1;
-  let pageCount = 1;
-  do {
-    const query = encodeStrapiQuery({
-      ...queryBase,
-      pagination: { page, pageSize: PAGE_SIZE, withCount: true },
-    });
-    const { json } = (await httpClient(`${STRAPI_URL}${path}?${query}`)) as {
-      json: ListResponse<T>;
-    };
-    rows.push(...(json.data ?? []));
-    pageCount = json.meta?.pagination?.pageCount ?? 1;
-    page += 1;
-  } while (page <= pageCount && page <= MAX_PAGES);
-  return rows;
-}
-
 async function loadHenHouses(
   httpClient: ContentHttpClient,
 ): Promise<{ ids: Set<string>; names: Map<string, string> }> {
-  const parents = await fetchAllPages<OrgRow>(
+  const parents = await fetchStrapiList<OrgRow>(
     httpClient,
     '/api/organizations',
     {
@@ -106,7 +79,7 @@ async function loadHenHouses(
   if (!parentId) {
     return { ids: new Set(), names: new Map() };
   }
-  const children = await fetchAllPages<OrgRow>(
+  const children = await fetchStrapiList<OrgRow>(
     httpClient,
     '/api/organizations',
     {
@@ -130,7 +103,7 @@ async function loadMembers(
 ): Promise<EggReportMemberRef[]> {
   // All members with a private pocket — distribution is not limited to
   // Tyúktartás membership (sheet imports debit saját:* for any member).
-  const rows = await fetchAllPages<MemberRow>(httpClient, '/api/members', {
+  const rows = await fetchStrapiList<MemberRow>(httpClient, '/api/members', {
     fields: ['documentId', 'name'],
     populate: {
       private_account: { fields: ['documentId', 'code'] },
@@ -179,13 +152,13 @@ async function loadTransactions(
   httpClient: ContentHttpClient,
   preset: DateRangePreset,
   saleCurrency: string,
+  transactionStatus: ReportTransactionStatusFilter,
 ): Promise<EggReportTx[]> {
   const bounds = boundsForPreset(preset);
   const dateFilter: Record<string, string> = { $lte: bounds.to };
   if (bounds.from) dateFilter.$gte = bounds.from;
 
-  const rows = await fetchAllPages<TxRow>(httpClient, '/api/transactions', {
-    status: 'published',
+  const rows = await loadReportTransactions<TxRow>(httpClient, transactionStatus, {
     filters: {
       $and: [
         { date: dateFilter },
@@ -207,7 +180,7 @@ async function loadTransactions(
 }
 
 /**
- * Load published egg inventory data from the Content API and aggregate.
+ * Load egg inventory data from the Content API and aggregate.
  * Returns null when the range has no matching activity.
  */
 export async function fetchEggInventoryReport(
@@ -215,15 +188,18 @@ export async function fetchEggInventoryReport(
   options: {
     saleCurrency?: string;
     httpClient?: ContentHttpClient;
+    transactionStatus?: ReportTransactionStatusFilter;
   } = {},
 ): Promise<EggInventoryReport | null> {
   const httpClient = options.httpClient ?? strapiHttpClient();
   const saleCurrency = options.saleCurrency?.trim() || 'HUF';
+  const transactionStatus =
+    options.transactionStatus ?? REPORT_TRANSACTION_STATUS_FILTER_DEFAULT;
 
   const [henHouses, members, txs] = await Promise.all([
     loadHenHouses(httpClient),
     loadMembers(httpClient),
-    loadTransactions(httpClient, preset, saleCurrency),
+    loadTransactions(httpClient, preset, saleCurrency, transactionStatus),
   ]);
 
   // Drop unrelated HUF noise client-side (keep EGG + sale cash legs).

@@ -124,6 +124,15 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Template account codes could not be resolved uniquely — check the account fields.',
     account_profile_workflow_dropped:
       'The selected transaction template no longer matches the chosen accounts.',
+    reports: {
+      transaction_status: {
+        label: 'Transactions',
+        /** Published/live books view — default, same as before. */
+        preview: 'Published (live books)',
+        draft: 'Draft',
+        all: 'All (draft + published)',
+      },
+    },
     egg_inventory: {
       menu: 'Egg inventory',
       title: 'Egg inventory report',

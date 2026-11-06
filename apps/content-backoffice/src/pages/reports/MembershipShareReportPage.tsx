@@ -36,6 +36,11 @@ import {
   MEMBER_POCKET_ACCOUNT_CODE,
   MEMBER_SHARE_ACCOUNT_CODE,
 } from './membershipShare/types';
+import { ReportTransactionStatusFilterControl } from './components/ReportTransactionStatusFilter';
+import {
+  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  type ReportTransactionStatusFilter as ReportTxStatusMode,
+} from './shared/reportTransactionStatus';
 import { useMembershipShareReport } from './membershipShare/useMembershipShareReport';
 
 const RANGE_PRESETS: DateRangePreset[] = [
@@ -74,7 +79,13 @@ export function MembershipShareReportPage() {
   const translate = useTranslate();
   const [range, setRange] = useState<DateRangePreset>('thisMonth');
   const [focus, setFocus] = useState<LedgerFocus>('both');
-  const { status, report, reload } = useMembershipShareReport(range, focus);
+  const [transactionStatus, setTransactionStatus] =
+    useState<ReportTxStatusMode>(REPORT_TRANSACTION_STATUS_FILTER_DEFAULT);
+  const { status, report, reload } = useMembershipShareReport(
+    range,
+    focus,
+    transactionStatus,
+  );
 
   return (
     <Box sx={{ p: 2, maxWidth: 1100 }}>
@@ -126,6 +137,11 @@ export function MembershipShareReportPage() {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
+
+        <ReportTransactionStatusFilterControl
+          onChange={setTransactionStatus}
+          value={transactionStatus}
+        />
       </Stack>
 
       {status === 'loading' ? <ReportSkeleton /> : null}
