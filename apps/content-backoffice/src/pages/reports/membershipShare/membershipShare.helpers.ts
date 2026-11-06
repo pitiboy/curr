@@ -51,9 +51,7 @@ export function sortMembersByFocus(
 ): MembershipMemberRow[] {
   return [...rows]
     .filter((row) => memberFocusTotal(row, focus) > 0)
-    .sort(
-      (a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus),
-    );
+    .sort((a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus));
 }
 
 export function buildKpis(
@@ -67,9 +65,8 @@ export function buildKpis(
     pocketByCurrency: mergeCurrencyAmounts(
       ...byMember.map((row) => row.pocketByCurrency),
     ),
-    memberCount: byMember.filter(
-      (row) => memberFocusTotal(row, 'both') > 0,
-    ).length,
+    memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') > 0)
+      .length,
     paymentCount,
   };
 }
@@ -136,10 +133,7 @@ export function pickHistoryCurrency(
 ): string {
   const totals = new Map<string, number>();
   for (const row of byMember) {
-    for (const entry of [
-      ...row.shareByCurrency,
-      ...row.pocketByCurrency,
-    ]) {
+    for (const entry of [...row.shareByCurrency, ...row.pocketByCurrency]) {
       totals.set(
         entry.currency,
         (totals.get(entry.currency) ?? 0) + entry.amount,

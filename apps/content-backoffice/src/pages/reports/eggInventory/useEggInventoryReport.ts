@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useBackofficeConfig } from '../../../workflows/useBackofficeConfig';
-import {
-  EGG_PRODUCTION_WORKFLOW_ID,
-} from '../../../workflows/bulk-quantity/eggDailyEntry.constants';
+import { EGG_PRODUCTION_WORKFLOW_ID } from '../../../workflows/bulk-quantity/eggDailyEntry.constants';
 import { eggSaleCurrencyForWorkflow } from '../../../workflows/parseBackofficeConfig';
 
 import { fetchEggInventoryReport } from './eggInventory.fetch';

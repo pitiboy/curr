@@ -11,10 +11,7 @@ import {
 } from './membershipShare.aggregate';
 import { boundsForPreset } from './dateRange';
 import type { DateRangePreset, MembershipShareReport } from './types';
-import {
-  MEMBER_POCKET_ACCOUNT_CODE,
-  MEMBER_SHARE_ACCOUNT_CODE,
-} from './types';
+import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 50;

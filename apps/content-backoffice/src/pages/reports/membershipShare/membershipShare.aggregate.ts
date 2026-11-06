@@ -11,10 +11,7 @@ import type {
   MembershipMemberRow,
   MembershipShareReport,
 } from './types';
-import {
-  MEMBER_POCKET_ACCOUNT_CODE,
-  MEMBER_SHARE_ACCOUNT_CODE,
-} from './types';
+import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
 
 export type MembershipShareTx = {
   date: string;
@@ -127,10 +124,7 @@ export function aggregateMembershipShareReport(
     const acc = ensure(ref);
     const target =
       ledger === 'share' ? acc.shareByCurrency : acc.pocketByCurrency;
-    target.set(
-      tx.currencyCode,
-      (target.get(tx.currencyCode) ?? 0) + tx.amount,
-    );
+    target.set(tx.currencyCode, (target.get(tx.currencyCode) ?? 0) + tx.amount);
     paymentCount += 1;
 
     const period = periodKeyForPreset(normalizeDate(tx.date), preset);

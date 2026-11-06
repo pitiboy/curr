@@ -51,7 +51,10 @@ function normalizeDate(raw: string): string {
   return raw.slice(0, 10);
 }
 
-function isProduction(tx: EggReportTx, henHouseIds: ReadonlySet<string>): boolean {
+function isProduction(
+  tx: EggReportTx,
+  henHouseIds: ReadonlySet<string>,
+): boolean {
   return (
     tx.currencyCode === 'EGG' &&
     tx.debitCode === EGG_PRODUCTION_DEBIT_ACCOUNT_CODE &&
@@ -159,11 +162,7 @@ export function aggregateEggInventoryReport(
   let internalTotal = 0;
   let saleTotal = 0;
 
-  const bumpPeriodMember = (
-    period: string,
-    memberId: string,
-    qty: number,
-  ) => {
+  const bumpPeriodMember = (period: string, memberId: string, qty: number) => {
     let map = memberTotalByPeriod.get(period);
     if (!map) {
       map = new Map();
@@ -250,8 +249,7 @@ export function aggregateEggInventoryReport(
   );
   const byAlom: EggAlomRow[] = alomNames.map((alomName) => {
     const p = producedByAlom.get(alomName) ?? 0;
-    const d =
-      produced === 0 ? 0 : Math.round((p / produced) * distributed);
+    const d = produced === 0 ? 0 : Math.round((p / produced) * distributed);
     return { alomName, produced: p, distributed: d, remaining: p - d };
   });
 

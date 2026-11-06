@@ -1,6 +1,8 @@
 import type { EggInventoryKpis, EggMemberRow } from './types';
 
-export function memberTotal(row: Pick<EggMemberRow, 'internalQty' | 'saleQty'>): number {
+export function memberTotal(
+  row: Pick<EggMemberRow, 'internalQty' | 'saleQty'>,
+): number {
   return row.internalQty + row.saleQty;
 }
 

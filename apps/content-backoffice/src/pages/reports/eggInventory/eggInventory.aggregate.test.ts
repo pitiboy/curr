@@ -26,7 +26,9 @@ const catalog: EggReportCatalog = {
   saleCurrency: 'HUF',
 };
 
-function tx(partial: Partial<EggReportTx> & Pick<EggReportTx, 'date'>): EggReportTx {
+function tx(
+  partial: Partial<EggReportTx> & Pick<EggReportTx, 'date'>,
+): EggReportTx {
   return {
     amount: 0,
     currencyCode: 'EGG',
