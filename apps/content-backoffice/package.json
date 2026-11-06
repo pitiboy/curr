@@ -16,6 +16,7 @@
     "postinstall": "node scripts/patch-mui9-text-field-props.mjs"
   },
   "dependencies": {
+    "@mui/x-charts": "^9.17.0",
     "ra-i18n-polyglot": "^5.13.3",
     "ra-language-english": "^5.13.3",
     "ra-language-hungarian": "^1.4.0",

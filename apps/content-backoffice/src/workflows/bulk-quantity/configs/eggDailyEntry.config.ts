@@ -5,7 +5,7 @@ import {
   DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE,
   DISTRIBUTION_REVENUE_ACCOUNT_CODE,
   DISTRIBUTION_SALE_CASH_ACCOUNT_CODE,
-  EGG_DAILY_ENTRY_WORKFLOW_ID,
+  EGG_PRODUCTION_WORKFLOW_ID,
 } from '../eggDailyEntry.constants';
 import type {
   BulkQuantityDistributionConfig,
@@ -27,7 +27,7 @@ export {
   DISTRIBUTION_MEMBER_PRIVATE_ACCOUNT_CODE,
   DISTRIBUTION_REVENUE_ACCOUNT_CODE,
   DISTRIBUTION_SALE_CASH_ACCOUNT_CODE,
-  EGG_DAILY_ENTRY_WORKFLOW_ID,
+  EGG_PRODUCTION_WORKFLOW_ID,
 } from '../eggDailyEntry.constants';
 
 export const eggDistributionConfig: BulkQuantityDistributionConfig = {
@@ -45,9 +45,9 @@ export const eggDistributionConfig: BulkQuantityDistributionConfig = {
 };
 
 export const eggDailyEntryConfig: BulkQuantityWorkflowConfig = {
-  workflowId: EGG_DAILY_ENTRY_WORKFLOW_ID,
-  path: '/workflows/egg-daily-entry',
-  labelKey: 'app.workflows.egg-daily-entry',
+  workflowId: EGG_PRODUCTION_WORKFLOW_ID,
+  path: '/workflows/egg-production',
+  labelKey: 'app.workflows.egg-production',
   parentOrganizationName: PULTRY_PARENT_ORG_NAME,
   currencyCode: 'EGG',
   debitAccountCode: DEBIT_ACCOUNT_CODE,

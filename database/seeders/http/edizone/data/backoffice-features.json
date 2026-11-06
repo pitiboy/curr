@@ -35,8 +35,13 @@
     "config": {}
   },
   {
-    "key": "egg-daily-entry",
+    "key": "egg-production",
     "enabled": true,
     "config": { "saleCurrency": "HUF" }
+  },
+  {
+    "key": "membership-share",
+    "enabled": false,
+    "config": {}
   }
 ]

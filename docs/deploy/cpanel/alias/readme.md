@@ -56,7 +56,7 @@ Az alias folyamata a közös mappa `.env` fájlját is betölti. A cPanelben meg
   5. cPanel env: `CLOUDINARY_UPLOAD_PRESET` = a preset neve; `CLOUDINARY_FOLDER` = ugyanaz a folder string, mint a presetben.
 - `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY` — új titkok aliasonként. Generálás a repo gyökeréből: `node scripts/generate-secrets.js` (stdout `KEY=value` sorok; másold a cPanel env-be)
 - `ADMIN_APP_TITLE` — Strapi Admin böngészőfül brand (pl. `EdiZone`). Runtime, nem a közös `.env`-be; hiányzik → `KÖR`
-- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-daily-entry` enabled).
+- Backoffice workflow kapcsolók: Strapi Admin → **Settings** collection (vagy httpyac seed: `npm run seed:http:edizone:backoffice-features -- prod`). Az alias `.env`-ben nincs külön env; példányonként az adatbázis dönt (edizone: `egg-production` enabled — űrlap + tojáskészlet kimutatás).
 - Google OAuth — ugyanaz a Web application kliens, mint a kornál (új kliens nem kell). Részletes háttér: [backoffice-google-oauth.md](../../backoffice-google-oauth.md).
   1. [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients) → nyisd meg a meglévő **Web application** klienst (ugyanaz a projekt, mint a kornál).
   2. **Authorised redirect URIs** → **Add URI**: `https://<alias-domain>/api/connect/google/callback` (pl. `https://edizone.fejlesztesek.hu/api/connect/google/callback` vagy `https://teszt-kor.fejlesztesek.hu/api/connect/google/callback`). A kor és a localhost URI-k maradjanak. **Save**.
