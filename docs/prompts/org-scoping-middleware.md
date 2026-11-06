@@ -29,7 +29,7 @@ Register Document Service middleware that runs **only** for the content types / 
 - átvezetés (pool / inter-org transfer)
 - osztás (distribution)
 - eladás (sales)
-- report pages’ transaction (and related) reads that currently load via Document Service / Content API
+- report pages' transaction (and related) reads that currently load via Document Service / Content API
 
 Do **not** register a global middleware for every content type. Prefer an explicit allowlist of UIDs (named constant).
 
