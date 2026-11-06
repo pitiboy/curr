@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  fetchMembershipShareReport,
+  fetchMembershipShareMock,
   filterReportByFocus,
   getMembershipShareReport,
   historyAmountForFocus,
@@ -88,7 +88,7 @@ describe('membership-share mock consistency', () => {
   });
 
   it('fetch resolves mock data', async () => {
-    const report = await fetchMembershipShareReport('thisMonth', {
+    const report = await fetchMembershipShareMock('thisMonth', {
       delayMs: 0,
     });
     expect(report?.kpis.paymentCount).toBeGreaterThan(0);
@@ -96,7 +96,7 @@ describe('membership-share mock consistency', () => {
 
   it('fetch rejects when forceError', async () => {
     await expect(
-      fetchMembershipShareReport('thisMonth', {
+      fetchMembershipShareMock('thisMonth', {
         delayMs: 0,
         forceError: true,
       }),

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import {
-  fetchMembershipShareReport,
-  filterReportByFocus,
-} from './membershipShare.mock';
+import { fetchMembershipShareReport } from './membershipShare.fetch';
+import { filterReportByFocus } from './membershipShare.helpers';
 import type {
   DateRangePreset,
   LedgerFocus,
@@ -45,7 +43,9 @@ export function useMembershipShareReport(
         setReport(null);
         setFailed(true);
         setErrorMessage(
-          err instanceof Error ? err.message : 'membership-share load failed',
+          err instanceof Error
+            ? err.message
+            : 'membership-share load failed',
         );
         setResolvedKey(`${preset}:${focus}:${reloadToken}`);
       });

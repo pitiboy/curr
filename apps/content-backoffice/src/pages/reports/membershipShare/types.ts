@@ -1,9 +1,10 @@
 /**
  * Membership-share (részjegy) report shapes.
  *
- * Future API (not wired yet): published money transactions that credit a
- * member ledger account. 1101 = részjegy (real share capital). 1001 = private
- * "pocket" ledger. Amounts stay split by currency; never summed across FX.
+ * Source: published transactions that credit a member's 1101 (részjegy /
+ * `account`) or 1001 (zseb / `private_account`) ledger, where the debit is
+ * not another member ledger (excludes 1101↔1001 internals). Amounts stay
+ * split by currency; never summed across FX.
  */
 
 export type DateRangePreset =

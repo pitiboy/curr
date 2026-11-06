@@ -4,14 +4,24 @@ import {
   EGG_PRODUCTION_DEBIT_ACCOUNT_CODE,
 } from '../../../workflows/bulk-quantity/eggDailyEntry.constants';
 
+import {
+  buildKpis,
+  memberTotal,
+  sortMembersByTotal,
+} from './eggInventory.helpers';
 import type {
   DateRangePreset,
   EggAlomRow,
-  EggInventoryKpis,
   EggInventoryReport,
   EggMemberRow,
   EggTimeseriesPoint,
 } from './types';
+
+export {
+  buildKpis,
+  memberTotal,
+  sortMembersByTotal,
+} from './eggInventory.helpers';
 
 /** Ledger codes used when a real aggregator is wired. */
 export const EGG_REPORT_ACCOUNT_CODES = {
@@ -22,33 +32,8 @@ export const EGG_REPORT_ACCOUNT_CODES = {
 
 const ALOMS = ['2024 alom', '2025 alom', '2026 alom'] as const;
 
-export function memberTotal(row: EggMemberRow): number {
-  return row.internalQty + row.saleQty;
-}
-
 export function producedInPeriod(point: EggTimeseriesPoint): number {
   return Object.values(point.byAlom).reduce((sum, n) => sum + n, 0);
-}
-
-export function buildKpis(
-  produced: number,
-  internalTotal: number,
-  saleTotal: number,
-): EggInventoryKpis {
-  const distributed = internalTotal + saleTotal;
-  return {
-    produced,
-    distributed,
-    remaining: produced - distributed,
-    internalTotal,
-    saleTotal,
-  };
-}
-
-export function sortMembersByTotal(rows: EggMemberRow[]): EggMemberRow[] {
-  return [...rows]
-    .filter((row) => memberTotal(row) > 0)
-    .sort((a, b) => memberTotal(b) - memberTotal(a));
 }
 
 function assertConsistent(report: EggInventoryReport): EggInventoryReport {

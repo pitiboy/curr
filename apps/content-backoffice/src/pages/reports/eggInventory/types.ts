@@ -1,11 +1,10 @@
 /**
  * Egg inventory report shapes.
  *
- * Future API (not wired yet): published EGG transactions under the Tyúktartás
- * org tree. Produced = debit 1300 ← credit 4500. Distributed EGG = debit 1001 ←
- * credit 1300 on the parent. Internal vs sale: membership egg.mode (or a
- * companion HUF sale leg). Member name from the 1001 account / member relation.
- * Remaining in a range = produced − distributed.
+ * Source: published Content API transactions. Produced = EGG debit 1300 ←
+ * credit 4500 on Tyúktartás hen-house orgs. Distributed EGG = debit member
+ * private (1001) ← credit 1300. Sale vs internal: companion HUF cash leg
+ * (1000 ← member 1001) on the same day. Remaining = produced − distributed.
  */
 
 export type DateRangePreset =

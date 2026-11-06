@@ -188,7 +188,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       },
       history_title: 'Befizetések időben (%{currency})',
       history_subtitle:
-        'Mikor történt a vagyoni befizetés tagonként — oszloponként az időszak, színenként a tag.',
+        'Mikor történt a vagyoni befizetés tagonként — időszakonként egymás melletti oszlopok, színenként a tag.',
       empty:
         'Nincs megjeleníthető tagi befizetés ebben az időszakban. Válassz másik tartományt vagy számlát.',
       error: 'A kimutatás betöltése nem sikerült.',

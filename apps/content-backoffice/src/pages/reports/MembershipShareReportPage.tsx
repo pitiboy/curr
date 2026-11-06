@@ -25,7 +25,7 @@ import {
   historyAmountForFocus,
   memberFocusTotal,
   mergeCurrencyAmounts,
-} from './membershipShare/membershipShare.mock';
+} from './membershipShare/membershipShare.helpers';
 import type {
   CurrencyAmount,
   DateRangePreset,
