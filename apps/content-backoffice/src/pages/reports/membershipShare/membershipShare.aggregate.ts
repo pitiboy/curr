@@ -110,7 +110,8 @@ export function aggregateMembershipShareReport(
     string,
     Map<string, Map<string, { share: number; pocket: number }>>
   >();
-  let paymentCount = 0;
+  let sharePaymentCount = 0;
+  let pocketPaymentCount = 0;
 
   for (const tx of txs) {
     if (!isMembershipSharePayment(tx, memberAccountIds)) continue;
@@ -121,11 +122,12 @@ export function aggregateMembershipShareReport(
     if (!ref) continue;
 
     const ledger: 'share' | 'pocket' = shareRef ? 'share' : 'pocket';
+    if (ledger === 'share') sharePaymentCount += 1;
+    else pocketPaymentCount += 1;
     const acc = ensure(ref);
     const target =
       ledger === 'share' ? acc.shareByCurrency : acc.pocketByCurrency;
     target.set(tx.currencyCode, (target.get(tx.currencyCode) ?? 0) + tx.amount);
-    paymentCount += 1;
 
     const period = periodKeyForPreset(normalizeDate(tx.date), preset);
     let periodMap = historyRaw.get(period);
@@ -180,7 +182,7 @@ export function aggregateMembershipShareReport(
     .filter((point) => Object.keys(point.byMember).length > 0);
 
   return {
-    kpis: buildKpis(byMember, paymentCount),
+    kpis: buildKpis(byMember, sharePaymentCount, pocketPaymentCount, 'both'),
     byMember,
     historyCurrency,
     history,

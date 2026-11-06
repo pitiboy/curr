@@ -56,8 +56,16 @@ export function sortMembersByFocus(
 
 export function buildKpis(
   byMember: MembershipMemberRow[],
-  paymentCount: number,
+  sharePaymentCount: number,
+  pocketPaymentCount: number,
+  focus: LedgerFocus = 'both',
 ): MembershipShareKpis {
+  const paymentCountForFocus =
+    focus === 'both'
+      ? sharePaymentCount + pocketPaymentCount
+      : focus === 'share'
+        ? sharePaymentCount
+        : pocketPaymentCount;
   return {
     shareByCurrency: mergeCurrencyAmounts(
       ...byMember.map((row) => row.shareByCurrency),
@@ -67,8 +75,19 @@ export function buildKpis(
     ),
     memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') > 0)
       .length,
-    paymentCount,
+    sharePaymentCount,
+    pocketPaymentCount,
+    paymentCount: paymentCountForFocus,
   };
+}
+
+function paymentCountForLedgerFocus(
+  kpis: MembershipShareKpis,
+  focus: LedgerFocus,
+): number {
+  if (focus === 'both') return kpis.sharePaymentCount + kpis.pocketPaymentCount;
+  if (focus === 'share') return kpis.sharePaymentCount;
+  return kpis.pocketPaymentCount;
 }
 
 function filterHistory(
@@ -103,6 +122,10 @@ export function filterReportByFocus(
     return {
       ...report,
       byMember: sortMembersByFocus(report.byMember, focus),
+      kpis: {
+        ...report.kpis,
+        paymentCount: paymentCountForLedgerFocus(report.kpis, 'both'),
+      },
       history: report.history,
     };
   }
@@ -118,8 +141,15 @@ export function filterReportByFocus(
 
   return {
     kpis: {
-      ...buildKpis(byMember, report.kpis.paymentCount),
-      paymentCount: report.kpis.paymentCount,
+      ...buildKpis(
+        byMember,
+        report.kpis.sharePaymentCount,
+        report.kpis.pocketPaymentCount,
+        focus,
+      ),
+      sharePaymentCount: report.kpis.sharePaymentCount,
+      pocketPaymentCount: report.kpis.pocketPaymentCount,
+      paymentCount: paymentCountForLedgerFocus(report.kpis, focus),
     },
     byMember,
     historyCurrency: report.historyCurrency,

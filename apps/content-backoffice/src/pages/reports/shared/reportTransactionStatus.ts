@@ -22,14 +22,25 @@ type ListResponse<T> = {
 };
 
 /**
- * Maps UI mode → Strapi Content API `status` query param.
- * For `all`, omit `status` at the top level; callers fetch draft + published separately
- * and merge (same idea as `assembleTransactionList` / the transaction list dataProvider).
+ * Maps UI mode → Strapi Content API query params.
+ *
+ * Strapi 5 defaults missing `status` to **`published`** (see core `getFetchParams`).
+ * So `all` must not omit `status`; we fetch draft + published explicitly.
+ *
+ * For draft legs we use `publicationFilter: 'never-published'`: only drafts that have
+ * no published row (same cohort as draft-only rows in `assembleTransactionList`).
+ * Without this, `status=draft` can still include draft snapshots of published docs and
+ * duplicate KPIs when merged with published.
  */
 export function transactionStatusQuery(
   mode: ReportTransactionStatusFilter,
-): { status: 'draft' | 'published' } | Record<string, never> {
-  if (mode === 'draft') return { status: 'draft' };
+):
+  | { status: 'draft'; publicationFilter: 'never-published' }
+  | { status: 'published' }
+  | Record<string, never> {
+  if (mode === 'draft') {
+    return { status: 'draft', publicationFilter: 'never-published' };
+  }
   if (mode === 'preview') return { status: 'published' };
   return {};
 }
@@ -97,6 +108,7 @@ export async function loadReportTransactions<T>(
     fetchStrapiList<T>(httpClient, '/api/transactions', {
       ...queryBase,
       status: 'draft',
+      publicationFilter: 'never-published',
     }),
     fetchStrapiList<T>(httpClient, '/api/transactions', {
       ...queryBase,

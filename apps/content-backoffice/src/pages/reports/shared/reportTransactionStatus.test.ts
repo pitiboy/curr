@@ -13,7 +13,7 @@ describe('transactionStatusQuery', () => {
       ReturnType<typeof transactionStatusQuery>,
     ]
   >([
-    ['draft', { status: 'draft' }],
+    ['draft', { status: 'draft', publicationFilter: 'never-published' }],
     ['preview', { status: 'published' }],
     ['all', {}],
   ])('maps %s to API shape', (mode, expected) => {
