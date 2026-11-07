@@ -6,6 +6,7 @@ import {
   registerStaticPageSlugGuard,
 } from './static-pages';
 import { createPublishPolicyLoader } from './backoffice-features/policy';
+import { registerOrgScopeMiddleware } from './org-scope-middleware';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { registerMembershipValidFromFormDefault } from './membership-valid-from-default';
@@ -428,6 +429,7 @@ function registerAdminAppConfigRoute(strapi: {
 
 export default {
   register({ strapi }) {
+    registerOrgScopeMiddleware(strapi);
     registerPublishGuard(strapi, createPublishPolicyLoader(strapi));
     registerStaticPageRoutes(strapi);
     registerStaticPageSlugGuard(strapi);
