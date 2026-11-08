@@ -1,0 +1,37 @@
+{
+  "name": "Közös tagközpontból vásárolt csibe készpénzért (kakas)",
+  "debit_account_code": 1300,
+  "credit_account_code": 2000,
+  "currency": "ROOSTER",
+  "steps": [
+    {
+      "description": "Csibe beérkezés (kakas) – {original.description}",
+      "percent": 100,
+      "debit_code": "1300",
+      "credit_code": "2000",
+      "currency": "ROOSTER",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Csibe vásárlás – szállítói számla (kakas)",
+      "percent": 100,
+      "debit_code": "5000",
+      "credit_code": "2000",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
+    },
+    {
+      "description": "Csibe vásárlás – kifizetés (kakas)",
+      "percent": 100,
+      "debit_code": "2000",
+      "credit_code": "1000",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Készpénz",
+      "apply_currency_rate": true
+    }
+  ]
+}

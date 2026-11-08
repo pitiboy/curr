@@ -16,5 +16,17 @@
     "toCurrencyCode": "EUR",
     "rate": 0.0026,
     "validFrom": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "HEN",
+    "toCurrencyCode": "HUF",
+    "rate": 800,
+    "validFrom": "2026-09-11T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "ROOSTER",
+    "toCurrencyCode": "HUF",
+    "rate": 400,
+    "validFrom": "2026-09-11T00:00:00.000Z"
   }
 ]

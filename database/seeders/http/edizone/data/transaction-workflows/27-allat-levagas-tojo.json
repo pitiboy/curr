@@ -1,0 +1,17 @@
+{
+  "name": "Állat levágás saját számlára (tojó)",
+  "debit_account_code": 1001,
+  "credit_account_code": 1300,
+  "currency": "HEN",
+  "steps": [
+    {
+      "description": "Levágás (tojó) – {original.description}",
+      "percent": 100,
+      "debit_code": "1001",
+      "credit_code": "1300",
+      "currency": "HEN",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

@@ -22,5 +22,17 @@
     "name": "tojás termelés",
     "unit": "egg",
     "categoryCode": "RESOURCES"
+  },
+  {
+    "code": "HEN",
+    "name": "tojó tyúk",
+    "unit": "db",
+    "categoryCode": "RESOURCES"
+  },
+  {
+    "code": "ROOSTER",
+    "name": "kakas",
+    "unit": "db",
+    "categoryCode": "RESOURCES"
   }
 ]
