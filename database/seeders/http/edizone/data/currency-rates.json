@@ -20,7 +20,13 @@
   {
     "fromCurrencyCode": "HEN",
     "toCurrencyCode": "HUF",
-    "rate": 800,
+    "rate": 600,
+    "validFrom": "2026-09-11T00:00:00.000Z"
+  },
+  {
+    "fromCurrencyCode": "CHICK",
+    "toCurrencyCode": "HUF",
+    "rate": 600,
     "validFrom": "2026-09-11T00:00:00.000Z"
   },
   {
