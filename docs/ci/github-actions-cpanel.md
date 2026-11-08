@@ -2,10 +2,11 @@
 
 A repó két workflow-t futtat:
 
-| Workflow   | Fájl                                                                               | Mikor                                                          |
-| ---------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **CI**     | [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                       | Minden PR és `main` push                                       |
-| **Deploy** | [`.github/workflows/deploy-cpanel.yml`](../../.github/workflows/deploy-cpanel.yml) | `main` push (csak érintett útvonal) + kézi `workflow_dispatch` |
+| Workflow        | Fájl                                                                                             | Mikor                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **CI**          | [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                                     | Minden PR és `main` push                                                                   |
+| **Deploy**      | [`.github/workflows/deploy-cpanel.yml`](../../.github/workflows/deploy-cpanel.yml)               | `main` push (csak érintett útvonal) + kézi `workflow_dispatch`                             |
+| **Neon backup** | [`.github/workflows/neon-postgres-backup.yml`](../../.github/workflows/neon-postgres-backup.yml) | Napi 02:30 UTC + kézi; **3 DB**, lásd [neon-postgres-backup.md](./neon-postgres-backup.md) |
 
 A build **mindig a GitHub runneren** készül. A shared host csak futtatja a már feltöltött fát (Passenger / Setup Node.js App).
 
