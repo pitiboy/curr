@@ -171,6 +171,34 @@ export const enMessages = mergeTranslations(englishMessages, {
       error: 'Could not load the report.',
       retry: 'Retry',
     },
+    poultry_flock: {
+      menu: 'Poultry flock',
+      title: 'Poultry flock report',
+      subtitle:
+        'Hen and rooster headcount per brood and how it changed (arrivals, mortality, slaughter) in the selected period.',
+      kpi: {
+        opening: 'Opening headcount',
+        added: 'Arrivals',
+        died: 'Mortality',
+        slaughtered: 'Slaughtered',
+        other_out: 'Other outflow',
+        closing: 'Closing headcount',
+      },
+      split: 'hens %{hen} · roosters %{rooster}',
+      hen: 'Hens',
+      rooster: 'Roosters',
+      total: 'Total',
+      headcount_title: 'Headcount trend (by brood)',
+      animal_title: 'Hens / roosters',
+      movements_title: 'Flock movements',
+      alom_title: 'By brood',
+      alom_name: 'Brood',
+      mortality_rate: 'Mortality rate',
+      empty:
+        'No hen or rooster movements in this period. Try another date range.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
     membership_share: {
       menu: 'Share capital report',
       title: 'Member share and pocket',
@@ -240,6 +268,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       'egg-production': 'Daily egg entry',
       'member-fee': 'Member fee',
       'membership-share': 'Share capital report',
+      'poultry-flock': 'Poultry flock report',
     },
     bulk_quantity: {
       save: 'Save',

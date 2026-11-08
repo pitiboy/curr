@@ -46,5 +46,10 @@
     "key": "membership-share",
     "enabled": true,
     "config": {}
+  },
+  {
+    "key": "poultry-flock",
+    "enabled": false,
+    "config": {}
   }
 ]

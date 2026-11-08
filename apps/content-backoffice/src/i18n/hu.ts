@@ -172,6 +172,34 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
     },
+    poultry_flock: {
+      menu: 'Tyúktartás',
+      title: 'Tyúktartás — állomány kimutatás',
+      subtitle:
+        'Almonkénti tojó és kakas létszám és annak alakulása (beérkezés, elhullás, levágás) a választott időszakban.',
+      kpi: {
+        opening: 'Nyitó létszám',
+        added: 'Beérkezés',
+        died: 'Elhullás',
+        slaughtered: 'Levágás',
+        other_out: 'Egyéb kivezetés',
+        closing: 'Záró létszám',
+      },
+      split: 'tojó %{hen} · kakas %{rooster}',
+      hen: 'Tojó',
+      rooster: 'Kakas',
+      total: 'Összesen',
+      headcount_title: 'Létszám alakulása (alom szerint)',
+      animal_title: 'Tojó / kakas létszám',
+      movements_title: 'Állománymozgások',
+      alom_title: 'Alom bontás',
+      alom_name: 'Alom',
+      mortality_rate: 'Elhullási arány',
+      empty:
+        'Nincs tyúk- vagy kakasmozgás ebben az időszakban. Válassz másik tartományt.',
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+    },
     membership_share: {
       menu: 'Részjegy kimutatás',
       title: 'Tagi részjegy és zseb',
@@ -242,6 +270,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'egg-production': 'Napi tojás rögzítés',
       'member-fee': 'Tagdíj',
       'membership-share': 'Részjegy kimutatás',
+      'poultry-flock': 'Tyúktartás kimutatás',
     },
     bulk_quantity: {
       save: 'Mentés',

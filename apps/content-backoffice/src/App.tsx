@@ -12,6 +12,8 @@ import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
 import { MembershipShareReportPage } from './pages/reports/MembershipShareReportPage';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from './pages/reports/membershipShare/types';
+import { PoultryFlockReportPage } from './pages/reports/PoultryFlockReportPage';
+import { POULTRY_FLOCK_FEATURE_ID } from './pages/reports/poultryFlock/types';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionShow } from './pages/transactions/TransactionShow';
@@ -71,6 +73,17 @@ export function App() {
               </WorkflowFormGate>
             }
             path="/reports/membership-share"
+          />
+          <Route
+            element={
+              <WorkflowFormGate
+                roles={['dataentry', 'editor']}
+                workflowId={POULTRY_FLOCK_FEATURE_ID}
+              >
+                <PoultryFlockReportPage />
+              </WorkflowFormGate>
+            }
+            path="/reports/poultry-flock"
           />
           {workflowForms.map((form) => (
             <Route

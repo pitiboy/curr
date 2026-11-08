@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import EggOutlinedIcon from '@mui/icons-material/EggOutlined';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import ListIcon from '@mui/icons-material/List';
 import PostAddIcon from '@mui/icons-material/PostAdd';
@@ -14,6 +15,7 @@ import {
   type TransactionListMode,
 } from '../data/transactionListLocation';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
+import { POULTRY_FLOCK_FEATURE_ID } from '../pages/reports/poultryFlock/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
 import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
@@ -34,6 +36,8 @@ export function BackofficeMenu() {
     canReadReports && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
     canReadReports && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
+  const canReadPoultryFlock =
+    canReadReports && enabled.includes(POULTRY_FLOCK_FEATURE_ID);
 
   return (
     <Menu>
@@ -62,6 +66,13 @@ export function BackofficeMenu() {
           leftIcon={<AssessmentOutlinedIcon />}
           primaryText={translate('app.egg_inventory.menu')}
           to="/reports/egg-inventory"
+        />
+      ) : null}
+      {canReadPoultryFlock ? (
+        <Menu.Item
+          leftIcon={<EggOutlinedIcon />}
+          primaryText={translate('app.poultry_flock.menu')}
+          to="/reports/poultry-flock"
         />
       ) : null}
       {canReadMembershipShare ? (
