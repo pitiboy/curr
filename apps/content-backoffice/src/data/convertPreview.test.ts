@@ -1,6 +1,38 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { convertPreviewUrl, fetchConvertPreview } from './convertPreview';
+import {
+  appliedRateLabelParts,
+  convertPreviewUrl,
+  fetchConvertPreview,
+} from './convertPreview';
+
+describe('appliedRateLabelParts', () => {
+  it('formats rate and valid-from day', () => {
+    expect(
+      appliedRateLabelParts({
+        fromCurrencyDocumentId: 'egg',
+        toCurrencyDocumentId: 'huf',
+        rate: 100,
+        validFrom: '2023-01-01T00:00:00.000Z',
+        currencyRateDocumentId: 'r',
+      }),
+    ).toEqual({ rate: '100', validFrom: '2023-01-01' });
+  });
+
+  it('returns null without a rate and keeps validFrom null for same currency', () => {
+    expect(appliedRateLabelParts(null)).toBeNull();
+    expect(appliedRateLabelParts(undefined)).toBeNull();
+    expect(
+      appliedRateLabelParts({
+        fromCurrencyDocumentId: 'huf',
+        toCurrencyDocumentId: 'huf',
+        rate: 1,
+        validFrom: null,
+        currencyRateDocumentId: null,
+      }),
+    ).toEqual({ rate: '1', validFrom: null });
+  });
+});
 
 describe('convertPreviewUrl', () => {
   it('targets the convert-preview route', () => {

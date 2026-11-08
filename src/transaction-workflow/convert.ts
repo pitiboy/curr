@@ -5,7 +5,10 @@
  * Expand: step percent → összeg, {original.*}/{1} leírás;
  * organization_from_original (forrás org kötelező) vagy step org (üres marad üres);
  * tagi oldal forrás trx / testvér számlából.
- * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat).
+ * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
+ * legfrissebb valid_from ≤ forrás nap vége), 2 tizedes; rate-et a hívó oldja fel.
+ * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat),
+ * opcionális gépi `code` (pl. CURRENCY_RATE_MISSING) és `details`.
  */
 
 /** Source row after convert. */
@@ -27,13 +30,27 @@ export function isExpandableConvertedValue(
   // Legacy boolean false (pre-enum) still counts as expandable.
   return value == null || value === '' || value === false;
 }
+export const ERROR_CURRENCY_RATE_MISSING = 'CURRENCY_RATE_MISSING' as const;
+export const ERROR_CURRENCY_RATE_INVALID = 'CURRENCY_RATE_INVALID' as const;
+export const ERROR_MEMBERSHIP_RATIO_UNSUPPORTED =
+  'MEMBERSHIP_RATIO_UNSUPPORTED' as const;
+
 export class TransactionWorkflowError extends Error {
   status: number;
+  code?: string;
+  details?: Record<string, unknown>;
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = 'TransactionWorkflowError';
     this.status = status;
+    if (code) this.code = code;
+    if (details) this.details = details;
   }
 }
 
@@ -60,11 +77,12 @@ export type WorkflowStep = {
   member_account_code?: string | number | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
-  currency_type?: { documentId: string } | null;
+  currency_type?: CurrencyRef | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
   organization_from_original?: boolean | null;
   copy_receipt?: boolean | null;
+  apply_currency_rate?: boolean | null;
 };
 
 export type NormalizedWorkflowStep = {
@@ -79,6 +97,7 @@ export type NormalizedWorkflowStep = {
   organization?: { documentId: string } | null;
   organization_from_original?: boolean | null;
   copy_receipt?: boolean | null;
+  apply_currency_rate?: boolean;
 };
 
 export type WorkflowTemplate = {
@@ -91,6 +110,12 @@ export type WorkflowTemplate = {
   currency_type?: { documentId: string } | null;
   transaction_type?: { documentId: string } | null;
   step?: WorkflowStep[] | null;
+};
+
+/** Currency ref as populated on steps / source (code optional). */
+export type CurrencyRef = {
+  documentId: string;
+  code?: string | null;
 };
 
 export type SourceTransaction = {
@@ -181,6 +206,7 @@ export function normalizeWorkflowStep(
     organization: step.organization,
     organization_from_original: step.organization_from_original === true,
     copy_receipt: step.copy_receipt,
+    apply_currency_rate: step.apply_currency_rate === true,
   };
 
   if (component === STEP_RELATED) {
@@ -411,6 +437,164 @@ export function resolveStepAccount(
   return stepAccount;
 }
 
+/** Rate actually used for an `apply_currency_rate` step. */
+export type AppliedRate = {
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+  rate: number;
+  /** null when from === to (implicit rate 1, no lookup). */
+  validFrom: string | null;
+  currencyRateDocumentId: string | null;
+};
+
+/** Resolved rates keyed by step (target) currency documentId; source currency is fixed per call. */
+export type RateByCurrency = ReadonlyMap<string, AppliedRate>;
+
+/** Currency-rate row reduced to what the lookup needs. */
+export type CurrencyRateRow = {
+  documentId?: string | null;
+  rate: number | string;
+  valid_from: string;
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+};
+
+/** `YYYY-MM-DD` of the transaction date (accepts full ISO timestamps). */
+export function isoDay(date: string): string {
+  return String(date ?? '').slice(0, 10);
+}
+
+/** Inclusive UTC end of the given day — same rule as backoffice pickLatestCurrencyRate. */
+export function rateCutoff(date: string): string {
+  return `${isoDay(date)}T23:59:59.999Z`;
+}
+
+/** Two-decimal rounding for rate-applied amounts (matches saleRevenueAmount). */
+export function roundAmount(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * Latest direct `from → to` row with valid_from ≤ end of `date` (UTC).
+ * No inverse fallback. Same currency → rate 1 without a row.
+ */
+export function pickLatestRate(
+  rows: readonly CurrencyRateRow[],
+  fromCurrencyDocumentId: string,
+  toCurrencyDocumentId: string,
+  date: string,
+): AppliedRate | null {
+  if (fromCurrencyDocumentId === toCurrencyDocumentId) {
+    return {
+      fromCurrencyDocumentId,
+      toCurrencyDocumentId,
+      rate: 1,
+      validFrom: null,
+      currencyRateDocumentId: null,
+    };
+  }
+  const cutoff = Date.parse(rateCutoff(date));
+  let best: CurrencyRateRow | null = null;
+  let bestTime = -Infinity;
+  for (const row of rows) {
+    if (row.fromCurrencyDocumentId !== fromCurrencyDocumentId) continue;
+    if (row.toCurrencyDocumentId !== toCurrencyDocumentId) continue;
+    const time = Date.parse(row.valid_from);
+    if (!Number.isFinite(time) || time > cutoff) continue;
+    if (time > bestTime) {
+      best = row;
+      bestTime = time;
+    }
+  }
+  if (!best) return null;
+  return {
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
+    rate: Number(best.rate),
+    validFrom: best.valid_from,
+    currencyRateDocumentId: best.documentId ?? null,
+  };
+}
+
+/** True when any step of the template asks for a currency-rate conversion. */
+export function workflowAppliesCurrencyRate(
+  workflow: Pick<WorkflowTemplate, 'step'>,
+): boolean {
+  return (workflow.step ?? []).some(
+    (step) => step?.apply_currency_rate === true,
+  );
+}
+
+/**
+ * Target currency documentIds that need a rate lookup (flagged steps whose
+ * currency differs from the source). Source currency is required when any step is flagged.
+ */
+export function stepsNeedingRate(
+  workflow: Pick<WorkflowTemplate, 'step'>,
+  source: SourceTransaction,
+): { from: string; to: string[] } | null {
+  if (!workflowAppliesCurrencyRate(workflow)) return null;
+  const from = source.currency_type?.documentId;
+  if (!from) {
+    throw new TransactionWorkflowError(
+      'Source transaction currency_type is required for apply_currency_rate steps',
+      422,
+    );
+  }
+  const to = new Set<string>();
+  for (const step of workflow.step ?? []) {
+    if (step?.apply_currency_rate !== true) continue;
+    const target = step.currency_type?.documentId;
+    if (target && target !== from) to.add(target);
+  }
+  return { from, to: [...to] };
+}
+
+function currencyLabel(ref: CurrencyRef | null | undefined): string {
+  return ref?.code?.trim() || ref?.documentId || '';
+}
+
+/** Rate for one flagged step, or a 422 with a machine-readable code. */
+function requireStepRate(
+  stepCurrency: CurrencyRef,
+  source: SourceTransaction,
+  rates: RateByCurrency | undefined,
+): AppliedRate {
+  const from = source.currency_type?.documentId;
+  if (!from) {
+    throw new TransactionWorkflowError(
+      'Source transaction currency_type is required for apply_currency_rate steps',
+      422,
+    );
+  }
+  if (from === stepCurrency.documentId) {
+    return pickLatestRate([], from, from, source.date) as AppliedRate;
+  }
+  const details = {
+    from: currencyLabel(source.currency_type),
+    to: currencyLabel(stepCurrency),
+    date: isoDay(source.date),
+  };
+  const applied = rates?.get(stepCurrency.documentId);
+  if (!applied) {
+    throw new TransactionWorkflowError(
+      `Currency rate ${details.from} → ${details.to} not found on or before ${details.date}`,
+      422,
+      ERROR_CURRENCY_RATE_MISSING,
+      details,
+    );
+  }
+  if (!Number.isFinite(applied.rate) || applied.rate <= 0) {
+    throw new TransactionWorkflowError(
+      `Currency rate ${details.from} → ${details.to} is invalid (${applied.rate})`,
+      422,
+      ERROR_CURRENCY_RATE_INVALID,
+      { ...details, rate: applied.rate },
+    );
+  }
+  return applied;
+}
+
 export type ExpandedStepRow = {
   index: number;
   description: string;
@@ -422,12 +606,15 @@ export type ExpandedStepRow = {
   organization: { documentId: string } | null;
   copy_receipt: boolean;
   entered_key: string;
+  /** Set only on apply_currency_rate steps. */
+  appliedRate: AppliedRate | null;
 };
 
 export function expandWorkflowSteps(
   workflow: WorkflowTemplate,
   transaction: SourceTransaction,
   siblingByCode: ReadonlyMap<string, AccountRef>,
+  rates?: RateByCurrency,
 ): ExpandedStepRow[] {
   const steps = workflow.step ?? [];
   if (!steps.length) {
@@ -450,10 +637,24 @@ export function expandWorkflowSteps(
       throw new TransactionWorkflowError('Step currency_type is missing', 422);
     }
 
+    const baseAmount = stepAmount(
+      transaction.amount,
+      normalized.percent ?? 100,
+    );
+    const appliedRate = normalized.apply_currency_rate
+      ? requireStepRate(
+          normalized.currency_type as CurrencyRef,
+          transaction,
+          rates,
+        )
+      : null;
+
     return {
       index,
       description: expandTemplate(normalized.description, transaction),
-      amount: stepAmount(transaction.amount, normalized.percent ?? 100),
+      amount: appliedRate
+        ? roundAmount(baseAmount * appliedRate.rate)
+        : baseAmount,
       debit_account: resolveStepAccount(
         normalized.debitWanted,
         normalized.debitRelation,
@@ -473,6 +674,7 @@ export function expandWorkflowSteps(
       organization: resolveStepOrganization(normalized, transaction),
       copy_receipt: normalized.copy_receipt === true,
       entered_key: `${transaction.documentId}:step:${index}`,
+      appliedRate,
     };
   });
 }

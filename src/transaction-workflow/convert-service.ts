@@ -7,6 +7,8 @@
  * organization / accounts); otherwise they stay draft while steps may still publish.
  * Partial keep_original failure rolls back created rows and clears the source mark.
  * keep_original false: delete original, step chain; receipt only on copy_receipt steps.
+ * apply_currency_rate steps: rates and the membership-ratio guard resolve before
+ * any write (422 CURRENCY_RATE_MISSING / MEMBERSHIP_RATIO_UNSUPPORTED leave no rows).
  */
 import {
   shouldPublishConvertedSource,
@@ -31,6 +33,12 @@ import {
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert';
+import {
+  createRateResolver,
+  loadMembershipRatioIssues,
+  resolveWorkflowRates,
+} from './convert-context';
+import { assertMembershipRatioSupported } from './membership-ratio';
 
 type DocumentsApi = {
   findMany: (params?: Record<string, unknown>) => Promise<unknown[]>;
@@ -48,12 +56,29 @@ export type ConvertRequest = {
   steps_published?: boolean;
 };
 
+export type AppliedRateResult = {
+  stepIndex: number;
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+  rate: number;
+  validFrom: string | null;
+  currencyRateDocumentId: string | null;
+};
+
 export type ConvertResultItem = {
   transactionDocumentId: string;
   workflowDocumentId: string;
   stornoDocumentId?: string;
   createdDocumentIds: string[];
+  /** Only apply_currency_rate steps. */
+  appliedRates: AppliedRateResult[];
 };
+
+function appliedRatesOf(rows: ExpandedStepRow[]): AppliedRateResult[] {
+  return rows
+    .filter((row) => row.appliedRate)
+    .map((row) => ({ stepIndex: row.index, ...row.appliedRate! }));
+}
 
 export type ConvertStrapi = {
   documents: (uid: string) => unknown;
@@ -74,7 +99,7 @@ function documentsApi(strapi: ConvertStrapi, uid: string): DocumentsApi {
 
 /** Nested relations inside a dynamic zone need per-component `on` fragments (Strapi 5). */
 const stepSharedPopulate = {
-  currency_type: { fields: ['documentId'] },
+  currency_type: { fields: ['documentId', 'code'] },
   transaction_type: { fields: ['documentId'] },
   organization: { fields: ['documentId'] },
 };
@@ -110,7 +135,7 @@ const workflowPopulate = {
 const transactionPopulate = {
   debit_account: { fields: ['documentId', 'code'] },
   credit_account: { fields: ['documentId', 'code'] },
-  currency_type: { fields: ['documentId'] },
+  currency_type: { fields: ['documentId', 'code'] },
   transaction_type: { fields: ['documentId'] },
   organization: { fields: ['documentId'] },
   receipts: { fields: ['documentId'] },
@@ -413,6 +438,7 @@ export async function convertTransactions(
   );
 
   const results: ConvertResultItem[] = [];
+  const resolveRate = createRateResolver(strapi);
 
   for (const transaction of transactions) {
     if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
@@ -426,7 +452,21 @@ export async function convertTransactions(
     const published =
       request.steps_published ?? workflow.steps_published !== false;
     const siblingMap = await loadMemberSiblingMap(strapi, transaction);
-    const expanded = expandWorkflowSteps(workflow, transaction, siblingMap);
+    // Resolve rate + ratio guard before any write (no rollback needed on 422).
+    const rates = await resolveWorkflowRates(
+      resolveRate,
+      workflow,
+      transaction,
+    );
+    assertMembershipRatioSupported(
+      await loadMembershipRatioIssues(strapi, workflow, transaction),
+    );
+    const expanded = expandWorkflowSteps(
+      workflow,
+      transaction,
+      siblingMap,
+      rates,
+    );
     assertKeepOriginalReceiptPolicy(keepOriginal, transaction, expanded);
 
     const receiptIds =
@@ -521,6 +561,7 @@ export async function convertTransactions(
       workflowDocumentId: workflow.documentId,
       stornoDocumentId,
       createdDocumentIds,
+      appliedRates: appliedRatesOf(expanded),
     });
   }
 

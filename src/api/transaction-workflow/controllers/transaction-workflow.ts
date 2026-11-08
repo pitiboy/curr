@@ -15,6 +15,18 @@ import {
 } from '../../../transaction-workflow/preview-service';
 import { TransactionWorkflowError } from '../../../transaction-workflow/convert';
 
+/** Strapi-style error; `details.code` carries the machine code (e.g. CURRENCY_RATE_MISSING). */
+function errorBody(error: TransactionWorkflowError) {
+  return {
+    status: error.status,
+    name: error.name,
+    message: error.message,
+    ...(error.code || error.details
+      ? { details: { ...(error.details ?? {}), code: error.code } }
+      : {}),
+  };
+}
+
 export default factories.createCoreController(
   'api::transaction-workflow.transaction-workflow',
   ({ strapi }) => ({
@@ -50,11 +62,7 @@ export default factories.createCoreController(
           ctx.status = error.status;
           ctx.body = {
             data: null,
-            error: {
-              status: error.status,
-              name: error.name,
-              message: error.message,
-            },
+            error: errorBody(error),
           };
           return;
         }
@@ -89,11 +97,7 @@ export default factories.createCoreController(
           ctx.status = error.status;
           ctx.body = {
             data: null,
-            error: {
-              status: error.status,
-              name: error.name,
-              message: error.message,
-            },
+            error: errorBody(error),
           };
           return;
         }

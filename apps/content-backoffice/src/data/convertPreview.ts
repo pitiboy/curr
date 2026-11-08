@@ -23,7 +23,29 @@ export type PreviewMovement = {
   percent: number | null;
   copyReceipt: boolean;
   organizationDocumentId: string | null;
+  /** Set on `apply_currency_rate` steps (currency-rate used by Convert). */
+  rate?: PreviewAppliedRate | null;
 };
+
+export type PreviewAppliedRate = {
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+  rate: number;
+  /** null when source and step currency match (implicit rate 1). */
+  validFrom: string | null;
+  currencyRateDocumentId: string | null;
+};
+
+/** `{ rate, validFrom }` for the preview table, or null without a rate. */
+export function appliedRateLabelParts(
+  rate: PreviewAppliedRate | null | undefined,
+): { rate: string; validFrom: string | null } | null {
+  if (!rate || !Number.isFinite(rate.rate)) return null;
+  return {
+    rate: rate.rate.toLocaleString('hu-HU', { maximumFractionDigits: 6 }),
+    validFrom: rate.validFrom ? rate.validFrom.slice(0, 10) : null,
+  };
+}
 
 export type ConvertPreview = {
   workflow: {

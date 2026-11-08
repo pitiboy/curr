@@ -1,6 +1,6 @@
 # Implementation plan: `transaction-workflow` content type
 
-**Status:** draft (séma kézzel a repóban; Convert API és seed JSON még nincs)  
+**Status:** Convert API, seed JSON és F fázis (árfolyamos step, tagsági ratio őr) implementálva; lekötés KOR átállítása nyitott  
 **Date:** 2026-10-29  
 **Üzleti modell:** [Ügyletek](../transaction-workflow.md)  
 **Backoffice v1:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md) — a Convert API **v1 utáni**  
@@ -179,10 +179,11 @@ export type AppliedRate = {
 /** kulcs: step currency documentId (a forrás pénzneme request-en belül fix) */
 export type RateByCurrency = ReadonlyMap<string, AppliedRate>;
 
+/** null ha nincs flagelt step; `to` = flagelt, forrástól eltérő step pénznemek */
 export function stepsNeedingRate(
   workflow,
   source,
-): { from: string; to: string }[];
+): { from: string; to: string[] } | null;
 export function pickLatestRate(rows, from, to, isoDate): AppliedRate | null; // tiszta, tesztelhető
 export function expandWorkflowSteps(
   workflow,
@@ -195,7 +196,7 @@ export function expandWorkflowSteps(
 
 `expandWorkflowSteps`: ha `apply_currency_rate` és `rates.get(stepCurrency)` hiányzik → `TransactionWorkflowError(…, 422, 'CURRENCY_RATE_MISSING')`. Így a Convert és a `convert-preview` ugyanúgy viselkedik.
 
-**Strapi réteg:** [currency-rate service](../../src/api/currency-rate/services/currency-rate.ts) bővül egy `findLatestRate({ fromDocumentId, toDocumentId, onOrBeforeDate })` metódussal. Ez a v2 PRD-ben jelzett hiányzó dátum szerinti lookup. A [convert-service](../../src/transaction-workflow/convert-service.ts) és a [preview-service](../../src/transaction-workflow/preview-service.ts) ezt hívja a `stepsNeedingRate` párokra.
+**Strapi réteg:** a lekérdezés a [convert-context.ts](../../src/transaction-workflow/convert-context.ts) `findLatestCurrencyRate` függvénye (filter: direkt pár + `valid_from $lte` nap vége, `sort valid_from:desc`, `limit 1`, utána a tiszta `pickLatestRate` újra szűr). A [currency-rate service](../../src/api/currency-rate/services/currency-rate.ts) `findLatestRate({ fromDocumentId, toDocumentId, onOrBeforeDate })` metódusként teszi elérhetővé; ez a v2 PRD-ben jelzett hiányzó dátum szerinti lookup. A `createRateResolver` requestenként cache-el, a `resolveWorkflowRates` a `stepsNeedingRate` párokra old fel. A [convert-service](../../src/transaction-workflow/convert-service.ts) és a [preview-service](../../src/transaction-workflow/preview-service.ts) ugyanezt hívja, a [tagsági ratio őr](#52-tagsági-ratio-őr) (`loadMembershipRatioIssues`) mellett.
 
 **Példa — Tojás eladás forintért** (`24-tojas-eladas-forint.json`). Forrás: `1001 tag ← 1300`, 30 EGG, `date: 2026-11-07`. `currency-rate`: EGG → HUF = 100, `valid_from 2023-01-01`.
 
@@ -221,7 +222,7 @@ Korábban (flag nélkül) az 1–2. sor **30 HUF** lett. Ugyanez a flag kerül a
 | Nincs tag / nincs tagság | Ratio 1, nincs akadály                                                                                                                                                                                                                                                                                                                             |
 | Jutalék                  | A [0005](./0005-tojas-eladas-kozvetitoi-jutalek.md) `commissionPercent` / `internalPercent` mezőit az őr nem nézi; azok a Napi tojás űrlap hatáskörében maradnak                                                                                                                                                                                   |
 
-Az őr a rate-feloldással együtt, minden írás előtt fut.
+Az őr a rate-feloldással együtt, minden írás előtt fut. Implementáció: [membership-ratio.ts](../../src/transaction-workflow/membership-ratio.ts) (a backoffice `resolveEggRule` / `membershipValidOnDate` szerveroldali másolata, `SERVER_EGG_RULE_FALLBACK_BY_MEMBERSHIP_TYPE_NAME` fallback táblával; a kettőt együtt kell módosítani). Az előnézet figyelmeztetése `MEMBERSHIP_RATIO_UNSUPPORTED:` prefixszel kezdődik.
 
 ---
 
@@ -534,16 +535,16 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 - [ ] Convert API + `converted_to_workflow` / storno / `copy_receipt` / `steps_published`
 - [ ] Unit: Ügylet 8, Ügylet 1, Ügylet 9 (1 step), tagi számla kód-match
 - [ ] Doc hivatkozások naprakészek
-- [ ] F: `apply_currency_rate` a három step komponensen + seed DSL (`11-transaction-workflows.http`) + edizone 23/24 JSON
-- [ ] F: `currency-rate` service `findLatestRate`
-- [ ] F: `convert.ts` `pickLatestRate`, `stepsNeedingRate`, `expandWorkflowSteps(..., rates)`, `TransactionWorkflowError.code`
-- [ ] F: convert-service / preview-service rate feloldás írás előtt + `appliedRates` / `movement.rate`
-- [ ] F: Unit — `pickLatestRate`: legfrissebb ≤ nap, aznapi későbbi időpont is számít, jövőbeli kizárva, rossz irány/pár → null, azonos pénznem → 1
-- [ ] F: Unit — `expandWorkflowSteps`: tojás 30 EGG → 3 000 HUF (két HUF step), flag nélkül változatlan (Ügylet 1 KOR `percent: 1` regresszió), hiányzó rate → 422 `CURRENCY_RATE_MISSING`, `percent` 50 × rate, 2 tizedes kerekítés
-- [ ] F: Service teszt (`convert-service.test.ts` mock mintára) — hiányzó rate esetén **nulla** `create`/`update` hívás; párnaponként egy lookup; `appliedRates` a válaszban
-- [ ] F: Preview teszt — `movements[].rate` kitöltve, flag nélkül `null`
+- [x] F: `apply_currency_rate` a három step komponensen + seed DSL (`11-transaction-workflows.http`) + edizone 23/24 JSON
+- [x] F: `currency-rate` service `findLatestRate`
+- [x] F: `convert.ts` `pickLatestRate`, `stepsNeedingRate`, `expandWorkflowSteps(..., rates)`, `TransactionWorkflowError.code`
+- [x] F: convert-service / preview-service rate feloldás írás előtt + `appliedRates` / `movement.rate`
+- [x] F: Unit — `pickLatestRate`: legfrissebb ≤ nap, aznapi későbbi időpont is számít, jövőbeli kizárva, rossz irány/pár → null, azonos pénznem → 1
+- [x] F: Unit — `expandWorkflowSteps`: tojás 30 EGG → 3 000 HUF (két HUF step), flag nélkül változatlan (Ügylet 1 KOR `percent: 1` regresszió), hiányzó rate → 422 `CURRENCY_RATE_MISSING`, `percent` 50 × rate, 2 tizedes kerekítés
+- [x] F: Service teszt (`convert-service.test.ts` mock mintára) — hiányzó rate esetén **nulla** `create`/`update` hívás; párnaponként egy lookup; `appliedRates` a válaszban
+- [x] F: Preview teszt — `movements[].rate` kitöltve, flag nélkül `null`
 - [ ] Később (külön PR): lekötés KOR stepek → `apply_currency_rate` + `percent: 100`; KOR-párra inverz fallback (`1/rate`) + `AppliedRate.inverted`; unit: 2 000 000 HUF / 600 → 3 333.33 KOR, direkt sor elsőbbsége, nem-KOR párnál nincs inverz
-- [ ] F: Ratio őr — szerveroldali egg rule feloldás (membership → type → név fallback → 1); unit: ratio ≠ 1 tagság → preview warning + Convert 422 `MEMBERSHIP_RATIO_UNSUPPORTED` írás nélkül; ratio 1 / nincs tagság / lejárt tagság → átmegy; flag nélküli sablonon nem fut
+- [x] F: Ratio őr — szerveroldali egg rule feloldás (membership → type → név fallback → 1); unit: ratio ≠ 1 tagság → preview warning + Convert 422 `MEMBERSHIP_RATIO_UNSUPPORTED` írás nélkül; ratio 1 / nincs tagság / lejárt tagság → átmegy; flag nélküli sablonon nem fut
 
 ---
 
