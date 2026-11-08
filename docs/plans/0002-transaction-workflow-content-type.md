@@ -90,7 +90,7 @@ flowchart LR
 
 ### 3.2 Step komponensek (dynamic zone)
 
-Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, opcionális `organization`, opcionális `organization_from_original`, opcionális `transaction_type`, `copy_receipt`.
+Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, opcionális `organization`, opcionális `organization_from_original`, opcionális `transaction_type`, `copy_receipt`, **`apply_currency_rate`** (boolean, default `false`, lásd [5.1](#51-árfolyamos-lépés-apply_currency_rate)).
 
 | Komponens UID | Admin név | Számlák |
 | ---- | ---- | ---- |
@@ -98,7 +98,7 @@ Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0�
 | `workflow.step-member-debit` | Step with Member as Debit | `member_account_code` (`1101`/`1001`) + `credit_account` reláció |
 | `workflow.step-member-credit` | Step with Member as Credit | `member_account_code` (`1101`/`1001`) + `debit_account` reláció |
 
-Generált összeg: `amount = source.amount * percent / 100`.
+Generált összeg: `amount = source.amount * percent / 100`; ha a stepen `apply_currency_rate: true`, akkor `amount = round2(source.amount * percent / 100 * rate)`, ahol `rate` a forrás pénznem → step pénznem `currency-rate` a forrás `date` napjáig ([5.1](#51-árfolyamos-lépés-apply_currency_rate)).
 
 **Tagi feloldás:** member komponensnél a Convert a forrás trx azonos kódú oldalát (vagy a [member-accounts](../../src/member-accounts.ts) testvért) használja — **nem** seed documentId-t. Fix oldalon a relation `documentId` megy a generált sorra.
 
@@ -133,7 +133,7 @@ A konverzió **egy** matcholt sorból indul; a doc teljes ügyletének minden ki
 
 Minden `step` sorrendben:
 
-- `amount` = forrás × `percent` / 100  
+- `amount` = forrás × `percent` / 100; `apply_currency_rate: true` stepnél × `rate` és 2 tizedesre kerekítve ([5.1](#51-árfolyamos-lépés-apply_currency_rate))  
 - számlák: ha a step debit/credit account **kódja** `1101` vagy `1001` (vagy egyezik a forrás valamelyik oldalának kódjával tagi számlánál), a forrás trx megfelelő account példánya (ill. testvér a member-accounts-ból); egyébként a step relation  
 - `currency_type`, `transaction_type` a stepről; `organization` a stepről, vagy `organization_from_original` esetén a forrásról (üres marad üres)  
 - `date` ← forrás `date`  
@@ -142,6 +142,62 @@ Minden `step` sorrendben:
 - **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres  
 
 A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora és a [forint bevétel](../transaction-workflow.md#forint-bevétel-korona-nélkül) két sora **külön** `workflow.step` elemek a seedben — nincs implicit kibontás.
+
+### 5.1 Árfolyamos lépés (`apply_currency_rate`)
+
+**Felváltja** a korábbi „a Convert nem számol `currency-rate`-et” korlátot ([9.1](#91-seed-előfeltételek)), de **csak opt-in stepen**. Flag nélküli step viselkedése bitre azonos a korábbival.
+
+**Miért step-flag, és nem automatikus pénznem-eltérés?** A meglévő KOR lekötés stepek (Ügylet 1, 2, 5, 6) a váltást a `percent: 1`-gyel emulálják (HUF forrás → KOR step). Automatikus átváltásnál ezek kétszer váltanának. Egy fejléc- vagy sablon-szintű `from_currency`/`to_currency` pedig felesleges: a forrás pénznem a forrás trx-en, a cél a step `currency_type`-ján már adott. Transaction type vagy leírás prefix alapú trigger túl implicit, ezért elvetve.
+
+| Elem | Szerződés |
+| ---- | --------- |
+| Séma | `apply_currency_rate: boolean`, `default: false`, nem kötelező — mindhárom step komponensen (`step.json`, `step-member-debit.json`, `step-member-credit.json`) |
+| Seed DSL | step JSON `"apply_currency_rate": true` → `common/11-transaction-workflows.http` mindhárom komponens payloadjára átmásolja |
+| Pár | `from` = forrás trx `currency_type`, `to` = step `currency_type` |
+| Azonos pénznem | `from === to` → `rate = 1`, nincs lookup (mint a backoffice `pickLatestCurrencyRate`) |
+| Dátum | forrás trx `date` (`YYYY-MM-DD`). A receipt dátuma nem számít. Request body override **nincs** (a Napi tojás űrlap is a bizonylat/űrlap dátumát használja, ami itt a trx `date`). |
+| Lookup | `currency_rates` ahol `from_currency_type.documentId = from`, `to_currency_type.documentId = to`, `valid_from <= {date}T23:59:59.999Z`; rendezés `valid_from:desc`, `limit 1`. Ugyanaz a szabály, mint a backoffice [`pickLatestCurrencyRate`](../../apps/content-backoffice/src/workflows/bulk-quantity/distributionLogic.ts) (UTC nap vége, beleértve) |
+| Inverz pár | **nincs** fallback (`to → from`, `1/rate`); csak a direkt pár számít, ahogy a termékleírásban |
+| Képlet | `amount = round2(source.amount × percent / 100 × rate)`; `percent/100` = sablon szintű **ratio** (100 = 1). Kerekítés csak árfolyamos stepen (`Math.round(x*100)/100`, mint `saleRevenueAmount`) |
+| Membership ratio | A Convert **nem** olvas `membership.rules.egg.ratio`-t. A tagonkénti ratio (pl. Érdeklődő 0.75) a Napi tojás űrlap felelőssége; Convert-tel csak ratio = `percent/100` könyvelhető. Későbbi bővítés: `apply_membership_ratio` (nem cél) |
+| Láncolás | Nincs: minden árfolyamos step a **forrás** összegéből számol; két HUF step (kp befizetés + bevétel) ugyanazt az összeget kapja |
+| Hiányzó rate | **Blokkoló** 422 `CURRENCY_RATE_MISSING`; nem jön létre draft sem. Rate `<= 0` vagy nem véges → 422 `CURRENCY_RATE_INVALID` |
+| Írás előtti feloldás | A service a rate-eket **minden írás előtt** feloldja (storno, `original` jelölés előtt), így hiányzó rate esetén nincs rollback-igény |
+| Cache | Requesten belül `Map<"{from}:{to}:{date}", AppliedRate>`; batch convertnél párnaponként egy query |
+| Perzisztencia | `transaction` séma **nem** változik. A generált `amount` a rögzítéskori fix érték; egy későbbi `currency-rate` módosítás nem írja át. Az alkalmazott rate a Convert válaszban és az előnézetben látszik. A „rögzítéskori árfolyam a tranzakción” mező a [v2 PRD](../prd/0002-content-backoffice-v2.md) külön tétele; ha elkészül, a Convert tölti |
+
+**Pure réteg ([convert.ts](../../src/transaction-workflow/convert.ts)):**
+
+```ts
+export type AppliedRate = {
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+  rate: number;
+  validFrom: string | null;        // null ha from === to
+  currencyRateDocumentId: string | null;
+};
+/** kulcs: step currency documentId (a forrás pénzneme request-en belül fix) */
+export type RateByCurrency = ReadonlyMap<string, AppliedRate>;
+
+export function stepsNeedingRate(workflow, source): { from: string; to: string }[];
+export function pickLatestRate(rows, from, to, isoDate): AppliedRate | null; // tiszta, tesztelhető
+export function expandWorkflowSteps(workflow, transaction, siblingByCode, rates?: RateByCurrency): ExpandedStepRow[];
+// ExpandedStepRow += { appliedRate: AppliedRate | null }
+```
+
+`expandWorkflowSteps`: ha `apply_currency_rate` és `rates.get(stepCurrency)` hiányzik → `TransactionWorkflowError(…, 422, 'CURRENCY_RATE_MISSING')`. Így a Convert és a `convert-preview` ugyanúgy viselkedik.
+
+**Strapi réteg:** [currency-rate service](../../src/api/currency-rate/services/currency-rate.ts) bővül egy `findLatestRate({ fromDocumentId, toDocumentId, onOrBeforeDate })` metódussal. Ez a v2 PRD-ben jelzett hiányzó dátum szerinti lookup. A [convert-service](../../src/transaction-workflow/convert-service.ts) és a [preview-service](../../src/transaction-workflow/preview-service.ts) ezt hívja a `stepsNeedingRate` párokra.
+
+**Példa — Tojás eladás forintért** (`24-tojas-eladas-forint.json`). Forrás: `1001 tag ← 1300`, 30 EGG, `date: 2026-11-07`. `currency-rate`: EGG → HUF = 100, `valid_from 2023-01-01`.
+
+| # | Step | percent | `apply_currency_rate` | Pénznem | Összeg |
+| - | ---- | ------- | --------------------- | ------- | ------ |
+| 0 | Tojás eladás (tojás) | 100 | – | EGG | 30 |
+| 1 | Tojás eladás (kp befizetés) | 100 | `true` | HUF | 30 × 1 × 100 = **3 000** |
+| 2 | Tojás eladás (bevétel) | 100 | `true` | HUF | **3 000** |
+
+Korábban (flag nélkül) az 1–2. sor **30 HUF** lett. Ugyanez a flag kerül a `23-tojas-keletkezese-es-eladasa.json` két HUF stepjére.
 
 ---
 
@@ -186,9 +242,13 @@ flowchart TD
 | Hely | `src/api/transaction-workflow/` custom route + controller/service |
 | Endpoint | pl. `POST /api/transaction-workflows/convert` |
 | Auth | `editor` (vagy Admin); nem publikus |
-| Body | opcionális: `workflowDocumentId`, `transactionDocumentId`, **`steps_published`** (override a sablon defaultján) |
+| Body | opcionális: `workflowDocumentId`, `transactionDocumentId`, **`steps_published`** (override a sablon defaultján). Árfolyam/dátum override **nincs**. |
+| Válasz | `data[]` elemenként: `transactionDocumentId`, `workflowDocumentId`, `stornoDocumentId?`, `createdDocumentIds`, **`appliedRates`**: `{ stepIndex, fromCurrencyDocumentId, toCurrencyDocumentId, rate, validFrom, currencyRateDocumentId }[]` (csak `apply_currency_rate` stepek) |
+| Előnézet | `convert-preview` `movements[]` elemein **`rate`** (`AppliedRate \| null`), hogy a modál mutassa a használt árfolyamot |
 
-Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó account/org / tagi testvér (422), `entered_key` ütközés (409), `keep_original: false` + receipt orphan (422).
+Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó account/org / tagi testvér (422), `entered_key` ütközés (409), `keep_original: false` + receipt orphan (422), **nincs érvényes `currency-rate` a forrás dátumáig (422 `CURRENCY_RATE_MISSING`)**, **hibás rate ≤ 0 (422 `CURRENCY_RATE_INVALID`)**.
+
+A hibatörzs bővül egy gépi kóddal: `error.details.code` (pl. `CURRENCY_RATE_MISSING`), `error.details.from` / `to` (pénznem kód) és `error.details.date`. A `TransactionWorkflowError` opcionális `code` + `details` mezőt kap; a meglévő hibák kód nélkül változatlanok. Batch convertnél (nincs `transactionDocumentId`) az első hiányzó rate megállítja a futást. A már feldolgozott sorok megmaradnak (ez a jelenlegi batch szemantika).
 
 ---
 
@@ -392,7 +452,7 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | `4500`, `EGG`, Tojóól | 3 |
 | `FRUIT` | 4 |
 
-(A Convert **nem** számol `currency-rate`-et: a KOR összeg a `percent` × forrás `amount`.)
+~~A Convert **nem** számol `currency-rate`-et.~~ **Felváltva ([5.1](#51-árfolyamos-lépés-apply_currency_rate)):** a Convert csak `apply_currency_rate: true` stepen alkalmaz `currency-rate`-et. A meglévő KOR lekötés stepek flag nélkül maradnak: a KOR összeg továbbra is `percent` × forrás `amount` (`percent: 1` ≈ 1:100). A kor seed `KOR → HUF = 600` sora ennek **ellentmond**, és HUF → KOR direkt sor nincs. A lekötés átállítása flagre (percent 100 + rate) külön döntés, nem része ennek a scope-nak.
 
 ### 9.2 Rögzített döntések (implementáció)
 
@@ -404,6 +464,14 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | Kimenet státusz | Sablon `steps_published` default `true`; Convert body override |
 | Első PR scope | **Mind a 9 ügylet** seed + Convert API |
 | Receipt | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra |
+| Árfolyam trigger | Step `apply_currency_rate` (opt-in, default `false`); nincs sablon/fejléc `from_currency`/`to_currency`, nincs típus/prefix trigger |
+| Árfolyam dátum | Forrás trx `date`, `valid_from <= nap vége UTC`, legfrissebb; nincs body override |
+| Árfolyam pár | Direkt `from → to`; nincs inverz fallback; azonos pénznem → 1 |
+| Hiányzó rate | 422 `CURRENCY_RATE_MISSING`, blokkol (nincs draft); feloldás minden írás előtt |
+| Ratio | `percent / 100`; membership ratio-t a Convert nem olvas |
+| Kerekítés | Árfolyamos stepen 2 tizedes |
+| Rate perzisztencia | Nincs új `transaction` mező; `appliedRates` a válaszban / előnézetben |
+| Visszamenőleges | Már kifejtett sorok nem változnak, nincs automatikus újrakonvertálás |
 
 ### 9.3 Maradék finomság (defaultolható)
 
@@ -422,6 +490,15 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101) |
 | **D** | Content API jogok |
 | **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél) |
+| **F** | Árfolyamos step: `apply_currency_rate` séma + seed DSL + `findLatestRate` + pure expand + preview `rate` + 422 kód + tesztek ([5.1](#51-árfolyamos-lépés-apply_currency_rate)) |
+
+#### F fázis — kompatibilitás
+
+- **Meglévő kifejtett sorok:** `converted_to_workflow` nem null, ezért a Convert nem veszi újra. A régi 1:1 HUF sorok (pl. 30 HUF 3 000 helyett) **nem** javulnak maguktól. Javítás: kézi storno + új könyvelés, vagy a hibás konverzió visszabontása (storno/step sorok törlése, `original` jelölés `null`-ra) és újra Convert. Automatikus migráció nem cél.
+- **Sablonok:** a seed upsert insert-only, ezért a már létező edizone `Tojás eladás forintért` / `Tojás keletkezése és egyből eladása` rekordokon a flaget Strapi Adminban kell bekapcsolni (vagy törlés + reseed).
+- **Flag nélküli sablonok** (Ügylet 1–9, gyümölcs) változatlanok; a KOR lekötés továbbra is `percent`-tel számol.
+- **Re-run / idempotencia:** az `entered_key` séma nem változik. Részleges hiba utáni újrahívás ugyanazt a rate-et kapja, amíg nincs újabb `currency-rate` sor az adott napig.
+- **Visszafelé:** a flag mező hiánya = `false`, ezért régi kliens/seed payload érvényes marad.
 
 ### Checklist
 
@@ -430,6 +507,14 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 - [ ] Convert API + `converted_to_workflow` / storno / `copy_receipt` / `steps_published`  
 - [ ] Unit: Ügylet 8, Ügylet 1, Ügylet 9 (1 step), tagi számla kód-match  
 - [ ] Doc hivatkozások naprakészek  
+- [ ] F: `apply_currency_rate` a három step komponensen + seed DSL (`11-transaction-workflows.http`) + edizone 23/24 JSON  
+- [ ] F: `currency-rate` service `findLatestRate`  
+- [ ] F: `convert.ts` `pickLatestRate`, `stepsNeedingRate`, `expandWorkflowSteps(..., rates)`, `TransactionWorkflowError.code`  
+- [ ] F: convert-service / preview-service rate feloldás írás előtt + `appliedRates` / `movement.rate`  
+- [ ] F: Unit — `pickLatestRate`: legfrissebb ≤ nap, aznapi későbbi időpont is számít, jövőbeli kizárva, rossz irány/pár → null, azonos pénznem → 1  
+- [ ] F: Unit — `expandWorkflowSteps`: tojás 30 EGG → 3 000 HUF (két HUF step), flag nélkül változatlan (Ügylet 1 KOR `percent: 1` regresszió), hiányzó rate → 422 `CURRENCY_RATE_MISSING`, `percent` 50 × rate, 2 tizedes kerekítés  
+- [ ] F: Service teszt (`convert-service.test.ts` mock mintára) — hiányzó rate esetén **nulla** `create`/`update` hívás; párnaponként egy lookup; `appliedRates` a válaszban  
+- [ ] F: Preview teszt — `movements[].rate` kitöltve, flag nélkül `null`  
 
 ---
 
@@ -444,3 +529,5 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | [workflow/step-member-debit.json](../../src/components/workflow/step-member-debit.json) | Member as Debit |
 | [workflow/step-member-credit.json](../../src/components/workflow/step-member-credit.json) | Member as Credit |
 | [transaction/schema.json](../../src/api/transaction/content-types/transaction/schema.json) | `converted_to_workflow`, `entered_key` |
+| [currency-rate/schema.json](../../src/api/currency-rate/content-types/currency-rate/schema.json) | `rate`, `valid_from`, `from_currency_type`, `to_currency_type` — árfolyamos step forrása |
+| [distributionLogic.ts](../../apps/content-backoffice/src/workflows/bulk-quantity/distributionLogic.ts) | Backoffice `pickLatestCurrencyRate` / `saleRevenueAmount` — a Convert ugyanezt a szabályt követi |

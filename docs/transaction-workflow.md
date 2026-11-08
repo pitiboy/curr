@@ -114,7 +114,7 @@ A táblázatok a hiányzó tételeket a javasolt kóddal írják. Ezek a seedben
 - A `1530` Lakóépületek leírása a seedben „1520 Lakóépületek számla”. A kód `1530`, a leírásból a `1520` elírás.
 - Az `1400` Előlegek a seedben a Terjesztési Igazgatóságon ül. Ingatlan-előlegnél a sor szervezete az ingatlan projektje, `I/4.11.1.1 Lakóterületek` vagy `I/4.11.1.2 Termőterületek`.
 - A `1101` és `1001` nincs az `accounts.json`-ban: tagonként automatikusan jön létre.
-- Az árfolyamot a `currency-rate` adja, a sor nem őrzi meg.
+- Az árfolyamot a `currency-rate` adja. A sor külön árfolyam mezőt nem tárol, de az átváltott **összeg** a rögzítéskori (konverziókori) árfolyammal számolt fix érték: egy későbbi árfolyam-módosítás nem írja át. Lásd [Árfolyamos lépés](#árfolyamos-lépés).
 
 A korábbi rések közül a `KOR` pénznem már a [kor currency-types](../database/seeders/http/kor/data/currency-types.json) fájlban van, a kétszeres `4300` kód pedig megszűnt.
 
@@ -351,6 +351,8 @@ A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** 
 | `sale` — bevétel      | `4000` Értékesítés bevétele | `1000` Készpénz         | ugyanaz               | HUF                                 | ugyanaz      | `Átvezetés` |
 
 Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
+
+**Ugyanez Convert-tel:** egy egysoros `1001 tag ← 1300` EGG tranzakció a **Tojás eladás forintért** sablonnal is kifejthető. A két HUF lépés (kp befizetés, bevétel) [árfolyamos lépés](#árfolyamos-lépés). Az összeg itt is db × ratio × árfolyam, ugyanazzal az árfolyam-szabállyal (a tranzakció dátumáig érvényes legfrissebb EGG → HUF sor; ha nincs, a konverzió nem fut le). Eltérés az űrlaptól: a Convert-nél a ratio a sablon lépés `percent / 100` értéke, **nem** a tag tagsági szabálya. Az eltérő ratio-jú tagok (pl. Érdeklődő 0.75) eladását az űrlap könyveli helyesen.
 
 Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár (termelés és továbbosztás ugyanígy). Ha bármelyik lépéshez talál meglévő sort, egy párbeszéd kínál **új sor** vagy **meglévő frissítése** választást; a választás **minden** érintett sorra vonatkozik (termelés + továbbosztás).
 
@@ -646,7 +648,7 @@ Step komponensek:
 | `workflow.step-member-debit`       | `member_account_code` (`1101`/`1001`) + `credit_account` |
 | `workflow.step-member-credit`      | `member_account_code` (`1101`/`1001`) + `debit_account`  |
 
-Közös: `description` (default `{1}`; `{original.<mező>}` sablon, legacy `{1}` = `{original.description}`), `percent` (0–100), `currency_type`, opcionális `organization` / `organization_from_original` (seed: `"{original.organization}"`; üres marad üres), opcionális `transaction_type`, `copy_receipt`. Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
+Közös: `description` (default `{1}`; `{original.<mező>}` sablon, legacy `{1}` = `{original.description}`), `percent` (0–100), `currency_type`, opcionális `organization` / `organization_from_original` (seed: `"{original.organization}"`; üres marad üres), opcionális `transaction_type`, `copy_receipt`, `apply_currency_rate` (default ki; lásd [Árfolyamos lépés](#árfolyamos-lépés)). Tagi oldalon a Convert a **forrás trx** / member testvér példányát használja.
 
 A [lekötés blokk](#lekötés-blokk) és a [forint bevétel](#forint-bevétel-korona-nélkül) üzleti norma marad: mindkét könyvelési sor külön step a dynamic zone-ban (nincs implicit `1900` kibontás).
 
@@ -660,6 +662,24 @@ Csak `converted_to_workflow` **üres / null** tranzakciók (még kifejthetők). 
 
 A generált sorok `entered_key` mezője idempotenciához (pl. `{originalDocumentId}:storno` / `{originalDocumentId}:step:{i}`). A Convert Strapi route/controller a `transaction-workflow` API alatt.
 
+#### Árfolyamos lépés
+
+Ha egy lépés más pénznemben könyvel, mint a forrás (pl. EGG darab → HUF bevétel), a könyvelő a lépésen bekapcsolja az **Árfolyam alkalmazása** (`apply_currency_rate`) kapcsolót. Ekkor a lépés összege:
+
+> forrás összeg × `percent` / 100 × árfolyam, két tizedesre kerekítve
+
+- **Árfolyam:** a `currency-rate` legfrissebb sora a forrás pénznemből a lépés pénznemébe, amely a forrás tranzakció **dátumáig** (beleértve) érvényes. Ugyanez a szabály a [Napi tojás továbbosztás](#napi-tojás-továbbosztás-edizone-backoffice-2-lépés) űrlapon. Fordított irányú árfolyamból nem számol. Azonos pénznemnél az árfolyam 1.
+- **Nincs árfolyam:** a konverzió **nem fut le**, és draft sor sem jön létre. Az editor hibaüzenetet kap (melyik pénznempár, melyik dátum), és előbb fel kell vinni az árfolyamot.
+- **Ratio:** a `percent / 100`. A tagsági tojás-ratio-t a Convert nem olvassa.
+- Minden árfolyamos lépés a **forrás** összegéből számol; a kp befizetés és a bevétel ugyanazt a forint összeget kapja.
+- A használt árfolyam (érték, érvényesség kezdete) a **Kifejtés előnézete** modálon és a Convert válaszban látszik. A tranzakció sorra külön árfolyam mező nem kerül.
+- **Kapcsoló nélkül semmi nem változik:** a lekötés KOR lépései továbbra is a `percent`-tel (pl. 1 % ≈ 1 KOR = 100 Ft) számolnak, nem a `currency-rate`-tel.
+- **Régi konverziók:** a kapcsoló bekapcsolása előtt kifejtett sorok (pl. 30 tojás → 30 Ft) maguktól nem javulnak; kézi korrekció kell. A már létező sablonokon a kapcsolót a Strapi Adminban kell bekapcsolni.
+
+Példa (**Tojás eladás forintért**): 30 tojás, EGG → HUF árfolyam 100 → tojás sor 30 EGG, kp befizetés 3 000 Ft, bevétel 3 000 Ft.
+
+Technikai szerződés: [0002 plan §5.1](./plans/0002-transaction-workflow-content-type.md#51-árfolyamos-lépés-apply_currency_rate).
+
 #### Előnézet
 
 Szerkesztő (`editor`) a kifejtés megerősítése előtt megnyithatja a **Kifejtés előnézete** modált. A `POST /api/transaction-workflows/convert-preview` dry-run endpoint ugyanazt a pure logikát hívja (`expandWorkflowSteps`, storno szabályok), mint a Convert — nincs írás az adatbázisba. Mentett tranzakcióhoz `transactionDocumentId`, create űrlaphoz inline `transaction` payload (documentId-kkel). A válasz SVG diagramhoz és táblázathoz: eredeti, storno (ha `keep_original`), lépések sorrendben; figyelmeztetések (pl. bizonylat másolás, százalék-összeg).
@@ -669,7 +689,7 @@ flowchart TD
   api["Convert API"]
   loadWf["Published sablonok"]
   findTx["Match: kodok plusz nem converted"]
-  expand["step: amount = orig * percent / 100"]
+  expand["step: amount = orig * percent / 100 (x rate ha apply_currency_rate)"]
   keep{"keep_original?"}
   storno["Storno amount*-1"]
   mark["converted: original / storno / expanded"]
