@@ -1,6 +1,6 @@
 # Implementation plan: Audit log (HTTP endpoint szint)
 
-**Status:** proposed
+**Status:** in progress (v1 implemented; Human verification pending)
 **Date:** 2026-11-08
 **Döntés:** [ADR 0002: Audit log](../adr/0002-audit-log.md)
 **Érintett kód:** [`config/middlewares.ts`](../../config/middlewares.ts), [`config/server.ts`](../../config/server.ts), [`src/publish-guard.ts`](../../src/publish-guard.ts) (`contentApiActor`)
