@@ -1,0 +1,17 @@
+{
+  "name": "Állat levágás saját számlára (kakas)",
+  "debit_account_code": 1001,
+  "credit_account_code": 1300,
+  "currency": "ROOSTER",
+  "steps": [
+    {
+      "description": "Levágás (kakas) – {original.description}",
+      "percent": 100,
+      "debit_code": "1001",
+      "credit_code": "1300",
+      "currency": "ROOSTER",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

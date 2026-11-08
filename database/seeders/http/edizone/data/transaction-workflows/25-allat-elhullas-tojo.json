@@ -1,0 +1,17 @@
+{
+  "name": "Állat elhullás (tojó)",
+  "debit_account_code": 5810,
+  "credit_account_code": 1300,
+  "currency": "HEN",
+  "steps": [
+    {
+      "description": "Elhullás (tojó) – {original.description}",
+      "percent": 100,
+      "debit_code": "5810",
+      "credit_code": "1300",
+      "currency": "HEN",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

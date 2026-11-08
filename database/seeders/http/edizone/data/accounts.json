@@ -128,6 +128,13 @@
       "organizationName": "I/3. Pénzügyi Igazgatóság"
     },
     {
+      "name": "Nyitó egyenleg",
+      "code": "3900",
+      "description": "Nyitó egyenleg (nyitómérleg) ellenszámla — rendszer bevezetése előtti állomány",
+      "categoryType": "equity",
+      "organizationName": "I/3. Pénzügyi Igazgatóság"
+    },
+    {
       "name": "Értékesítés bevétele",
       "code": "4000",
       "description": "Értékesítés bevétele számla",
@@ -231,6 +238,13 @@
       "description": "Egyéb költségek számla",
       "categoryType": "expense",
       "organizationName": "I/0. Vezetés"
+    },
+    {
+      "name": "Állatelhullás",
+      "code": "5810",
+      "description": "Állatelhullás (készlethiány, veszteség) számla",
+      "categoryType": "expense",
+      "organizationName": "I/4. Termelési Igazgatóság"
     }
   ]
 }
