@@ -11,7 +11,10 @@ import {
   stepAmount,
   TransactionWorkflowError,
   type AccountRef,
+  type AppliedRate,
   type ExpandedStepRow,
+  type MemberRatio,
+  type RateByCurrency,
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert';
@@ -43,6 +46,16 @@ export type PreviewMovement = {
   percent: number | null;
   copyReceipt: boolean;
   organizationDocumentId: string | null;
+  /** apply_currency_rate steps only; null otherwise (and on storno). */
+  rate: AppliedRate | null;
+  /** Member ratio that multiplied this step (real conversion only). */
+  memberRatio: MemberRatio | null;
+};
+
+/** Strapi-resolved inputs for apply_currency_rate templates. */
+export type PreviewRateContext = {
+  rates?: RateByCurrency;
+  memberRatio?: MemberRatio | null;
 };
 
 export type ConvertPreview = {
@@ -187,6 +200,8 @@ function movementFromStepRow(
     percent: stepPercent(workflow, row.index),
     copyReceipt: row.copy_receipt,
     organizationDocumentId: row.organization?.documentId ?? null,
+    rate: row.appliedRate,
+    memberRatio: row.memberRatio,
   };
 }
 
@@ -214,6 +229,8 @@ function stornoMovement(
     percent: null,
     copyReceipt: false,
     organizationDocumentId: storno.organization?.documentId ?? null,
+    rate: null,
+    memberRatio: null,
   };
 }
 
@@ -223,6 +240,7 @@ export function buildConvertPreview(
   siblingByCode: ReadonlyMap<string, AccountRef>,
   accountLookup: AccountMetaLookup,
   currencyLookup: CurrencyMetaLookup,
+  rateContext: PreviewRateContext = {},
 ): ConvertPreview {
   if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
     throw new TransactionWorkflowError(
@@ -231,7 +249,13 @@ export function buildConvertPreview(
     );
   }
 
-  const expanded = expandWorkflowSteps(workflow, transaction, siblingByCode);
+  const expanded = expandWorkflowSteps(
+    workflow,
+    transaction,
+    siblingByCode,
+    rateContext.rates,
+    rateContext.memberRatio,
+  );
   const keepOriginal = workflow.keep_original !== false;
   const sourceAmount = Number(transaction.amount);
   const warnings = collectPreviewWarnings(
@@ -293,14 +317,12 @@ export function buildConvertPreview(
   };
 }
 
-export function previewForTransaction(
+/** Template the preview would use (404 when none / not found). */
+export function selectPreviewWorkflow(
   workflows: WorkflowTemplate[],
   transaction: SourceTransaction,
-  siblingByCode: ReadonlyMap<string, AccountRef>,
-  accountLookup: AccountMetaLookup,
-  currencyLookup: CurrencyMetaLookup,
   workflowDocumentId?: string,
-): ConvertPreview {
+): WorkflowTemplate {
   let candidates = workflows;
   if (workflowDocumentId) {
     candidates = workflows.filter(
@@ -321,13 +343,25 @@ export function previewForTransaction(
       404,
     );
   }
+  return workflow;
+}
 
+export function previewForTransaction(
+  workflows: WorkflowTemplate[],
+  transaction: SourceTransaction,
+  siblingByCode: ReadonlyMap<string, AccountRef>,
+  accountLookup: AccountMetaLookup,
+  currencyLookup: CurrencyMetaLookup,
+  workflowDocumentId?: string,
+  rateContext: PreviewRateContext = {},
+): ConvertPreview {
   return buildConvertPreview(
-    workflow,
+    selectPreviewWorkflow(workflows, transaction, workflowDocumentId),
     transaction,
     siblingByCode,
     accountLookup,
     currencyLookup,
+    rateContext,
   );
 }
 

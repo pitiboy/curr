@@ -14,9 +14,15 @@ import {
   type WorkflowTemplate,
 } from './convert';
 import {
+  createRateResolver,
+  loadMemberRatio,
+  resolveWorkflowRates,
+} from './convert-context';
+import {
   mergeCurrencyLookupRow,
   PREVIEW_INLINE_DOCUMENT_ID,
   previewForTransaction,
+  selectPreviewWorkflow,
   type ConvertPreview,
 } from './preview';
 
@@ -540,12 +546,26 @@ export async function convertPreview(
     ingestAccount(accountLookup, ref as AccountRow);
   }
 
-  return previewForTransaction(
+  // Same rate / ratio inputs as Convert, resolved for the template that matches.
+  const matched = selectPreviewWorkflow(
     workflows,
+    transaction,
+    request.workflowDocumentId?.trim(),
+  );
+  const rates = await resolveWorkflowRates(
+    createRateResolver(strapi),
+    matched,
+    transaction,
+  );
+  const memberRatio = await loadMemberRatio(strapi, matched, transaction);
+
+  return previewForTransaction(
+    [matched],
     transaction,
     siblingMap,
     accountLookup,
     currencyLookup,
-    request.workflowDocumentId?.trim(),
+    matched.documentId,
+    { rates, memberRatio },
   );
 }
