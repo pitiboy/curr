@@ -352,7 +352,7 @@ A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** 
 
 Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
 
-**Ugyanez Convert-tel:** egy egysoros `1001 tag ← 1300` EGG tranzakció a **Tojás eladás forintért** sablonnal is kifejthető. A két HUF lépés (kp befizetés, bevétel) [árfolyamos lépés](#árfolyamos-lépés). Az összeg itt is db × ratio × árfolyam, ugyanazzal az árfolyam-szabállyal (a tranzakció dátumáig érvényes legfrissebb EGG → HUF sor; ha nincs, a konverzió nem fut le). Eltérés az űrlaptól: a Convert-nél a ratio a sablon lépés `percent / 100` értéke, a tagsági szabállyal **nem** szoroz. Ha a tag tagságának tojás-ratio-ja nem 1, a Kifejtés előnézete figyelmeztet, és a Convert nem fut le. Az eltérő ratio-jú tagság eladását a Napi tojás űrlap könyveli.
+**Ugyanez Convert-tel:** egy egysoros `1001 tag ← 1300` EGG tranzakció a **Tojás eladás forintért** sablonnal is kifejthető. A két HUF lépés (kp befizetés, bevétel) [árfolyamos lépés](#árfolyamos-lépés). Az összeg itt is db × ratio × árfolyam, ugyanazzal az árfolyam-szabállyal (a tranzakció dátumáig érvényes legfrissebb EGG → HUF sor; ha nincs, a konverzió nem fut le). A ratio a tag tagsági szabálya (`rules.egg.ratio`), lásd [Árfolyamos lépés](#árfolyamos-lépés). Eltérések az űrlaptól: a Convert a tag **minden** érvényes tagságát nézi (nem csak a Tyúktartásét), csak az adatbázisban rögzített szabályt használja, `internal` tagnál is végrehajt, és közvetítői jutalékot nem könyvel.
 
 Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár (termelés és továbbosztás ugyanígy). Ha bármelyik lépéshez talál meglévő sort, egy párbeszéd kínál **új sor** vagy **meglévő frissítése** választást; a választás **minden** érintett sorra vonatkozik (termelés + továbbosztás).
 
@@ -666,19 +666,20 @@ A generált sorok `entered_key` mezője idempotenciához (pl. `{originalDocument
 
 Ha egy lépés más pénznemben könyvel, mint a forrás (pl. EGG darab → HUF bevétel), a könyvelő a lépésen bekapcsolja az **Árfolyam alkalmazása** (`apply_currency_rate`) kapcsolót. Ekkor a lépés összege:
 
-> forrás összeg × `percent` / 100 × árfolyam, két tizedesre kerekítve
+> forrás összeg × `percent` / 100 × árfolyam × tagsági ratio, két tizedesre kerekítve
 
 - **Árfolyam:** a `currency-rate` legfrissebb sora a forrás pénznemből a lépés pénznemébe, amely a forrás tranzakció **dátumáig** (beleértve) érvényes. Ugyanez a szabály a [Napi tojás továbbosztás](#napi-tojás-továbbosztás-edizone-backoffice-2-lépés) űrlapon. Fordított irányú árfolyamból nem számol. Azonos pénznemnél az árfolyam 1.
 - **Nincs árfolyam:** a konverzió **nem fut le**, és draft sor sem jön létre. Az editor hibaüzenetet kap (melyik pénznempár, melyik dátum), és előbb fel kell vinni az árfolyamot.
-- **Ratio:** a `percent / 100`. Ha a forrás tagjának tojás-ratio-ja nem 1, az előnézet figyelmeztet, és a konverzió nem fut le (az eladást a Napi tojás űrlap könyveli).
+- **Tagsági ratio:** ha a forrás egyik oldala tagi számla, és a lépés valóban pénznemet vált, az összeget a tag tagsági ratio-jával is szorozza. A szabály kulcsa a forrás pénznemének kódja kisbetűvel (tojásnál `rules.egg`, munkaóránál később `rules.hour`). A tagságon megadott szabály felülírja a tagságtípusét; ha egyik sincs, a ratio 1. A tranzakció napján érvényes **összes** tagság számít; ha ezek eltérő ratio-t adnak, a konverzió nem fut le, és az editor hibaüzenetet kap. A `mode` (pl. `internal`) nem számít.
+- **Nyomon követés:** ha a ratio nem 1, a generált sor leírása végére kerül, pl. „Tojás eladás (kp befizetés) · ratio 0.75 (Érdeklődő)”. Az előnézet a ratio-t és a tagságot is mutatja.
 - Minden árfolyamos lépés a **forrás** összegéből számol; a kp befizetés és a bevétel ugyanazt a forint összeget kapja.
 - A használt árfolyam (érték, érvényesség kezdete) a **Kifejtés előnézete** modálon és a Convert válaszban látszik. A tranzakció sorra árfolyam nem kerül.
 - **Kapcsoló nélkül semmi nem változik:** a lekötés KOR lépései továbbra is a `percent`-tel számolnak (az `1 %` fix 1 KOR = 100 Ft-ot jelent), nem a `currency-rate`-tel. Mivel a valós árfolyam a törzsadatból jön (jelenleg 600), ez elavult. Egy későbbi lépésben a lekötés KOR lépései is árfolyamos lépések lesznek: a forint → korona árfolyamot a korona → forint törzsadat-sor fordítottjából számolja (1 / 600), mert forint → korona sort nem tartunk karban. Ez a kivétel csak a koronára vonatkozik; a tojás eladásban korona nincs.
 - **Régi konverziók:** a kapcsoló bekapcsolása előtt kifejtett sorok (pl. 30 tojás → 30 Ft) maguktól nem javulnak; kézi korrekció kell. A már létező sablonokon a kapcsolót a Strapi Adminban kell bekapcsolni.
 
-Példa (**Tojás eladás forintért**): 30 tojás, EGG → HUF árfolyam 100 → tojás sor 30 EGG, kp befizetés 3 000 Ft, bevétel 3 000 Ft.
+Példa (**Tojás eladás forintért**): 30 tojás, EGG → HUF árfolyam 100 → tojás sor 30 EGG, kp befizetés 3 000 Ft, bevétel 3 000 Ft. Ha a tag ratio-ja 0.75: 30 EGG, 2 250 Ft, 2 250 Ft.
 
-Technikai szerződés: [0002 plan §5.1](./plans/0002-transaction-workflow-content-type.md#51-árfolyamos-lépés-apply_currency_rate).
+Technikai szerződés: [0002 plan §5.1](./plans/0002-transaction-workflow-content-type.md#51-árfolyamos-lépés-apply_currency_rate), [§5.2](./plans/0002-transaction-workflow-content-type.md#52-tagsági-ratio-szorzó).
 
 #### Előnézet
 

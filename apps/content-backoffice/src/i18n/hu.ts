@@ -53,6 +53,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'Lépések összege: %{steps} (eredeti: %{original})',
     transactions_convert_preview_rate: 'árfolyam × %{rate} (%{validFrom}-tól)',
     transactions_convert_preview_rate_same: 'árfolyam × %{rate}',
+    transactions_convert_preview_member_ratio:
+      'tagsági ratio × %{ratio} (%{membership})',
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',

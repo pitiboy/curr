@@ -360,3 +360,108 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
     );
   });
 });
+
+describe('expandWorkflowSteps with member ratio', () => {
+  const ratio075 = {
+    ratio: 0.75,
+    membershipDocumentId: 'm-1',
+    membershipName: 'Érdeklődő',
+    source: 'membership_type' as const,
+  };
+
+  it('20 EGG × 100 × 0.75 → 1 500 HUF on both HUF steps, EGG step untouched', () => {
+    const rows = expandWorkflowSteps(
+      eggSaleWorkflow,
+      { ...eggSource, amount: 20 },
+      new Map(),
+      new Map([[huf.documentId, rate(100)]]),
+      ratio075,
+    );
+    assert.deepEqual(
+      rows.map((row) => [row.amount, row.memberRatio?.ratio ?? null]),
+      [
+        [20, null],
+        [1500, 0.75],
+        [1500, 0.75],
+      ],
+    );
+  });
+
+  it('appends the ratio to the description of multiplied steps only', () => {
+    const rows = expandWorkflowSteps(
+      eggSaleWorkflow,
+      eggSource,
+      new Map(),
+      new Map([[huf.documentId, rate(100)]]),
+      ratio075,
+    );
+    assert.deepEqual(
+      rows.map((row) => row.description),
+      [
+        'Tojás eladás (tojás)',
+        'Tojás eladás (kp befizetés) · ratio 0.75 (Érdeklődő)',
+        'Tojás eladás (bevétel) · ratio 0.75 (Érdeklődő)',
+      ],
+    );
+  });
+
+  it('does not scale a flagged same-currency step', () => {
+    const workflow: WorkflowTemplate = {
+      ...eggSaleWorkflow,
+      step: [{ ...eggSaleWorkflow.step![0], apply_currency_rate: true }],
+    };
+    const [row] = expandWorkflowSteps(
+      workflow,
+      eggSource,
+      new Map(),
+      undefined,
+      ratio075,
+    );
+    assert.equal(row.amount, 30);
+    assert.equal(row.memberRatio, null);
+    assert.equal(row.description, 'Tojás eladás (tojás)');
+  });
+
+  it('ratio 1 / no ratio leaves amount and description unchanged', () => {
+    for (const memberRatio of [
+      null,
+      { ...ratio075, ratio: 1, membershipName: 'Vásárló' },
+    ]) {
+      const rows = expandWorkflowSteps(
+        eggSaleWorkflow,
+        eggSource,
+        new Map(),
+        new Map([[huf.documentId, rate(100)]]),
+        memberRatio,
+      );
+      assert.equal(rows[1].amount, 3000);
+      assert.equal(rows[1].description, 'Tojás eladás (kp befizetés)');
+    }
+  });
+
+  it('rounds after multiplying rate and ratio', () => {
+    const [row] = expandWorkflowSteps(
+      { ...eggSaleWorkflow, step: [eggSaleWorkflow.step![1]] },
+      { ...eggSource, amount: 7 },
+      new Map(),
+      new Map([[huf.documentId, rate(33.3333)]]),
+      { ...ratio075, ratio: 0.3 },
+    );
+    // 7 × 33.3333 × 0.3 = 69.999930 → 70
+    assert.equal(row.amount, 70);
+  });
+
+  it('ratio 0 books 0 HUF rows', () => {
+    const rows = expandWorkflowSteps(
+      eggSaleWorkflow,
+      eggSource,
+      new Map(),
+      new Map([[huf.documentId, rate(100)]]),
+      { ...ratio075, ratio: 0 },
+    );
+    assert.deepEqual(
+      rows.map((row) => row.amount),
+      [30, 0, 0],
+    );
+  });
+});

@@ -25,7 +25,29 @@ export type PreviewMovement = {
   organizationDocumentId: string | null;
   /** Set on `apply_currency_rate` steps (currency-rate used by Convert). */
   rate?: PreviewAppliedRate | null;
+  /** Member ratio (`rules[<source currency>]`) that multiplied this step. */
+  memberRatio?: PreviewMemberRatio | null;
 };
+
+export type PreviewMemberRatio = {
+  ratio: number;
+  membershipDocumentId: string | null;
+  membershipName: string | null;
+  source: 'membership' | 'membership_type';
+};
+
+/** `{ ratio, membership }` for the preview caption; null when no ratio applied. */
+export function memberRatioLabelParts(
+  memberRatio: PreviewMemberRatio | null | undefined,
+): { ratio: string; membership: string } | null {
+  if (!memberRatio || !Number.isFinite(memberRatio.ratio)) return null;
+  return {
+    ratio: memberRatio.ratio.toLocaleString('hu-HU', {
+      maximumFractionDigits: 6,
+    }),
+    membership: memberRatio.membershipName?.trim() || '—',
+  };
+}
 
 export type PreviewAppliedRate = {
   fromCurrencyDocumentId: string;

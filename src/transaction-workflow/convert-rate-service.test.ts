@@ -1,15 +1,16 @@
 /**
  * Convert / preview service with apply_currency_rate (0002 plan §5.1–5.2):
  * rate lookup query + per-request cache, appliedRates in the result,
- * 422 CURRENCY_RATE_MISSING / MEMBERSHIP_RATIO_UNSUPPORTED before any write,
- * preview movement.rate and ratio warning.
+ * member ratio multiplier (rules[<currency code>]) + description audit,
+ * 422 CURRENCY_RATE_MISSING / MEMBERSHIP_RATIO_AMBIGUOUS before any write,
+ * preview movement.rate / movement.memberRatio.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
   ERROR_CURRENCY_RATE_MISSING,
-  ERROR_MEMBERSHIP_RATIO_UNSUPPORTED,
+  ERROR_MEMBERSHIP_RATIO_AMBIGUOUS,
   MEMBER_UID,
   STEP_MEMBER_CREDIT,
   STEP_MEMBER_DEBIT,
@@ -26,7 +27,6 @@ import {
   findLatestCurrencyRate,
 } from './convert-context.ts';
 import { convertTransactions, type ConvertStrapi } from './convert-service.ts';
-import { MEMBERSHIP_RATIO_WARNING_PREFIX } from './membership-ratio.ts';
 import { convertPreview, type PreviewStrapi } from './preview-service.ts';
 
 const egg = { documentId: 'cur-egg', code: 'EGG' };
@@ -117,7 +117,11 @@ type Fixture = {
 
 function buildStrapi(fixture: Fixture) {
   const writes: string[] = [];
-  const created: { entered_key: string; amount: number }[] = [];
+  const created: {
+    entered_key: string;
+    amount: number;
+    description: string;
+  }[] = [];
   const rateQueries: Record<string, unknown>[] = [];
   let counter = 0;
 
@@ -131,6 +135,7 @@ function buildStrapi(fixture: Fixture) {
       created.push({
         entered_key: String(data.entered_key),
         amount: Number(data.amount),
+        description: String(data.description ?? ''),
       });
       return { documentId: `created-${counter}` };
     },
@@ -305,28 +310,89 @@ describe('convertTransactions with apply_currency_rate', () => {
     assert.deepEqual(writes, []);
   });
 
-  it('membership ratio ≠ 1 → 422 MEMBERSHIP_RATIO_UNSUPPORTED and no writes', async () => {
-    const { strapi, writes } = buildStrapi({
-      transactions: [eggSource()],
+  it('multiplies HUF steps by the member ratio and records it', async () => {
+    const { strapi, created } = buildStrapi({
+      transactions: [eggSource('tx-egg', 20)],
       rates: [eggHufRate],
       memberships: [
         {
           documentId: 'm-1',
-          name: 'Kedvezményes',
-          rules: { egg: { mode: 'sale', ratio: 0.5 } },
+          membership_type: {
+            name: 'Érdeklődő',
+            rules: { egg: { mode: 'sale', ratio: 0.75 } },
+          },
         },
+      ],
+    });
+    const [result] = await convertTransactions(
+      strapi as unknown as ConvertStrapi,
+      { transactionDocumentId: 'tx-egg' },
+    );
+    assert.deepEqual(
+      created.map((row) => [row.entered_key, row.amount, row.description]),
+      [
+        ['tx-egg:storno', -20, 'Tojás'],
+        ['tx-egg:step:0', 20, 'Tojás eladás (tojás)'],
+        [
+          'tx-egg:step:1',
+          1500,
+          'Tojás eladás (kp befizetés) · ratio 0.75 (Érdeklődő)',
+        ],
+        [
+          'tx-egg:step:2',
+          1500,
+          'Tojás eladás (bevétel) · ratio 0.75 (Érdeklődő)',
+        ],
+      ],
+    );
+    assert.deepEqual(
+      result.appliedRates.map((row) => [
+        row.stepIndex,
+        row.rate,
+        row.ratio,
+        row.membershipDocumentId,
+      ]),
+      [
+        [1, 100, 0.75, 'm-1'],
+        [2, 100, 0.75, 'm-1'],
+      ],
+    );
+  });
+
+  it('mode internal is executed (ratio still applies)', async () => {
+    const { strapi, created } = buildStrapi({
+      transactions: [eggSource()],
+      rates: [eggHufRate],
+      memberships: [{ rules: { egg: { mode: 'internal', ratio: 1 } } }],
+    });
+    await convertTransactions(strapi as unknown as ConvertStrapi, {
+      transactionDocumentId: 'tx-egg',
+    });
+    assert.deepEqual(
+      created.map((row) => row.amount),
+      [-30, 30, 3000, 3000],
+    );
+  });
+
+  it('ambiguous ratios → 422 MEMBERSHIP_RATIO_AMBIGUOUS and no writes', async () => {
+    const { strapi, writes } = buildStrapi({
+      transactions: [eggSource()],
+      rates: [eggHufRate],
+      memberships: [
+        { name: 'Tyúktartás', rules: { egg: { ratio: 1 } } },
+        { name: 'Más projekt', rules: { egg: { ratio: 0.75 } } },
       ],
     });
     await rejectsWithCode(
       convertTransactions(strapi as unknown as ConvertStrapi, {
         transactionDocumentId: 'tx-egg',
       }),
-      ERROR_MEMBERSHIP_RATIO_UNSUPPORTED,
+      ERROR_MEMBERSHIP_RATIO_AMBIGUOUS,
     );
     assert.deepEqual(writes, []);
   });
 
-  it('ratio 1 membership passes', async () => {
+  it('no membership rule for the currency → ratio 1', async () => {
     const { strapi, created } = buildStrapi({
       transactions: [eggSource()],
       rates: [eggHufRate],
@@ -334,10 +400,13 @@ describe('convertTransactions with apply_currency_rate', () => {
         { documentId: 'm-ok', membership_type: { name: 'Vásárló' } },
       ],
     });
-    await convertTransactions(strapi as unknown as ConvertStrapi, {
-      transactionDocumentId: 'tx-egg',
-    });
-    assert.equal(created.length, 4);
+    const [result] = await convertTransactions(
+      strapi as unknown as ConvertStrapi,
+      { transactionDocumentId: 'tx-egg' },
+    );
+    assert.equal(created[2].amount, 3000);
+    assert.equal(result.appliedRates[0].ratio, 1);
+    assert.equal(result.appliedRates[0].membershipDocumentId, null);
   });
 });
 
@@ -363,29 +432,56 @@ describe('convertPreview with apply_currency_rate', () => {
         ['step', 3000, 100],
       ],
     );
-    assert.equal(
-      preview.warnings.some((w) =>
-        w.startsWith(MEMBERSHIP_RATIO_WARNING_PREFIX),
-      ),
-      false,
-    );
+    assert.ok(preview.movements.every((row) => row.memberRatio === null));
   });
 
-  it('warns (does not fail) on membership ratio ≠ 1', async () => {
+  it('shows the multiplied amount and memberRatio on HUF steps', async () => {
     const { strapi } = buildStrapi({
       transactions: [eggSource()],
       rates: [eggHufRate],
       memberships: [
-        { documentId: 'm-1', rules: { egg: { mode: 'sale', ratio: 0.5 } } },
+        {
+          documentId: 'm-1',
+          name: 'Kedvezményes',
+          rules: { egg: { mode: 'sale', ratio: 0.5 } },
+        },
       ],
     });
     const preview = await convertPreview(strapi as unknown as PreviewStrapi, {
       transactionDocumentId: 'tx-egg',
     });
-    assert.ok(
-      preview.warnings.some((w) =>
-        w.startsWith(MEMBERSHIP_RATIO_WARNING_PREFIX),
-      ),
+    assert.deepEqual(
+      preview.movements.map((row) => [
+        row.amount,
+        row.memberRatio?.ratio ?? null,
+      ]),
+      [
+        [-30, null],
+        [30, null],
+        [1500, 0.5],
+        [1500, 0.5],
+      ],
+    );
+    assert.equal(
+      preview.movements[2].description,
+      'Tojás eladás (kp befizetés) · ratio 0.5 (Kedvezményes)',
+    );
+  });
+
+  it('ambiguous ratios → 422 in preview too', async () => {
+    const { strapi } = buildStrapi({
+      transactions: [eggSource()],
+      rates: [eggHufRate],
+      memberships: [
+        { rules: { egg: { ratio: 1 } } },
+        { rules: { egg: { ratio: 0.5 } } },
+      ],
+    });
+    await rejectsWithCode(
+      convertPreview(strapi as unknown as PreviewStrapi, {
+        transactionDocumentId: 'tx-egg',
+      }),
+      ERROR_MEMBERSHIP_RATIO_AMBIGUOUS,
     );
   });
 

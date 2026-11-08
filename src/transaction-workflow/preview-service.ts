@@ -15,7 +15,7 @@ import {
 } from './convert';
 import {
   createRateResolver,
-  loadMembershipRatioIssues,
+  loadMemberRatio,
   resolveWorkflowRates,
 } from './convert-context';
 import {
@@ -557,11 +557,7 @@ export async function convertPreview(
     matched,
     transaction,
   );
-  const membershipRatioIssues = await loadMembershipRatioIssues(
-    strapi,
-    matched,
-    transaction,
-  );
+  const memberRatio = await loadMemberRatio(strapi, matched, transaction);
 
   return previewForTransaction(
     [matched],
@@ -570,6 +566,6 @@ export async function convertPreview(
     accountLookup,
     currencyLookup,
     matched.documentId,
-    { rates, membershipRatioIssues },
+    { rates, memberRatio },
   );
 }

@@ -1,51 +1,107 @@
 /**
- * Membership-ratio guard (0002 plan §5.2): server-side egg rule resolution,
- * date validity, preview warning and Convert 422.
+ * Member ratio (0002 plan §5.2): `rules[<source currency code>]` lookup,
+ * membership override → type default, validity window, ambiguity 422,
+ * no name fallback, `mode` ignored.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  ERROR_MEMBERSHIP_RATIO_UNSUPPORTED,
+  ERROR_MEMBERSHIP_RATIO_AMBIGUOUS,
   TransactionWorkflowError,
+  memberRatioDescriptionSuffix,
 } from './convert.ts';
 import {
-  MEMBERSHIP_RATIO_WARNING_PREFIX,
-  assertMembershipRatioSupported,
-  findUnsupportedMembershipRatios,
-  membershipRatioWarning,
+  memberRuleKey,
+  membershipRatioFor,
   membershipValidOn,
-  resolveServerEggRule,
+  resolveMemberRatio,
 } from './membership-ratio.ts';
 
-describe('resolveServerEggRule', () => {
-  it('membership rules win over the type', () => {
+const date = '2026-11-07';
+
+describe('memberRuleKey', () => {
+  it('lower-cases and trims the currency code', () => {
+    assert.equal(memberRuleKey('EGG'), 'egg');
+    assert.equal(memberRuleKey(' Hour '), 'hour');
+    assert.equal(memberRuleKey(''), null);
+    assert.equal(memberRuleKey(null), null);
+  });
+});
+
+describe('membershipRatioFor', () => {
+  it('membership rule wins over the type rule', () => {
     assert.deepEqual(
-      resolveServerEggRule(
-        { egg: { mode: 'sale', ratio: 0.5 } },
-        { egg: { mode: 'sale', ratio: 1 } },
-        'Vásárló',
+      membershipRatioFor(
+        {
+          documentId: 'm-1',
+          name: 'Kedvezményes',
+          rules: { egg: { mode: 'sale', ratio: 0.5 } },
+          membership_type: { name: 'Vásárló', rules: { egg: { ratio: 1 } } },
+        },
+        'egg',
       ),
-      { mode: 'sale', ratio: 0.5 },
+      {
+        ratio: 0.5,
+        membershipDocumentId: 'm-1',
+        membershipName: 'Kedvezményes',
+        source: 'membership',
+      },
     );
   });
 
-  it('falls back to type rules, then type name, then default 1', () => {
-    assert.equal(
-      resolveServerEggRule(null, { egg: { mode: 'sale', ratio: 0.9 } }).ratio,
-      0.9,
+  it('falls back to the type rule, named after the type when unnamed', () => {
+    assert.deepEqual(
+      membershipRatioFor(
+        {
+          documentId: 'm-2',
+          membership_type: {
+            name: 'Érdeklődő',
+            rules: { egg: { ratio: 0.75 } },
+          },
+        },
+        'egg',
+      ),
+      {
+        ratio: 0.75,
+        membershipDocumentId: 'm-2',
+        membershipName: 'Érdeklődő',
+        source: 'membership_type',
+      },
     );
-    assert.equal(resolveServerEggRule(null, null, 'Vásárló').ratio, 1);
-    assert.equal(resolveServerEggRule(null, null, 'Ismeretlen').ratio, 1);
-    assert.equal(resolveServerEggRule(null, null, null).ratio, 1);
   });
 
-  it('ignores an invalid membership fragment', () => {
+  it('missing ratio in a present rule means 1; mode is ignored', () => {
     assert.equal(
-      resolveServerEggRule(
-        { egg: { mode: 'bogus', ratio: 0.1 } },
-        { egg: { mode: 'sale', ratio: 1 } },
-      ).ratio,
+      membershipRatioFor({ rules: { egg: { mode: 'internal' } } }, 'egg')
+        ?.ratio,
       1,
+    );
+  });
+
+  it('no rule for the key → null (no name fallback)', () => {
+    assert.equal(
+      membershipRatioFor(
+        { membership_type: { name: 'Érdeklődő', rules: null } },
+        'egg',
+      ),
+      null,
+    );
+    assert.equal(
+      membershipRatioFor({ rules: { egg: { ratio: 0.5 } } }, 'hour'),
+      null,
+    );
+  });
+
+  it('invalid membership ratio falls through to the type', () => {
+    assert.equal(
+      membershipRatioFor(
+        {
+          rules: { egg: { ratio: -1 } },
+          membership_type: { rules: { egg: { ratio: 0.9 } } },
+        },
+        'egg',
+      )?.ratio,
+      0.9,
     );
   });
 });
@@ -53,95 +109,132 @@ describe('resolveServerEggRule', () => {
 describe('membershipValidOn', () => {
   it('is inclusive on both ends (UTC day)', () => {
     assert.equal(
-      membershipValidOn('2026-11-07T12:00:00.000Z', null, '2026-11-07'),
+      membershipValidOn('2026-11-07T12:00:00.000Z', null, date),
       true,
     );
     assert.equal(
-      membershipValidOn(null, '2026-11-07T00:00:00.000Z', '2026-11-07'),
+      membershipValidOn(null, '2026-11-07T00:00:00.000Z', date),
       true,
     );
     assert.equal(
-      membershipValidOn('2026-11-08T00:00:00.000Z', null, '2026-11-07'),
+      membershipValidOn('2026-11-08T00:00:00.000Z', null, date),
       false,
     );
     assert.equal(
-      membershipValidOn(null, '2026-11-06T23:59:59.000Z', '2026-11-07'),
+      membershipValidOn(null, '2026-11-06T23:59:59.000Z', date),
       false,
     );
   });
 });
 
-describe('findUnsupportedMembershipRatios', () => {
-  const date = '2026-11-07';
-
-  it('reports a valid membership with ratio ≠ 1', () => {
-    const issues = findUnsupportedMembershipRatios(
-      [
-        {
-          documentId: 'm-1',
-          name: 'Tyúktartás — kedvezményes',
-          rules: { egg: { mode: 'sale', ratio: 0.5 } },
-          membership_type: { name: 'Vásárló', rules: null },
-        },
-      ],
-      date,
-    );
-    assert.deepEqual(issues, [
-      {
-        membershipDocumentId: 'm-1',
-        membershipName: 'Tyúktartás — kedvezményes',
-        membershipTypeName: 'Vásárló',
-        ratio: 0.5,
-      },
-    ]);
-  });
-
-  it('passes ratio 1, no memberships, and expired memberships', () => {
-    assert.deepEqual(
-      findUnsupportedMembershipRatios(
-        [
-          { documentId: 'ok', membership_type: { name: 'Vásárló' } },
-          {
-            documentId: 'expired',
-            valid_to: '2026-01-01T00:00:00.000Z',
-            rules: { egg: { mode: 'sale', ratio: 0.5 } },
-          },
-        ],
+describe('resolveMemberRatio', () => {
+  it('returns the single matching ratio', () => {
+    assert.equal(
+      resolveMemberRatio(
+        [{ documentId: 'm', rules: { egg: { ratio: 0.75 } } }],
+        'EGG',
         date,
-      ),
-      [],
+      )?.ratio,
+      0.75,
     );
-    assert.deepEqual(findUnsupportedMembershipRatios([], date), []);
-    assert.deepEqual(findUnsupportedMembershipRatios(null, date), []);
-  });
-});
-
-describe('ratio warning / guard', () => {
-  const issues = [
-    {
-      membershipDocumentId: 'm-1',
-      membershipName: 'Kedvezményes',
-      membershipTypeName: null,
-      ratio: 0.5,
-    },
-  ];
-
-  it('preview warning carries the machine code prefix', () => {
-    const warning = membershipRatioWarning(issues);
-    assert.ok(warning?.startsWith(MEMBERSHIP_RATIO_WARNING_PREFIX));
-    assert.match(warning ?? '', /Kedvezményes \(ratio 0.5\)/);
-    assert.equal(membershipRatioWarning([]), null);
   });
 
-  it('convert guard throws 422 MEMBERSHIP_RATIO_UNSUPPORTED', () => {
+  it('null without memberships, without a rule, or without a currency code', () => {
+    assert.equal(resolveMemberRatio([], 'EGG', date), null);
+    assert.equal(resolveMemberRatio(null, 'EGG', date), null);
+    assert.equal(
+      resolveMemberRatio([{ rules: { fruit: { ratio: 0.5 } } }], 'EGG', date),
+      null,
+    );
+    assert.equal(
+      resolveMemberRatio([{ rules: { egg: { ratio: 0.5 } } }], null, date),
+      null,
+    );
+  });
+
+  it('ignores expired memberships', () => {
+    assert.equal(
+      resolveMemberRatio(
+        [
+          {
+            documentId: 'old',
+            valid_to: '2026-01-01T00:00:00.000Z',
+            rules: { egg: { ratio: 0.5 } },
+          },
+          { documentId: 'now', rules: { egg: { ratio: 1 } } },
+        ],
+        'EGG',
+        date,
+      )?.membershipDocumentId,
+      'now',
+    );
+  });
+
+  it('accepts several memberships with the same ratio (any organization)', () => {
+    assert.equal(
+      resolveMemberRatio(
+        [
+          {
+            documentId: 'a',
+            membership_type: { rules: { egg: { ratio: 1 } } },
+          },
+          { documentId: 'b', rules: { egg: { ratio: 1 } } },
+        ],
+        'EGG',
+        date,
+      )?.ratio,
+      1,
+    );
+  });
+
+  it('different ratios → 422 MEMBERSHIP_RATIO_AMBIGUOUS', () => {
     assert.throws(
-      () => assertMembershipRatioSupported(issues),
+      () =>
+        resolveMemberRatio(
+          [
+            { name: 'Tyúktartás', rules: { egg: { ratio: 1 } } },
+            { name: 'Más projekt', rules: { egg: { ratio: 0.75 } } },
+          ],
+          'EGG',
+          date,
+        ),
       (error: unknown) =>
         error instanceof TransactionWorkflowError &&
         error.status === 422 &&
-        error.code === ERROR_MEMBERSHIP_RATIO_UNSUPPORTED &&
-        Array.isArray(error.details?.memberships),
+        error.code === ERROR_MEMBERSHIP_RATIO_AMBIGUOUS &&
+        error.details?.key === 'egg',
     );
-    assert.doesNotThrow(() => assertMembershipRatioSupported([]));
+  });
+
+  it('works for any currency key (HOUR → rules.hour)', () => {
+    assert.equal(
+      resolveMemberRatio([{ rules: { hour: { ratio: 0.9 } } }], 'HOUR', date)
+        ?.ratio,
+      0.9,
+    );
+  });
+});
+
+describe('memberRatioDescriptionSuffix', () => {
+  it('adds ratio and membership name only when ratio ≠ 1', () => {
+    assert.equal(
+      memberRatioDescriptionSuffix({
+        ratio: 0.75,
+        membershipDocumentId: 'm',
+        membershipName: 'Érdeklődő',
+        source: 'membership_type',
+      }),
+      ' · ratio 0.75 (Érdeklődő)',
+    );
+    assert.equal(
+      memberRatioDescriptionSuffix({
+        ratio: 1,
+        membershipDocumentId: 'm',
+        membershipName: 'Vásárló',
+        source: 'membership_type',
+      }),
+      '',
+    );
+    assert.equal(memberRatioDescriptionSuffix(null), '');
   });
 });

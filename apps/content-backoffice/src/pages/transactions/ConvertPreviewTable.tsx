@@ -10,6 +10,7 @@ import { useTranslate } from 'react-admin';
 
 import {
   appliedRateLabelParts,
+  memberRatioLabelParts,
   type ConvertPreview,
   type PreviewMovement,
 } from '../../data/convertPreview';
@@ -34,6 +35,7 @@ function RateCaption({ movement }: { movement: PreviewMovement }) {
   const translate = useTranslate();
   const parts = appliedRateLabelParts(movement.rate);
   if (!parts) return null;
+  const ratio = memberRatioLabelParts(movement.memberRatio);
   return (
     <Typography
       color="text.secondary"
@@ -49,6 +51,19 @@ function RateCaption({ movement }: { movement: PreviewMovement }) {
         : translate('app.transactions_convert_preview_rate_same', {
             rate: parts.rate,
           })}
+      {ratio ? (
+        <Typography
+          color="text.secondary"
+          component="div"
+          data-testid="convert-preview-member-ratio"
+          variant="caption"
+        >
+          {translate('app.transactions_convert_preview_member_ratio', {
+            ratio: ratio.ratio,
+            membership: ratio.membership,
+          })}
+        </Typography>
+      ) : null}
     </Typography>
   );
 }

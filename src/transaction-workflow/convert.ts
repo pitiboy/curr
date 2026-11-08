@@ -6,7 +6,8 @@
  * organization_from_original (forrás org kötelező) vagy step org (üres marad üres);
  * tagi oldal forrás trx / testvér számlából.
  * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
- * legfrissebb valid_from ≤ forrás nap vége), 2 tizedes; rate-et a hívó oldja fel.
+ * legfrissebb valid_from ≤ forrás nap vége) × tagsági ratio (csak valódi váltásnál,
+ * `rules[forrás pénznem kód]`), 2 tizedes; rate-et és ratio-t a hívó oldja fel.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat),
  * opcionális gépi `code` (pl. CURRENCY_RATE_MISSING) és `details`.
  */
@@ -32,8 +33,8 @@ export function isExpandableConvertedValue(
 }
 export const ERROR_CURRENCY_RATE_MISSING = 'CURRENCY_RATE_MISSING' as const;
 export const ERROR_CURRENCY_RATE_INVALID = 'CURRENCY_RATE_INVALID' as const;
-export const ERROR_MEMBERSHIP_RATIO_UNSUPPORTED =
-  'MEMBERSHIP_RATIO_UNSUPPORTED' as const;
+export const ERROR_MEMBERSHIP_RATIO_AMBIGUOUS =
+  'MEMBERSHIP_RATIO_AMBIGUOUS' as const;
 
 export class TransactionWorkflowError extends Error {
   status: number;
@@ -447,6 +448,26 @@ export type AppliedRate = {
   currencyRateDocumentId: string | null;
 };
 
+/** Member ratio for the source currency (membership-ratio.ts resolves it). */
+export type MemberRatio = {
+  ratio: number;
+  membershipDocumentId: string | null;
+  membershipName: string | null;
+  /** 'membership' when the membership overrides, 'membership_type' otherwise. */
+  source: 'membership' | 'membership_type';
+};
+
+/** Description suffix for a step whose amount used a ratio ≠ 1 (audit trail). */
+export function memberRatioDescriptionSuffix(
+  memberRatio: MemberRatio | null | undefined,
+): string {
+  if (!memberRatio || memberRatio.ratio === 1) return '';
+  const label = memberRatio.membershipName
+    ? ` (${memberRatio.membershipName})`
+    : '';
+  return ` · ratio ${memberRatio.ratio}${label}`;
+}
+
 /** Resolved rates keyed by step (target) currency documentId; source currency is fixed per call. */
 export type RateByCurrency = ReadonlyMap<string, AppliedRate>;
 
@@ -608,6 +629,8 @@ export type ExpandedStepRow = {
   entered_key: string;
   /** Set only on apply_currency_rate steps. */
   appliedRate: AppliedRate | null;
+  /** Set when the member ratio multiplied this step (real conversion only). */
+  memberRatio: MemberRatio | null;
 };
 
 export function expandWorkflowSteps(
@@ -615,6 +638,7 @@ export function expandWorkflowSteps(
   transaction: SourceTransaction,
   siblingByCode: ReadonlyMap<string, AccountRef>,
   rates?: RateByCurrency,
+  memberRatio?: MemberRatio | null,
 ): ExpandedStepRow[] {
   const steps = workflow.step ?? [];
   if (!steps.length) {
@@ -649,11 +673,22 @@ export function expandWorkflowSteps(
         )
       : null;
 
+    // Ratio only on a real conversion (from ≠ to): a flagged same-currency
+    // step (e.g. EGG count) must never be scaled.
+    const stepRatio =
+      appliedRate &&
+      memberRatio &&
+      appliedRate.fromCurrencyDocumentId !== appliedRate.toCurrencyDocumentId
+        ? memberRatio
+        : null;
+
     return {
       index,
-      description: expandTemplate(normalized.description, transaction),
+      description:
+        expandTemplate(normalized.description, transaction) +
+        memberRatioDescriptionSuffix(stepRatio),
       amount: appliedRate
-        ? roundAmount(baseAmount * appliedRate.rate)
+        ? roundAmount(baseAmount * appliedRate.rate * (stepRatio?.ratio ?? 1))
         : baseAmount,
       debit_account: resolveStepAccount(
         normalized.debitWanted,
@@ -675,6 +710,7 @@ export function expandWorkflowSteps(
       copy_receipt: normalized.copy_receipt === true,
       entered_key: `${transaction.documentId}:step:${index}`,
       appliedRate,
+      memberRatio: stepRatio,
     };
   });
 }

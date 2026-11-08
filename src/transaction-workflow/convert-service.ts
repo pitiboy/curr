@@ -7,8 +7,8 @@
  * organization / accounts); otherwise they stay draft while steps may still publish.
  * Partial keep_original failure rolls back created rows and clears the source mark.
  * keep_original false: delete original, step chain; receipt only on copy_receipt steps.
- * apply_currency_rate steps: rates and the membership-ratio guard resolve before
- * any write (422 CURRENCY_RATE_MISSING / MEMBERSHIP_RATIO_UNSUPPORTED leave no rows).
+ * apply_currency_rate steps: rates and the member ratio resolve before any write
+ * (422 CURRENCY_RATE_MISSING / MEMBERSHIP_RATIO_AMBIGUOUS leave no rows).
  */
 import {
   shouldPublishConvertedSource,
@@ -35,10 +35,9 @@ import {
 } from './convert';
 import {
   createRateResolver,
-  loadMembershipRatioIssues,
+  loadMemberRatio,
   resolveWorkflowRates,
 } from './convert-context';
-import { assertMembershipRatioSupported } from './membership-ratio';
 
 type DocumentsApi = {
   findMany: (params?: Record<string, unknown>) => Promise<unknown[]>;
@@ -63,6 +62,9 @@ export type AppliedRateResult = {
   rate: number;
   validFrom: string | null;
   currencyRateDocumentId: string | null;
+  /** Member ratio multiplier (1 when none applied). */
+  ratio: number;
+  membershipDocumentId: string | null;
 };
 
 export type ConvertResultItem = {
@@ -77,7 +79,12 @@ export type ConvertResultItem = {
 function appliedRatesOf(rows: ExpandedStepRow[]): AppliedRateResult[] {
   return rows
     .filter((row) => row.appliedRate)
-    .map((row) => ({ stepIndex: row.index, ...row.appliedRate! }));
+    .map((row) => ({
+      stepIndex: row.index,
+      ...row.appliedRate!,
+      ratio: row.memberRatio?.ratio ?? 1,
+      membershipDocumentId: row.memberRatio?.membershipDocumentId ?? null,
+    }));
 }
 
 export type ConvertStrapi = {
@@ -452,20 +459,19 @@ export async function convertTransactions(
     const published =
       request.steps_published ?? workflow.steps_published !== false;
     const siblingMap = await loadMemberSiblingMap(strapi, transaction);
-    // Resolve rate + ratio guard before any write (no rollback needed on 422).
+    // Resolve rate + member ratio before any write (no rollback needed on 422).
     const rates = await resolveWorkflowRates(
       resolveRate,
       workflow,
       transaction,
     );
-    assertMembershipRatioSupported(
-      await loadMembershipRatioIssues(strapi, workflow, transaction),
-    );
+    const memberRatio = await loadMemberRatio(strapi, workflow, transaction);
     const expanded = expandWorkflowSteps(
       workflow,
       transaction,
       siblingMap,
       rates,
+      memberRatio,
     );
     assertKeepOriginalReceiptPolicy(keepOriginal, transaction, expanded);
 

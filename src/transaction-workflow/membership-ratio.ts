@@ -1,72 +1,54 @@
 /**
- * Tagsági tojás-ratio őr a Convert árfolyamos lépéseihez (0002 plan §5.2).
- * A Convert nem szoroz a tagsági ratio-val; ha a forrás tagjának a forrás napján
- * érvényes tagsága ≠ 1 ratio-t ad, az előnézet figyelmeztet, a Convert 422-vel leáll.
+ * Tagsági ratio szorzó a Convert árfolyamos lépéseihez (0002 plan §5.2).
  *
- * A szabály-feloldás a backoffice
- * `apps/content-backoffice/src/workflows/bulk-quantity/membershipRules.ts`
- * (`resolveEggRule`) és `distributionLogic.ts` (`membershipValidOnDate`)
- * szerveroldali másolata — a két helyet együtt kell módosítani.
+ * Konvenció: a tagsági `rules` JSON kulcsa a **forrás pénznem kódja kisbetűvel**
+ * (EGG → `rules.egg`, HOUR → `rules.hour`). A ratio = `rules[kulcs].ratio`
+ * (hiányzó ratio → 1). A `mode` mezőt a Convert nem nézi.
+ *
+ * Feloldás: a tag összes, a forrás napján érvényes tagsága (szervezettől
+ * függetlenül); tagságonként `membership.rules[kulcs]` → `membership_type.rules[kulcs]`.
+ * Csak a szabállyal rendelkező tagságok számítanak; nincs ilyen → nincs szorzó (1).
+ * Eltérő ratio-k → 422 MEMBERSHIP_RATIO_AMBIGUOUS. Név szerinti fallback nincs.
  */
 import {
-  ERROR_MEMBERSHIP_RATIO_UNSUPPORTED,
+  ERROR_MEMBERSHIP_RATIO_AMBIGUOUS,
   TransactionWorkflowError,
   isoDay,
+  type MemberRatio,
 } from './convert';
 
-type EggRule = { mode: 'internal' | 'sale'; ratio: number };
+export type { MemberRatio };
 
-const DEFAULT_EGG_RULE: EggRule = { mode: 'sale', ratio: 1 };
-
-/** Must match EGG_RULE_FALLBACK_BY_MEMBERSHIP_TYPE_NAME in the backoffice. */
-export const SERVER_EGG_RULE_FALLBACK_BY_MEMBERSHIP_TYPE_NAME: Readonly<
-  Record<string, EggRule>
-> = {
-  'Bentlakó tag': { mode: 'internal', ratio: 1 },
-  'Társult tag': { mode: 'internal', ratio: 1 },
-  'Partner / Bedolgozó': { mode: 'sale', ratio: 1 },
-  Vásárló: { mode: 'sale', ratio: 1 },
-  'Pártoló tag': { mode: 'sale', ratio: 1 },
-  Érdeklődő: { mode: 'sale', ratio: 0.75 },
+export type MembershipRuleRow = {
+  documentId?: string | null;
+  name?: string | null;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  rules?: unknown;
+  membership_type?: { name?: string | null; rules?: unknown } | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function parseEggRuleFragment(value: unknown): EggRule | null {
-  if (!isRecord(value)) return null;
-  const mode = value.mode;
-  if (mode !== 'internal' && mode !== 'sale') return null;
-  const ratioRaw = value.ratio;
-  const ratio =
-    ratioRaw === undefined || ratioRaw === null
-      ? DEFAULT_EGG_RULE.ratio
-      : Number(ratioRaw);
-  if (!Number.isFinite(ratio) || ratio < 0) return null;
-  return { mode, ratio };
+/** `rules` key for a currency code: trimmed, lower-case. */
+export function memberRuleKey(
+  currencyCode: string | null | undefined,
+): string | null {
+  const key = currencyCode?.trim().toLowerCase();
+  return key ? key : null;
 }
 
-/** membership.rules.egg → membership_type.rules.egg → type-name fallback → default. */
-export function resolveServerEggRule(
-  membershipRules: unknown,
-  membershipTypeRules: unknown,
-  membershipTypeName?: string | null,
-): EggRule {
-  if (isRecord(membershipRules) && membershipRules.egg !== undefined) {
-    const fromMembership = parseEggRuleFragment(membershipRules.egg);
-    if (fromMembership) return fromMembership;
-  }
-  if (isRecord(membershipTypeRules) && membershipTypeRules.egg !== undefined) {
-    const fromType = parseEggRuleFragment(membershipTypeRules.egg);
-    if (fromType) return fromType;
-  }
-  if (membershipTypeName) {
-    const fallback =
-      SERVER_EGG_RULE_FALLBACK_BY_MEMBERSHIP_TYPE_NAME[membershipTypeName];
-    if (fallback) return { ...fallback };
-  }
-  return { ...DEFAULT_EGG_RULE };
+/** Ratio of one `rules[key]` fragment; null when absent or invalid. */
+function ratioFromRules(rules: unknown, key: string): number | null {
+  if (!isRecord(rules)) return null;
+  const fragment = rules[key];
+  if (!isRecord(fragment)) return null;
+  const raw = fragment.ratio;
+  if (raw === undefined || raw === null) return 1;
+  const ratio = Number(raw);
+  return Number.isFinite(ratio) && ratio >= 0 ? ratio : null;
 }
 
 /** Inclusive UTC day check, same as backoffice membershipValidOnDate. */
@@ -93,76 +75,50 @@ export function membershipValidOn(
   return true;
 }
 
-export type MembershipRuleRow = {
-  documentId?: string | null;
-  name?: string | null;
-  valid_from?: string | null;
-  valid_to?: string | null;
-  rules?: unknown;
-  membership_type?: { name?: string | null; rules?: unknown } | null;
-};
+/** Ratio of one membership for `key`: membership override → type default. */
+export function membershipRatioFor(
+  row: MembershipRuleRow,
+  key: string,
+): MemberRatio | null {
+  const own = ratioFromRules(row.rules, key);
+  const ratio = own ?? ratioFromRules(row.membership_type?.rules, key);
+  if (ratio === null) return null;
+  return {
+    ratio,
+    membershipDocumentId: row.documentId ?? null,
+    membershipName: row.name ?? row.membership_type?.name ?? null,
+    source: own !== null ? 'membership' : 'membership_type',
+  };
+}
 
-export type MembershipRatioIssue = {
-  membershipDocumentId: string | null;
-  membershipName: string | null;
-  membershipTypeName: string | null;
-  ratio: number;
-};
-
-/** Memberships valid on `date` whose resolved egg ratio is not 1. */
-export function findUnsupportedMembershipRatios(
+/**
+ * Member ratio for the source currency on `date`; null when no valid
+ * membership has a rule for it (→ multiplier 1). Conflicting ratios → 422.
+ */
+export function resolveMemberRatio(
   memberships: readonly MembershipRuleRow[] | null | undefined,
+  currencyCode: string | null | undefined,
   date: string,
-): MembershipRatioIssue[] {
-  const issues: MembershipRatioIssue[] = [];
+): MemberRatio | null {
+  const key = memberRuleKey(currencyCode);
+  if (!key) return null;
+  const found: MemberRatio[] = [];
   for (const row of memberships ?? []) {
     if (!membershipValidOn(row.valid_from, row.valid_to, date)) continue;
-    const typeName = row.membership_type?.name ?? null;
-    const rule = resolveServerEggRule(
-      row.rules,
-      row.membership_type?.rules,
-      typeName,
-    );
-    if (Math.abs(rule.ratio - 1) > 1e-9) {
-      issues.push({
-        membershipDocumentId: row.documentId ?? null,
-        membershipName: row.name ?? null,
-        membershipTypeName: typeName,
-        ratio: rule.ratio,
-      });
-    }
+    const ratio = membershipRatioFor(row, key);
+    if (ratio) found.push(ratio);
   }
-  return issues;
-}
-
-export const MEMBERSHIP_RATIO_WARNING_PREFIX = `${ERROR_MEMBERSHIP_RATIO_UNSUPPORTED}:`;
-
-function describeIssues(issues: readonly MembershipRatioIssue[]): string {
-  return issues
-    .map(
-      (issue) =>
-        `${issue.membershipName ?? issue.membershipTypeName ?? 'membership'} (ratio ${issue.ratio})`,
-    )
-    .join(', ');
-}
-
-/** Preview warning text; null when nothing to report. */
-export function membershipRatioWarning(
-  issues: readonly MembershipRatioIssue[],
-): string | null {
-  if (!issues.length) return null;
-  return `${MEMBERSHIP_RATIO_WARNING_PREFIX} member egg ratio is not 1 — ${describeIssues(issues)}. Convert does not apply membership ratio; book this sale via the daily egg form.`;
-}
-
-/** Convert guard: throws 422 MEMBERSHIP_RATIO_UNSUPPORTED when issues exist. */
-export function assertMembershipRatioSupported(
-  issues: readonly MembershipRatioIssue[],
-): void {
-  if (!issues.length) return;
-  throw new TransactionWorkflowError(
-    `Member egg ratio is not 1 (${describeIssues(issues)}); convert does not apply membership ratio`,
-    422,
-    ERROR_MEMBERSHIP_RATIO_UNSUPPORTED,
-    { memberships: issues },
-  );
+  if (!found.length) return null;
+  const distinct = new Set(found.map((row) => row.ratio));
+  if (distinct.size > 1) {
+    throw new TransactionWorkflowError(
+      `Member has valid memberships with different "${key}" ratios (${found
+        .map((row) => `${row.membershipName ?? 'membership'}: ${row.ratio}`)
+        .join(', ')})`,
+      422,
+      ERROR_MEMBERSHIP_RATIO_AMBIGUOUS,
+      { key, date: isoDay(date), memberships: found },
+    );
+  }
+  return found[0];
 }

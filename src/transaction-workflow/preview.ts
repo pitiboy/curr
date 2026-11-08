@@ -13,14 +13,11 @@ import {
   type AccountRef,
   type AppliedRate,
   type ExpandedStepRow,
+  type MemberRatio,
   type RateByCurrency,
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert';
-import {
-  membershipRatioWarning,
-  type MembershipRatioIssue,
-} from './membership-ratio';
 
 export const PREVIEW_INLINE_DOCUMENT_ID = '__convert-preview-inline__';
 
@@ -51,12 +48,14 @@ export type PreviewMovement = {
   organizationDocumentId: string | null;
   /** apply_currency_rate steps only; null otherwise (and on storno). */
   rate: AppliedRate | null;
+  /** Member ratio that multiplied this step (real conversion only). */
+  memberRatio: MemberRatio | null;
 };
 
 /** Strapi-resolved inputs for apply_currency_rate templates. */
 export type PreviewRateContext = {
   rates?: RateByCurrency;
-  membershipRatioIssues?: readonly MembershipRatioIssue[];
+  memberRatio?: MemberRatio | null;
 };
 
 export type ConvertPreview = {
@@ -202,6 +201,7 @@ function movementFromStepRow(
     copyReceipt: row.copy_receipt,
     organizationDocumentId: row.organization?.documentId ?? null,
     rate: row.appliedRate,
+    memberRatio: row.memberRatio,
   };
 }
 
@@ -230,6 +230,7 @@ function stornoMovement(
     copyReceipt: false,
     organizationDocumentId: storno.organization?.documentId ?? null,
     rate: null,
+    memberRatio: null,
   };
 }
 
@@ -253,6 +254,7 @@ export function buildConvertPreview(
     transaction,
     siblingByCode,
     rateContext.rates,
+    rateContext.memberRatio,
   );
   const keepOriginal = workflow.keep_original !== false;
   const sourceAmount = Number(transaction.amount);
@@ -263,10 +265,6 @@ export function buildConvertPreview(
     workflow,
     sourceAmount,
   );
-  const ratioWarning = membershipRatioWarning(
-    rateContext.membershipRatioIssues ?? [],
-  );
-  if (ratioWarning) warnings.push(ratioWarning);
 
   const originalCurrencyId = transaction.currency_type?.documentId;
   if (!originalCurrencyId) {

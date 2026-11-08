@@ -2,9 +2,9 @@
  * Strapi-side lookups shared by Convert and Convert preview (no writes):
  * - currency-rate: latest direct `from → to` row with valid_from ≤ source day end,
  *   cached per request (`{from}:{to}:{day}`);
- * - member memberships for the membership-ratio guard (0002 plan §5.2).
+ * - member ratio for the source currency (`rules[code]`, 0002 plan §5.2).
  * Everything resolves before Convert writes anything, so a missing rate or an
- * unsupported ratio leaves no rows behind.
+ * ambiguous ratio leaves no rows behind.
  */
 import {
   MEMBER_UID,
@@ -13,18 +13,14 @@ import {
   pickLatestRate,
   rateCutoff,
   stepsNeedingRate,
-  workflowAppliesCurrencyRate,
   type AppliedRate,
   type CurrencyRateRow,
+  type MemberRatio,
   type RateByCurrency,
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert';
-import {
-  findUnsupportedMembershipRatios,
-  type MembershipRatioIssue,
-  type MembershipRuleRow,
-} from './membership-ratio';
+import { resolveMemberRatio, type MembershipRuleRow } from './membership-ratio';
 
 export const CURRENCY_RATE_UID = 'api::currency-rate.currency-rate';
 
@@ -155,17 +151,19 @@ export async function resolveWorkflowRates(
 }
 
 /**
- * Membership-ratio issues for the source member (only when the template has
- * apply_currency_rate steps and the source has a 1101/1001 side).
+ * Member ratio for the source currency, only when the template converts to
+ * another currency (flagged step with currency ≠ source) and the source has a
+ * 1101/1001 side. null → multiplier 1. Conflicting ratios → 422 AMBIGUOUS.
  */
-export async function loadMembershipRatioIssues(
+export async function loadMemberRatio(
   strapi: Pick<ConvertContextStrapi, 'db'>,
   workflow: WorkflowTemplate,
   transaction: SourceTransaction,
-): Promise<MembershipRatioIssue[]> {
-  if (!workflowAppliesCurrencyRate(workflow)) return [];
+): Promise<MemberRatio | null> {
+  const needed = stepsNeedingRate(workflow, transaction);
+  if (!needed?.to.length) return null;
   const memberAccount = memberAccountFromTransaction(transaction);
-  if (!memberAccount?.documentId) return [];
+  if (!memberAccount?.documentId) return null;
 
   const member = (await strapi.db.query(MEMBER_UID).findOne({
     where: {
@@ -182,8 +180,9 @@ export async function loadMembershipRatioIssues(
     },
   })) as { memberships?: MembershipRuleRow[] | null } | null;
 
-  return findUnsupportedMembershipRatios(
+  return resolveMemberRatio(
     member?.memberships ?? [],
+    transaction.currency_type?.code,
     transaction.date,
   );
 }
