@@ -157,14 +157,14 @@ A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora
 | Azonos pénznem       | `from === to` → `rate = 1`, nincs lookup (mint a backoffice `pickLatestCurrencyRate`)                                                                                                                                                                                                                                                                    |
 | Dátum                | forrás trx `date` (`YYYY-MM-DD`). A receipt dátuma nem számít. Request body override **nincs** (a Napi tojás űrlap is a bizonylat/űrlap dátumát használja, ami itt a trx `date`).                                                                                                                                                                        |
 | Lookup               | `currency_rates` ahol `from_currency_type.documentId = from`, `to_currency_type.documentId = to`, `valid_from <= {date}T23:59:59.999Z`; rendezés `valid_from:desc`, `limit 1`. Ugyanaz a szabály, mint a backoffice [`pickLatestCurrencyRate`](../../apps/content-backoffice/src/workflows/bulk-quantity/distributionLogic.ts) (UTC nap vége, beleértve) |
-| Inverz pár           | **nincs** fallback (`to → from`, `1/rate`); csak a direkt pár számít, ahogy a termékleírásban                                                                                                                                                                                                                                                            |
+| Inverz pár           | Tojás-scope: **nincs** fallback, csak a direkt pár számít, ahogy a termékleírásban. Kivétel a KOR-t érintő pár (lekötés átállítása, [9.1](#91-seed-előfeltételek)): direkt sor hiányában `1 / rate(to → from)`                                                                                                                                           |
 | Képlet               | `amount = round2(source.amount × percent / 100 × rate)`; `percent/100` = sablon szintű **ratio** (100 = 1). Kerekítés csak árfolyamos stepen (`Math.round(x*100)/100`, mint `saleRevenueAmount`)                                                                                                                                                         |
-| Membership ratio     | A Convert **nem** olvas `membership.rules.egg.ratio`-t. A tagonkénti ratio (pl. Érdeklődő 0.75) a Napi tojás űrlap felelőssége; Convert-tel csak ratio = `percent/100` könyvelhető. Későbbi bővítés: `apply_membership_ratio` (nem cél)                                                                                                                  |
+| Membership ratio     | A Convert **nem szoroz** a tagsági ratio-val, de **ellenőrzi** ([5.2](#52-tagsági-ratio-őr)): ha a tag tojás-ratio-ja ≠ 1, az előnézet figyelmeztet, a Convert 422 `MEMBERSHIP_RATIO_UNSUPPORTED`-del leáll. Az eltérő ratio-jú tagság eladását a Napi tojás űrlap könyveli.                                                                             |
 | Láncolás             | Nincs: minden árfolyamos step a **forrás** összegéből számol; két HUF step (kp befizetés + bevétel) ugyanazt az összeget kapja                                                                                                                                                                                                                           |
 | Hiányzó rate         | **Blokkoló** 422 `CURRENCY_RATE_MISSING`; nem jön létre draft sem. Rate `<= 0` vagy nem véges → 422 `CURRENCY_RATE_INVALID`                                                                                                                                                                                                                              |
 | Írás előtti feloldás | A service a rate-eket **minden írás előtt** feloldja (storno, `original` jelölés előtt), így hiányzó rate esetén nincs rollback-igény                                                                                                                                                                                                                    |
 | Cache                | Requesten belül `Map<"{from}:{to}:{date}", AppliedRate>`; batch convertnél párnaponként egy query                                                                                                                                                                                                                                                        |
-| Perzisztencia        | `transaction` séma **nem** változik. A generált `amount` a rögzítéskori fix érték; egy későbbi `currency-rate` módosítás nem írja át. Az alkalmazott rate a Convert válaszban és az előnézetben látszik. A „rögzítéskori árfolyam a tranzakción” mező a [v2 PRD](../prd/0002-content-backoffice-v2.md) külön tétele; ha elkészül, a Convert tölti        |
+| Perzisztencia        | **Döntés:** a `transaction` nem kap árfolyam mezőt (`applied_rate`, `rate_date` nincs), és ilyen nem is tervezett. A generált `amount` a konverziókori fix érték; egy későbbi `currency-rate` módosítás nem írja át. Az alkalmazott rate csak a Convert válaszban (`appliedRates`) és az előnézetben látszik.                                            |
 
 **Pure réteg ([convert.ts](../../src/transaction-workflow/convert.ts)):**
 
@@ -206,6 +206,22 @@ export function expandWorkflowSteps(
 | 2   | Tojás eladás (bevétel)      | 100     | `true`                | HUF     | **3 000**                |
 
 Korábban (flag nélkül) az 1–2. sor **30 HUF** lett. Ugyanez a flag kerül a `23-tojas-keletkezese-es-eladasa.json` két HUF stepjére.
+
+### 5.2 Tagsági ratio őr
+
+**Döntés (1C):** a Convert nem szoroz a tagsági tojás-ratio-val, de nem is hagyja figyelmen kívül.
+
+| Elem                     | Szerződés                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mikor fut                | A sablonnak van legalább egy `apply_currency_rate: true` stepje **és** a forrás egyik oldala tagi számla (`1101`/`1001`)                                                                                                                                                                                                                           |
+| Tag                      | A forrás tagi számlájához tartozó `member` (`account` / `private_account`); ugyanaz a lookup, mint a testvér-feloldásnál                                                                                                                                                                                                                           |
+| Tagságok                 | A tag `membership` rekordjai, amelyek a forrás `date` napján érvényesek (`valid_from` / `valid_to`, mint a backoffice `membershipValidOnDate`)                                                                                                                                                                                                     |
+| Ratio feloldás           | Ugyanaz a sorrend, mint a backoffice `resolveEggRule`-ban: `membership.rules.egg` → `membership_type.rules.egg` → tagságtípus név fallback → default `{ ratio: 1 }`. A logika a szerver oldalra is kell (közös modul vagy tesztelt másolat a `src/` alatt); a [0005 plan](./0005-tojas-eladas-kozvetitoi-jutalek.md) mezőnkénti felülírását követi |
+| Eredmény                 | Ha **bármely** érvényes tagság ratio-ja ≠ 1: előnézet `warnings[]` += `MEMBERSHIP_RATIO_UNSUPPORTED` (tag neve + ratio), Convert **422** `MEMBERSHIP_RATIO_UNSUPPORTED`, írás nélkül                                                                                                                                                               |
+| Nincs tag / nincs tagság | Ratio 1, nincs akadály                                                                                                                                                                                                                                                                                                                             |
+| Jutalék                  | A [0005](./0005-tojas-eladas-kozvetitoi-jutalek.md) `commissionPercent` / `internalPercent` mezőit az őr nem nézi; azok a Napi tojás űrlap hatáskörében maradnak                                                                                                                                                                                   |
+
+Az őr a rate-feloldással együtt, minden írás előtt fut.
 
 ---
 
@@ -254,7 +270,7 @@ flowchart TD
 | Válasz   | `data[]` elemenként: `transactionDocumentId`, `workflowDocumentId`, `stornoDocumentId?`, `createdDocumentIds`, **`appliedRates`**: `{ stepIndex, fromCurrencyDocumentId, toCurrencyDocumentId, rate, validFrom, currencyRateDocumentId }[]` (csak `apply_currency_rate` stepek) |
 | Előnézet | `convert-preview` `movements[]` elemein **`rate`** (`AppliedRate \| null`), hogy a modál mutassa a használt árfolyamot                                                                                                                                                          |
 
-Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó account/org / tagi testvér (422), `entered_key` ütközés (409), `keep_original: false` + receipt orphan (422), **nincs érvényes `currency-rate` a forrás dátumáig (422 `CURRENCY_RATE_MISSING`)**, **hibás rate ≤ 0 (422 `CURRENCY_RATE_INVALID`)**.
+Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó account/org / tagi testvér (422), `entered_key` ütközés (409), `keep_original: false` + receipt orphan (422), **nincs érvényes `currency-rate` a forrás dátumáig (422 `CURRENCY_RATE_MISSING`)**, **hibás rate ≤ 0 (422 `CURRENCY_RATE_INVALID`)**, **tagsági tojás-ratio ≠ 1 árfolyamos sablonnál (422 `MEMBERSHIP_RATIO_UNSUPPORTED`)**.
 
 A hibatörzs bővül egy gépi kóddal: `error.details.code` (pl. `CURRENCY_RATE_MISSING`), `error.details.from` / `to` (pénznem kód) és `error.details.date`. A `TransactionWorkflowError` opcionális `code` + `details` mezőt kap; a meglévő hibák kód nélkül változatlanok. Batch convertnél (nincs `transactionDocumentId`) az első hiányzó rate megállítja a futást. A már feldolgozott sorok megmaradnak (ez a jelenlegi batch szemantika).
 
@@ -460,26 +476,29 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 | `4500`, `EGG`, Tojóól | 3      |
 | `FRUIT`               | 4      |
 
-~~A Convert **nem** számol `currency-rate`-et.~~ **Felváltva ([5.1](#51-árfolyamos-lépés-apply_currency_rate)):** a Convert csak `apply_currency_rate: true` stepen alkalmaz `currency-rate`-et. A meglévő KOR lekötés stepek flag nélkül maradnak: a KOR összeg továbbra is `percent` × forrás `amount` (`percent: 1` ≈ 1:100). A kor seed `KOR → HUF = 600` sora ennek **ellentmond**, és HUF → KOR direkt sor nincs. A lekötés átállítása flagre (percent 100 + rate) külön döntés, nem része ennek a scope-nak.
+~~A Convert **nem** számol `currency-rate`-et.~~ **Felváltva ([5.1](#51-árfolyamos-lépés-apply_currency_rate)):** a Convert csak `apply_currency_rate: true` stepen alkalmaz `currency-rate`-et.
+
+**KOR árfolyam (döntés):** a helytálló érték mindig a DB `currency-rate` sora (jelenleg `KOR → HUF = 600`, változhat). A meglévő KOR lekötés stepek `percent: 1` értéke fix 1:100-at feltételez, ezért **elavult**: 600-as árfolyamnál a KOR összeg hatszor akkora a helyesnél. **Döntés (a lekötés átállítása, külön PR):** a lekötés KOR stepjei `apply_currency_rate: true` + `percent: 100` lesznek. Mivel a DB-ben csak `KOR → HUF` sor van, a `HUF → KOR` rate-et a Convert az **inverz** sorból számolja: `rate = 1 / rate(KOR → HUF)`, ugyanazzal a dátumszabállyal (legfrissebb `valid_from` ≤ forrás nap vége). Sorrend: ha van direkt `HUF → KOR` sor, az nyer; ha nincs, akkor jön az inverz; ha egyik sincs, 422 `CURRENCY_RATE_MISSING`. Az inverz fallback **csak a KOR-t érintő párokra** érvényes (`from` vagy `to` = KOR); más pároknál (pl. EGG → HUF) továbbra is csak a direkt sor számít. Kerekítés: 2 tizedes (pl. 2 000 000 Ft / 600 = 3 333.33 KOR). `AppliedRate` += `inverted: boolean`, `currencyRateDocumentId` az inverz sor id-ja. A tojás eladás workflow-ban KOR nincs, így ez a tojás-scope-ot nem érinti. Az átállításig a lekötés sablonok változatlanok (`percent: 1`).
 
 ### 9.2 Rögzített döntések (implementáció)
 
-| Kérdés             | Döntés                                                                                                                              |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `percent.max`      | **100** marad; tört percent OK                                                                                                      |
-| `step.min`         | **1**                                                                                                                               |
-| Tagi `1101`/`1001` | Member-debit / member-credit komponens + `member_account_code`; expand **forrás trx / member testvér**                              |
-| Kimenet státusz    | Sablon `steps_published` default `true`; Convert body override                                                                      |
-| Első PR scope      | **Mind a 9 ügylet** seed + Convert API                                                                                              |
-| Receipt            | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra                                                                  |
-| Árfolyam trigger   | Step `apply_currency_rate` (opt-in, default `false`); nincs sablon/fejléc `from_currency`/`to_currency`, nincs típus/prefix trigger |
-| Árfolyam dátum     | Forrás trx `date`, `valid_from <= nap vége UTC`, legfrissebb; nincs body override                                                   |
-| Árfolyam pár       | Direkt `from → to`; nincs inverz fallback; azonos pénznem → 1                                                                       |
-| Hiányzó rate       | 422 `CURRENCY_RATE_MISSING`, blokkol (nincs draft); feloldás minden írás előtt                                                      |
-| Ratio              | `percent / 100`; membership ratio-t a Convert nem olvas                                                                             |
-| Kerekítés          | Árfolyamos stepen 2 tizedes                                                                                                         |
-| Rate perzisztencia | Nincs új `transaction` mező; `appliedRates` a válaszban / előnézetben                                                               |
-| Visszamenőleges    | Már kifejtett sorok nem változnak, nincs automatikus újrakonvertálás                                                                |
+| Kérdés             | Döntés                                                                                                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `percent.max`      | **100** marad; tört percent OK                                                                                                                                                                                                                   |
+| `step.min`         | **1**                                                                                                                                                                                                                                            |
+| Tagi `1101`/`1001` | Member-debit / member-credit komponens + `member_account_code`; expand **forrás trx / member testvér**                                                                                                                                           |
+| Kimenet státusz    | Sablon `steps_published` default `true`; Convert body override                                                                                                                                                                                   |
+| Első PR scope      | **Mind a 9 ügylet** seed + Convert API                                                                                                                                                                                                           |
+| Receipt            | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra                                                                                                                                                                               |
+| Árfolyam trigger   | Step `apply_currency_rate` (opt-in, default `false`); nincs sablon/fejléc `from_currency`/`to_currency`, nincs típus/prefix trigger                                                                                                              |
+| Árfolyam dátum     | Forrás trx `date`, `valid_from <= nap vége UTC`, legfrissebb; nincs body override                                                                                                                                                                |
+| Árfolyam pár       | Direkt `from → to`; azonos pénznem → 1. Inverz fallback csak KOR-t érintő párnál (direkt sor hiányában `1/rate`)                                                                                                                                 |
+| Hiányzó rate       | 422 `CURRENCY_RATE_MISSING`, blokkol (nincs draft); feloldás minden írás előtt                                                                                                                                                                   |
+| Ratio              | `percent / 100`; tagsági ratio ≠ 1 → előnézet figyelmeztetés + Convert 422 `MEMBERSHIP_RATIO_UNSUPPORTED` ([5.2](#52-tagsági-ratio-őr))                                                                                                          |
+| KOR árfolyam       | Mindig a DB `currency-rate` értéke a helytálló (jelenleg `KOR → HUF = 600`); a doksi mintáiban a 100 Ft csak szemléltetés. Lekötés átállítása külön PR-ben: `apply_currency_rate` + `percent: 100` + inverz rate ([9.1](#91-seed-előfeltételek)) |
+| Kerekítés          | Árfolyamos stepen 2 tizedes                                                                                                                                                                                                                      |
+| Rate perzisztencia | Nincs és nem is lesz árfolyam mező a `transaction`-ön; `appliedRates` csak a válaszban / előnézetben                                                                                                                                             |
+| Visszamenőleges    | Már kifejtett sorok nem változnak, nincs automatikus újrakonvertálás                                                                                                                                                                             |
 
 ### 9.3 Maradék finomság (defaultolható)
 
@@ -491,14 +510,14 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 
 ## 10. Implementációs fázisok
 
-| Fázis | Deliverable                                                                                                                                                                    |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **A** | Séma: `steps_published`, `copy_receipt`, `step.min: 1` (kész / igazítva)                                                                                                       |
-| **B** | Seed JSON **1–9** (+ szükség szerint 3/4 második HUF sablon) + `1900`/EGG/FRUIT pótlás + publish                                                                               |
-| **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101)                                                                                                                         |
-| **D** | Content API jogok                                                                                                                                                              |
-| **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél)                                                   |
-| **F** | Árfolyamos step: `apply_currency_rate` séma + seed DSL + `findLatestRate` + pure expand + preview `rate` + 422 kód + tesztek ([5.1](#51-árfolyamos-lépés-apply_currency_rate)) |
+| Fázis | Deliverable                                                                                                                                                                                                                      |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** | Séma: `steps_published`, `copy_receipt`, `step.min: 1` (kész / igazítva)                                                                                                                                                         |
+| **B** | Seed JSON **1–9** (+ szükség szerint 3/4 második HUF sablon) + `1900`/EGG/FRUIT pótlás + publish                                                                                                                                 |
+| **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101)                                                                                                                                                                           |
+| **D** | Content API jogok                                                                                                                                                                                                                |
+| **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél)                                                                                                     |
+| **F** | Árfolyamos step: `apply_currency_rate` séma + seed DSL + `findLatestRate` + pure expand + preview `rate` + 422 kódok + tagsági ratio őr + tesztek ([5.1](#51-árfolyamos-lépés-apply_currency_rate), [5.2](#52-tagsági-ratio-őr)) |
 
 #### F fázis — kompatibilitás
 
@@ -523,6 +542,8 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 - [ ] F: Unit — `expandWorkflowSteps`: tojás 30 EGG → 3 000 HUF (két HUF step), flag nélkül változatlan (Ügylet 1 KOR `percent: 1` regresszió), hiányzó rate → 422 `CURRENCY_RATE_MISSING`, `percent` 50 × rate, 2 tizedes kerekítés
 - [ ] F: Service teszt (`convert-service.test.ts` mock mintára) — hiányzó rate esetén **nulla** `create`/`update` hívás; párnaponként egy lookup; `appliedRates` a válaszban
 - [ ] F: Preview teszt — `movements[].rate` kitöltve, flag nélkül `null`
+- [ ] Később (külön PR): lekötés KOR stepek → `apply_currency_rate` + `percent: 100`; KOR-párra inverz fallback (`1/rate`) + `AppliedRate.inverted`; unit: 2 000 000 HUF / 600 → 3 333.33 KOR, direkt sor elsőbbsége, nem-KOR párnál nincs inverz
+- [ ] F: Ratio őr — szerveroldali egg rule feloldás (membership → type → név fallback → 1); unit: ratio ≠ 1 tagság → preview warning + Convert 422 `MEMBERSHIP_RATIO_UNSUPPORTED` írás nélkül; ratio 1 / nincs tagság / lejárt tagság → átmegy; flag nélküli sablonon nem fut
 
 ---
 
