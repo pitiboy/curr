@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end backup test: three disposable DBs, parallel success, isolated failure on db-2.
+# End-to-end backup test: two disposable DBs, parallel success, isolated failure on edizone.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -63,98 +63,91 @@ pg_isready -h 127.0.0.1 -p "$TEST_PORT" -U postgres >/dev/null || {
   exit 1
 }
 
-createdb -h 127.0.0.1 -p "$TEST_PORT" -U postgres backup_db1
-createdb -h 127.0.0.1 -p "$TEST_PORT" -U postgres backup_db2
-createdb -h 127.0.0.1 -p "$TEST_PORT" -U postgres backup_db3
+createdb -h 127.0.0.1 -p "$TEST_PORT" -U postgres backup_zep
+createdb -h 127.0.0.1 -p "$TEST_PORT" -U postgres backup_edizone
 
-psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d backup_db1 -v ON_ERROR_STOP=1 -c \
+psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d backup_zep -v ON_ERROR_STOP=1 -c \
   'CREATE TABLE t1 (id int primary key); INSERT INTO t1 VALUES (1),(2);'
-psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d backup_db2 -v ON_ERROR_STOP=1 -c \
-  'CREATE TABLE t2 (id int primary key); INSERT INTO t2 VALUES (10);'
-psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d backup_db3 -v ON_ERROR_STOP=1 -c \
-  'CREATE TABLE t3 (id int primary key); INSERT INTO t3 VALUES (100),(101),(102);'
+psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d backup_edizone -v ON_ERROR_STOP=1 -c \
+  'CREATE TABLE t2 (id int primary key); INSERT INTO t2 VALUES (10),(11),(12);'
 
 uri_for() {
   local db="$1"
   printf 'postgresql://postgres:localtest@127.0.0.1:%s/%s?sslmode=disable' "$TEST_PORT" "$db"
 }
 
-export NEON_BACKUP_DATABASE_URL_1
-export NEON_BACKUP_DATABASE_URL_2
-export NEON_BACKUP_DATABASE_URL_3
-NEON_BACKUP_DATABASE_URL_1="$(uri_for backup_db1)"
-NEON_BACKUP_DATABASE_URL_2="$(uri_for backup_db2)"
-NEON_BACKUP_DATABASE_URL_3="$(uri_for backup_db3)"
+export NEON_BACKUP_DATABASE_URL_ZEP NEON_BACKUP_DATABASE_URL_EDIZONE
+NEON_BACKUP_DATABASE_URL_ZEP="$(uri_for backup_zep)"
+NEON_BACKUP_DATABASE_URL_EDIZONE="$(uri_for backup_edizone)"
 
 unset ALLOW_LOCAL_BACKUP_TEST
 bash "$SCRIPT_DIR/test-configure-libpq.sh"
 export ALLOW_LOCAL_BACKUP_TEST=1
 bash "$SCRIPT_DIR/preflight.sh"
 
-run_slot() {
-  local slot="$1"
+run_key() {
+  local key="$1"
   local out staging
   set +e
   out="$(
-    ALLOW_LEGACY_PG_CLIENT=1 ALLOW_LOCAL_BACKUP_TEST=1 DB_SLOT="$slot" \
+    ALLOW_LEGACY_PG_CLIENT=1 ALLOW_LOCAL_BACKUP_TEST=1 DB_KEY="$key" \
       BACKUP_ARTIFACT_ROOT="${LOG_DIR}/artifacts" \
-      bash "$SCRIPT_DIR/run-backup.sh" 2>"${LOG_DIR}/err-${slot}.log"
+      bash "$SCRIPT_DIR/run-backup.sh" 2>"${LOG_DIR}/err-${key}.log"
   )"
   local code=$?
   set -e
   [[ "$code" -eq 0 ]] || {
-    echo "run_slot ${slot} failed:" >&2
-    cat "${LOG_DIR}/err-${slot}.log" >&2
+    echo "run_key ${key} failed:" >&2
+    cat "${LOG_DIR}/err-${key}.log" >&2
     return "$code"
   }
-  echo "$out" >"${LOG_DIR}/ok-${slot}.log"
+  echo "$out" >"${LOG_DIR}/ok-${key}.log"
   staging="$(echo "$out" | sed -n 's/^ARTIFACT_STAGING=//p')"
-  echo "$staging" >"${LOG_DIR}/staging-${slot}.txt"
+  echo "$staging" >"${LOG_DIR}/staging-${key}.txt"
 }
 
-run_slot 1 &
-pid1=$!
-run_slot 3 &
-pid3=$!
-wait "$pid1"
-wait "$pid3"
+run_key zep &
+pid_zep=$!
+run_key edizone &
+pid_edizone=$!
+wait "$pid_zep"
+wait "$pid_edizone"
 
 # Independent failure: invalid pooler-like host must not stop other completed jobs.
-export NEON_BACKUP_DATABASE_URL_2='postgresql://postgres:secret@ep-test-pooler.neon.tech/backup_db2?sslmode=require'
+export NEON_BACKUP_DATABASE_URL_EDIZONE='postgresql://postgres:secret@ep-test-pooler.neon.tech/backup_edizone?sslmode=require'
 set +e
-ALLOW_LEGACY_PG_CLIENT=1 ALLOW_LOCAL_BACKUP_TEST=1 DB_SLOT=2 \
-  bash "$SCRIPT_DIR/run-backup.sh" >"${LOG_DIR}/fail-2.log" 2>&1
+ALLOW_LEGACY_PG_CLIENT=1 ALLOW_LOCAL_BACKUP_TEST=1 DB_KEY=edizone \
+  bash "$SCRIPT_DIR/run-backup.sh" >"${LOG_DIR}/fail-edizone.log" 2>&1
 fail_code=$?
 set -e
 if [[ "$fail_code" -eq 0 ]]; then
-  echo "Expected db-2 failure with pooler URL" >&2
+  echo "Expected db-edizone failure with pooler URL" >&2
   exit 1
 fi
 
-# Restore slot 2 and run successful backup for decrypt round-trip.
-export NEON_BACKUP_DATABASE_URL_2="$(uri_for backup_db2)"
-run_slot 2
+export NEON_BACKUP_DATABASE_URL_EDIZONE="$(uri_for backup_edizone)"
+run_key edizone
 
-for slot in 1 2 3; do
-  staging="$(cat "${LOG_DIR}/staging-${slot}.txt")"
-  dump="$(find "$staging" -name "neon-pg-backup-db-${slot}-*.dump.age" -type f | head -n1)"
+for key in zep edizone; do
+  staging="$(cat "${LOG_DIR}/staging-${key}.txt")"
+  dump="$(find "$staging" -name "neon-pg-backup-db-${key}-*.dump.age" -type f | head -n1)"
   [[ -n "$dump" ]] || {
-    echo "Missing encrypted dump for db-${slot}" >&2
+    echo "Missing encrypted dump for db-${key}" >&2
     exit 1
   }
-  plain="${WORKDIR}/roundtrip-${slot}.dump"
+  plain="${WORKDIR}/roundtrip-${key}.dump"
   age -d -i "${AGE_DIR}/key.txt" -o "$plain" "$dump"
   pg_restore --list "$plain" >/dev/null
-  restore_db="restore_db${slot}"
+  restore_db="restore_${key}"
   createdb -h 127.0.0.1 -p "$TEST_PORT" -U postgres "$restore_db"
   pg_restore -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d "$restore_db" --no-owner --no-acl "$plain"
 done
 
-count1="$(psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d restore_db1 -tAc 'SELECT count(*) FROM t1;' | tr -d '[:space:]')"
-count3="$(psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d restore_db3 -tAc 'SELECT count(*) FROM t3;' | tr -d '[:space:]')"
-[[ "$count1" == "2" && "$count3" == "3" ]] || {
+count_zep="$(psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d restore_zep -tAc 'SELECT count(*) FROM t1;' | tr -d '[:space:]')"
+count_edizone="$(psql -h 127.0.0.1 -p "$TEST_PORT" -U postgres -d restore_edizone -tAc 'SELECT count(*) FROM t2;' | tr -d '[:space:]')"
+[[ "$count_zep" == "2" && "$count_edizone" == "3" ]] || {
   echo "Restore row counts mismatch" >&2
   exit 1
 }
 
-echo "Local matrix test OK (3 DB backup, isolated db-2 failure, decrypt + pg_restore)."
+echo "Local matrix test OK (zep + edizone, isolated edizone failure, decrypt + pg_restore)."

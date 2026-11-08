@@ -1,6 +1,6 @@
 # Neon Postgres – napi logikai mentés (GitHub Actions)
 
-A [`Neon Postgres backup`](../../.github/workflows/neon-postgres-backup.yml) workflow **naponta egyszer** (02:30 UTC) és **kézi** `workflow_dispatch` futással készít **három független** PostgreSQL logikai dumpot (`pg_dump -Fc`), **age** titkosítással, **30 napos** artifact megőrzéssel.
+A [`Neon Postgres backup`](../../.github/workflows/neon-postgres-backup.yml) workflow **naponta egyszer** (02:30 UTC) és **kézi** `workflow_dispatch` futással készít **két független** PostgreSQL logikai dumpot (`pg_dump -Fc`), **age** titkosítással, **30 napos** artifact megőrzéssel.
 
 > **Fontos:** A mentés **csak** a beállítások megadása és a PR **main**-be merge után indul el. Addig a workflow létezik, de a secretek nélkül a preflight **azonnal hibára fut**.
 
@@ -13,14 +13,13 @@ A [`Neon Postgres backup`](../../.github/workflows/neon-postgres-backup.yml) wor
 
 Nyilvános repo: [github.com/pitiboy/curr](https://github.com/pitiboy/curr)
 
-| Hol                                                                               | Név                          | Típus                                  |
-| --------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------- |
-| [Secrets → Actions](https://github.com/pitiboy/curr/settings/secrets/actions)     | `NEON_BACKUP_DATABASE_URL_1` | Secret                                 |
-| Ugyanitt                                                                          | `NEON_BACKUP_DATABASE_URL_2` | Secret                                 |
-| Ugyanitt                                                                          | `NEON_BACKUP_DATABASE_URL_3` | Secret                                 |
-| [Variables → Actions](https://github.com/pitiboy/curr/settings/variables/actions) | `BACKUP_AGE_RECIPIENT`       | Variable (`age1…` **nyilvános** kulcs) |
+| Hol                                                                               | Név                                | Típus                                  |
+| --------------------------------------------------------------------------------- | ---------------------------------- | -------------------------------------- |
+| [Secrets → Actions](https://github.com/pitiboy/curr/settings/secrets/actions)     | `NEON_BACKUP_DATABASE_URL_ZEP`     | Secret                                 |
+| Ugyanitt                                                                          | `NEON_BACKUP_DATABASE_URL_EDIZONE` | Secret                                 |
+| [Variables → Actions](https://github.com/pitiboy/curr/settings/variables/actions) | `BACKUP_AGE_RECIPIENT`             | Variable (`age1…` **nyilvános** kulcs) |
 
-Mind a **három** DB secret **kötelező** – hiányzó esetén a workflow **láthatóan elbukik** (preflight + érintett matrix job).
+Mind a **két** DB secret **kötelező** – hiányzó esetén a workflow **láthatóan elbukik** (preflight + érintett matrix job).
 
 ### connection string követelmények
 
@@ -28,7 +27,7 @@ Mind a **három** DB secret **kötelező** – hiányzó esetén a workflow **l�
 - URI formátum: `postgresql://…` – **jelszó csak secretben**, soha ne add meg URL-ben a workflow YAML-ban.
 - Ajánlott query: `sslmode=require` (+ Neon által kért `channel_binding` / `options`, ha van a konzolon).
 
-A secret **tartalmát** a repó nem ismeri; a slot (`1` / `2` / `3`) csak címke az artifactokban (`db-1`, `db-2`, `db-3`).
+A secret **tartalmát** a repó nem ismeri; a címke az artifactokban: `db-zep`, `db-edizone`.
 
 ## age kulcs (Mac, offline)
 
@@ -44,27 +43,27 @@ Titkosítás nélküli artifact **nincs** – csak `.dump.age` + manifest + chec
 
 ## Ütemezés és artifactok
 
-|               |                                                                                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow neve | **Neon Postgres backup**                                                                                                                        |
-| Ütemezés      | `30 2 * * *` → **02:30 UTC** (≈ 03:30 Budapest télen / 04:30 nyáron); a GitHub queue csúsztathat                                                |
-| Kézi futás    | Actions → **Neon Postgres backup** → **Run workflow**                                                                                           |
-| Artifact név  | `neon-pg-backup-db-{1\|2\|3}-{run_id}`                                                                                                          |
-| Megőrzés      | **pontosan 30 nap** / artifact                                                                                                                  |
-| Matrix        | `fail-fast: false` – egy DB hibája **nem állítja le** a másik kettő mentését; a workflow **összesítve mégis failed**, ha bármelyik slot elbukik |
+|               |                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Workflow neve | **Neon Postgres backup**                                                                                                      |
+| Ütemezés      | `30 2 * * *` → **02:30 UTC** (≈ 03:30 Budapest télen / 04:30 nyáron); a GitHub queue csúsztathat                              |
+| Kézi futás    | Actions → **Neon Postgres backup** → **Run workflow**                                                                         |
+| Artifact név  | `neon-pg-backup-db-{zep\|edizone}-{run_id}`                                                                                   |
+| Megőrzés      | **pontosan 30 nap** / artifact                                                                                                |
+| Matrix        | `fail-fast: false` – egy DB hibája **nem állítja le** a másikat; a workflow **összesítve mégis failed**, ha bármelyik elbukik |
 
-Az összesítő summary **per-slot titkosított méretet** és **összesített bájt** értéket ír (becsléshez: × 30 nap). Egy adatbázisról ~559 KB méret **egyszer** lett mérve; a másik kettő **nincs** mérve.
+Az összesítő summary **per-db titkosított méretet** és **összesített bájt** értéket ír (becsléshez: × 30 nap). Egy adatbázisról ~559 KB méret **egyszer** lett mérve; a másik **nincs** mérve.
 
 ## Első éles teszt (te)
 
 1. Merge a `main`-be (ez a PR **után**).
 2. Ellenőrizd a fenti secreteket / variable-t.
 3. Actions → **Neon Postgres backup** → **Run workflow**.
-4. Töltsd le mindhárom artifactot (vagy csak egyet próbára).
+4. Töltsd le mindkét artifactot (vagy csak egyet próbára).
 5. **Visszaállítás csak új, üres teszt DB-be** (soha ne productionre):
 
 ```bash
-age -d -i ~/secure/neon-backup-age.txt -o dump.dump artifact/neon-pg-backup-db-1-….dump.age
+age -d -i ~/secure/neon-backup-age.txt -o dump.dump artifact/neon-pg-backup-db-zep-….dump.age
 pg_restore --list dump.dump          # tartalom lista, nem restore
 createdb my_restore_test             # üres cél DB
 pg_restore -d my_restore_test --no-owner --no-acl dump.dump
@@ -80,7 +79,7 @@ pg_restore -d my_restore_test --no-owner --no-acl dump.dump
 
 ```bash
 bash scripts/backup/test-configure-libpq.sh
-bash scripts/backup/test-local-matrix.sh   # 3 eldobható DB, párhuzamos OK + db-2 izolált hiba
+bash scripts/backup/test-local-matrix.sh   # zep + edizone, párhuzamos OK + edizone izolált hiba
 ```
 
 ## Biztonsági megjegyzések

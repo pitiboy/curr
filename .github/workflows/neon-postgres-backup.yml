@@ -23,21 +23,20 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate secrets and variables
         env:
-          NEON_BACKUP_DATABASE_URL_1: ${{ secrets.NEON_BACKUP_DATABASE_URL_1 }}
-          NEON_BACKUP_DATABASE_URL_2: ${{ secrets.NEON_BACKUP_DATABASE_URL_2 }}
-          NEON_BACKUP_DATABASE_URL_3: ${{ secrets.NEON_BACKUP_DATABASE_URL_3 }}
+          NEON_BACKUP_DATABASE_URL_ZEP: ${{ secrets.NEON_BACKUP_DATABASE_URL_ZEP }}
+          NEON_BACKUP_DATABASE_URL_EDIZONE: ${{ secrets.NEON_BACKUP_DATABASE_URL_EDIZONE }}
           BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
         run: bash scripts/backup/preflight.sh
 
   backup:
-    name: Backup db-${{ matrix.db_slot }}
+    name: Backup db-${{ matrix.db_key }}
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        db_slot: [1, 2, 3]
+        db_key: [zep, edizone]
     steps:
       - uses: actions/checkout@v4
       - name: Install PostgreSQL 18 client and age
@@ -48,16 +47,15 @@ jobs:
       - name: Run logical backup
         id: run_backup
         env:
-          DB_SLOT: ${{ matrix.db_slot }}
+          DB_KEY: ${{ matrix.db_key }}
           BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
-          NEON_BACKUP_DATABASE_URL_1: ${{ secrets.NEON_BACKUP_DATABASE_URL_1 }}
-          NEON_BACKUP_DATABASE_URL_2: ${{ secrets.NEON_BACKUP_DATABASE_URL_2 }}
-          NEON_BACKUP_DATABASE_URL_3: ${{ secrets.NEON_BACKUP_DATABASE_URL_3 }}
+          NEON_BACKUP_DATABASE_URL_ZEP: ${{ secrets.NEON_BACKUP_DATABASE_URL_ZEP }}
+          NEON_BACKUP_DATABASE_URL_EDIZONE: ${{ secrets.NEON_BACKUP_DATABASE_URL_EDIZONE }}
         run: bash scripts/backup/run-backup.sh
       - name: Upload encrypted artifact
         uses: actions/upload-artifact@v4
         with:
-          name: neon-pg-backup-db-${{ matrix.db_slot }}-${{ github.run_id }}
+          name: neon-pg-backup-db-${{ matrix.db_key }}-${{ github.run_id }}
           path: ${{ steps.run_backup.outputs.artifact_dir }}/
           retention-days: 30
           if-no-files-found: error

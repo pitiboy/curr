@@ -13,17 +13,24 @@ sanitize_err() {
 on_err() {
   local code=$?
   local line=${BASH_LINENO[0]:-unknown}
-  echo "Backup failed (db_slot=${DB_SLOT:-?}, exit=$code, line=$line)." >&2 | sanitize_err
+  echo "Backup failed (db_key=${DB_KEY:-?}, exit=$code, line=$line)." >&2 | sanitize_err
   backup_cleanup
   exit "$code"
 }
 trap on_err ERR
 trap backup_cleanup EXIT
 
-: "${DB_SLOT:?DB_SLOT is required (1, 2, or 3)}"
+: "${DB_KEY:?DB_KEY is required (zep or edizone)}"
 : "${BACKUP_AGE_RECIPIENT:?BACKUP_AGE_RECIPIENT is required}"
 
-var_name="NEON_BACKUP_DATABASE_URL_${DB_SLOT}"
+case "${DB_KEY}" in
+  zep) var_name="NEON_BACKUP_DATABASE_URL_ZEP" ;;
+  edizone) var_name="NEON_BACKUP_DATABASE_URL_EDIZONE" ;;
+  *)
+    echo "Invalid DB_KEY: ${DB_KEY} (expected zep or edizone)." >&2 | sanitize_err
+    exit 2
+    ;;
+esac
 NEON_BACKUP_DATABASE_URL="${!var_name:-}"
 if [[ -z "$NEON_BACKUP_DATABASE_URL" ]]; then
   echo "Secret ${var_name} is not set." >&2 | sanitize_err
@@ -33,14 +40,14 @@ export NEON_BACKUP_DATABASE_URL
 
 RUN_ID="${GITHUB_RUN_ID:-local}"
 STAMP_UTC="$(date -u +%Y%m%dT%H%M%SZ)"
-WORK_ROOT="${RUNNER_TEMP:-/tmp}/neon-backup/db-${DB_SLOT}-${RUN_ID}-${STAMP_UTC}"
+WORK_ROOT="${RUNNER_TEMP:-/tmp}/neon-backup/db-${DB_KEY}-${RUN_ID}-${STAMP_UTC}"
 STAGING="${WORK_ROOT}/artifact"
-ARTIFACT_OUT="${BACKUP_ARTIFACT_ROOT:-${RUNNER_TEMP:-/tmp}/neon-backup-publish}/db-${DB_SLOT}-${RUN_ID}-${STAMP_UTC}"
+ARTIFACT_OUT="${BACKUP_ARTIFACT_ROOT:-${RUNNER_TEMP:-/tmp}/neon-backup-publish}/db-${DB_KEY}-${RUN_ID}-${STAMP_UTC}"
 PLAIN_DUMP="${WORK_ROOT}/dump.dump"
 ENCRYPTED="${WORK_ROOT}/dump.dump.age"
-MANIFEST="${STAGING}/manifest-db-${DB_SLOT}.json"
-CHECKSUMS="${STAGING}/checksums-db-${DB_SLOT}.txt"
-ENCRYPTED_NAME="neon-pg-backup-db-${DB_SLOT}-${STAMP_UTC}.dump.age"
+MANIFEST="${STAGING}/manifest-db-${DB_KEY}.json"
+CHECKSUMS="${STAGING}/checksums-db-${DB_KEY}.txt"
+ENCRYPTED_NAME="neon-pg-backup-db-${DB_KEY}-${STAMP_UTC}.dump.age"
 
 backup_register_cleanup "$WORK_ROOT"
 mkdir -p "$STAGING"
@@ -160,7 +167,7 @@ from datetime import datetime, timezone
 path = sys.argv[1]
 data = {
     "workflow": "Neon Postgres backup",
-    "db_slot": os.environ["DB_SLOT"],
+    "db_key": os.environ["DB_KEY"],
     "created_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "run_id": os.environ.get("GITHUB_RUN_ID", "local"),
     "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", "1"),
@@ -176,7 +183,7 @@ data = {
     "encrypted_bytes": int(os.environ.get("ENCRYPTED_BYTES", "0")),
     "plaintext_sha256": os.environ.get("PLAIN_SHA", ""),
     "encrypted_sha256": os.environ.get("ENCRYPTED_SHA", ""),
-    "encrypted_file": f"neon-pg-backup-db-{os.environ['DB_SLOT']}-{os.environ.get('STAMP_UTC', '')}.dump.age",
+    "encrypted_file": f"neon-pg-backup-db-{os.environ['DB_KEY']}-{os.environ.get('STAMP_UTC', '')}.dump.age",
 }
 with open(path, "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2)
@@ -184,7 +191,7 @@ with open(path, "w", encoding="utf-8") as f:
 PY
 
 {
-  echo "# neon-pg-backup db-${DB_SLOT}"
+  echo "# neon-pg-backup db-${DB_KEY}"
   echo "${encrypted_sha}  ${ENCRYPTED_NAME}"
 } >"$CHECKSUMS"
 
@@ -195,7 +202,7 @@ fi
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   {
-    echo "### db-${DB_SLOT} backup"
+    echo "### db-${DB_KEY} backup"
     echo ""
     echo "| Mező | Érték |"
     echo "| --- | --- |"
@@ -206,5 +213,5 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   } >>"$GITHUB_STEP_SUMMARY"
 fi
 
-echo "Backup db-${DB_SLOT} OK (encrypted_bytes=${encrypted_bytes})."
+echo "Backup db-${DB_KEY} OK (encrypted_bytes=${encrypted_bytes})."
 echo "ARTIFACT_STAGING=${ARTIFACT_OUT}"

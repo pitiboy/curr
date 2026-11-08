@@ -22,10 +22,8 @@ if [[ "$recipient" != age1* ]]; then
 fi
 
 missing=()
-for slot in 1 2 3; do
-  var="NEON_BACKUP_DATABASE_URL_${slot}"
-  val="${!var:-}"
-  if [[ -z "$val" ]]; then
+for var in NEON_BACKUP_DATABASE_URL_ZEP NEON_BACKUP_DATABASE_URL_EDIZONE; do
+  if [[ -z "${!var:-}" ]]; then
     missing+=("$var")
   fi
 done
@@ -34,4 +32,4 @@ if ((${#missing[@]})); then
   fail "Missing required secrets: ${missing[*]}"
 fi
 
-echo "Preflight OK: all three database secrets and BACKUP_AGE_RECIPIENT are configured."
+echo "Preflight OK: ZEP + EDIZONE database secrets and BACKUP_AGE_RECIPIENT are configured."
