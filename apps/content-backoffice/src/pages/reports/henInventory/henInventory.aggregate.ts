@@ -1,10 +1,10 @@
 import {
-  HEN_CURRENCY_CODE,
   HEN_INVENTORY_ACCOUNT_CODE,
   HEN_MEMBER_PRIVATE_ACCOUNT_CODE,
   HEN_MORTALITY_EXPENSE_ACCOUNT_CODE,
   HEN_SLAUGHTER_DESCRIPTION_RE,
   HEN_TRANSFER_DESCRIPTION_RE,
+  isPoultryInventoryCurrency,
 } from './henInventory.constants';
 import {
   boundsForPreset,
@@ -57,7 +57,7 @@ function inventoryDelta(
   tx: HenReportTx,
   henHouseIds: ReadonlySet<string>,
 ): number {
-  if (tx.currencyCode !== HEN_CURRENCY_CODE) return 0;
+  if (!isPoultryInventoryCurrency(tx.currencyCode)) return 0;
   if (!henHouseIds.has(tx.orgId)) return 0;
   if (tx.debitCode === HEN_INVENTORY_ACCOUNT_CODE) return tx.amount;
   if (tx.creditCode === HEN_INVENTORY_ACCOUNT_CODE) return -tx.amount;
@@ -69,7 +69,7 @@ function isMortality(
   henHouseIds: ReadonlySet<string>,
 ): boolean {
   return (
-    tx.currencyCode === HEN_CURRENCY_CODE &&
+    isPoultryInventoryCurrency(tx.currencyCode) &&
     henHouseIds.has(tx.orgId) &&
     tx.debitCode === HEN_MORTALITY_EXPENSE_ACCOUNT_CODE &&
     tx.creditCode === HEN_INVENTORY_ACCOUNT_CODE
@@ -98,7 +98,7 @@ function isMemberInventoryOutflow(
   catalog: Pick<HenReportCatalog, 'henHouseIds' | 'poultryParentOrgId'>,
 ): boolean {
   return (
-    tx.currencyCode === HEN_CURRENCY_CODE &&
+    isPoultryInventoryCurrency(tx.currencyCode) &&
     isPoultryOrg(tx, catalog.henHouseIds, catalog.poultryParentOrgId) &&
     tx.creditCode === HEN_INVENTORY_ACCOUNT_CODE &&
     looksLikeMemberPrivateDebit(tx)
@@ -214,7 +214,7 @@ export function aggregateHenInventoryReport(
     const alomName = (catalog.henHouseNames.get(tx.orgId) ?? tx.orgName) || '—';
 
     if (
-      tx.currencyCode === HEN_CURRENCY_CODE &&
+      isPoultryInventoryCurrency(tx.currencyCode) &&
       catalog.henHouseIds.has(tx.orgId) &&
       tx.debitCode === HEN_INVENTORY_ACCOUNT_CODE &&
       tx.creditCode !== HEN_MEMBER_PRIVATE_ACCOUNT_CODE

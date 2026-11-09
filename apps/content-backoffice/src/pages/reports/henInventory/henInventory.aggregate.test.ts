@@ -106,10 +106,35 @@ describe('aggregateHenInventoryReport', () => {
       }),
     ];
     const report = aggregateHenInventoryReport(rows, catalog, 'all', now);
-    expect(
-      report!.outflowTimeseries.some((p) => p.period === '2026-11'),
-    ).toBe(true);
+    expect(report!.outflowTimeseries.some((p) => p.period === '2026-11')).toBe(
+      true,
+    );
     expect(report!.stockTimeseries.length).toBeGreaterThan(1);
+  });
+
+  it('includes CHICK and ROOSTER stock like HEN', () => {
+    const rows: HenReportTx[] = [
+      tx({
+        date: '2026-03-09',
+        amount: 60,
+        currencyCode: 'CHICK',
+        debitCode: '1300',
+        creditCode: '2000',
+      }),
+      tx({
+        date: '2026-11-01',
+        amount: 5,
+        currencyCode: 'ROOSTER',
+        debitCode: '1300',
+        creditCode: '2000',
+      }),
+    ];
+    const report = aggregateHenInventoryReport(rows, catalog, 'all', now);
+    expect(report!.kpis.totalStock).toBe(65);
+    expect(report!.kpis.intakeInPeriod).toBe(65);
+    expect(
+      report!.byAlom.find((r) => r.alomName === '2026 alom')?.stockEnd,
+    ).toBe(65);
   });
 
   it('counts mortality in kpis', () => {

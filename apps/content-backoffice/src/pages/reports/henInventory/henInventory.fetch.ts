@@ -10,8 +10,8 @@ import {
   type HenReportTx,
 } from './henInventory.aggregate';
 import {
-  HEN_CURRENCY_CODE,
   HEN_INVENTORY_ACCOUNT_CODE,
+  POULTRY_INVENTORY_CURRENCY_CODES,
 } from './henInventory.constants';
 import type { HenInventoryReport } from './types';
 import {
@@ -125,7 +125,11 @@ async function loadTransactions(
       filters: {
         $and: [
           { date: dateFilter },
-          { currency_type: { code: { $eq: HEN_CURRENCY_CODE } } },
+          {
+            currency_type: {
+              code: { $in: [...POULTRY_INVENTORY_CURRENCY_CODES] },
+            },
+          },
         ],
       },
       populate: reportPopulate,

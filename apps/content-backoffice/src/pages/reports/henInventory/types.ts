@@ -1,7 +1,7 @@
 /**
- * Hen (tojó tyúk / HEN) inventory report.
+ * Poultry inventory report (CHICK, HEN, ROOSTER).
  *
- * Stock per hen-house org = net HEN on ledger 1300 (debit increases, credit decreases).
+ * Stock per hen-house org = net poultry headcount on ledger 1300 (debit +, credit −).
  * Slaughter = member 1001 ← inventory 1300 with Levágás in description.
  * Transfer = same leg pattern without slaughter wording (optional átadás marker).
  */
