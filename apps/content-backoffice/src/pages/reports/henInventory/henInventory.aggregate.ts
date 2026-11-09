@@ -104,7 +104,6 @@ function memberLabelFromDebit(tx: HenReportTx): string {
 
 function inSelectedPeriod(
   day: string,
-  preset: DateRangePreset,
   bounds: ReturnType<typeof boundsForPreset>,
 ): boolean {
   if (day > bounds.to) return false;
@@ -199,7 +198,7 @@ export function aggregateHenInventoryReport(
       snapshotByPeriod.set(period, names);
     }
 
-    if (!inSelectedPeriod(day, preset, bounds)) continue;
+    if (!inSelectedPeriod(day, bounds)) continue;
 
     const alomName = (catalog.henHouseNames.get(tx.orgId) ?? tx.orgName) || '—';
 

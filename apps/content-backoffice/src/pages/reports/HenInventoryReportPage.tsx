@@ -112,8 +112,7 @@ export function HenInventoryReportPage() {
 function ReportBody({ report }: { report: HenInventoryReport }) {
   const translate = useTranslate();
   const theme = useTheme();
-  const { kpis, stockTimeseries, byAlom, outflowTimeseries, byMember } =
-    report;
+  const { kpis, stockTimeseries, byAlom, outflowTimeseries, byMember } = report;
   const periods = stockTimeseries.map((p) => p.period);
   const alomNames = Object.keys(stockTimeseries[0]?.byAlom ?? {}).sort((a, b) =>
     a.localeCompare(b, 'hu'),
@@ -266,25 +265,23 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
               ))}
               <TableRow>
                 <TableCell colSpan={2}>
-                  <Typography fontWeight={600} variant="body2">
+                  <Typography sx={{ fontWeight: 600 }} variant="body2">
                     {translate('app.hen_inventory.totals_row')}
                   </Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Typography fontWeight={600} variant="body2">
+                  <Typography sx={{ fontWeight: 600 }} variant="body2">
                     {formatQty(kpis.slaughterInPeriod)}
                   </Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Typography fontWeight={600} variant="body2">
+                  <Typography sx={{ fontWeight: 600 }} variant="body2">
                     {formatQty(kpis.transferInPeriod)}
                   </Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Typography fontWeight={600} variant="body2">
-                    {formatQty(
-                      kpis.slaughterInPeriod + kpis.transferInPeriod,
-                    )}
+                  <Typography sx={{ fontWeight: 600 }} variant="body2">
+                    {formatQty(kpis.slaughterInPeriod + kpis.transferInPeriod)}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -374,9 +371,7 @@ function OutflowMemberBarChart({
         type: 'bar' as const,
         id: member.memberId,
         label: member.memberName,
-        data: timeseries.map(
-          (point) => point[field][member.memberId] ?? 0,
-        ),
+        data: timeseries.map((point) => point[field][member.memberId] ?? 0),
         color: MEMBER_BAR_COLORS[index % MEMBER_BAR_COLORS.length],
       }))}
       xAxis={[
