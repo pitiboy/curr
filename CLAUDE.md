@@ -21,6 +21,44 @@ Közösségi erőforrás-nyilvántartás: Strapi 5 API a repó gyökerében, ket
 - `src/extensions/documentation/**` – documentation plugin generálja.
 - Cursor Agent: `.cursorignore` + rule `strapi-generated-artifacts`; lefthook Prettier kihagyja a generált útvonalakat.
 
+A fájlok **verziókezelve maradnak** (CI `typecheck`). A `develop` / `npm run dev` gyakran újraírja őket → lokálisan zajos `git status`.
+
+### Git: `skip-worktree` (opcionális, csak a saját gépen)
+
+A jel **nem kerül a repóba** — csak az adott gépen él. Aktív skip esetén Git **figyelmen kívül hagyja** a working copy módosítását ezeken a trackelt fájlokon, amíg vissza nem kapcsolod. A Strapi továbbra is generál; más fejlesztőket nem érinti.
+
+**Érintett fájlok:**
+
+- `types/generated/contentTypes.d.ts`
+- `types/generated/components.d.ts`
+- `src/extensions/documentation/documentation/1.0.0/full_documentation.json`
+
+**Beállítás (új klón / másik gép):**
+
+```bash
+git update-index --skip-worktree \
+  types/generated/contentTypes.d.ts \
+  types/generated/components.d.ts \
+  src/extensions/documentation/documentation/1.0.0/full_documentation.json
+```
+
+**Kikapcsolás** (séma / content type / documentation változás commitolása előtt — különben a friss generált állapot nem látszik `git status`-ban):
+
+```bash
+git update-index --no-skip-worktree \
+  types/generated/contentTypes.d.ts \
+  types/generated/components.d.ts \
+  src/extensions/documentation/documentation/1.0.0/full_documentation.json
+```
+
+Ezután `git status`, `git add`, commit a generált frissítéssel. Ha megint csak a develop-zajt akarod elnyomni, futtasd újra a `--skip-worktree` blokkot.
+
+**Ellenőrzés** (mely fájlokon van aktív jel):
+
+```bash
+git ls-files -v | grep '^S'
+```
+
 ## Parancsok
 
 ```bash
