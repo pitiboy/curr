@@ -11,6 +11,7 @@ import { backfillMemberAccounts } from './member-accounts';
 import { registerMembershipValidFromFormDefault } from './membership-valid-from-default';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
+import { registerWakeRoutes } from './wake/register-wake';
 
 const enabled = { enabled: true, policy: '' };
 
@@ -428,6 +429,7 @@ function registerAdminAppConfigRoute(strapi: {
 
 export default {
   register({ strapi }) {
+    registerWakeRoutes(strapi);
     registerPublishGuard(strapi, createPublishPolicyLoader(strapi));
     registerStaticPageRoutes(strapi);
     registerStaticPageSlugGuard(strapi);
