@@ -4,11 +4,11 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 
 ## Mit töltött fel a repó
 
-| Fájl                                 | Szerep                                         |
-| ------------------------------------ | ---------------------------------------------- |
+| Fájl                          | Szerep                                         |
+| ----------------------------- | ---------------------------------------------- |
 | `docs/deploy/wake/index.html` | Statikus landing (nincs build lépés)           |
-| `server/wake-entry.js`               | Production: HTTP azonnal, majd Strapi `load()` |
-| `server.js`                          | Passenger belépési pont                        |
+| `server/wake-entry.js`        | Production: HTTP azonnal, majd Strapi `load()` |
+| `server.js`                   | Passenger belépési pont                        |
 
 ## Statikus oldal telepítése
 

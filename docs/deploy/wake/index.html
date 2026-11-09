@@ -4,6 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
+    <meta
+      name="theme-color"
+      content="#f4f6f8"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#121417"
+      media="(prefers-color-scheme: dark)"
+    />
     <title>KÖR – indulás</title>
     <style>
       :root {
@@ -16,6 +26,10 @@
         --accent-soft: #d8f3dc;
         --danger: #b42318;
         --track: #e2e8f0;
+        --stripe-dark: rgba(0, 0, 0, 0.22);
+        --bar: #40b883;
+        --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        --focus-ring: #2d6a4f;
         font-family:
           system-ui,
           -apple-system,
@@ -35,10 +49,16 @@
           --accent-soft: #1b4332;
           --danger: #f97066;
           --track: #2d333b;
+          --card-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+          --focus-ring: #95d5b2;
         }
       }
       * {
         box-sizing: border-box;
+      }
+      ::selection {
+        background: var(--accent-soft);
+        color: var(--text);
       }
       body {
         margin: 0;
@@ -54,32 +74,65 @@
         background: var(--card);
         border-radius: 1rem;
         padding: 2rem 1.75rem;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--card-shadow);
       }
       h1 {
         font-size: 1.35rem;
-        margin: 0 0 0.5rem;
-        font-weight: 650;
+        margin: 0 0 0.35rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
       }
       p {
-        margin: 0.25rem 0 1.25rem;
+        margin: 0 0 1.5rem;
         color: var(--muted);
         line-height: 1.5;
+        font-size: 0.95rem;
       }
       .progress {
-        height: 0.55rem;
+        --stripe: 1.25rem;
+        height: 1.5rem;
         background: var(--track);
-        border-radius: 999px;
+        border-radius: 0.25rem;
         overflow: hidden;
         margin: 1rem 0 0.75rem;
       }
+      /* Continuously moving 45° hatching: signals activity even when the
+         width barely changes, so the bar never looks frozen. */
       .progress > span {
         display: block;
         height: 100%;
-        width: 8%;
-        background: linear-gradient(90deg, var(--accent), #40916c);
-        border-radius: inherit;
-        transition: width 0.4s ease;
+        width: 0;
+        background-color: var(--bar);
+        background-image: linear-gradient(
+          -45deg,
+          var(--stripe-dark) 25%,
+          transparent 25%,
+          transparent 50%,
+          var(--stripe-dark) 50%,
+          var(--stripe-dark) 75%,
+          transparent 75%,
+          transparent
+        );
+        background-size: var(--stripe) var(--stripe);
+        animation: progress-stripes 0.8s linear infinite;
+        transition: width 0.3s linear;
+      }
+      .progress.failed > span {
+        animation-play-state: paused;
+        background-color: var(--muted);
+      }
+      @keyframes progress-stripes {
+        from {
+          background-position: 0 0;
+        }
+        to {
+          background-position: var(--stripe) 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .progress > span {
+          animation: none;
+        }
       }
       .status {
         font-size: 0.95rem;
@@ -92,25 +145,49 @@
         margin-top: 1rem;
         border: 0;
         border-radius: 0.5rem;
-        padding: 0.65rem 1rem;
+        padding: 0.7rem 1rem;
+        min-height: 2.75rem;
+        width: 100%;
         font: inherit;
         font-weight: 600;
         cursor: pointer;
         background: var(--accent);
         color: #fff;
         display: none;
+        transition: background-color 0.15s ease-out;
+      }
+      button:hover {
+        background: color-mix(in srgb, var(--accent) 88%, #000);
+      }
+      button:active {
+        background: color-mix(in srgb, var(--accent) 78%, #000);
       }
       button:focus-visible {
-        outline: 2px solid var(--accent-soft);
+        outline: 2px solid var(--focus-ring);
         outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        button {
+          transition: none;
+        }
       }
     </style>
   </head>
   <body>
-    <main>
+    <main id="app" aria-busy="true">
       <h1>KÖR</h1>
       <p>Közösségi Önjegyző Rendszer</p>
-      <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+      <div
+        class="progress"
+        id="progress"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        aria-labelledby="status"
+      >
+        <span id="bar"></span>
+      </div>
       <div class="status" id="status" role="status" aria-live="polite">
         A szerver ébresztése folyamatban…
       </div>
@@ -129,8 +206,10 @@
 
         const params = new URLSearchParams(window.location.search);
         const bar = document.getElementById('bar');
+        const progressEl = document.getElementById('progress');
         const statusEl = document.getElementById('status');
         const retryBtn = document.getElementById('retry');
+        const appEl = document.getElementById('app');
 
         function normalizeRedirectTarget(raw, fallback) {
           const trimmed = (raw || '').trim();
@@ -161,9 +240,57 @@
         let aborted = false;
         let controller = null;
 
-        function setProgress(ratio) {
-          const clamped = Math.max(0.08, Math.min(0.98, ratio));
-          bar.style.width = (clamped * 100).toFixed(1) + '%';
+        // Progress creeps asymptotically toward the current phase's ceiling,
+        // so it keeps moving (ever slower) without ever claiming "done" early.
+        // tau = time constant in ms: ~63% of the remaining gap is covered per tau.
+        const PHASES = {
+          wake: { ceiling: 0.35, tau: 12000 },
+          ready: { ceiling: 0.92, tau: 30000 },
+        };
+        const TICK_MS = 250;
+        let progress = 0;
+        let phase = PHASES.wake;
+        let ticker = null;
+
+        function renderProgress() {
+          const pct = progress * 100;
+          bar.style.width = pct.toFixed(2) + '%';
+          progressEl.setAttribute('aria-valuenow', String(Math.round(pct)));
+        }
+
+        function startProgress() {
+          progress = 0.02;
+          phase = PHASES.wake;
+          progressEl.classList.remove('failed');
+          renderProgress();
+          stopProgress();
+          ticker = setInterval(() => {
+            const gap = phase.ceiling - progress;
+            if (gap > 0) {
+              progress += gap * (1 - Math.exp(-TICK_MS / phase.tau));
+              renderProgress();
+            }
+          }, TICK_MS);
+        }
+
+        function stopProgress() {
+          if (ticker) clearInterval(ticker);
+          ticker = null;
+        }
+
+        function setPhase(next) {
+          phase = next;
+        }
+
+        function finishProgress() {
+          stopProgress();
+          progress = 1;
+          renderProgress();
+        }
+
+        function failProgress() {
+          stopProgress();
+          progressEl.classList.add('failed');
         }
 
         function setStatus(text, isError) {
@@ -193,7 +320,6 @@
           while (!aborted) {
             attempt += 1;
             const elapsed = Date.now() - startedAt;
-            setProgress(Math.min(0.92, elapsed / TIMEOUT_MS));
             if (elapsed > 6000) {
               setStatus(STATUS_ALMOST, false);
             }
@@ -220,25 +346,35 @@
           }
         }
 
+        function setBusy(busy) {
+          appEl.setAttribute('aria-busy', busy ? 'true' : 'false');
+        }
+
         async function run() {
           aborted = false;
           attempt = 0;
           retryBtn.style.display = 'none';
+          setBusy(true);
           setStatus(STATUS_WAKING, false);
-          setProgress(0.1);
+          startProgress();
           controller = new AbortController();
           const startedAt = Date.now();
 
           try {
             await ping(WAKE_URL);
+            setPhase(PHASES.ready);
             await waitUntilReady(startedAt);
-            setProgress(1);
+            finishProgress();
             setStatus(STATUS_REDIRECT, false);
+            setBusy(false);
+            // Let the bar visibly reach 100% before navigating away.
+            await sleep(350);
             window.location.replace(redirectTarget);
           } catch {
-            setProgress(0.15);
+            failProgress();
             setStatus(STATUS_FAIL, true);
-            retryBtn.style.display = 'inline-block';
+            setBusy(false);
+            retryBtn.style.display = 'block';
           }
         }
 
