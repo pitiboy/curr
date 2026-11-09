@@ -25,7 +25,23 @@ A fájlok **verziókezelve maradnak** (CI `typecheck`). A `develop` / `npm run d
 
 ### Git: `skip-worktree` (opcionális, csak a saját gépen)
 
-A jel **nem kerül a repóba** — csak az adott gépen él. Aktív skip esetén Git **figyelmen kívül hagyja** a working copy módosítását ezeken a trackelt fájlokon, amíg vissza nem kapcsolod. A Strapi továbbra is generál; más fejlesztőket nem érinti.
+A jel **nem kerül a repóba** — csak az adott gépen él. Aktív skip esetén Git **figyelmen kívül hagyja** a working copy módosítását ezeken a trackelt fájlokon a `git status`-ban, amíg vissza nem kapcsolod. A Strapi továbbra is generál; más fejlesztőket nem érinti.
+
+**Figyelem:** `skip-worktree` **nem** oldja meg a merge / pull / rebase / branch-váltás blokkolását. Ha a `develop` újraírta a fájlt a lemezen, Git továbbra is megáll („would be overwritten by merge”). Ilyenkor állítsd vissza a commitolt állapotra:
+
+```bash
+npm run git:reset-generated
+```
+
+(`scripts/reset-strapi-generated-git.sh`: no-skip → `git restore` HEAD-ről → skip újra.)
+
+**Main merge (`mm`):** a repóban `npm run git:mm` (= `scripts/git-mm.sh`) futtat resetet az elején és a `git merge main` előtt is (futó `dev` közben is regenerálódhat). Cseréld a személyes `mm` aliast:
+
+```bash
+alias mm='npm run git:mm'
+```
+
+(csak a repó gyökeréből.)
 
 **Érintett fájlok:**
 
@@ -59,9 +75,13 @@ Ezután `git status`, `git add`, commit a generált frissítéssel. Ha megint cs
 git ls-files -v | grep '^S'
 ```
 
+**Commit generált frissítéssel:** `bash scripts/reset-strapi-generated-git.sh skip-off` → status/diff → add/commit → opcionálisan `skip-on` vagy `npm run git:reset-generated`.
+
 ## Parancsok
 
 ```bash
+npm run git:reset-generated  # merge/pull előtt: generált fájlok = HEAD (skip-worktree mellett is)
+npm run git:mm               # main pull + merge (régi mm alias, reset beépítve)
 npm run develop          # Strapi :1337
 npm run dev:all          # Strapi + backoffice (nx)
 npm run typecheck
