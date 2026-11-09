@@ -96,6 +96,7 @@ Ha a kulcs hiányzik vagy üres, a kód az alapértéket használja.
 - [ ] `membershipRules.ts`: az `EggDistributionRule` bővül: `commissionPercent: number` (alap 0), `internalPercent: number | null` (alap `null`). A `parseEggRuleFragment` mindkettőt validálja: véges szám, 0 és 100 között. Érvénytelen érték esetén a mezőnek az alapérték kell, ne az egész szabály legyen `null`.
 - [ ] `resolveEggRule`: a membership-szintű felülírás **mezőnként** érvényesüljön. Ha a membership csak `commissionPercent`-et ad meg, a `mode`/`ratio` a típusból jöjjön. Ha ez a meglévő viselkedést megtörné (most a fragmentnek `mode` kell), a változást dokumentálni kell a README-ben.
 - [ ] Fallback tábla frissítése a 4. fejezet szerint, az `Érdeklődő` `ratio` értéke `1`.
+- [ ] A Convert tagsági ratio szorzója ([0002 §5.2](./0002-transaction-workflow-content-type.md#52-tagsági-ratio-szorzó), [`membership-ratio.ts`](../../src/transaction-workflow/membership-ratio.ts)) **nem** használ név szerinti fallbacket, csak a DB `rules` JSON-t; az `Érdeklődő` ratio-ja ott a seed / migráció után lesz 1. A szerveroldalon nincs szinkronban tartandó tábla. A Convert jutaléksort nem könyvel.
 - [ ] Teszt: új `membershipRules.test.ts`. Esetek: hiányzó mezők → alapértékek; `commissionPercent: 150` → 0; membership felülírja csak a százalékot; `internalPercent` beolvasása; `Érdeklődő` fallback → `ratio: 1`, `commissionPercent: 10`.
 - [ ] Ellenőrzés: `npx nx test content-backoffice` (vagy a repo szokásos vitest parancsa) zöld.
 - [ ] Human

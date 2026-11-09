@@ -314,6 +314,8 @@ Accept: application/json
       if (orgFromOriginal) row.organization_from_original = true;
       else if (orgId) row.organization = orgId;
       if (typeId) row.transaction_type = typeId;
+      // Opt-in currency-rate conversion (0002 plan §5.1); omitted = false.
+      if (step.apply_currency_rate === true) row.apply_currency_rate = true;
       if (step.copy_receipt) row.copy_receipt = true;
       steps.push(row);
     }
