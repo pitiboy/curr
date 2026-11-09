@@ -35,7 +35,7 @@ npm run git:reset-generated
 
 (`scripts/reset-strapi-generated-git.sh`: no-skip → `git restore` HEAD-ről → skip újra.)
 
-**Main merge (`mm`):** a repóban `npm run git:mm` (= `scripts/git-mm.sh`) futtat resetet az elején és a `git merge main` előtt is (futó `dev` közben is regenerálódhat). Cseréld a személyes `mm` aliast:
+**Main merge (`mm`):** `npm run git:mm` — generált zajra `prep` + **stash** (futó `dev` esetén), **`git checkout -f`**, merge, stash **drop** (pop nélkül), `skip-worktree` vissza. A `pregit:mm` ne legyen (dupla reset + skip vissza közben race). Cseréld a személyes `mm` aliast:
 
 ```bash
 alias mm='npm run git:mm'
