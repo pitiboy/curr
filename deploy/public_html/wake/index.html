@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>KÖR – indulás</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f6f8;
+        --card: #ffffff;
+        --text: #1a1f24;
+        --muted: #5c6670;
+        --accent: #2d6a4f;
+        --accent-soft: #d8f3dc;
+        --danger: #b42318;
+        --track: #e2e8f0;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121417;
+          --card: #1c2026;
+          --text: #f3f5f7;
+          --muted: #a8b0ba;
+          --accent: #52b788;
+          --accent-soft: #1b4332;
+          --danger: #f97066;
+          --track: #2d333b;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        color: var(--text);
+        padding: 1.5rem;
+      }
+      main {
+        width: min(28rem, 100%);
+        background: var(--card);
+        border-radius: 1rem;
+        padding: 2rem 1.75rem;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+      }
+      h1 {
+        font-size: 1.35rem;
+        margin: 0 0 0.5rem;
+        font-weight: 650;
+      }
+      p {
+        margin: 0.25rem 0 1.25rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .progress {
+        height: 0.55rem;
+        background: var(--track);
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 1rem 0 0.75rem;
+      }
+      .progress > span {
+        display: block;
+        height: 100%;
+        width: 8%;
+        background: linear-gradient(90deg, var(--accent), #40916c);
+        border-radius: inherit;
+        transition: width 0.4s ease;
+      }
+      .status {
+        font-size: 0.95rem;
+        min-height: 2.5em;
+      }
+      .error {
+        color: var(--danger);
+      }
+      button {
+        margin-top: 1rem;
+        border: 0;
+        border-radius: 0.5rem;
+        padding: 0.65rem 1rem;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent);
+        color: #fff;
+        display: none;
+      }
+      button:focus-visible {
+        outline: 2px solid var(--accent-soft);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>KÖR</h1>
+      <p>Közösségi Önjegyző Rendszer</p>
+      <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+      <div class="status" id="status" role="status" aria-live="polite">
+        A szerver ébresztése folyamatban…
+      </div>
+      <button type="button" id="retry">Újrapróbálás</button>
+    </main>
+    <script>
+      (function () {
+        const STATUS_WAKING = 'A szerver ébresztése folyamatban…';
+        const STATUS_ALMOST = 'Mindjárt kész…';
+        const STATUS_REDIRECT = 'Átirányítás…';
+        const STATUS_FAIL = 'Nem sikerült elérni a szervert. Próbáld újra!';
+        const DEFAULT_TARGET = '/backoffice/';
+        const WAKE_URL = '/api/wake';
+        const READY_URL = '/api/wake/ready';
+        const TIMEOUT_MS = 120000;
+
+        const params = new URLSearchParams(window.location.search);
+        const bar = document.getElementById('bar');
+        const statusEl = document.getElementById('status');
+        const retryBtn = document.getElementById('retry');
+
+        function normalizeRedirectTarget(raw, fallback) {
+          const trimmed = (raw || '').trim();
+          return trimmed || fallback;
+        }
+
+        function isSafeSameOriginRedirectPath(path) {
+          if (!path.startsWith('/') || path.startsWith('//')) return false;
+          if (path.includes('://') || path.includes('\\')) return false;
+          try {
+            const resolved = new URL(path, window.location.origin);
+            return resolved.origin === window.location.origin;
+          } catch {
+            return false;
+          }
+        }
+
+        function resolveRedirectTarget(raw, fallback) {
+          const normalized = normalizeRedirectTarget(raw, fallback);
+          return isSafeSameOriginRedirectPath(normalized) ? normalized : null;
+        }
+
+        const redirectTarget =
+          resolveRedirectTarget(params.get('next'), DEFAULT_TARGET) ||
+          DEFAULT_TARGET;
+
+        let attempt = 0;
+        let aborted = false;
+        let controller = null;
+
+        function setProgress(ratio) {
+          const clamped = Math.max(0.08, Math.min(0.98, ratio));
+          bar.style.width = (clamped * 100).toFixed(1) + '%';
+        }
+
+        function setStatus(text, isError) {
+          statusEl.textContent = text;
+          statusEl.classList.toggle('error', Boolean(isError));
+        }
+
+        function sleep(ms) {
+          return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        function backoffMs(n) {
+          return Math.min(8000, 400 + n * 450);
+        }
+
+        async function ping(url, method) {
+          const res = await fetch(url, {
+            method: method || 'GET',
+            cache: 'no-store',
+            credentials: 'same-origin',
+            signal: controller ? controller.signal : undefined,
+          });
+          return res;
+        }
+
+        async function waitUntilReady(startedAt) {
+          while (!aborted) {
+            attempt += 1;
+            const elapsed = Date.now() - startedAt;
+            setProgress(Math.min(0.92, elapsed / TIMEOUT_MS));
+            if (elapsed > 6000) {
+              setStatus(STATUS_ALMOST, false);
+            }
+            if (elapsed > TIMEOUT_MS) {
+              throw new Error('timeout');
+            }
+
+            try {
+              const readyRes = await ping(READY_URL);
+              if (readyRes.ok) {
+                const targetRes = await ping(redirectTarget, 'HEAD');
+                if (
+                  targetRes.ok ||
+                  (targetRes.status >= 300 && targetRes.status < 400)
+                ) {
+                  return;
+                }
+              }
+            } catch {
+              /* keep polling */
+            }
+
+            await sleep(backoffMs(attempt));
+          }
+        }
+
+        async function run() {
+          aborted = false;
+          attempt = 0;
+          retryBtn.style.display = 'none';
+          setStatus(STATUS_WAKING, false);
+          setProgress(0.1);
+          controller = new AbortController();
+          const startedAt = Date.now();
+
+          try {
+            await ping(WAKE_URL);
+            await waitUntilReady(startedAt);
+            setProgress(1);
+            setStatus(STATUS_REDIRECT, false);
+            window.location.replace(redirectTarget);
+          } catch {
+            setProgress(0.15);
+            setStatus(STATUS_FAIL, true);
+            retryBtn.style.display = 'inline-block';
+          }
+        }
+
+        retryBtn.addEventListener('click', () => {
+          if (controller) {
+            controller.abort();
+          }
+          run();
+        });
+
+        run();
+      })();
+    </script>
+  </body>
+</html>
