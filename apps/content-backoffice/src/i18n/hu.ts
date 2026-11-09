@@ -129,6 +129,13 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     account_profile_workflow_dropped:
       'A kiválasztott ügylet-sablon már nem illik a megadott számlákra.',
     reports: {
+      range: {
+        all: 'Összes',
+        thisMonth: 'Ez a hónap',
+        lastMonth: 'Előző hónap',
+        last7: 'Elmúlt 7 nap',
+        thisYear: 'Ez az év',
+      },
       transaction_status: {
         label: 'Tranzakciók',
         /** Megfelel a könyvekben közzétett (published) nézetnek — alapértelmezett. */
@@ -173,6 +180,34 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       member_total: 'Összesen (db)',
       empty:
         'Nincs megjeleníthető tojásforgalom ebben az időszakban. Válassz másik tartományt.',
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+    },
+    hen_inventory: {
+      menu: 'Tyúk nyilvántartás',
+      title: 'Tyúkállomány kimutatás',
+      subtitle:
+        'Tojó tyúk készlet almonként időben, levágások és tyúk-átadások tagonként napra bontva.',
+      kpi: {
+        stock: 'Állomány (időszak vége)',
+        intake: 'Beérkezés',
+        slaughter: 'Levágás',
+        transfer: 'Tyúk átadás',
+        mortality: 'Elhullás',
+      },
+      stock_timeseries_title: 'Állomány idősor (alom szerint)',
+      alom_title: 'Alom bontás',
+      alom_name: 'Alom',
+      slaughter_chart_title: 'Levágások napra és tagra bontva',
+      transfer_chart_title: 'Tyúk átadások napra és tagra bontva',
+      members_title: 'Tagi összesítés (levágás / átadás)',
+      member_name: 'Tag',
+      member_account: 'Számla',
+      member_total: 'Összesen (db)',
+      totals_row: 'Összesen',
+      outflow_empty: 'Nincs levágás vagy átadás ebben az időszakban.',
+      empty:
+        'Nincs megjeleníthető tyúkforgalom ebben az időszakban. Válassz másik tartományt.',
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
     },
