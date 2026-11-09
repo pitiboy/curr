@@ -1,18 +1,18 @@
 # Wake oldal (hidegindítás)
 
-A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivitás után 30+ másodpercig nem válaszol. A `deploy/public_html/wake/index.html` statikus oldal azonnal betölt, meghívja a `/api/wake` végpontot, majd progresszal vár, amíg az alkalmazás elérhető.
+A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivitás után 30+ másodpercig nem válaszol. A `docs/deploy/wake/index.html` statikus oldal azonnal betölt, meghívja a `/api/wake` végpontot, majd progresszal vár, amíg az alkalmazás elérhető.
 
 ## Mit töltött fel a repó
 
 | Fájl                                 | Szerep                                         |
 | ------------------------------------ | ---------------------------------------------- |
-| `deploy/public_html/wake/index.html` | Statikus landing (nincs build lépés)           |
+| `docs/deploy/wake/index.html` | Statikus landing (nincs build lépés)           |
 | `server/wake-entry.js`               | Production: HTTP azonnal, majd Strapi `load()` |
 | `server.js`                          | Passenger belépési pont                        |
 
 ## Statikus oldal telepítése
 
-1. Másold a `deploy/public_html/wake/` mappát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
+1. Másold a `docs/deploy/wake/` mappát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
 2. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem).
 3. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
 
