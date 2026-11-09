@@ -77,9 +77,9 @@ describe('aggregateHenInventoryReport', () => {
     expect(report).not.toBeNull();
     expect(report!.kpis.totalStock).toBe(5);
     expect(report!.kpis.slaughterInPeriod).toBe(3);
-    expect(report!.kpis.transferInPeriod).toBe(2);
+    expect(report!.kpis.transferInPeriod).toBe(5);
     expect(report!.byMember[0]?.slaughterQty).toBe(3);
-    expect(report!.byMember[0]?.transferQty).toBe(2);
+    expect(report!.byMember[0]?.transferQty).toBe(5);
 
     const lastPoint = report!.stockTimeseries.at(-1);
     expect(lastPoint?.byAlom['2026 alom']).toBe(5);

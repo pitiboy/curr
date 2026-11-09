@@ -198,15 +198,13 @@ export const enMessages = mergeTranslations(englishMessages, {
       alom_title: 'Breakdown by flock',
       alom_name: 'Flock',
       slaughter_chart_title: 'Slaughter by day and member',
-      transfer_chart_title: 'Hen transfers by day and member',
       members_title: 'Member totals (slaughter / transfer)',
       member_name: 'Member',
       member_account: 'Account',
       member_total: 'Total (head)',
       totals_row: 'Total',
-      slaughter_empty: 'No slaughter in this period.',
-      transfer_empty:
-        'No hen transfers in this period. Book handovers as HEN 1300→1001 (member pocket) with “átadás” / without “Levágás” in the description; the slaughter template only appears on the slaughter chart.',
+      slaughter_empty:
+        'No member hen outflows in this period. The report counts every HEN 1300→member-pocket booking, including the slaughter template.',
       outflow_empty: 'No slaughter or transfers in this period.',
       empty: 'No hen traffic for this period. Try another date range.',
       error: 'Could not load the report.',

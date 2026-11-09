@@ -199,15 +199,13 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       alom_title: 'Alom bontás',
       alom_name: 'Alom',
       slaughter_chart_title: 'Levágások napra és tagra bontva',
-      transfer_chart_title: 'Tyúk átadások napra és tagra bontva',
       members_title: 'Tagi összesítés (levágás / átadás)',
       member_name: 'Tag',
       member_account: 'Számla',
       member_total: 'Összesen (db)',
       totals_row: 'Összesen',
-      slaughter_empty: 'Nincs levágás ebben az időszakban.',
-      transfer_empty:
-        'Nincs tyúk átadás ebben az időszakban. Az átadást HEN 1300→1001 (saját) sorral és „átadás” / nem „Levágás” leírással könyveljük; a Levágás sablon csak a levágás diagramban jelenik meg.',
+      slaughter_empty:
+        'Nincs tagi tyúkkivét ebben az időszakban. A kimutatás minden HEN 1300→saját könyvelést mutat, beleértve a Levágás sablont is.',
       outflow_empty: 'Nincs levágás vagy átadás ebben az időszakban.',
       empty:
         'Nincs megjeleníthető tyúkforgalom ebben az időszakban. Válassz másik tartományt.',

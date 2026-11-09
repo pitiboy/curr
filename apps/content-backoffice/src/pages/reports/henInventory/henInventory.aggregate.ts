@@ -111,14 +111,6 @@ function isSlaughter(tx: HenReportTx): boolean {
   return HEN_SLAUGHTER_DESCRIPTION_RE.test(desc);
 }
 
-function isTransfer(tx: HenReportTx): boolean {
-  const desc = tx.description ?? '';
-  if (HEN_SLAUGHTER_DESCRIPTION_RE.test(desc)) return false;
-  if (HEN_TRANSFER_DESCRIPTION_RE.test(desc)) return true;
-  // Member outflow without „Levágás” in the description → live handover.
-  return looksLikeMemberPrivateDebit(tx);
-}
-
 function memberLabelFromDebit(tx: HenReportTx): string {
   const name = tx.debitAccountName?.trim() ?? '';
   const match = name.match(/^(.+?)\s+-\s+saját/i);
@@ -245,14 +237,15 @@ export function aggregateHenInventoryReport(
     const row = ensureMemberRow(memberId, memberName, accountLabel);
     const period = periodKeyForPreset(day, preset);
 
+    // Kimutatásban az átadás minden tagi készletkivét (a levágás sablon is).
+    transferInPeriod += tx.amount;
+    row.transfer += tx.amount;
+    bumpOutflow(transferByPeriod, period, memberId, tx.amount);
+
     if (isSlaughter(tx)) {
       slaughterInPeriod += tx.amount;
       row.slaughter += tx.amount;
       bumpOutflow(slaughterByPeriod, period, memberId, tx.amount);
-    } else if (isTransfer(tx)) {
-      transferInPeriod += tx.amount;
-      row.transfer += tx.amount;
-      bumpOutflow(transferByPeriod, period, memberId, tx.amount);
     }
   }
 
@@ -320,11 +313,8 @@ export function aggregateHenInventoryReport(
       slaughterQty: row.slaughter,
       transferQty: row.transfer,
     }))
-    .filter((r) => r.slaughterQty > 0 || r.transferQty > 0)
-    .sort(
-      (a, b) =>
-        b.slaughterQty + b.transferQty - (a.slaughterQty + a.transferQty),
-    );
+    .filter((r) => r.transferQty > 0)
+    .sort((a, b) => b.transferQty - a.transferQty);
 
   return {
     kpis: {

@@ -207,15 +207,6 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
         <OutflowMemberBarChart
           emptyLabel={translate('app.hen_inventory.slaughter_empty')}
           members={byMember}
-          mode="slaughter"
-          timeseries={outflowTimeseries}
-        />
-      </Section>
-
-      <Section title={translate('app.hen_inventory.transfer_chart_title')}>
-        <OutflowMemberBarChart
-          emptyLabel={translate('app.hen_inventory.transfer_empty')}
-          members={byMember}
           mode="transfer"
           timeseries={outflowTimeseries}
         />
@@ -259,7 +250,7 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
                     {formatQty(row.transferQty)}
                   </TableCell>
                   <TableCell align="right">
-                    {formatQty(row.slaughterQty + row.transferQty)}
+                    {formatQty(row.transferQty)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -281,7 +272,7 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
                 </TableCell>
                 <TableCell align="right">
                   <Typography sx={{ fontWeight: 600 }} variant="body2">
-                    {formatQty(kpis.slaughterInPeriod + kpis.transferInPeriod)}
+                    {formatQty(kpis.transferInPeriod)}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -459,7 +450,6 @@ function ReportSkeleton() {
       </Box>
       <Skeleton height={280} variant="rounded" />
       <Skeleton height={160} variant="rounded" />
-      <Skeleton height={280} variant="rounded" />
       <Skeleton height={280} variant="rounded" />
     </Stack>
   );
