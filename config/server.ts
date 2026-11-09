@@ -1,3 +1,5 @@
+import { auditLogRetentionTask } from './cron-tasks';
+
 export default ({ env }) => {
   const isProduction = env('NODE_ENV') === 'production';
 
@@ -11,6 +13,17 @@ export default ({ env }) => {
     },
     app: {
       keys: env.array('APP_KEYS'),
+    },
+    cron: {
+      enabled: true,
+      tasks: {
+        auditLogRetention: {
+          task: auditLogRetentionTask,
+          options: {
+            rule: '0 3 * * *',
+          },
+        },
+      },
     },
     logger: isProduction
       ? {

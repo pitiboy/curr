@@ -50,6 +50,10 @@ export default ({ env }) => {
     'strapi::poweredBy',
     'strapi::query',
     'strapi::body',
+    {
+      name: 'global::audit-log',
+      resolve: './src/middlewares/audit-log',
+    },
     'strapi::session',
     {
       name: 'strapi::favicon',
