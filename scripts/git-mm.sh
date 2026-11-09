@@ -6,6 +6,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+export STRAPI_GIT_ROOT="$ROOT"
 
 RESET_SRC="$ROOT/scripts/reset-strapi-generated-git.sh"
 if [[ ! -f "$RESET_SRC" ]]; then

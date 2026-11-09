@@ -2,7 +2,12 @@
 # Lokális Strapi generált fájlok + git skip-worktree (merge/pull/git-mm).
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# /tmp másolatból futva a $0 mappa nem a repó — git-mm STRAPI_GIT_ROOT-ot ad
+if [[ -n "${STRAPI_GIT_ROOT:-}" ]]; then
+  ROOT="$STRAPI_GIT_ROOT"
+else
+  ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+fi
 cd "$ROOT"
 
 STRAPI_GENERATED_FILES=(
