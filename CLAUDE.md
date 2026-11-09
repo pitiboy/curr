@@ -17,8 +17,9 @@ Közösségi erőforrás-nyilvántartás: Strapi 5 API a repó gyökerében, ket
 
 ## Generált fájlok – ne szerkeszd kézzel
 
-- `types/generated/*` – Strapi generálja.
+- `types/generated/*` – Strapi generálja; forrás: `src/api/**/content-types/**/schema.json`.
 - `src/extensions/documentation/**` – documentation plugin generálja.
+- Cursor Agent: `.cursorignore` + rule `strapi-generated-artifacts`; lefthook Prettier kihagyja a generált útvonalakat.
 
 ## Parancsok
 

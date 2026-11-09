@@ -1,0 +1,16 @@
+---
+description: Strapi develop/build által újragenerált fájlok — ne forrásként kezelni, séma a schema.json.
+alwaysApply: true
+---
+
+# Strapi generált artefaktok
+
+A `types/generated/*` és a `src/extensions/documentation/**` (különösen `full_documentation.json`, `public/index.html`) **minden futásnál újragenerálódik**. Ne szerkeszd kézzel, ne másolj belőlük mintát, ne commitold develop utáni zaj-diffet, ha nem változott séma.
+
+**Forrás (olvass ezeket):**
+
+- Content type mezők, relációk: `src/api/**/content-types/**/schema.json`, komponensek: `src/components/**/schema.json`
+- Backoffice típusok: `schema.json` (lásd `docs/adr/0001-react-admin-content-ui.md`), nem a generált `.d.ts`
+- API / route viselkedés: `src/api/**` (controllers, routes, services), nem a documentation plugin OpenAPI dump
+
+**Verziókezelés:** a generált fájlok a repóban maradnak (CI `typecheck`). Csak tudatos séma-változáskor commitolj generált frissítést.

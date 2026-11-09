@@ -6,6 +6,7 @@
       "Read(./apps/content-backoffice/package-lock.json)",
       "Read(./docs/airtable.api.html)",
       "Read(./docs/honline.export/**)",
+      "Read(./types/generated/**)",
       "Read(./src/extensions/documentation/documentation/**/full_documentation.json)",
       "Read(./src/extensions/documentation/public/index.html)",
       "Read(./dist/**)",
