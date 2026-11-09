@@ -7,8 +7,9 @@
  * split by currency; never summed across FX.
  */
 
-export type DateRangePreset =
-  'all' | 'thisMonth' | 'lastMonth' | 'last7' | 'thisYear';
+import type { DateRangePreset } from '../shared/reportDateRange';
+
+export type { DateRangePreset };
 
 /** Which member ledger(s) the report focuses on. */
 export type LedgerFocus = 'share' | 'pocket' | 'both';

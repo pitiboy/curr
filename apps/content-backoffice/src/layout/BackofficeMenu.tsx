@@ -58,11 +58,18 @@ export function BackofficeMenu() {
         />
       )}
       {canReadEggInventory ? (
-        <Menu.Item
-          leftIcon={<AssessmentOutlinedIcon />}
-          primaryText={translate('app.egg_inventory.menu')}
-          to="/reports/egg-inventory"
-        />
+        <>
+          <Menu.Item
+            leftIcon={<AssessmentOutlinedIcon />}
+            primaryText={translate('app.egg_inventory.menu')}
+            to="/reports/egg-inventory"
+          />
+          <Menu.Item
+            leftIcon={<AssessmentOutlinedIcon />}
+            primaryText={translate('app.hen_inventory.menu')}
+            to="/reports/hen-inventory"
+          />
+        </>
       ) : null}
       {canReadMembershipShare ? (
         <Menu.Item
