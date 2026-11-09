@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   boundsForPreset,
+  chartBucketGranularity,
+  endDateOfPeriod,
   periodKeyForPreset,
   periodsInRange,
   toIsoDate,
@@ -45,6 +47,22 @@ describe('periodKeyForPreset', () => {
     expect(periodKeyForPreset('2026-11-06', 'all')).toBe('2026-11');
     expect(periodKeyForPreset('2026-11-06', 'thisYear')).toBe('2026-11');
     expect(periodKeyForPreset('2026-11-06', 'thisMonth')).toBe('2026-11-06');
+  });
+});
+
+describe('chartBucketGranularity', () => {
+  it('uses month for all/thisYear and day for month/week presets', () => {
+    expect(chartBucketGranularity('all')).toBe('month');
+    expect(chartBucketGranularity('thisYear')).toBe('month');
+    expect(chartBucketGranularity('thisMonth')).toBe('day');
+    expect(chartBucketGranularity('last7')).toBe('day');
+  });
+});
+
+describe('endDateOfPeriod', () => {
+  it('returns last day of month for monthly buckets', () => {
+    expect(endDateOfPeriod('2026-02', 'all')).toBe('2026-02-28');
+    expect(endDateOfPeriod('2026-11-09', 'thisMonth')).toBe('2026-11-09');
   });
 });
 

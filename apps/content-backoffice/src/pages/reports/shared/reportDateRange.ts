@@ -56,31 +56,58 @@ export function boundsForPreset(
   }
 }
 
-/** Bucket key for charts: month for long ranges, day otherwise. */
+/** Monthly X buckets for long presets; daily for month/week views. */
+export function chartBucketGranularity(
+  preset: DateRangePreset,
+): 'day' | 'month' {
+  if (preset === 'all' || preset === 'thisYear') {
+    return 'month';
+  }
+  return 'day';
+}
+
+/** Bucket key for charts (aligned with {@link chartBucketGranularity}). */
 export function periodKeyForPreset(
   isoDate: string,
   preset: DateRangePreset,
 ): string {
   const day = isoDate.slice(0, 10);
-  if (preset === 'all' || preset === 'thisYear') {
+  if (chartBucketGranularity(preset) === 'month') {
     return day.slice(0, 7);
   }
   return day;
 }
 
 function parseIsoLocal(iso: string): Date {
+  if (iso.length === 7) {
+    const [y, m] = iso.split('-').map(Number);
+    return new Date(y!, (m ?? 1) - 1, 1);
+  }
   const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
+  return new Date(y!, (m ?? 1) - 1, d ?? 1);
 }
 
-function addPeriodStep(iso: string, preset: DateRangePreset): string {
-  const d = parseIsoLocal(iso);
-  if (preset === 'all' || preset === 'thisYear') {
+function addPeriodStep(periodKey: string, preset: DateRangePreset): string {
+  const d = parseIsoLocal(periodKey);
+  if (chartBucketGranularity(preset) === 'month') {
     d.setMonth(d.getMonth() + 1);
     return toIsoDate(d).slice(0, 7);
   }
   d.setDate(d.getDate() + 1);
   return toIsoDate(d);
+}
+
+/** Inclusive last calendar day of a chart bucket (for stock snapshots). */
+export function endDateOfPeriod(
+  periodKey: string,
+  preset: DateRangePreset,
+): string {
+  if (chartBucketGranularity(preset) === 'month') {
+    const [y, m] = periodKey.split('-').map(Number);
+    const last = new Date(y!, m!, 0);
+    return toIsoDate(last);
+  }
+  return periodKey.slice(0, 10);
 }
 
 /**

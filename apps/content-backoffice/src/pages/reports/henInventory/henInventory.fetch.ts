@@ -164,6 +164,7 @@ export async function fetchHenInventoryReport(
   const catalog: HenReportCatalog = {
     henHouseIds: henHouses.ids,
     henHouseNames: henHouses.names,
+    poultryParentOrgId: henHouses.parentId,
     members,
   };
 

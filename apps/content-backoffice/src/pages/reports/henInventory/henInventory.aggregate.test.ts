@@ -12,6 +12,7 @@ const catalog: HenReportCatalog = {
     ['org-2025', '2025 alom'],
     ['org-2026', '2026 alom'],
   ]),
+  poultryParentOrgId: null,
   members: [
     {
       memberId: 'm-peti',
@@ -82,6 +83,33 @@ describe('aggregateHenInventoryReport', () => {
 
     const lastPoint = report!.stockTimeseries.at(-1);
     expect(lastPoint?.byAlom['2026 alom']).toBe(5);
+    expect(report!.outflowTimeseries.length).toBe(
+      report!.stockTimeseries.length,
+    );
+  });
+
+  it('uses monthly buckets for all-time presets', () => {
+    const rows: HenReportTx[] = [
+      tx({
+        date: '2026-10-15',
+        amount: 5,
+        orgId: 'org-2025',
+        orgName: '2025 alom',
+      }),
+      tx({
+        date: '2026-11-10',
+        amount: 2,
+        debitCode: '1001',
+        creditCode: '1300',
+        debitAccountId: 'acc-peti',
+        description: 'Levágás (tojó)',
+      }),
+    ];
+    const report = aggregateHenInventoryReport(rows, catalog, 'all', now);
+    expect(
+      report!.outflowTimeseries.some((p) => p.period === '2026-11'),
+    ).toBe(true);
+    expect(report!.stockTimeseries.length).toBeGreaterThan(1);
   });
 
   it('counts mortality in kpis', () => {

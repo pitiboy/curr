@@ -9,6 +9,8 @@ type OrgRow = {
 };
 
 export type PoultryHenHouseCatalog = {
+  /** Tyúktartás parent org (pool / central), when present. */
+  parentId: string | null;
   ids: Set<string>;
   names: Map<string, string>;
 };
@@ -25,9 +27,9 @@ export async function loadPoultryHenHouses(
       fields: ['documentId', 'name'],
     },
   );
-  const parentId = parents[0]?.documentId;
+  const parentId = parents[0]?.documentId ?? null;
   if (!parentId) {
-    return { ids: new Set(), names: new Map() };
+    return { parentId: null, ids: new Set(), names: new Map() };
   }
   const children = await fetchStrapiList<OrgRow>(
     httpClient,
@@ -45,5 +47,5 @@ export async function loadPoultryHenHouses(
     ids.add(row.documentId);
     names.set(row.documentId, row.name?.trim() || row.documentId);
   }
-  return { ids, names };
+  return { parentId, ids, names };
 }

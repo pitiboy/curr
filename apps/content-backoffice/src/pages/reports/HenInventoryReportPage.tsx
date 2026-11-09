@@ -205,7 +205,7 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
 
       <Section title={translate('app.hen_inventory.slaughter_chart_title')}>
         <OutflowMemberBarChart
-          emptyLabel={translate('app.hen_inventory.outflow_empty')}
+          emptyLabel={translate('app.hen_inventory.slaughter_empty')}
           members={byMember}
           mode="slaughter"
           timeseries={outflowTimeseries}
@@ -214,7 +214,7 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
 
       <Section title={translate('app.hen_inventory.transfer_chart_title')}>
         <OutflowMemberBarChart
-          emptyLabel={translate('app.hen_inventory.outflow_empty')}
+          emptyLabel={translate('app.hen_inventory.transfer_empty')}
           members={byMember}
           mode="transfer"
           timeseries={outflowTimeseries}

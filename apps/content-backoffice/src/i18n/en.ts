@@ -204,6 +204,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       member_account: 'Account',
       member_total: 'Total (head)',
       totals_row: 'Total',
+      slaughter_empty: 'No slaughter in this period.',
+      transfer_empty:
+        'No hen transfers in this period. Book handovers as HEN 1300→1001 (member pocket) with “átadás” / without “Levágás” in the description; the slaughter template only appears on the slaughter chart.',
       outflow_empty: 'No slaughter or transfers in this period.',
       empty: 'No hen traffic for this period. Try another date range.',
       error: 'Could not load the report.',

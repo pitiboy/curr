@@ -8,6 +8,7 @@ import {
 } from './henInventory.constants';
 import {
   boundsForPreset,
+  endDateOfPeriod,
   periodKeyForPreset,
   periodsInRange,
   type DateRangePreset,
@@ -43,6 +44,8 @@ export type HenReportMemberRef = {
 export type HenReportCatalog = {
   henHouseIds: ReadonlySet<string>;
   henHouseNames: ReadonlyMap<string, string>;
+  /** Tyúktartás — member outflows are sometimes booked on the parent org. */
+  poultryParentOrgId: string | null;
   members: readonly HenReportMemberRef[];
 };
 
@@ -73,15 +76,32 @@ function isMortality(
   );
 }
 
-function isMemberInventoryOutflow(
+function looksLikeMemberPrivateDebit(tx: HenReportTx): boolean {
+  if (tx.debitCode === HEN_MEMBER_PRIVATE_ACCOUNT_CODE) return true;
+  const name = tx.debitAccountName?.toLowerCase() ?? '';
+  return name.includes('saját');
+}
+
+function isPoultryOrg(
   tx: HenReportTx,
   henHouseIds: ReadonlySet<string>,
+  poultryParentOrgId: string | null,
+): boolean {
+  return (
+    henHouseIds.has(tx.orgId) ||
+    (poultryParentOrgId != null && tx.orgId === poultryParentOrgId)
+  );
+}
+
+function isMemberInventoryOutflow(
+  tx: HenReportTx,
+  catalog: Pick<HenReportCatalog, 'henHouseIds' | 'poultryParentOrgId'>,
 ): boolean {
   return (
     tx.currencyCode === HEN_CURRENCY_CODE &&
-    henHouseIds.has(tx.orgId) &&
+    isPoultryOrg(tx, catalog.henHouseIds, catalog.poultryParentOrgId) &&
     tx.creditCode === HEN_INVENTORY_ACCOUNT_CODE &&
-    tx.debitCode === HEN_MEMBER_PRIVATE_ACCOUNT_CODE
+    looksLikeMemberPrivateDebit(tx)
   );
 }
 
@@ -92,7 +112,11 @@ function isSlaughter(tx: HenReportTx): boolean {
 }
 
 function isTransfer(tx: HenReportTx): boolean {
-  return !isSlaughter(tx);
+  const desc = tx.description ?? '';
+  if (HEN_SLAUGHTER_DESCRIPTION_RE.test(desc)) return false;
+  if (HEN_TRANSFER_DESCRIPTION_RE.test(desc)) return true;
+  // Member outflow without „Levágás” in the description → live handover.
+  return looksLikeMemberPrivateDebit(tx);
 }
 
 function memberLabelFromDebit(tx: HenReportTx): string {
@@ -132,7 +156,6 @@ export function aggregateHenInventoryReport(
     balanceByOrg.set(id, 0);
   }
 
-  const snapshotByPeriod = new Map<string, Record<string, number>>();
   const alomIntake = new Map<string, number>();
   const alomMortality = new Map<string, number>();
 
@@ -186,18 +209,6 @@ export function aggregateHenInventoryReport(
     const day = normalizeDate(tx.date);
     if (!earliestDay || day < earliestDay) earliestDay = day;
 
-    const delta = inventoryDelta(tx, catalog.henHouseIds);
-    if (delta !== 0) {
-      balanceByOrg.set(tx.orgId, (balanceByOrg.get(tx.orgId) ?? 0) + delta);
-      const period = periodKeyForPreset(day, preset);
-      const names: Record<string, number> = {};
-      for (const [orgId, bal] of balanceByOrg) {
-        const alomName = (catalog.henHouseNames.get(orgId) ?? orgId) || '—';
-        names[alomName] = bal;
-      }
-      snapshotByPeriod.set(period, names);
-    }
-
     if (!inSelectedPeriod(day, bounds)) continue;
 
     const alomName = (catalog.henHouseNames.get(tx.orgId) ?? tx.orgName) || '—';
@@ -222,7 +233,7 @@ export function aggregateHenInventoryReport(
       );
     }
 
-    if (!isMemberInventoryOutflow(tx, catalog.henHouseIds)) continue;
+    if (!isMemberInventoryOutflow(tx, catalog)) continue;
 
     const ref = memberByPrivateId.get(tx.debitAccountId);
     const memberId =
@@ -245,6 +256,13 @@ export function aggregateHenInventoryReport(
     }
   }
 
+  for (const tx of sorted) {
+    const delta = inventoryDelta(tx, catalog.henHouseIds);
+    if (delta !== 0) {
+      balanceByOrg.set(tx.orgId, (balanceByOrg.get(tx.orgId) ?? 0) + delta);
+    }
+  }
+
   const hasStock = [...balanceByOrg.values()].some((n) => n !== 0);
   const hasFlow =
     slaughterInPeriod > 0 ||
@@ -261,31 +279,23 @@ export function aggregateHenInventoryReport(
     a.localeCompare(b, 'hu'),
   );
 
-  const snapshotKeys = [...snapshotByPeriod.keys()].sort();
-  const stockTimeseries: HenStockTimeseriesPoint[] = periodList.map(
-    (period) => {
-      const snapKey =
-        [...snapshotKeys].reverse().find((key) => key <= period) ?? null;
-      const snap = snapKey ? snapshotByPeriod.get(snapKey) : undefined;
-      const byAlom: Record<string, number> = {};
-      for (const name of alomNames) {
-        byAlom[name] = snap?.[name] ?? 0;
-      }
-      return { period, byAlom };
-    },
+  const stockTimeseries = buildStockTimeseries(
+    sorted,
+    catalog,
+    preset,
+    periodList,
+    alomNames,
   );
 
-  const outflowPeriods = [
-    ...new Set([...slaughterByPeriod.keys(), ...transferByPeriod.keys()]),
-  ].sort();
-
-  const outflowTimeseries: HenOutflowTimeseriesPoint[] = (
-    outflowPeriods.length > 0 ? outflowPeriods : periodList
-  ).map((period) => ({
-    period,
-    slaughterByMember: Object.fromEntries(slaughterByPeriod.get(period) ?? []),
-    transferByMember: Object.fromEntries(transferByPeriod.get(period) ?? []),
-  }));
+  const outflowTimeseries: HenOutflowTimeseriesPoint[] = periodList.map(
+    (period) => ({
+      period,
+      slaughterByMember: Object.fromEntries(
+        slaughterByPeriod.get(period) ?? [],
+      ),
+      transferByMember: Object.fromEntries(transferByPeriod.get(period) ?? []),
+    }),
+  );
 
   let totalStock = 0;
   const byAlom: HenAlomRow[] = alomNames.map((alomName) => {
@@ -329,6 +339,42 @@ export function aggregateHenInventoryReport(
     outflowTimeseries,
     byMember,
   };
+}
+
+function buildStockTimeseries(
+  sorted: readonly HenReportTx[],
+  catalog: HenReportCatalog,
+  preset: DateRangePreset,
+  periodList: readonly string[],
+  alomNames: readonly string[],
+): HenStockTimeseriesPoint[] {
+  const balanceByOrg = new Map<string, number>();
+  for (const id of catalog.henHouseIds) {
+    balanceByOrg.set(id, 0);
+  }
+
+  let txIndex = 0;
+  return periodList.map((period) => {
+    const endDay = endDateOfPeriod(period, preset);
+    while (txIndex < sorted.length) {
+      const tx = sorted[txIndex]!;
+      const day = normalizeDate(tx.date);
+      if (day > endDay) break;
+      const delta = inventoryDelta(tx, catalog.henHouseIds);
+      if (delta !== 0) {
+        balanceByOrg.set(tx.orgId, (balanceByOrg.get(tx.orgId) ?? 0) + delta);
+      }
+      txIndex += 1;
+    }
+    const byAlom: Record<string, number> = {};
+    for (const name of alomNames) {
+      const orgEntry = [...catalog.henHouseNames.entries()].find(
+        ([, n]) => n === name,
+      );
+      byAlom[name] = orgEntry ? (balanceByOrg.get(orgEntry[0]) ?? 0) : 0;
+    }
+    return { period, byAlom };
+  });
 }
 
 export function reportHasActivity(report: HenInventoryReport): boolean {

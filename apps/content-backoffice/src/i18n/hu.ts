@@ -205,6 +205,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       member_account: 'Számla',
       member_total: 'Összesen (db)',
       totals_row: 'Összesen',
+      slaughter_empty: 'Nincs levágás ebben az időszakban.',
+      transfer_empty:
+        'Nincs tyúk átadás ebben az időszakban. Az átadást HEN 1300→1001 (saját) sorral és „átadás” / nem „Levágás” leírással könyveljük; a Levágás sablon csak a levágás diagramban jelenik meg.',
       outflow_empty: 'Nincs levágás vagy átadás ebben az időszakban.',
       empty:
         'Nincs megjeleníthető tyúkforgalom ebben az időszakban. Válassz másik tartományt.',
