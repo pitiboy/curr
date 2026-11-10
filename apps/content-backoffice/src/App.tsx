@@ -10,8 +10,11 @@ import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
+import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
 import { MembershipShareReportPage } from './pages/reports/MembershipShareReportPage';
+import { ProjectBalanceReportPage } from './pages/reports/ProjectBalanceReportPage';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from './pages/reports/membershipShare/types';
+import { PROJECT_BALANCE_FEATURE_ID } from './pages/reports/projectBalance/types';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionShow } from './pages/transactions/TransactionShow';
@@ -64,6 +67,17 @@ export function App() {
           <Route
             element={
               <WorkflowFormGate
+                roles={eggDailyEntryConfig.roles}
+                workflowId={eggDailyEntryConfig.workflowId}
+              >
+                <HenInventoryReportPage />
+              </WorkflowFormGate>
+            }
+            path="/reports/hen-inventory"
+          />
+          <Route
+            element={
+              <WorkflowFormGate
                 roles={['dataentry', 'editor']}
                 workflowId={MEMBERSHIP_SHARE_FEATURE_ID}
               >
@@ -71,6 +85,17 @@ export function App() {
               </WorkflowFormGate>
             }
             path="/reports/membership-share"
+          />
+          <Route
+            element={
+              <WorkflowFormGate
+                roles={['dataentry', 'editor']}
+                workflowId={PROJECT_BALANCE_FEATURE_ID}
+              >
+                <ProjectBalanceReportPage />
+              </WorkflowFormGate>
+            }
+            path="/reports/project-balance"
           />
           {workflowForms.map((form) => (
             <Route

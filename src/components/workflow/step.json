@@ -56,6 +56,11 @@
       "type": "boolean",
       "required": false,
       "default": false
+    },
+    "apply_currency_rate": {
+      "type": "boolean",
+      "required": false,
+      "default": false
     }
   },
   "config": {}

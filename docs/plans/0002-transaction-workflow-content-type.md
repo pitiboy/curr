@@ -1,6 +1,6 @@
 # Implementation plan: `transaction-workflow` content type
 
-**Status:** draft (séma kézzel a repóban; Convert API és seed JSON még nincs)  
+**Status:** Convert API, seed JSON és F fázis (árfolyamos step, tagsági ratio szorzó) implementálva; lekötés KOR átállítása nyitott  
 **Date:** 2026-10-29  
 **Üzleti modell:** [Ügyletek](../transaction-workflow.md)  
 **Backoffice v1:** [0001-content-backoffice-v1](../prd/0001-content-backoffice-v1.md) — a Convert API **v1 utáni**  
@@ -30,16 +30,16 @@ Ez a fájl a **`transaction-workflow`** katalógus szerződése, a **Convert** a
 
 ## 2. Fogalomtár
 
-| Fogalom | Jelentés |
-| -------- | -------- |
-| **Ügylet** | Teljes gazdasági esemény; a sablon `name` és a doc fejezet. |
-| **Tranzakció** | Egy könyvelési sor. |
-| **`transaction-workflow` rekord** | Admin sablon: match fejléc + `step` lista. |
-| **Convert** | API: matcholt egysoros trx → storno/törlés + step-sorok. |
-| **`converted_to_workflow`** | `transaction` enum `original` \| `expanded` \| `storno` (üres = kifejthető); Convert csak null sorokat vesz. |
-| **`entered_key`** | `transaction` string; generált sorok idempotenciája (nem workflow kulcs). |
-| **`steps_published`** | Sablon boolean; generált sorok published/draft; Convert override. |
-| **`copy_receipt`** | Step boolean; forrás receiptjei a generált sorra. |
+| Fogalom                           | Jelentés                                                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Ügylet**                        | Teljes gazdasági esemény; a sablon `name` és a doc fejezet.                                                  |
+| **Tranzakció**                    | Egy könyvelési sor.                                                                                          |
+| **`transaction-workflow` rekord** | Admin sablon: match fejléc + `step` lista.                                                                   |
+| **Convert**                       | API: matcholt egysoros trx → storno/törlés + step-sorok.                                                     |
+| **`converted_to_workflow`**       | `transaction` enum `original` \| `expanded` \| `storno` (üres = kifejthető); Convert csak null sorokat vesz. |
+| **`entered_key`**                 | `transaction` string; generált sorok idempotenciája (nem workflow kulcs).                                    |
+| **`steps_published`**             | Sablon boolean; generált sorok published/draft; Convert override.                                            |
+| **`copy_receipt`**                | Step boolean; forrás receiptjei a generált sorra.                                                            |
 
 ```mermaid
 flowchart LR
@@ -68,37 +68,37 @@ flowchart LR
 
 ### 3.1 `api::transaction-workflow.transaction-workflow`
 
-| Tulajdonság | Érték |
-| ----------- | ----- |
-| `collectionName` | `transaction_workflows` |
+| Tulajdonság       | Érték                                                   |
+| ----------------- | ------------------------------------------------------- |
+| `collectionName`  | `transaction_workflows`                                 |
 | `draftAndPublish` | **`true`** — Convert csak **published** sablont használ |
-| `displayName` | Transaction-workflow (Admin; később Ügylet) |
+| `displayName`     | Transaction-workflow (Admin; később Ügylet)             |
 
-| Mező | Típus | Kötelező | Megjegyzés |
-| ---- | ----- | -------- | ---------- |
-| `name` | string | igen | Seed / Admin címke |
-| `debit_account_code` | integer 1000–9999 | igen | Match: forrás `debit_account.code` |
-| `credit_account_code` | integer 1000–9999 | igen | Match: forrás `credit_account.code` |
-| `transaction_type` | relation oneToOne → transaction-type | nem | Ha van: szigorú match |
-| `currency_type` | relation oneToOne → currency-type | nem | Ha van: szigorú match |
-| `keep_original` | boolean | nem, default `true` | Lásd 6. |
-| `steps_published` | boolean | nem, default **`true`** | Generált step (+ storno) sorok `published` vs draft; Convert body felülírhatja |
-| `configuration` | json | nem | Fenntartott |
-| `step` | dynamic zone (három komponens, lásd 3.2) | igen, **min 1** | Sorrend = kifejtés sorrendje |
+| Mező                  | Típus                                    | Kötelező                | Megjegyzés                                                                     |
+| --------------------- | ---------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| `name`                | string                                   | igen                    | Seed / Admin címke                                                             |
+| `debit_account_code`  | integer 1000–9999                        | igen                    | Match: forrás `debit_account.code`                                             |
+| `credit_account_code` | integer 1000–9999                        | igen                    | Match: forrás `credit_account.code`                                            |
+| `transaction_type`    | relation oneToOne → transaction-type     | nem                     | Ha van: szigorú match                                                          |
+| `currency_type`       | relation oneToOne → currency-type        | nem                     | Ha van: szigorú match                                                          |
+| `keep_original`       | boolean                                  | nem, default `true`     | Lásd 6.                                                                        |
+| `steps_published`     | boolean                                  | nem, default **`true`** | Generált step (+ storno) sorok `published` vs draft; Convert body felülírhatja |
+| `configuration`       | json                                     | nem                     | Fenntartott                                                                    |
+| `step`                | dynamic zone (három komponens, lásd 3.2) | igen, **min 1**         | Sorrend = kifejtés sorrendje                                                   |
 
 **Jogosultság (javaslat):** sablon szerkesztés Strapi Admin; Content API `find`/`findOne` `dataentry`+`editor`; create/update/delete Content API-n tilos. Convert endpoint: külön jog (pl. `editor` vagy admin token).
 
 ### 3.2 Step komponensek (dynamic zone)
 
-Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, opcionális `organization`, opcionális `organization_from_original`, opcionális `transaction_type`, `copy_receipt`.
+Közös mezők minden komponensen: `description` (default `{1}`), `percent` (0–100, tört OK), `currency_type`, opcionális `organization`, opcionális `organization_from_original`, opcionális `transaction_type`, `copy_receipt`, **`apply_currency_rate`** (boolean, default `false`, lásd [5.1](#51-árfolyamos-lépés-apply_currency_rate)).
 
-| Komponens UID | Admin név | Számlák |
-| ---- | ---- | ---- |
-| `workflow.step` | Step with Related accounts | `debit_account` + `credit_account` reláció (**required**) |
-| `workflow.step-member-debit` | Step with Member as Debit | `member_account_code` (`1101`/`1001`) + `credit_account` reláció |
-| `workflow.step-member-credit` | Step with Member as Credit | `member_account_code` (`1101`/`1001`) + `debit_account` reláció |
+| Komponens UID                 | Admin név                  | Számlák                                                          |
+| ----------------------------- | -------------------------- | ---------------------------------------------------------------- |
+| `workflow.step`               | Step with Related accounts | `debit_account` + `credit_account` reláció (**required**)        |
+| `workflow.step-member-debit`  | Step with Member as Debit  | `member_account_code` (`1101`/`1001`) + `credit_account` reláció |
+| `workflow.step-member-credit` | Step with Member as Credit | `member_account_code` (`1101`/`1001`) + `debit_account` reláció  |
 
-Generált összeg: `amount = source.amount * percent / 100`.
+Generált összeg: `amount = source.amount * percent / 100`; ha a stepen `apply_currency_rate: true`, akkor `amount = round2(source.amount * percent / 100 * rate)`, ahol `rate` a forrás pénznem → step pénznem `currency-rate` a forrás `date` napjáig ([5.1](#51-árfolyamos-lépés-apply_currency_rate)).
 
 **Tagi feloldás:** member komponensnél a Convert a forrás trx azonos kódú oldalát (vagy a [member-accounts](../../src/member-accounts.ts) testvért) használja — **nem** seed documentId-t. Fix oldalon a relation `documentId` megy a generált sorra.
 
@@ -108,11 +108,11 @@ Generált összeg: `amount = source.amount * percent / 100`.
 
 ### 3.3 `transaction` érintett mezők
 
-| Mező | Szerep |
-| ---- | ------ |
-| `converted_to_workflow` | enumeration `original` \| `expanded` \| `storno`, nem kötelező (null = kifejthető); Convert szűrő |
-| `entered_key` | unique string; javaslat: `{originalDocumentId}:storno`, `{originalDocumentId}:step:{i}` |
-| `related_transaction` / `related_transactions` | keep ág: gyerekek → eredeti; delete ág: új sorok lánca |
+| Mező                                           | Szerep                                                                                            |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `converted_to_workflow`                        | enumeration `original` \| `expanded` \| `storno`, nem kötelező (null = kifejthető); Convert szűrő |
+| `entered_key`                                  | unique string; javaslat: `{originalDocumentId}:storno`, `{originalDocumentId}:step:{i}`           |
+| `related_transaction` / `related_transactions` | keep ág: gyerekek → eredeti; delete ág: új sorok lánca                                            |
 
 ---
 
@@ -133,15 +133,103 @@ A konverzió **egy** matcholt sorból indul; a doc teljes ügyletének minden ki
 
 Minden `step` sorrendben:
 
-- `amount` = forrás × `percent` / 100  
-- számlák: ha a step debit/credit account **kódja** `1101` vagy `1001` (vagy egyezik a forrás valamelyik oldalának kódjával tagi számlánál), a forrás trx megfelelő account példánya (ill. testvér a member-accounts-ból); egyébként a step relation  
-- `currency_type`, `transaction_type` a stepről; `organization` a stepről, vagy `organization_from_original` esetén a forrásról (üres marad üres)  
-- `date` ← forrás `date`  
-- `description` ← step sablon (`{original.*}` / `{1}`)  
-- **státusz:** `steps_published` a sablonról, kivéve ha a Convert request body felülírja (`steps_published?: boolean`)  
-- **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres  
+- `amount` = forrás × `percent` / 100; `apply_currency_rate: true` stepnél × `rate` és 2 tizedesre kerekítve ([5.1](#51-árfolyamos-lépés-apply_currency_rate))
+- számlák: ha a step debit/credit account **kódja** `1101` vagy `1001` (vagy egyezik a forrás valamelyik oldalának kódjával tagi számlánál), a forrás trx megfelelő account példánya (ill. testvér a member-accounts-ból); egyébként a step relation
+- `currency_type`, `transaction_type` a stepről; `organization` a stepről, vagy `organization_from_original` esetén a forrásról (üres marad üres)
+- `date` ← forrás `date`
+- `description` ← step sablon (`{original.*}` / `{1}`)
+- **státusz:** `steps_published` a sablonról, kivéve ha a Convert request body felülírja (`steps_published?: boolean`)
+- **`copy_receipt`:** ha `true`, a forrás `receipts` reláció másolása a generált sorra; ha a forrásnak nem volt receiptje, üres
 
 A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora és a [forint bevétel](../transaction-workflow.md#forint-bevétel-korona-nélkül) két sora **külön** `workflow.step` elemek a seedben — nincs implicit kibontás.
+
+### 5.1 Árfolyamos lépés (`apply_currency_rate`)
+
+**Felváltja** a korábbi „a Convert nem számol `currency-rate`-et” korlátot ([9.1](#91-seed-előfeltételek)), de **csak opt-in stepen**. Flag nélküli step viselkedése bitre azonos a korábbival.
+
+**Miért step-flag, és nem automatikus pénznem-eltérés?** A meglévő KOR lekötés stepek (Ügylet 1, 2, 5, 6) a váltást a `percent: 1`-gyel emulálják (HUF forrás → KOR step). Automatikus átváltásnál ezek kétszer váltanának. Egy fejléc- vagy sablon-szintű `from_currency`/`to_currency` pedig felesleges: a forrás pénznem a forrás trx-en, a cél a step `currency_type`-ján már adott. Transaction type vagy leírás prefix alapú trigger túl implicit, ezért elvetve.
+
+| Elem                 | Szerződés                                                                                                                                                                                                                                                                                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Séma                 | `apply_currency_rate: boolean`, `default: false`, nem kötelező — mindhárom step komponensen (`step.json`, `step-member-debit.json`, `step-member-credit.json`)                                                                                                                                                                                           |
+| Seed DSL             | step JSON `"apply_currency_rate": true` → `common/11-transaction-workflows.http` mindhárom komponens payloadjára átmásolja                                                                                                                                                                                                                               |
+| Pár                  | `from` = forrás trx `currency_type`, `to` = step `currency_type`                                                                                                                                                                                                                                                                                         |
+| Azonos pénznem       | `from === to` → `rate = 1`, nincs lookup (mint a backoffice `pickLatestCurrencyRate`)                                                                                                                                                                                                                                                                    |
+| Dátum                | forrás trx `date` (`YYYY-MM-DD`). A receipt dátuma nem számít. Request body override **nincs** (a Napi tojás űrlap is a bizonylat/űrlap dátumát használja, ami itt a trx `date`).                                                                                                                                                                        |
+| Lookup               | `currency_rates` ahol `from_currency_type.documentId = from`, `to_currency_type.documentId = to`, `valid_from <= {date}T23:59:59.999Z`; rendezés `valid_from:desc`, `limit 1`. Ugyanaz a szabály, mint a backoffice [`pickLatestCurrencyRate`](../../apps/content-backoffice/src/workflows/bulk-quantity/distributionLogic.ts) (UTC nap vége, beleértve) |
+| Inverz pár           | Tojás-scope: **nincs** fallback, csak a direkt pár számít, ahogy a termékleírásban. Kivétel a KOR-t érintő pár (lekötés átállítása, [9.1](#91-seed-előfeltételek)): direkt sor hiányában `1 / rate(to → from)`                                                                                                                                           |
+| Képlet               | `amount = round2(source.amount × percent / 100 × rate × memberRatio)`; `percent/100` = sablon szintű arány, `memberRatio` = tagsági ratio (alap 1). Kerekítés csak árfolyamos stepen (`Math.round(x*100)/100`, mint `saleRevenueAmount`)                                                                                                                 |
+| Membership ratio     | Árfolyamos, valódi váltású stepen szorzó: `rules[forrás pénznem kód].ratio` a tag érvényes tagságaiból ([5.2](#52-tagsági-ratio-szorzó)). Eltérő ratio-k → 422 `MEMBERSHIP_RATIO_AMBIGUOUS`                                                                                                                                                              |
+| Láncolás             | Nincs: minden árfolyamos step a **forrás** összegéből számol; két HUF step (kp befizetés + bevétel) ugyanazt az összeget kapja                                                                                                                                                                                                                           |
+| Hiányzó rate         | **Blokkoló** 422 `CURRENCY_RATE_MISSING`; nem jön létre draft sem. Rate `<= 0` vagy nem véges → 422 `CURRENCY_RATE_INVALID`                                                                                                                                                                                                                              |
+| Írás előtti feloldás | A service a rate-eket **minden írás előtt** feloldja (storno, `original` jelölés előtt), így hiányzó rate esetén nincs rollback-igény                                                                                                                                                                                                                    |
+| Cache                | Requesten belül `Map<"{from}:{to}:{date}", AppliedRate>`; batch convertnél párnaponként egy query                                                                                                                                                                                                                                                        |
+| Perzisztencia        | **Döntés:** a `transaction` nem kap árfolyam mezőt (`applied_rate`, `rate_date` nincs), és ilyen nem is tervezett. A generált `amount` a konverziókori fix érték; egy későbbi `currency-rate` módosítás nem írja át. Az alkalmazott rate csak a Convert válaszban (`appliedRates`) és az előnézetben látszik.                                            |
+
+**Pure réteg ([convert.ts](../../src/transaction-workflow/convert.ts)):**
+
+```ts
+export type AppliedRate = {
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+  rate: number;
+  validFrom: string | null; // null ha from === to
+  currencyRateDocumentId: string | null;
+};
+/** kulcs: step currency documentId (a forrás pénzneme request-en belül fix) */
+export type RateByCurrency = ReadonlyMap<string, AppliedRate>;
+
+/** null ha nincs flagelt step; `to` = flagelt, forrástól eltérő step pénznemek */
+export function stepsNeedingRate(
+  workflow,
+  source,
+): { from: string; to: string[] } | null;
+export function pickLatestRate(rows, from, to, isoDate): AppliedRate | null; // tiszta, tesztelhető
+export function expandWorkflowSteps(
+  workflow,
+  transaction,
+  siblingByCode,
+  rates?: RateByCurrency,
+): ExpandedStepRow[];
+// ExpandedStepRow += { appliedRate: AppliedRate | null }
+```
+
+`expandWorkflowSteps`: ha `apply_currency_rate` és `rates.get(stepCurrency)` hiányzik → `TransactionWorkflowError(…, 422, 'CURRENCY_RATE_MISSING')`. Így a Convert és a `convert-preview` ugyanúgy viselkedik.
+
+**Strapi réteg:** a lekérdezés a [convert-context.ts](../../src/transaction-workflow/convert-context.ts) `findLatestCurrencyRate` függvénye (filter: direkt pár + `valid_from $lte` nap vége, `sort valid_from:desc`, `limit 1`, utána a tiszta `pickLatestRate` újra szűr). A [currency-rate service](../../src/api/currency-rate/services/currency-rate.ts) `findLatestRate({ fromDocumentId, toDocumentId, onOrBeforeDate })` metódusként teszi elérhetővé; ez a v2 PRD-ben jelzett hiányzó dátum szerinti lookup. A `createRateResolver` requestenként cache-el, a `resolveWorkflowRates` a `stepsNeedingRate` párokra old fel. A [convert-service](../../src/transaction-workflow/convert-service.ts) és a [preview-service](../../src/transaction-workflow/preview-service.ts) ugyanezt hívja, a [tagsági ratio](#52-tagsági-ratio-szorzó) (`loadMemberRatio`) mellett.
+
+**Példa — Tojás eladás forintért** (`24-tojas-eladas-forint.json`). Forrás: `1001 tag ← 1300`, 30 EGG, `date: 2026-11-07`. `currency-rate`: EGG → HUF = 100, `valid_from 2023-01-01`.
+
+| #   | Step                        | percent | `apply_currency_rate` | Pénznem | Összeg                   |
+| --- | --------------------------- | ------- | --------------------- | ------- | ------------------------ |
+| 0   | Tojás eladás (tojás)        | 100     | –                     | EGG     | 30                       |
+| 1   | Tojás eladás (kp befizetés) | 100     | `true`                | HUF     | 30 × 1 × 100 = **3 000** |
+| 2   | Tojás eladás (bevétel)      | 100     | `true`                | HUF     | **3 000**                |
+
+Korábban (flag nélkül) az 1–2. sor **30 HUF** lett. Ugyanez a flag kerül a `23-tojas-keletkezese-es-eladasa.json` két HUF stepjére.
+
+### 5.2 Tagsági ratio szorzó
+
+**Döntés (2026-11-09, felváltja a korábbi 1C „őr” változatot):** a Convert az árfolyamos lépést a forrás tagjának tagsági ratio-jával is szorozza, ugyanúgy, mint a Napi tojás űrlap (db × ratio × árfolyam). Új mező nincs; a szabály adatból jön.
+
+**Konvenció:** a tagsági `rules` JSON kulcsa a **forrás pénznem kódja kisbetűvel** (EGG → `rules.egg`, HOUR → `rules.hour`). Új pénznemhez csak adat kell, kód nem.
+
+| Elem               | Szerződés                                                                                                                                                                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Mikor szoroz       | `apply_currency_rate: true` step, **valódi váltás** (forrás pénznem ≠ step pénznem) **és** a forrás egyik oldala tagi számla (`1101`/`1001`). Azonos pénznemű flagelt step (pl. EGG darab) soha nem szorzódik                              |
+| Tag                | A forrás tagi számlájához tartozó `member` (`account` / `private_account`)                                                                                                                                                                 |
+| Tagságok           | A tag **összes** `membership` rekordja, amely a forrás `date` napján érvényes (`valid_from` / `valid_to`, UTC nap, mindkét vég beleértve), **szervezettől függetlenül**                                                                    |
+| Ratio tagságonként | `membership.rules[kulcs]` → ha nincs, `membership_type.rules[kulcs]`. Hiányzó `ratio` egy létező szabályban = 1; érvénytelen (negatív / nem szám) → a típusra esik vissza. **Név szerinti fallback nincs** (csak a DB `rules` JSON számít) |
+| `mode`             | Nem számít; `internal` tagnál is végrehajt                                                                                                                                                                                                 |
+| Eredmény           | Nincs szabállyal rendelkező tagság → ratio 1. Egy vagy több egyező ratio → az. **Eltérő ratio-k → 422 `MEMBERSHIP_RATIO_AMBIGUOUS`**, írás nélkül                                                                                          |
+| Formula            | `amount = round2(source.amount × percent / 100 × rate × ratio)`                                                                                                                                                                            |
+| Ratio 0            | Megengedett; 0 összegű HUF sorok jönnek létre                                                                                                                                                                                              |
+| Audit              | Ratio ≠ 1 esetén a generált sor `description` végére: ` · ratio 0.75 (<tagság / tagságtípus neve>)`. A Convert válasz `appliedRates[]` elemei: `ratio`, `membershipDocumentId`; az előnézet `movements[].memberRatio`                      |
+| Jutalék            | A [0005](./0005-tojas-eladas-kozvetitoi-jutalek.md) `commissionPercent` / `internalPercent` mezőit a Convert nem könyveli (eltérés az űrlaptól)                                                                                            |
+
+Implementáció: [membership-ratio.ts](../../src/transaction-workflow/membership-ratio.ts) (`resolveMemberRatio`), [convert-context.ts](../../src/transaction-workflow/convert-context.ts) (`loadMemberRatio`), [convert.ts](../../src/transaction-workflow/convert.ts) (`expandWorkflowSteps(…, rates, memberRatio)`, `memberRatioDescriptionSuffix`). A feloldás a rate-tel együtt, minden írás előtt fut.
+
+**Eltérés a Napi tojás űrlaptól (szándékos):** az űrlap csak a beállított szervezet (Tyúktartás) tagságait nézi, név szerinti fallbacket használ, és `internal` tagnak nem könyvel eladást. A Convert minden érvényes tagságot figyelembe vesz, csak a DB szabályt használja, és végrehajt.
 
 ---
 
@@ -149,15 +237,15 @@ A [lekötés](../transaction-workflow.md#lekötés-blokk) két könyvelési sora
 
 ### `true` (seed default)
 
-1. Storno: forrás mezők másolata, `amount * -1`.  
-2. Új step-sorok.  
-3. Storno + új sorok: `related_transaction` → **eredeti**.  
+1. Storno: forrás mezők másolata, `amount * -1`.
+2. Új step-sorok.
+3. Storno + új sorok: `related_transaction` → **eredeti**.
 4. `converted_to_workflow: original` az **eredetin**, `storno` a **storno soron**, `expanded` a **step sorokon**.
 5. A generált sorok státusza a `steps_published` (vagy Convert override) szerint. Az eredeti csak akkor published, ha a hét publish-mező mind kitöltött; hiányzó organization/számla esetén draft marad (`converted_to_workflow: original` mellett). Draft lépéseknél az eredeti draft marad / unpublish.
 
 ### `false`
 
-1. Eredeti törlése. A forrás receiptjei csak azokra az új sorokra kerülnek, ahol `copy_receipt: true` (különben a receipt orphan / előtte átkötés — implementáció: ha van receipt és egyetlen step sem `copy_receipt`, 422 vagy az első stepre másolás; **default:** első `copy_receipt: true` step, ha nincs ilyen és volt receipt → 422).  
+1. Eredeti törlése. A forrás receiptjei csak azokra az új sorokra kerülnek, ahol `copy_receipt: true` (különben a receipt orphan / előtte átkötés — implementáció: ha van receipt és egyetlen step sem `copy_receipt`, 422 vagy az első stepre másolás; **default:** első `copy_receipt: true` step, ha nincs ilyen és volt receipt → 422).
 2. Csak új step-sorok; `related_transaction` lánc (első `null`, többi az előzőre); `converted_to_workflow: expanded` a step sorokon.
 
 ```mermaid
@@ -181,14 +269,18 @@ flowchart TD
 
 ## 7. Convert API
 
-| Elem | Javaslat |
-| ---- | -------- |
-| Hely | `src/api/transaction-workflow/` custom route + controller/service |
-| Endpoint | pl. `POST /api/transaction-workflows/convert` |
-| Auth | `editor` (vagy Admin); nem publikus |
-| Body | opcionális: `workflowDocumentId`, `transactionDocumentId`, **`steps_published`** (override a sablon defaultján) |
+| Elem     | Javaslat                                                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hely     | `src/api/transaction-workflow/` custom route + controller/service                                                                                                                                                                                                               |
+| Endpoint | pl. `POST /api/transaction-workflows/convert`                                                                                                                                                                                                                                   |
+| Auth     | `editor` (vagy Admin); nem publikus                                                                                                                                                                                                                                             |
+| Body     | opcionális: `workflowDocumentId`, `transactionDocumentId`, **`steps_published`** (override a sablon defaultján). Árfolyam/dátum override **nincs**.                                                                                                                             |
+| Válasz   | `data[]` elemenként: `transactionDocumentId`, `workflowDocumentId`, `stornoDocumentId?`, `createdDocumentIds`, **`appliedRates`**: `{ stepIndex, fromCurrencyDocumentId, toCurrencyDocumentId, rate, validFrom, currencyRateDocumentId }[]` (csak `apply_currency_rate` stepek) |
+| Előnézet | `convert-preview` `movements[]` elemein **`rate`** (`AppliedRate \| null`), hogy a modál mutassa a használt árfolyamot                                                                                                                                                          |
 
-Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó account/org / tagi testvér (422), `entered_key` ütközés (409), `keep_original: false` + receipt orphan (422).
+Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó account/org / tagi testvér (422), `entered_key` ütközés (409), `keep_original: false` + receipt orphan (422), **nincs érvényes `currency-rate` a forrás dátumáig (422 `CURRENCY_RATE_MISSING`)**, **hibás rate ≤ 0 (422 `CURRENCY_RATE_INVALID`)**, **a tag érvényes tagságai eltérő ratio-t adnak (422 `MEMBERSHIP_RATIO_AMBIGUOUS`)**.
+
+A hibatörzs bővül egy gépi kóddal: `error.details.code` (pl. `CURRENCY_RATE_MISSING`), `error.details.from` / `to` (pénznem kód) és `error.details.date`. A `TransactionWorkflowError` opcionális `code` + `details` mezőt kap; a meglévő hibák kód nélkül változatlanok. Batch convertnél (nincs `transactionDocumentId`) az első hiányzó rate megállítja a futást. A már feldolgozott sorok megmaradnak (ez a jelenlegi batch szemantika).
 
 ---
 
@@ -199,25 +291,25 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 **Normatív forrás:** [docs/transaction-workflow.md](../transaction-workflow.md) Ügylet 1–9.  
 **Cél CT:** `api::transaction-workflow.transaction-workflow` + három step komponens.
 
-1. Egy ügylet = **egy** published sablon rekord (**első PR: mind a 9 ügylet** seedelve). Ahol a percent 0–100 mellett más pénznemű / nagyobb összegű lépés kell (3, 4), **második** sablon is megengedett (lásd 8.3–8.4).  
-2. Fejléc kódok = a doc **egysoros match** T←K párja (fejezetenként rögzítve alább).  
-3. `keep_original: true`, `steps_published: true`, `configuration: null` default a speceknél.  
-4. Opcionális fejléc `currency_type` / `transaction_type`: csak ha a matchot szűkíteni kell (alább jelezve).  
-5. Minden könyvelési kimeneti sor → megfelelő step `__component` (related / member-debit / member-credit); `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).  
-6. Lekötés blokk → **2** step; forint bevétel → **2** step.  
-7. `percent` ∈ [0, 100], tört OK = `minta_lépés_összeg / minta_forrás_összeg * 100`. KOR lépésnél a minta **korona** összeg a számláló. Seed ≥ 6 tizedes.  
-8. Seed JSON `debit_code`/`credit_code`: ha az egyik tagi (`1101`/`1001`) → member-debit vagy member-credit + `member_account_code`; ha egyik sem → related mindkét account lookup. Org / currency / type név/kód lookup.  
+1. Egy ügylet = **egy** published sablon rekord (**első PR: mind a 9 ügylet** seedelve). Ahol a percent 0–100 mellett más pénznemű / nagyobb összegű lépés kell (3, 4), **második** sablon is megengedett (lásd 8.3–8.4).
+2. Fejléc kódok = a doc **egysoros match** T←K párja (fejezetenként rögzítve alább).
+3. `keep_original: true`, `steps_published: true`, `configuration: null` default a speceknél.
+4. Opcionális fejléc `currency_type` / `transaction_type`: csak ha a matchot szűkíteni kell (alább jelezve).
+5. Minden könyvelési kimeneti sor → megfelelő step `__component` (related / member-debit / member-credit); `copy_receipt` default `false` (első bizonylatos stepnél `true` ha a minta ügyletnél van receipt).
+6. Lekötés blokk → **2** step; forint bevétel → **2** step.
+7. `percent` ∈ [0, 100], tört OK = `minta_lépés_összeg / minta_forrás_összeg * 100`. KOR lépésnél a minta **korona** összeg a számláló. Seed ≥ 6 tizedes.
+8. Seed JSON `debit_code`/`credit_code`: ha az egyik tagi (`1101`/`1001`) → member-debit vagy member-credit + `member_account_code`; ha egyik sem → related mindkét account lookup. Org / currency / type név/kód lookup.
 9. `step.min` = **1** (séma). Ügylet 9 egy steppel seedelhető.
 
 **Szállítás:**
 
-| Elem | Utasítás |
-| ---- | -------- |
-| Mappa | `database/seeders/http/kor/data/transaction-workflows/` |
-| HttpYac | `common/11-transaction-workflows.http` — `npm run seed:http:kor:transaction-workflows:local` |
-| Upsert kulcs | `name` + `debit_account_code` + `credit_account_code` (insert-only) |
-| Előfeltétel | [Számlatükör-rések](../transaction-workflow.md#számlatükör-rések): `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org, stb. |
-| Publish | `POST …?status=published` |
+| Elem         | Utasítás                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Mappa        | `database/seeders/http/kor/data/transaction-workflows/`                                                             |
+| HttpYac      | `common/11-transaction-workflows.http` — `npm run seed:http:kor:transaction-workflows:local`                        |
+| Upsert kulcs | `name` + `debit_account_code` + `credit_account_code` (insert-only)                                                 |
+| Előfeltétel  | [Számlatükör-rések](../transaction-workflow.md#számlatükör-rések): `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org, stb. |
+| Publish      | `POST …?status=published`                                                                                           |
 
 ---
 
@@ -227,18 +319,18 @@ Hibák: nincs published sablon (noop/404), nincs match (200 üres), hiányzó ac
 **name:** `Tagi befizetés ingatlan vásárlásra`  
 **Match:** `debit_account_code: 1520`, `credit_account_code: 1101`  
 **Fejléc currency/type:** üres (HUF egysoros)  
-**Forrás mintaösszeg:** 2 000 000  
+**Forrás mintaösszeg:** 2 000 000
 
 Lekötés vételár (2 step) a [lekötés blokk](../transaction-workflow.md#lekötés-blokk) szerint; fedezet forrás az eszköz HUF (`1520` → `1900`), majd KOR vissza az eszközre (`1520` ← `1900`).
 
-| # | description | percent (≈) | Tartozik | Követel | Pénznem | Szervezet | Típus |
-| - | ----------- | ----------- | -------- | ------- | ------- | --------- | ----- |
-| 1 | Részjegy előírása | 100 | 1101 tag | 3000 | HUF | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 2 | Bejövő tagi utalás | 100 | 1100 | 1101 tag | HUF | I/3. Pénzügyi Igazgatóság | Utalás |
-| 3 | Stróman (vételár) | 100 | 1001 tag | 1100 | KOR | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 4 | Telek vételár | 100 | 1520 | 1001 tag | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 5 | Lekötés 1 HUF fedezet | 100 | 1900 | 1520 | HUF | I/4.11.1.1 Lakóterületek | Átvezetés |
-| 6 | Lekötés 2 KOR | 1 | 1520 | 1900 | KOR | I/4.11.1.1 Lakóterületek | Átvezetés |
+| #   | description           | percent (≈) | Tartozik | Követel  | Pénznem | Szervezet                 | Típus     |
+| --- | --------------------- | ----------- | -------- | -------- | ------- | ------------------------- | --------- |
+| 1   | Részjegy előírása     | 100         | 1101 tag | 3000     | HUF     | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 2   | Bejövő tagi utalás    | 100         | 1100     | 1101 tag | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
+| 3   | Stróman (vételár)     | 100         | 1001 tag | 1100     | KOR     | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 4   | Telek vételár         | 100         | 1520     | 1001 tag | KOR     | I/4.11.1.1 Lakóterületek  | Átvezetés |
+| 5   | Lekötés 1 HUF fedezet | 100         | 1900     | 1520     | HUF     | I/4.11.1.1 Lakóterületek  | Átvezetés |
+| 6   | Lekötés 2 KOR         | 1           | 1520     | 1900     | KOR     | I/4.11.1.1 Lakóterületek  | Átvezetés |
 
 Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 
@@ -249,13 +341,13 @@ Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 **Doc:** [Ügylet 2](../transaction-workflow.md#ügylet-2--készpénzes-belterületi-ingatlan-vásárlás)  
 **name:** `Készpénzes belterületi ingatlan vásárlás`  
 **Match:** `1520` ← `1000`  
-**Forrás mintaösszeg:** 800 000 (vételár)  
+**Forrás mintaösszeg:** 800 000 (vételár)
 
-| # | description | percent | Tartozik | Követel | Pénznem | Szervezet | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --------- | ----- |
-| 1 | Telek vételár | 100 | 1520 | 1000 | HUF | Lakóterületek | Készpénz |
-| 2 | Lekötés 1 HUF fedezet | 100 | 1900 | 1520 | HUF | Lakóterületek | Átvezetés |
-| 3 | Lekötés 2 KOR | 1 | 1520 | 1900 | KOR | Lakóterületek | Átvezetés |
+| #   | description           | percent | Tartozik | Követel | Pénznem | Szervezet     | Típus     |
+| --- | --------------------- | ------- | -------- | ------- | ------- | ------------- | --------- |
+| 1   | Telek vételár         | 100     | 1520     | 1000    | HUF     | Lakóterületek | Készpénz  |
+| 2   | Lekötés 1 HUF fedezet | 100     | 1900     | 1520    | HUF     | Lakóterületek | Átvezetés |
+| 3   | Lekötés 2 KOR         | 1       | 1520     | 1900    | KOR     | Lakóterületek | Átvezetés |
 
 ---
 
@@ -265,16 +357,16 @@ Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 **name:** `Tojás keletkezése és eladása`  
 **Match:** `1300` ← `4500`  
 **Fejléc `currency_type`:** EGG (szigorú match a Napi tojás sorokra)  
-**Forrás mintaösszeg:** 30 (EGG)  
+**Forrás mintaösszeg:** 30 (EGG)
 
 **`percent` 0–100:** EGG forrásból (30) nem jön ki 6000 HUF. **Két sablon:** (A) EGG keletkezés+készletcsökkenés; (B) HUF eladás (forint bevétel 2 step).
 
 **Sablon A:**
 
-| # | description | percent | Tartozik | Követel | Pénznem | Szervezet | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --------- | ----- |
-| 1 | Keletkezés | 100 | 1300 | 4500 | EGG | Tojóól | Átvezetés |
-| 2 | Készletcsökkenés | 100 | 5600 | 1300 | EGG | Tojóól | Átvezetés |
+| #   | description      | percent | Tartozik | Követel | Pénznem | Szervezet | Típus     |
+| --- | ---------------- | ------- | -------- | ------- | ------- | --------- | --------- |
+| 1   | Keletkezés       | 100     | 1300     | 4500    | EGG     | Tojóól    | Átvezetés |
+| 2   | Készletcsökkenés | 100     | 5600     | 1300    | EGG     | Tojóól    | Átvezetés |
 
 **Második sablon (eladás HUF), name:** `Tojás eladás forint` — match `1000`←`1900` (vagy a beérkezés páros), forrás 6000; step: beérkezés 100% + értékesítés 100% (`1900`←`4000`).
 
@@ -285,16 +377,16 @@ Percent ellenőrzés: HUF lábak 100%; KOR: 20 000 / 2 000 000×100 = 1.
 **Doc:** [Ügylet 4](../transaction-workflow.md#ügylet-4--gyümölcs-szürete-és-piaci-eladása)  
 **name:** `Gyümölcs szürete és piaci eladása`  
 **Match:** `1300` ← `4500`, fejléc currency **FRUIT**  
-**Forrás mintaösszeg:** 80  
+**Forrás mintaösszeg:** 80
 
 Ugyanaz a `percent` 0–100 korlát, mint 8.3 → **két sablon**.
 
 **Sablon A (FRUIT):**
 
-| # | description | percent | Tartozik | Követel | Pénznem | Org | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
-| 1 | Szüret | 100 | 1300 | 4500 | FRUIT | gyümölcsfaliget | Átvezetés |
-| 2 | Készletcsökkenés | 62.5 | 5600 | 1300 | FRUIT | gyümölcsfaliget | Átvezetés |
+| #   | description      | percent | Tartozik | Követel | Pénznem | Org             | Típus     |
+| --- | ---------------- | ------- | -------- | ------- | ------- | --------------- | --------- |
+| 1   | Szüret           | 100     | 1300     | 4500    | FRUIT   | gyümölcsfaliget | Átvezetés |
+| 2   | Készletcsökkenés | 62.5    | 5600     | 1300    | FRUIT   | gyümölcsfaliget | Átvezetés |
 
 **Sablon B** (`Gyümölcs eladás forint`): match beérkezés T←K, forrás 25 000; forint bevétel 2 step, 100% + 100%.
 
@@ -305,17 +397,17 @@ Ugyanaz a `percent` 0–100 korlát, mint 8.3 → **két sablon**.
 **Doc:** [Ügylet 5](../transaction-workflow.md#ügylet-5--ingatlan-szerzése)  
 **name:** `Ingatlan szerzése`  
 **Match:** `1530` ← `1100` (teljes vételár összefoglaló; `percent` 0–100 miatt nem a foglaló 2 000 000)  
-**Forrás mintaösszeg:** 10 000 000  
+**Forrás mintaösszeg:** 10 000 000
 
 Steps:
 
-| # | description | percent | Tartozik | Követel | Pénznem | Org | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
-| 1 | Foglaló | 20 | 1400 | 1100 | HUF | Lakóterületek | Utalás |
-| 2 | Fennmaradó | 80 | 1530 | 1100 | HUF | Lakóterületek | Utalás |
-| 3 | Beszámítás | 20 | 1530 | 1400 | HUF | Lakóterületek | Átvezetés |
-| 4 | Lekötés 1 HUF fedezet | 100 | 1900 | 1530 | HUF | Lakóterületek | Átvezetés |
-| 5 | Lekötés 2 KOR | 1 | 1530 | 1900 | KOR | Lakóterületek | Átvezetés |
+| #   | description           | percent | Tartozik | Követel | Pénznem | Org           | Típus     |
+| --- | --------------------- | ------- | -------- | ------- | ------- | ------------- | --------- |
+| 1   | Foglaló               | 20      | 1400     | 1100    | HUF     | Lakóterületek | Utalás    |
+| 2   | Fennmaradó            | 80      | 1530     | 1100    | HUF     | Lakóterületek | Utalás    |
+| 3   | Beszámítás            | 20      | 1530     | 1400    | HUF     | Lakóterületek | Átvezetés |
+| 4   | Lekötés 1 HUF fedezet | 100     | 1900     | 1530    | HUF     | Lakóterületek | Átvezetés |
+| 5   | Lekötés 2 KOR         | 1       | 1530     | 1900    | KOR     | Lakóterületek | Átvezetés |
 
 ---
 
@@ -324,14 +416,14 @@ Steps:
 **Doc:** [Ügylet 6](../transaction-workflow.md#ügylet-6--felújítás)  
 **name:** `Felújítás`  
 **Match:** `1500` ← `2000`  
-**Forrás mintaösszeg:** 1 500 000  
+**Forrás mintaösszeg:** 1 500 000
 
-| # | description | percent | Tartozik | Követel | Pénznem | Org | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
-| 1 | Aktiválás | 100 | 1500 | 2000 | HUF | Állattenyésztés | Átvezetés |
-| 2 | Utalás | 100 | 2000 | 1100 | HUF | Állattenyésztés | Utalás |
-| 3 | Lekötés 1 HUF fedezet | 100 | 1900 | 1500 | HUF | Állattenyésztés | Átvezetés |
-| 4 | Lekötés 2 KOR | 1 | 1500 | 1900 | KOR | Állattenyésztés | Átvezetés |
+| #   | description           | percent | Tartozik | Követel | Pénznem | Org             | Típus     |
+| --- | --------------------- | ------- | -------- | ------- | ------- | --------------- | --------- |
+| 1   | Aktiválás             | 100     | 1500     | 2000    | HUF     | Állattenyésztés | Átvezetés |
+| 2   | Utalás                | 100     | 2000     | 1100    | HUF     | Állattenyésztés | Utalás    |
+| 3   | Lekötés 1 HUF fedezet | 100     | 1900     | 1500    | HUF     | Állattenyésztés | Átvezetés |
+| 4   | Lekötés 2 KOR         | 1       | 1500     | 1900    | KOR     | Állattenyésztés | Átvezetés |
 
 ---
 
@@ -340,13 +432,13 @@ Steps:
 **Doc:** [Ügylet 7](../transaction-workflow.md#ügylet-7--területalapú-agrár-támogatás)  
 **name:** `Területalapú agrár támogatás`  
 **Match:** `1200` ← `4200`  
-**Forrás mintaösszeg:** 400 000  
+**Forrás mintaösszeg:** 400 000
 
-| # | description | percent | Tartozik | Követel | Pénznem | Org | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
-| 1 | Megítélés | 100 | 1200 | 4200 | HUF | Termőterületek | Átvezetés |
-| 2 | Kincstári jóváírás | 100 | 1100 | 1900 | HUF | I/3. Pénzügyi Igazgatóság | Utalás |
-| 3 | Követelés zárása | 100 | 1900 | 1200 | HUF | Termőterületek | Átvezetés |
+| #   | description        | percent | Tartozik | Követel | Pénznem | Org                       | Típus     |
+| --- | ------------------ | ------- | -------- | ------- | ------- | ------------------------- | --------- |
+| 1   | Megítélés          | 100     | 1200     | 4200    | HUF     | Termőterületek            | Átvezetés |
+| 2   | Kincstári jóváírás | 100     | 1100     | 1900    | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
+| 3   | Követelés zárása   | 100     | 1900     | 1200    | HUF     | Termőterületek            | Átvezetés |
 
 ---
 
@@ -355,12 +447,12 @@ Steps:
 **Doc:** [Ügylet 8](../transaction-workflow.md#ügylet-8--adminisztráció)  
 **name:** `Adminisztráció`  
 **Match:** `5440` ← `2000`  
-**Forrás mintaösszeg:** 80 000  
+**Forrás mintaösszeg:** 80 000
 
-| # | description | percent | Tartozik | Követel | Pénznem | Org | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
-| 1 | Számla | 100 | 5440 | 2000 | HUF | I/3. Pénzügyi Igazgatóság | Átvezetés |
-| 2 | Utalás | 100 | 2000 | 1100 | HUF | I/3. Pénzügyi Igazgatóság | Utalás |
+| #   | description | percent | Tartozik | Követel | Pénznem | Org                       | Típus     |
+| --- | ----------- | ------- | -------- | ------- | ------- | ------------------------- | --------- |
+| 1   | Számla      | 100     | 5440     | 2000    | HUF     | I/3. Pénzügyi Igazgatóság | Átvezetés |
+| 2   | Utalás      | 100     | 2000     | 1100    | HUF     | I/3. Pénzügyi Igazgatóság | Utalás    |
 
 ---
 
@@ -370,13 +462,13 @@ Steps:
 **name:** `Bányászás`  
 **Match:** `1001` ← `1100`  
 **Fejléc `transaction_type`:** Bányászás (szigorú)  
-**Forrás mintaösszeg:** 50 000  
+**Forrás mintaösszeg:** 50 000
 
 A Homály kiadások **nem** részei ennek a sablonnak.
 
-| # | description | percent | Tartozik | Követel | Pénznem | Org | Típus |
-| - | ----------- | ------- | -------- | ------- | ------- | --- | ----- |
-| 1 | Bányászás | 100 | 1001 tag | 1100 | HUF | I/3. Pénzügyi Igazgatóság | Bányászás |
+| #   | description | percent | Tartozik | Követel | Pénznem | Org                       | Típus     |
+| --- | ----------- | ------- | -------- | ------- | ------- | ------------------------- | --------- |
+| 1   | Bányászás   | 100     | 1001 tag | 1100    | HUF     | I/3. Pénzügyi Igazgatóság | Bányászás |
 
 Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, eltérő `credit_account_code` (egy step elég, `min: 1`).
 
@@ -386,61 +478,93 @@ Két forrás (`1100` vs `1000`) = **két** sablon ugyanazzal a step listával, e
 
 ### 9.1 Seed előfeltételek
 
-| Hiány | Ügylet |
-| ----- | ------ |
-| `1900` | 1–7 |
-| `4500`, `EGG`, Tojóól | 3 |
-| `FRUIT` | 4 |
+| Hiány                 | Ügylet |
+| --------------------- | ------ |
+| `1900`                | 1–7    |
+| `4500`, `EGG`, Tojóól | 3      |
+| `FRUIT`               | 4      |
 
-(A Convert **nem** számol `currency-rate`-et: a KOR összeg a `percent` × forrás `amount`.)
+~~A Convert **nem** számol `currency-rate`-et.~~ **Felváltva ([5.1](#51-árfolyamos-lépés-apply_currency_rate)):** a Convert csak `apply_currency_rate: true` stepen alkalmaz `currency-rate`-et.
+
+**KOR árfolyam (döntés):** a helytálló érték mindig a DB `currency-rate` sora (jelenleg `KOR → HUF = 600`, változhat). A meglévő KOR lekötés stepek `percent: 1` értéke fix 1:100-at feltételez, ezért **elavult**: 600-as árfolyamnál a KOR összeg hatszor akkora a helyesnél. **Döntés (a lekötés átállítása, külön PR):** a lekötés KOR stepjei `apply_currency_rate: true` + `percent: 100` lesznek. Mivel a DB-ben csak `KOR → HUF` sor van, a `HUF → KOR` rate-et a Convert az **inverz** sorból számolja: `rate = 1 / rate(KOR → HUF)`, ugyanazzal a dátumszabállyal (legfrissebb `valid_from` ≤ forrás nap vége). Sorrend: ha van direkt `HUF → KOR` sor, az nyer; ha nincs, akkor jön az inverz; ha egyik sincs, 422 `CURRENCY_RATE_MISSING`. Az inverz fallback **csak a KOR-t érintő párokra** érvényes (`from` vagy `to` = KOR); más pároknál (pl. EGG → HUF) továbbra is csak a direkt sor számít. Kerekítés: 2 tizedes (pl. 2 000 000 Ft / 600 = 3 333.33 KOR). `AppliedRate` += `inverted: boolean`, `currencyRateDocumentId` az inverz sor id-ja. A tojás eladás workflow-ban KOR nincs, így ez a tojás-scope-ot nem érinti. Az átállításig a lekötés sablonok változatlanok (`percent: 1`).
 
 ### 9.2 Rögzített döntések (implementáció)
 
-| Kérdés | Döntés |
-| ------ | ------ |
-| `percent.max` | **100** marad; tört percent OK |
-| `step.min` | **1** |
-| Tagi `1101`/`1001` | Member-debit / member-credit komponens + `member_account_code`; expand **forrás trx / member testvér** |
-| Kimenet státusz | Sablon `steps_published` default `true`; Convert body override |
-| Első PR scope | **Mind a 9 ügylet** seed + Convert API |
-| Receipt | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra |
+| Kérdés             | Döntés                                                                                                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `percent.max`      | **100** marad; tört percent OK                                                                                                                                                                                                                   |
+| `step.min`         | **1**                                                                                                                                                                                                                                            |
+| Tagi `1101`/`1001` | Member-debit / member-credit komponens + `member_account_code`; expand **forrás trx / member testvér**                                                                                                                                           |
+| Kimenet státusz    | Sablon `steps_published` default `true`; Convert body override                                                                                                                                                                                   |
+| Első PR scope      | **Mind a 9 ügylet** seed + Convert API                                                                                                                                                                                                           |
+| Receipt            | Step `copy_receipt`; másolja a forrás receiptjeit a generált sorra                                                                                                                                                                               |
+| Árfolyam trigger   | Step `apply_currency_rate` (opt-in, default `false`); nincs sablon/fejléc `from_currency`/`to_currency`, nincs típus/prefix trigger                                                                                                              |
+| Árfolyam dátum     | Forrás trx `date`, `valid_from <= nap vége UTC`, legfrissebb; nincs body override                                                                                                                                                                |
+| Árfolyam pár       | Direkt `from → to`; azonos pénznem → 1. Inverz fallback csak KOR-t érintő párnál (direkt sor hiányában `1/rate`)                                                                                                                                 |
+| Hiányzó rate       | 422 `CURRENCY_RATE_MISSING`, blokkol (nincs draft); feloldás minden írás előtt                                                                                                                                                                   |
+| Ratio              | `percent / 100` × tagsági ratio (`rules[pénznem kód]`, minden érvényes tagság, szervezettől függetlenül; eltérő → 422 `MEMBERSHIP_RATIO_AMBIGUOUS`; `mode` nem számít; név szerinti fallback nincs) ([5.2](#52-tagsági-ratio-szorzó))            |
+| KOR árfolyam       | Mindig a DB `currency-rate` értéke a helytálló (jelenleg `KOR → HUF = 600`); a doksi mintáiban a 100 Ft csak szemléltetés. Lekötés átállítása külön PR-ben: `apply_currency_rate` + `percent: 100` + inverz rate ([9.1](#91-seed-előfeltételek)) |
+| Kerekítés          | Árfolyamos stepen 2 tizedes                                                                                                                                                                                                                      |
+| Rate perzisztencia | Nincs és nem is lesz árfolyam mező a `transaction`-ön; `appliedRates` csak a válaszban / előnézetben                                                                                                                                             |
+| Visszamenőleges    | Már kifejtett sorok nem változnak, nincs automatikus újrakonvertálás                                                                                                                                                                             |
 
 ### 9.3 Maradék finomság (defaultolható)
 
-- Ütköző sablon fejléc → 409  
-- `{original.*}` / `{1}` → forrás mezők; üres → üres; `organization_from_original`  
-- Admin UI a Convert híváshoz (opcionális fázis E)  
+- Ütköző sablon fejléc → 409
+- `{original.*}` / `{1}` → forrás mezők; üres → üres; `organization_from_original`
+- Admin UI a Convert híváshoz (opcionális fázis E)
 
 ---
 
 ## 10. Implementációs fázisok
 
-| Fázis | Deliverable |
-| ----- | ----------- |
-| **A** | Séma: `steps_published`, `copy_receipt`, `step.min: 1` (kész / igazítva) |
-| **B** | Seed JSON **1–9** (+ szükség szerint 3/4 második HUF sablon) + `1900`/EGG/FRUIT pótlás + publish |
-| **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101) |
-| **D** | Content API jogok |
-| **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél) |
+| Fázis | Deliverable                                                                                                                                                                                                                              |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** | Séma: `steps_published`, `copy_receipt`, `step.min: 1` (kész / igazítva)                                                                                                                                                                 |
+| **B** | Seed JSON **1–9** (+ szükség szerint 3/4 második HUF sablon) + `1900`/EGG/FRUIT pótlás + publish                                                                                                                                         |
+| **C** | Convert route/controller + tesztek (8 + 1 + tagi 1101)                                                                                                                                                                                   |
+| **D** | Content API jogok                                                                                                                                                                                                                        |
+| **E** | Convert UI a backoffice-ban: [0003](./0003-transaction-workflow-backoffice.md) (`steps_published` override továbbra sem cél)                                                                                                             |
+| **F** | Árfolyamos step: `apply_currency_rate` séma + seed DSL + `findLatestRate` + pure expand + preview `rate` + 422 kódok + tagsági ratio szorzó + tesztek ([5.1](#51-árfolyamos-lépés-apply_currency_rate), [5.2](#52-tagsági-ratio-szorzó)) |
+
+#### F fázis — kompatibilitás
+
+- **Meglévő kifejtett sorok:** `converted_to_workflow` nem null, ezért a Convert nem veszi újra. A régi 1:1 HUF sorok (pl. 30 HUF 3 000 helyett) **nem** javulnak maguktól. Javítás: kézi storno + új könyvelés, vagy a hibás konverzió visszabontása (storno/step sorok törlése, `original` jelölés `null`-ra) és újra Convert. Automatikus migráció nem cél.
+- **Sablonok:** a seed upsert insert-only, ezért a már létező edizone `Tojás eladás forintért` / `Tojás keletkezése és egyből eladása` rekordokon a flaget Strapi Adminban kell bekapcsolni (vagy törlés + reseed).
+- **Flag nélküli sablonok** (Ügylet 1–9, gyümölcs) változatlanok; a KOR lekötés továbbra is `percent`-tel számol.
+- **Re-run / idempotencia:** az `entered_key` séma nem változik. Részleges hiba utáni újrahívás ugyanazt a rate-et kapja, amíg nincs újabb `currency-rate` sor az adott napig.
+- **Visszafelé:** a flag mező hiánya = `false`, ezért régi kliens/seed payload érvényes marad.
 
 ### Checklist
 
-- [ ] Seed specek JSON a 8. fejezetből (összes ügylet)  
-- [ ] `1900` / EGG / FRUIT pótlás  
-- [ ] Convert API + `converted_to_workflow` / storno / `copy_receipt` / `steps_published`  
-- [ ] Unit: Ügylet 8, Ügylet 1, Ügylet 9 (1 step), tagi számla kód-match  
-- [ ] Doc hivatkozások naprakészek  
+- [ ] Seed specek JSON a 8. fejezetből (összes ügylet)
+- [ ] `1900` / EGG / FRUIT pótlás
+- [ ] Convert API + `converted_to_workflow` / storno / `copy_receipt` / `steps_published`
+- [ ] Unit: Ügylet 8, Ügylet 1, Ügylet 9 (1 step), tagi számla kód-match
+- [ ] Doc hivatkozások naprakészek
+- [x] F: `apply_currency_rate` a három step komponensen + seed DSL (`11-transaction-workflows.http`) + edizone 23/24 JSON
+- [x] F: `currency-rate` service `findLatestRate`
+- [x] F: `convert.ts` `pickLatestRate`, `stepsNeedingRate`, `expandWorkflowSteps(..., rates)`, `TransactionWorkflowError.code`
+- [x] F: convert-service / preview-service rate feloldás írás előtt + `appliedRates` / `movement.rate`
+- [x] F: Unit — `pickLatestRate`: legfrissebb ≤ nap, aznapi későbbi időpont is számít, jövőbeli kizárva, rossz irány/pár → null, azonos pénznem → 1
+- [x] F: Unit — `expandWorkflowSteps`: tojás 30 EGG → 3 000 HUF (két HUF step), flag nélkül változatlan (Ügylet 1 KOR `percent: 1` regresszió), hiányzó rate → 422 `CURRENCY_RATE_MISSING`, `percent` 50 × rate, 2 tizedes kerekítés
+- [x] F: Service teszt (`convert-service.test.ts` mock mintára) — hiányzó rate esetén **nulla** `create`/`update` hívás; párnaponként egy lookup; `appliedRates` a válaszban
+- [x] F: Preview teszt — `movements[].rate` kitöltve, flag nélkül `null`
+- [ ] Később (külön PR): lekötés KOR stepek → `apply_currency_rate` + `percent: 100`; KOR-párra inverz fallback (`1/rate`) + `AppliedRate.inverted`; unit: 2 000 000 HUF / 600 → 3 333.33 KOR, direkt sor elsőbbsége, nem-KOR párnál nincs inverz
+- [x] F: Tagsági ratio szorzó — `resolveMemberRatio` (`rules[pénznem kód]`, membership → type, nincs név fallback, `mode` ignorálva); unit: tagság nyer típus felett, lejárt tagság kimarad, egyező ratio-k OK, eltérő → 422 `MEMBERSHIP_RATIO_AMBIGUOUS` írás nélkül, `hour` kulcs; expand: 20 EGG × 100 × 0.75 = 1 500, azonos pénznem nem szorzódik, ratio 0, kerekítés, description ` · ratio …`; service: `appliedRates[].ratio` / `membershipDocumentId`, preview `memberRatio`
 
 ---
 
 ## Kapcsolódó fájlok
 
-| Útvonal | Szerep |
-| ------- | ------ |
-| [docs/transaction-workflow.md](../transaction-workflow.md) | Üzleti norma + Strapi konverzió |
-| [0003-transaction-workflow-backoffice.md](./0003-transaction-workflow-backoffice.md) | Backoffice Convert gombok (editor + match) |
-| [transaction-workflow/schema.json](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) | Sablon CT |
-| [workflow/step.json](../../src/components/workflow/step.json) | Related accounts step |
-| [workflow/step-member-debit.json](../../src/components/workflow/step-member-debit.json) | Member as Debit |
-| [workflow/step-member-credit.json](../../src/components/workflow/step-member-credit.json) | Member as Credit |
-| [transaction/schema.json](../../src/api/transaction/content-types/transaction/schema.json) | `converted_to_workflow`, `entered_key` |
+| Útvonal                                                                                                               | Szerep                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [docs/transaction-workflow.md](../transaction-workflow.md)                                                            | Üzleti norma + Strapi konverzió                                                                  |
+| [0003-transaction-workflow-backoffice.md](./0003-transaction-workflow-backoffice.md)                                  | Backoffice Convert gombok (editor + match)                                                       |
+| [transaction-workflow/schema.json](../../src/api/transaction-workflow/content-types/transaction-workflow/schema.json) | Sablon CT                                                                                        |
+| [workflow/step.json](../../src/components/workflow/step.json)                                                         | Related accounts step                                                                            |
+| [workflow/step-member-debit.json](../../src/components/workflow/step-member-debit.json)                               | Member as Debit                                                                                  |
+| [workflow/step-member-credit.json](../../src/components/workflow/step-member-credit.json)                             | Member as Credit                                                                                 |
+| [transaction/schema.json](../../src/api/transaction/content-types/transaction/schema.json)                            | `converted_to_workflow`, `entered_key`                                                           |
+| [currency-rate/schema.json](../../src/api/currency-rate/content-types/currency-rate/schema.json)                      | `rate`, `valid_from`, `from_currency_type`, `to_currency_type` — árfolyamos step forrása         |
+| [distributionLogic.ts](../../apps/content-backoffice/src/workflows/bulk-quantity/distributionLogic.ts)                | Backoffice `pickLatestCurrencyRate` / `saleRevenueAmount` — a Convert ugyanezt a szabályt követi |

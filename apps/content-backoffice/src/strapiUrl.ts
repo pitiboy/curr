@@ -2,7 +2,11 @@
 export function resolveStrapiUrl(options: {
   dev: boolean;
   windowOrigin?: string;
+  /** `VITE_STRAPI_URL` override (e2e preview: SPA on :4173, API on :1337). */
+  envUrl?: string;
 }): string {
+  const fromEnv = options.envUrl?.trim().replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
   if (options.dev) {
     return 'http://localhost:1337';
   }

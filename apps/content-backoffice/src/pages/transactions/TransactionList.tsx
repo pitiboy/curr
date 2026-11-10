@@ -36,6 +36,7 @@ import {
   CONVERTED_STORNO,
   DEFAULT_CONVERTED_FILTER,
   firstReceiptVendor,
+  sumTransactionAmountsByCurrency,
 } from '../../data/transactionList';
 import {
   defaultTransactionDisplayedFilters,
@@ -236,6 +237,141 @@ function TransactionOpenField(_props: {
   );
 }
 
+function formatPageAmountTotal(
+  amount: number,
+  currency: string,
+  locale: string,
+): string {
+  const tag = locale === 'en' ? 'en' : 'hu-HU';
+  if (currency === '—') {
+    return new Intl.NumberFormat(tag, { maximumFractionDigits: 2 }).format(
+      amount,
+    );
+  }
+  try {
+    return new Intl.NumberFormat(tag, {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: currency === 'HUF' ? 0 : 2,
+    }).format(amount);
+  } catch {
+    return `${new Intl.NumberFormat(tag).format(amount)} ${currency}`;
+  }
+}
+
+/** Grid tracks aligned with Datagrid columns up to `amount` (then a flexible tail). */
+function transactionListFooterGridColumns(
+  mobile: boolean,
+  showBulkCheckbox: boolean,
+): string {
+  if (mobile) {
+    return showBulkCheckbox
+      ? '3rem 6.25rem 6.25rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)'
+      : '6.25rem 6.25rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)';
+  }
+  return showBulkCheckbox
+    ? '3rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)'
+    : '4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)';
+}
+
+function transactionListFooterMinWidth(
+  mobile: boolean,
+  showBulkCheckbox: boolean,
+): number | string {
+  return mobile ? (showBulkCheckbox ? '44rem' : '41rem') : '52rem';
+}
+
+function TransactionListAmountFooter({
+  locale,
+  mobile,
+  showBulkCheckbox,
+}: {
+  locale: string;
+  mobile: boolean;
+  showBulkCheckbox: boolean;
+}) {
+  const translate = useTranslate();
+  const { data, isPending, total } = useListContext();
+  const rows = data ?? [];
+  const totals = sumTransactionAmountsByCurrency(rows);
+  if (isPending || rows.length === 0 || totals.length === 0) {
+    return null;
+  }
+
+  const formatted = totals
+    .map((row) => formatPageAmountTotal(row.amount, row.currency, locale))
+    .join('  |  ');
+
+  const gridColumns = transactionListFooterGridColumns(
+    mobile,
+    showBulkCheckbox,
+  );
+
+  return (
+    <Box
+      sx={{
+        bgcolor: 'action.hover',
+        borderTop: 1,
+        borderColor: 'divider',
+        columnGap: 0,
+        display: 'grid',
+        gridTemplateColumns: gridColumns,
+        alignItems: 'center',
+        minHeight: 40,
+        minWidth: transactionListFooterMinWidth(mobile, showBulkCheckbox),
+        py: 0.75,
+        typography: 'body2',
+        width: 'max-content',
+      }}
+    >
+      {showBulkCheckbox ? <Box aria-hidden /> : null}
+      {mobile ? (
+        <>
+          <Box aria-hidden />
+          <Box aria-hidden />
+        </>
+      ) : null}
+      <Box
+        sx={{
+          fontWeight: 600,
+          gridColumn: mobile ? 'span 3' : 'span 3',
+          minWidth: 0,
+          overflow: 'hidden',
+          pl: showBulkCheckbox ? 0.5 : 1,
+          pr: 0.5,
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {translate('app.transactions_page_total')}
+        {total != null ? (
+          <Typography
+            color="text.secondary"
+            component="span"
+            sx={{ fontWeight: 400, ml: 0.75 }}
+            variant="inherit"
+          >
+            ({rows.length} / {total})
+          </Typography>
+        ) : null}
+      </Box>
+      <Box
+        className="column-amount"
+        sx={{
+          fontVariantNumeric: 'tabular-nums',
+          fontWeight: 600,
+          pr: 1,
+          textAlign: 'right',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {formatted}
+      </Box>
+      <Box aria-hidden sx={{ minWidth: 48 }} />
+    </Box>
+  );
+}
+
 function TransactionListEmpty() {
   const translate = useTranslate();
   return (
@@ -400,23 +536,43 @@ export function TransactionList() {
       perPage={25}
       sort={{ field: 'entryId', order: 'DESC' }}
     >
-      <Datagrid
-        bulkActionButtons={
-          editorBulkApprove ? <TransactionBulkApproveButton /> : false
-        }
-        empty={<TransactionListEmpty />}
-        hover={false}
-        isRowSelectable={editorBulkApprove ? draftRowSelectable : undefined}
-        rowClick={false}
-        rowSx={bandedRow}
+      <Box
         sx={{
-          '& .column-open, & .column-convert': {
-            whiteSpace: 'nowrap',
-          },
+          maxWidth: '100%',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
-        {transactionDatagridColumns(locale, mobile)}
-      </Datagrid>
+        <Datagrid
+          bulkActionButtons={
+            editorBulkApprove ? <TransactionBulkApproveButton /> : false
+          }
+          empty={<TransactionListEmpty />}
+          hover={false}
+          isRowSelectable={editorBulkApprove ? draftRowSelectable : undefined}
+          rowClick={false}
+          rowSx={bandedRow}
+          sx={{
+            '& .RaDatagrid-table, & table': {
+              mb: 0,
+              minWidth: transactionListFooterMinWidth(
+                mobile,
+                editorBulkApprove,
+              ),
+            },
+            '& .column-open, & .column-convert': {
+              whiteSpace: 'nowrap',
+            },
+          }}
+        >
+          {transactionDatagridColumns(locale, mobile)}
+        </Datagrid>
+        <TransactionListAmountFooter
+          locale={locale}
+          mobile={mobile}
+          showBulkCheckbox={editorBulkApprove}
+        />
+      </Box>
     </List>
   );
 }

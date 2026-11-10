@@ -7,8 +7,9 @@
  * (1000 ← member 1001) on the same day. Remaining = produced − distributed.
  */
 
-export type DateRangePreset =
-  'all' | 'thisMonth' | 'lastMonth' | 'last7' | 'thisYear';
+import type { DateRangePreset } from '../shared/reportDateRange';
+
+export type { DateRangePreset };
 
 export type EggInventoryKpis = {
   produced: number;

@@ -7,6 +7,8 @@ export interface WorkflowStep extends Struct.ComponentSchema {
     icon: 'bulletList';
   };
   attributes: {
+    apply_currency_rate: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     copy_receipt: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     credit_account: Schema.Attribute.Relation<
       'oneToOne',
@@ -56,6 +58,8 @@ export interface WorkflowStepMemberCredit extends Struct.ComponentSchema {
     icon: 'user';
   };
   attributes: {
+    apply_currency_rate: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     copy_receipt: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
@@ -105,6 +109,8 @@ export interface WorkflowStepMemberDebit extends Struct.ComponentSchema {
     icon: 'user';
   };
   attributes: {
+    apply_currency_rate: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     copy_receipt: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     credit_account: Schema.Attribute.Relation<
       'oneToOne',

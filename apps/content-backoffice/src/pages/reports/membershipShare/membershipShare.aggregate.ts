@@ -34,6 +34,8 @@ export type MembershipShareMemberRef = {
 type MemberAcc = {
   memberId: string;
   memberName: string;
+  shareAccountId: string | null;
+  pocketAccountId: string | null;
   shareByCurrency: Map<string, number>;
   pocketByCurrency: Map<string, number>;
 };
@@ -97,6 +99,8 @@ export function aggregateMembershipShareReport(
       row = {
         memberId: ref.memberId,
         memberName: ref.memberName,
+        shareAccountId: ref.shareAccountId,
+        pocketAccountId: ref.pocketAccountId,
         shareByCurrency: new Map(),
         pocketByCurrency: new Map(),
       };
@@ -157,6 +161,8 @@ export function aggregateMembershipShareReport(
     [...accByMember.values()].map((row) => ({
       memberId: row.memberId,
       memberName: row.memberName,
+      shareAccountId: row.shareAccountId,
+      pocketAccountId: row.pocketAccountId,
       shareByCurrency: currencyMapToList(row.shareByCurrency),
       pocketByCurrency: currencyMapToList(row.pocketByCurrency),
     })),

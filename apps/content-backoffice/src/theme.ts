@@ -147,6 +147,9 @@ export const bandedShow: SxProps<Theme> = (theme) => ({
   },
 });
 
+/** Horizontal inset for blocks that sit between two banded show stacks. */
+export const showBetweenBandsInset = { px: 1, py: 0.5 } as const;
+
 /** iPhone-sized viewports: keep chrome on-screen; only the datagrid scrolls sideways. */
 const mobileChrome: ThemeOptions = {
   components: {

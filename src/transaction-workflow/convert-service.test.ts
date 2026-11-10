@@ -243,7 +243,7 @@ describe('convertTransactions keep_original write order', () => {
     ]);
   });
 
-  it('keeps incomplete-source storno as draft while publishing complete steps', async () => {
+  it('keeps incomplete-source storno and steps as draft (related link needs a published source)', async () => {
     const workflow: WorkflowTemplate = {
       ...workflowTwoSteps,
       steps_published: true,
@@ -256,12 +256,8 @@ describe('convertTransactions keep_original write order', () => {
     });
 
     assert.deepEqual(
-      ops.filter((op) => op.kind === 'publish').map(opSignature),
-      ['publish:created-2', 'publish:created-3'],
-    );
-    assert.equal(
-      ops.some((op) => op.kind === 'publish' && op.documentId === 'created-1'),
-      false,
+      ops.filter((op) => op.kind === 'publish'),
+      [],
     );
   });
 
