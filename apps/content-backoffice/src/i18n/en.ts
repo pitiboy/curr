@@ -255,6 +255,41 @@ export const enMessages = mergeTranslations(englishMessages, {
       error: 'Could not load the report.',
       retry: 'Retry',
     },
+    project_balance: {
+      menu: 'Project balances',
+      title: 'Project balances',
+      subtitle:
+        'Per project: production (inflow / revenue-style lines) and investment (5xx/15xx). Default: published only — include drafts via the Transactions filter.',
+      project_filter: 'Project (all)',
+      currency: 'Currency',
+      revenue: 'Production',
+      cost: 'Investment',
+      kpi: {
+        cumulative: 'Cumulative balance · %{currency}',
+        period_revenue: 'Period production · %{currency}',
+        period_cost: 'Period investment · %{currency}',
+        period_net: 'Period net · %{currency}',
+      },
+      by_project_title: 'Production and investment by project (%{currency})',
+      history_title: 'Production and investment over time (%{currency})',
+      history_empty: 'No time series for this currency.',
+      table_title: 'Project table',
+      col: {
+        project: 'Project',
+        period_revenue: 'Production (%{currency})',
+        period_cost: 'Investment (%{currency})',
+        period_net: 'Profit (%{currency})',
+        cumulative: 'Total (%{currency})',
+      },
+      empty:
+        'No project activity in this range. Try another period or publication filter.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+      warn_truncated:
+        'Transaction load hit the safety cap — older rows may be missing. Narrow the date range or add a backend aggregate later.',
+      warn_unclassified:
+        '%{count} booked rows have a project but no production/investment pattern (e.g. 1900↔1100 transfers only). Convert templates or fix account pairs may help.',
+    },
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',
@@ -276,6 +311,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
     workflows: {
+      'project-balance': 'Project balance report',
       'egg-production': 'Daily egg entry',
       'member-fee': 'Member fee',
       'membership-share': 'Share capital report',
