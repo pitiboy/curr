@@ -1,10 +1,11 @@
 /**
  * Membership-share (részjegy) report shapes.
  *
- * Source: published transactions that credit a member's 1101 (részjegy /
- * `account`) or 1001 (zseb / `private_account`) ledger, where the debit is
- * not another member ledger (excludes 1101↔1001 internals). Amounts stay
- * split by currency; never summed across FX.
+ * Source: published transactions on a member's 1101 (részjegy / `account`) or
+ * 1001 (zseb / `private_account`) ledger with the other leg outside member
+ * accounts (excludes 1101↔1001 internals). Credits add, debits subtract so
+ * ügylet-kifejtés zseb költségek nem duplikálnak. Amounts stay split by
+ * currency; never summed across FX.
  */
 
 import type { DateRangePreset } from '../shared/reportDateRange';
