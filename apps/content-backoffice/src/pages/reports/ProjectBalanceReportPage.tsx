@@ -20,8 +20,16 @@ import {
   useTheme,
 } from '@mui/material';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import type { BarItemIdentifier } from '@mui/x-charts/models';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Title, useTranslate } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
 
 import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
 import {
@@ -32,6 +40,16 @@ import {
   kpisForCurrency,
   projectTotalsForCurrency,
 } from './projectBalance/projectBalance.helpers';
+import {
+  drilldownForHistoryChart,
+  drilldownForProjectChart,
+  drilldownForTableCumulative,
+  drilldownForTablePeriodAllLegs,
+  drilldownForTablePeriodLeg,
+  drilldownForTableProjectName,
+  type ProjectBalanceDrilldownContext,
+  type ProjectBalanceLeg,
+} from './projectBalance/drilldown';
 import type { ProjectBalanceReport } from './projectBalance/types';
 import type { DateRangePreset } from './shared/reportDateRange';
 import {
@@ -169,6 +187,12 @@ export function ProjectBalanceReportPage() {
           ) : null}
           <ReportBody
             currency={currency}
+            drilldownContext={{
+              range,
+              transactionStatus,
+              currencyCode: currency,
+              toolbarOrganizationId: organizationId,
+            }}
             onCurrencyChange={setCurrency}
             report={report}
           />
@@ -181,14 +205,39 @@ export function ProjectBalanceReportPage() {
 function ReportBody({
   report,
   currency,
+  drilldownContext,
   onCurrencyChange,
 }: {
   report: ProjectBalanceReport;
   currency: string;
+  drilldownContext: ProjectBalanceDrilldownContext;
   onCurrencyChange: (value: string) => void;
 }) {
   const translate = useTranslate();
   const theme = useTheme();
+  const navigate = useNavigate();
+
+  const openDrilldown = useCallback(
+    (link: { pathname: '/transactions'; search: string }) => {
+      navigate({ pathname: link.pathname, search: link.search });
+    },
+    [navigate],
+  );
+
+  const onBarClick = useCallback(
+    (
+      pick: (
+        dataIndex: number,
+        leg: ProjectBalanceLeg,
+      ) => { pathname: '/transactions'; search: string },
+    ) =>
+      (_event: unknown, item: BarItemIdentifier) => {
+        const seriesId = String(item.seriesId);
+        if (seriesId !== 'revenue' && seriesId !== 'cost') return;
+        openDrilldown(pick(item.dataIndex, seriesId));
+      },
+    [openDrilldown],
+  );
   const kpis = kpisForCurrency(report, currency);
   const history = report.historyByCurrency[currency] ?? [];
   const showCurrencyPicker = report.currencies.length > 1;
@@ -260,6 +309,13 @@ function ReportBody({
         <BarChart
           height={Math.max(280, report.byProject.length * 36)}
           margin={{ left: 72, right: 16, top: 24, bottom: 80 }}
+          onItemClick={onBarClick((dataIndex, leg) =>
+            drilldownForProjectChart(
+              drilldownContext,
+              report.byProject[dataIndex]?.orgId ?? '',
+              leg,
+            ),
+          )}
           series={[
             {
               id: 'revenue',
@@ -297,6 +353,13 @@ function ReportBody({
           <BarChart
             height={320}
             margin={{ left: 72, right: 16, top: 24, bottom: 40 }}
+            onItemClick={onBarClick((dataIndex, leg) =>
+              drilldownForHistoryChart(
+                drilldownContext,
+                history[dataIndex]?.period ?? '',
+                leg,
+              ),
+            )}
             series={[
               {
                 id: 'revenue',
@@ -358,21 +421,83 @@ function ReportBody({
               {report.byProject.map((row) => {
                 const totals = projectTotalsForCurrency(row, currency);
                 if (!totals) return null;
+                const drillTip = translate(
+                  'app.project_balance.drilldown.hint',
+                );
                 return (
                   <TableRow key={row.orgId}>
-                    <TableCell>{row.orgName}</TableCell>
-                    <TableCell align="right">
+                    <DrilldownCell
+                      align="left"
+                      onOpen={() =>
+                        openDrilldown(
+                          drilldownForTableProjectName(
+                            drilldownContext,
+                            row.orgId,
+                          ),
+                        )
+                      }
+                      title={drillTip}
+                    >
+                      {row.orgName}
+                    </DrilldownCell>
+                    <DrilldownCell
+                      align="right"
+                      onOpen={() =>
+                        openDrilldown(
+                          drilldownForTablePeriodLeg(
+                            drilldownContext,
+                            row.orgId,
+                            'revenue',
+                          ),
+                        )
+                      }
+                      title={drillTip}
+                    >
                       {formatMoney(totals.periodRevenue, currency)}
-                    </TableCell>
-                    <TableCell align="right">
+                    </DrilldownCell>
+                    <DrilldownCell
+                      align="right"
+                      onOpen={() =>
+                        openDrilldown(
+                          drilldownForTablePeriodLeg(
+                            drilldownContext,
+                            row.orgId,
+                            'cost',
+                          ),
+                        )
+                      }
+                      title={drillTip}
+                    >
                       {formatMoney(totals.periodCost, currency)}
-                    </TableCell>
-                    <TableCell align="right">
+                    </DrilldownCell>
+                    <DrilldownCell
+                      align="right"
+                      onOpen={() =>
+                        openDrilldown(
+                          drilldownForTablePeriodAllLegs(
+                            drilldownContext,
+                            row.orgId,
+                          ),
+                        )
+                      }
+                      title={drillTip}
+                    >
                       {formatMoney(totals.periodNet, currency)}
-                    </TableCell>
-                    <TableCell align="right">
+                    </DrilldownCell>
+                    <DrilldownCell
+                      align="right"
+                      onOpen={() =>
+                        openDrilldown(
+                          drilldownForTableCumulative(
+                            drilldownContext,
+                            row.orgId,
+                          ),
+                        )
+                      }
+                      title={drillTip}
+                    >
                       {formatMoney(totals.cumulativeBalance, currency)}
-                    </TableCell>
+                    </DrilldownCell>
                   </TableRow>
                 );
               })}
@@ -381,6 +506,40 @@ function ReportBody({
         </Paper>
       </Section>
     </Stack>
+  );
+}
+
+function DrilldownCell({
+  align,
+  children,
+  onOpen,
+  title,
+}: {
+  align: 'left' | 'right';
+  children: ReactNode;
+  onOpen: () => void;
+  title: string;
+}) {
+  return (
+    <TableCell
+      align={align}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+      role="button"
+      sx={{
+        cursor: 'pointer',
+        '&:hover': { textDecoration: 'underline' },
+      }}
+      tabIndex={0}
+      title={title}
+    >
+      {children}
+    </TableCell>
   );
 }
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assembleTransactionList,
   buildTransactionFilters,
+  PROJECT_BALANCE_LEG_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
   pickMatchingWorkflow,
@@ -167,6 +168,31 @@ describe('assembleTransactionList', () => {
     expect(data.map((row) => row.id)).toEqual(['empty', 'a', 'z']);
   });
 
+  it('filters by project balance leg using account classification', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'rev',
+        date: '2026-01-01',
+        debit_account: { code: '1200' },
+        credit_account: { code: '4000' },
+      },
+      {
+        documentId: 'cost',
+        date: '2026-01-02',
+        debit_account: { code: '5200' },
+        credit_account: { code: '1100' },
+      },
+    ];
+    const { data: revenueOnly } = assembleTransactionList([], rows, {
+      filter: { [PROJECT_BALANCE_LEG_FILTER_KEY]: 'revenue' },
+    });
+    expect(revenueOnly.map((row) => row.id)).toEqual(['rev']);
+    const { data: costOnly } = assembleTransactionList([], rows, {
+      filter: { [PROJECT_BALANCE_LEG_FILTER_KEY]: 'cost' },
+    });
+    expect(costOnly.map((row) => row.id)).toEqual(['cost']);
+  });
+
   it('ignores rows without a documentId', () => {
     const { data, total } = assembleTransactionList(
       [{ id: 9, description: 'no document' }],
@@ -199,6 +225,7 @@ describe('buildTransactionFilters', () => {
         amount_gte: 1000,
         amount_lte: 1500,
         organization: 'org-1',
+        currency_type: 'HUF',
         debit_account: 'acc-debit',
         credit_account: 'acc-credit',
         description: '  kávé  ',
@@ -210,6 +237,7 @@ describe('buildTransactionFilters', () => {
         date: { $gte: '2026-01-01', $lte: '2026-01-31' },
         amount: { $gte: 1000, $lte: 1500 },
         organization: { documentId: { $eq: 'org-1' } },
+        currency_type: { code: { $eq: 'HUF' } },
         debit_account: { documentId: { $eq: 'acc-debit' } },
         credit_account: { documentId: { $eq: 'acc-credit' } },
         description: { $containsi: 'kávé' },

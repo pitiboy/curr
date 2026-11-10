@@ -1,3 +1,5 @@
+import { classifyLedgerMovement } from '../pages/reports/projectBalance/projectBalance.classify';
+
 export type PublicationStatus = 'draft' | 'published';
 
 /** Source row after Convert. */
@@ -111,6 +113,9 @@ export const transactionPopulate = {
     },
   },
 };
+
+/** Client-only list filter from project balance drill-down (not sent to Strapi). */
+export const PROJECT_BALANCE_LEG_FILTER_KEY = 'project_balance_leg' as const;
 
 export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
   /** React-admin id: Strapi documentId (not the numeric PK). */
@@ -244,8 +249,12 @@ export function assembleTransactionList(
   params: ListParams,
 ): { data: TransactionRow[]; total: number } {
   const { status } = buildTransactionFilters(params.filter ?? {});
-  const merged = mergeByStatus(drafts, published, status).filter((row) =>
-    matchesFirstReceiptVendor(row.receipts, params.filter?.vendor),
+  const filter = params.filter ?? {};
+  const leg = filter[PROJECT_BALANCE_LEG_FILTER_KEY];
+  const merged = mergeByStatus(drafts, published, status).filter(
+    (row) =>
+      matchesFirstReceiptVendor(row.receipts, filter.vendor) &&
+      matchesProjectBalanceLeg(row, leg),
   );
   const sorted = sortTransactionRows(
     merged,
@@ -288,6 +297,11 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   if (Object.keys(amount).length > 0) strapiFilters.amount = amount;
   if (isPresent(filter.organization)) {
     strapiFilters.organization = { documentId: { $eq: filter.organization } };
+  }
+  if (typeof filter.currency_type === 'string' && filter.currency_type.trim()) {
+    strapiFilters.currency_type = {
+      code: { $eq: filter.currency_type.trim() },
+    };
   }
   if (isPresent(filter.debit_account)) {
     strapiFilters.debit_account = {
@@ -497,6 +511,19 @@ function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const parsed = parseFloat(String(value ?? ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function matchesProjectBalanceLeg(
+  row: StrapiTransaction,
+  leg: unknown,
+): boolean {
+  if (leg !== 'revenue' && leg !== 'cost') return true;
+  const kind = classifyLedgerMovement(
+    row.debit_account?.code,
+    row.credit_account?.code,
+  );
+  if (leg === 'revenue') return kind === 'revenue';
+  return kind === 'cost';
 }
 
 function matchesFirstReceiptVendor(receipts: unknown, query: unknown): boolean {

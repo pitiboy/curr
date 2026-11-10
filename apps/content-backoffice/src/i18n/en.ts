@@ -289,6 +289,9 @@ export const enMessages = mergeTranslations(englishMessages, {
         'Transaction load hit the safety cap — older rows may be missing. Narrow the date range or add a backend aggregate later.',
       warn_unclassified:
         '%{count} booked rows have a project but no production/investment pattern (e.g. 1900↔1100 transfers only). Convert templates or fix account pairs may help.',
+      drilldown: {
+        hint: 'Click: filtered transaction list',
+      },
     },
     profile: 'Profile',
     profile_name: 'Name',

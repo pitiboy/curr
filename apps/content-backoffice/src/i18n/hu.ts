@@ -292,6 +292,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         'A betöltött tranzakciók száma elérte a biztonsági limitet — régebbi sorok kimaradhatnak. Szűkítsd az időszakot, vagy később backend összesítés kell.',
       warn_unclassified:
         '%{count} könyvelt sor van projekten, de nem termelés/beruházás minta (pl. csak 1900↔1100 átvezetés). Ügylet kifejtés vagy számlapár ellenőrzés segíthet.',
+      drilldown: {
+        hint: 'Kattintás: szűrt tranzakciólista',
+      },
     },
     profile: 'Profil',
     profile_name: 'Név',
