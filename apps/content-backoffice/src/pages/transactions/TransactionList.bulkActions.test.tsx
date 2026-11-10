@@ -79,6 +79,10 @@ vi.mock('../../workflows/useBackofficeConfig', () => ({
   useBackofficeConfig: () => ({ publisherMustDiffer: true }),
 }));
 
+vi.mock('../../filters/TransactionListFilterBridge', () => ({
+  TransactionListFilterBridge: () => null,
+}));
+
 vi.mock('./TransactionConvertField', () => ({
   TransactionConvertField: () => null,
 }));
