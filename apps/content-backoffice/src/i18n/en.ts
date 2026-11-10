@@ -391,6 +391,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       session_missing: 'The Google sign-in was interrupted. Please try again.',
       provider_disabled: 'Google sign-in is currently turned off.',
     },
+    administration: {
+      menu: 'Administration',
+    },
     static_nav: 'Static pages',
     static_privacy: 'Privacy Policy',
     static_terms: 'Terms of Service',

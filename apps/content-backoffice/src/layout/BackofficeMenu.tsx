@@ -21,6 +21,8 @@ import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
 
+import { AdministrationMenuItem } from './AdministrationMenuItem';
+
 export function BackofficeMenu() {
   const translate = useTranslate();
   const { permissions } = usePermissions();
@@ -96,6 +98,7 @@ export function BackofficeMenu() {
           mode="draft"
         />
       )}
+      <AdministrationMenuItem />
     </Menu>
   );
 }
