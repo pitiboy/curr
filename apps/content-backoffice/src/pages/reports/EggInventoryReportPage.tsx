@@ -37,9 +37,13 @@ import type {
 } from './eggInventory/types';
 import { useGlobalReportParams } from '../../filters/globalTransactionFiltersAtom';
 import { useEggInventoryReport } from './eggInventory/useEggInventoryReport';
-
-const CHART_MARGIN = { left: 52, right: 16, top: 28, bottom: 40 } as const;
-const CHART_HEIGHT = 280;
+import {
+  ReportPageHeader,
+  ReportPageShell,
+  ReportScrollX,
+  reportBarAreaMinWidth,
+  useReportChartMetrics,
+} from './shared/reportLayout';
 
 function formatQty(n: number): string {
   return new Intl.NumberFormat('hu-HU').format(n);
@@ -64,16 +68,12 @@ export function EggInventoryReportPage() {
   const { status, report, reload } = useEggInventoryReport(params);
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1100 }}>
+    <ReportPageShell>
       <Title title="app.egg_inventory.title" />
-      <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography component="h1" variant="h5">
-          {translate('app.egg_inventory.title')}
-        </Typography>
-        <Typography color="text.secondary" variant="body2">
-          {translate('app.egg_inventory.subtitle')}
-        </Typography>
-      </Stack>
+      <ReportPageHeader
+        subtitle={translate('app.egg_inventory.subtitle')}
+        title={translate('app.egg_inventory.title')}
+      />
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (
@@ -95,7 +95,7 @@ export function EggInventoryReportPage() {
         </Alert>
       ) : null}
       {status === 'success' && report ? <ReportBody report={report} /> : null}
-    </Box>
+    </ReportPageShell>
   );
 }
 
@@ -162,34 +162,40 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
       </Section>
 
       <Section title={translate('app.egg_inventory.alom_title')}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>{translate('app.egg_inventory.alom_name')}</TableCell>
-              <TableCell align="right">
-                {translate('app.egg_inventory.kpi.produced')}
-              </TableCell>
-              <TableCell align="right">
-                {translate('app.egg_inventory.kpi.distributed')}
-              </TableCell>
-              <TableCell align="right">
-                {translate('app.egg_inventory.kpi.remaining')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {byAlom.map((row) => (
-              <TableRow key={row.alomName}>
-                <TableCell>{row.alomName}</TableCell>
-                <TableCell align="right">{formatQty(row.produced)}</TableCell>
-                <TableCell align="right">
-                  {formatQty(row.distributed)}
+        <ReportScrollX>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  {translate('app.egg_inventory.alom_name')}
                 </TableCell>
-                <TableCell align="right">{formatQty(row.remaining)}</TableCell>
+                <TableCell align="right">
+                  {translate('app.egg_inventory.kpi.produced')}
+                </TableCell>
+                <TableCell align="right">
+                  {translate('app.egg_inventory.kpi.distributed')}
+                </TableCell>
+                <TableCell align="right">
+                  {translate('app.egg_inventory.kpi.remaining')}
+                </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {byAlom.map((row) => (
+                <TableRow key={row.alomName}>
+                  <TableCell>{row.alomName}</TableCell>
+                  <TableCell align="right">{formatQty(row.produced)}</TableCell>
+                  <TableCell align="right">
+                    {formatQty(row.distributed)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatQty(row.remaining)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ReportScrollX>
       </Section>
 
       <Section title={translate('app.egg_inventory.members_title')}>
@@ -227,66 +233,68 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                 title={translate('app.egg_inventory.pie_sale')}
               />
             </Box>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>
-                    {translate('app.egg_inventory.member_name')}
-                  </TableCell>
-                  <TableCell>
-                    {translate('app.egg_inventory.member_account')}
-                  </TableCell>
-                  <TableCell align="right">
-                    {translate('app.egg_inventory.kpi.internal')}
-                  </TableCell>
-                  <TableCell align="right">
-                    {translate('app.egg_inventory.sale_qty')}
-                  </TableCell>
-                  <TableCell align="right">
-                    {translate('app.egg_inventory.sale_revenue')}
-                  </TableCell>
-                  <TableCell align="right">
-                    {translate('app.egg_inventory.member_total')}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {byMember.map((row) => (
-                  <TableRow key={row.memberId}>
-                    <TableCell>{row.memberName}</TableCell>
+            <ReportScrollX minWidth={520}>
+              <Table size="small" sx={{ minWidth: 520 }}>
+                <TableHead>
+                  <TableRow>
                     <TableCell>
-                      <Typography
-                        component="span"
-                        sx={{ fontVariantNumeric: 'tabular-nums' }}
-                        variant="body2"
-                      >
-                        {row.accountLabel}
-                      </Typography>
+                      {translate('app.egg_inventory.member_name')}
+                    </TableCell>
+                    <TableCell>
+                      {translate('app.egg_inventory.member_account')}
                     </TableCell>
                     <TableCell align="right">
-                      {formatQty(row.internalQty)}
+                      {translate('app.egg_inventory.kpi.internal')}
                     </TableCell>
                     <TableCell align="right">
-                      {formatQty(row.saleQty)}
+                      {translate('app.egg_inventory.sale_qty')}
                     </TableCell>
                     <TableCell align="right">
-                      <Typography
-                        component="span"
-                        sx={{ fontVariantNumeric: 'tabular-nums' }}
-                        variant="body2"
-                      >
-                        {row.saleQty > 0
-                          ? formatMoney(row.saleRevenue, row.saleCurrency)
-                          : '—'}
-                      </Typography>
+                      {translate('app.egg_inventory.sale_revenue')}
                     </TableCell>
                     <TableCell align="right">
-                      {formatQty(memberTotal(row))}
+                      {translate('app.egg_inventory.member_total')}
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {byMember.map((row) => (
+                    <TableRow key={row.memberId}>
+                      <TableCell>{row.memberName}</TableCell>
+                      <TableCell>
+                        <Typography
+                          component="span"
+                          sx={{ fontVariantNumeric: 'tabular-nums' }}
+                          variant="body2"
+                        >
+                          {row.accountLabel}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatQty(row.internalQty)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatQty(row.saleQty)}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography
+                          component="span"
+                          sx={{ fontVariantNumeric: 'tabular-nums' }}
+                          variant="body2"
+                        >
+                          {row.saleQty > 0
+                            ? formatMoney(row.saleRevenue, row.saleCurrency)
+                            : '—'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatQty(memberTotal(row))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ReportScrollX>
           </Stack>
         )}
       </Section>
@@ -306,50 +314,55 @@ function ProductionBarTrendChart({
   trendLabel: string;
 }) {
   const theme = useTheme();
+  const chartMetrics = useReportChartMetrics();
   const totals = timeseries.map(producedInPeriod);
 
   return (
-    <ChartsContainer
-      height={CHART_HEIGHT}
-      margin={CHART_MARGIN}
-      series={[
-        ...EGG_REPORT_ALOM_NAMES.map((name, index) => ({
-          type: 'bar' as const,
-          id: name,
-          label: name,
-          data: timeseries.map((point) => point.byAlom[name] ?? 0),
-          stack: 'alom',
-          color: alomColors[index] ?? theme.palette.primary.main,
-        })),
-        {
-          type: 'line' as const,
-          id: 'trend-total',
-          label: trendLabel,
-          data: totals,
-          color: theme.palette.text.primary,
-          curve: 'linear' as const,
-          showMark: true,
-        },
-      ]}
-      xAxis={[
-        {
-          id: 'period',
-          data: periods,
-          scaleType: 'band',
-          tickLabelStyle: { fontSize: 11 },
-        },
-      ]}
-      yAxis={[{ id: 'qty', width: 48, min: 0 }]}
+    <ReportScrollX
+      minWidth={reportBarAreaMinWidth(periods.length, chartMetrics.narrow)}
     >
-      <ChartsGrid horizontal />
-      <BarPlot />
-      <LinePlot />
-      <MarkPlot />
-      <ChartsXAxis axisId="period" />
-      <ChartsYAxis axisId="qty" />
-      <ChartsLegend direction="horizontal" />
-      <ChartsTooltip />
-    </ChartsContainer>
+      <ChartsContainer
+        height={chartMetrics.narrow ? 250 : 280}
+        margin={chartMetrics.containerMargin}
+        series={[
+          ...EGG_REPORT_ALOM_NAMES.map((name, index) => ({
+            type: 'bar' as const,
+            id: name,
+            label: name,
+            data: timeseries.map((point) => point.byAlom[name] ?? 0),
+            stack: 'alom',
+            color: alomColors[index] ?? theme.palette.primary.main,
+          })),
+          {
+            type: 'line' as const,
+            id: 'trend-total',
+            label: trendLabel,
+            data: totals,
+            color: theme.palette.text.primary,
+            curve: 'linear' as const,
+            showMark: true,
+          },
+        ]}
+        xAxis={[
+          {
+            id: 'period',
+            data: periods,
+            scaleType: 'band',
+            tickLabelStyle: { fontSize: 11 },
+          },
+        ]}
+        yAxis={[{ id: 'qty', width: chartMetrics.yAxisWidth, min: 0 }]}
+      >
+        <ChartsGrid horizontal />
+        <BarPlot />
+        <LinePlot />
+        <MarkPlot />
+        <ChartsXAxis axisId="period" />
+        <ChartsYAxis axisId="qty" />
+        <ChartsLegend direction="horizontal" />
+        <ChartsTooltip />
+      </ChartsContainer>
+    </ReportScrollX>
   );
 }
 
@@ -371,37 +384,42 @@ function MemberTimelineChart({
   periods: string[];
   members: EggMemberRow[];
 }) {
+  const chartMetrics = useReportChartMetrics();
   return (
-    <ChartsContainer
-      height={CHART_HEIGHT}
-      margin={CHART_MARGIN}
-      series={members.map((member, index) => ({
-        type: 'bar' as const,
-        id: member.memberId,
-        label: member.memberName,
-        data: timeseries.map(
-          (point) => point.byMemberTotal[member.memberId] ?? 0,
-        ),
-        // No stack → grouped bars side-by-side per period.
-        color: MEMBER_BAR_COLORS[index % MEMBER_BAR_COLORS.length],
-      }))}
-      xAxis={[
-        {
-          id: 'period',
-          data: periods,
-          scaleType: 'band',
-          tickLabelStyle: { fontSize: 11 },
-        },
-      ]}
-      yAxis={[{ id: 'qty', width: 48, min: 0 }]}
+    <ReportScrollX
+      minWidth={reportBarAreaMinWidth(periods.length, chartMetrics.narrow)}
     >
-      <ChartsGrid horizontal />
-      <BarPlot />
-      <ChartsXAxis axisId="period" />
-      <ChartsYAxis axisId="qty" />
-      <ChartsLegend direction="horizontal" />
-      <ChartsTooltip />
-    </ChartsContainer>
+      <ChartsContainer
+        height={chartMetrics.narrow ? 250 : 280}
+        margin={chartMetrics.containerMargin}
+        series={members.map((member, index) => ({
+          type: 'bar' as const,
+          id: member.memberId,
+          label: member.memberName,
+          data: timeseries.map(
+            (point) => point.byMemberTotal[member.memberId] ?? 0,
+          ),
+          // No stack → grouped bars side-by-side per period.
+          color: MEMBER_BAR_COLORS[index % MEMBER_BAR_COLORS.length],
+        }))}
+        xAxis={[
+          {
+            id: 'period',
+            data: periods,
+            scaleType: 'band',
+            tickLabelStyle: { fontSize: 11 },
+          },
+        ]}
+        yAxis={[{ id: 'qty', width: chartMetrics.yAxisWidth, min: 0 }]}
+      >
+        <ChartsGrid horizontal />
+        <BarPlot />
+        <ChartsXAxis axisId="period" />
+        <ChartsYAxis axisId="qty" />
+        <ChartsLegend direction="horizontal" />
+        <ChartsTooltip />
+      </ChartsContainer>
+    </ReportScrollX>
   );
 }
 
@@ -435,7 +453,7 @@ function MemberSharePie({
         </Typography>
       ) : (
         <PieChart
-          height={240}
+          height={220}
           margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
           series={[
             {
@@ -511,7 +529,16 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <Typography component="h2" sx={{ mb: 1 }} variant="subtitle1">
         {title}
       </Typography>
-      <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', p: 1.5 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          border: 1,
+          borderColor: 'divider',
+          maxWidth: '100%',
+          minWidth: 0,
+          p: { xs: 1, sm: 1.5 },
+        }}
+      >
         {children}
       </Paper>
     </Box>
