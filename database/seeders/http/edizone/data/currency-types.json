@@ -24,6 +24,12 @@
     "categoryCode": "RESOURCES"
   },
   {
+    "code": "CHICK",
+    "name": "Csirke",
+    "unit": "db",
+    "categoryCode": "RESOURCES"
+  },
+  {
     "code": "HEN",
     "name": "tojó tyúk",
     "unit": "db",

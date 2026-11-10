@@ -1,4 +1,8 @@
-import type { DateRangeBounds } from '../eggInventory/dateRange';
+import {
+  periodKeyForPreset,
+  periodsInRange,
+  type DateRangeBounds,
+} from '../shared/reportDateRange';
 import type {
   DateRangePreset,
   FlockAlomRow,
@@ -32,53 +36,6 @@ export type FlockReportCatalog = {
   /** Hen-house org id → alom display name (children of Tyúktartás). */
   henHouseNames: ReadonlyMap<string, string>;
 };
-
-type Granularity = 'day' | 'month';
-
-function granularityForPreset(preset: DateRangePreset): Granularity {
-  return preset === 'all' || preset === 'thisYear' ? 'month' : 'day';
-}
-
-function periodKey(day: string, granularity: Granularity): string {
-  return granularity === 'month' ? day.slice(0, 7) : day;
-}
-
-function pad(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
-/** Continuous bucket keys from `from` to `to` (inclusive, YYYY-MM-DD). */
-export function enumeratePeriods(
-  from: string,
-  to: string,
-  granularity: Granularity,
-): string[] {
-  if (from > to) return [];
-  const out: string[] = [];
-  if (granularity === 'month') {
-    let year = Number(from.slice(0, 4));
-    let month = Number(from.slice(5, 7));
-    const endKey = to.slice(0, 7);
-    for (let guard = 0; guard < 1200; guard += 1) {
-      const key = `${year}-${pad(month)}`;
-      out.push(key);
-      if (key >= endKey) break;
-      month += 1;
-      if (month > 12) {
-        month = 1;
-        year += 1;
-      }
-    }
-    return out;
-  }
-  const cursor = new Date(`${from}T00:00:00Z`);
-  const end = new Date(`${to}T00:00:00Z`);
-  for (let guard = 0; guard < 4000 && cursor <= end; guard += 1) {
-    out.push(cursor.toISOString().slice(0, 10));
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return out;
-}
 
 export function animalForCurrency(code: string): FlockAnimal | null {
   if (code === FLOCK_CURRENCY_HEN) return 'hen';
@@ -149,7 +106,6 @@ export function aggregatePoultryFlockReport(
   preset: DateRangePreset,
   bounds: DateRangeBounds,
 ): PoultryFlockReport | null {
-  const granularity = granularityForPreset(preset);
   const kpis: PoultryFlockKpis = {
     opening: emptyCounts(),
     added: emptyCounts(),
@@ -206,7 +162,7 @@ export function aggregatePoultryFlockReport(
     acc[move.kind] += qty;
     bump(kpis[move.kind], animal, qty);
 
-    const period = periodKey(day, granularity);
+    const period = periodKeyForPreset(day, preset);
     let alomDeltas = deltaByPeriod.get(period);
     if (!alomDeltas) {
       alomDeltas = new Map();
@@ -275,8 +231,7 @@ export function aggregatePoultryFlockReport(
     running.set(name, { hen, rooster, total: hen + rooster });
   }
 
-  const rangeStart = bounds.from ?? firstInRangeDay ?? bounds.to;
-  const periods = enumeratePeriods(rangeStart, bounds.to, granularity);
+  const periods = periodsInRange(preset, bounds, firstInRangeDay ?? bounds.to);
 
   const timeseries: FlockTimeseriesPoint[] = periods.map((period) => {
     const deltas = deltaByPeriod.get(period);

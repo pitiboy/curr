@@ -50,6 +50,10 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_currency: 'Currency',
     transactions_convert_preview_steps_total:
       'Step total: %{steps} (original: %{original})',
+    transactions_convert_preview_rate: 'rate × %{rate} (from %{validFrom})',
+    transactions_convert_preview_rate_same: 'rate × %{rate}',
+    transactions_convert_preview_member_ratio:
+      'member ratio × %{ratio} (%{membership})',
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',
@@ -125,6 +129,13 @@ export const enMessages = mergeTranslations(englishMessages, {
     account_profile_workflow_dropped:
       'The selected transaction template no longer matches the chosen accounts.',
     reports: {
+      range: {
+        all: 'All time',
+        thisMonth: 'This month',
+        lastMonth: 'Last month',
+        last7: 'Last 7 days',
+        thisYear: 'This year',
+      },
       transaction_status: {
         label: 'Transactions',
         /** Published/live books view — default, same as before. */
@@ -168,6 +179,34 @@ export const enMessages = mergeTranslations(englishMessages, {
       sale_revenue: 'Sale revenue',
       member_total: 'Total (qty)',
       empty: 'No egg traffic for this period. Try another date range.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
+    hen_inventory: {
+      menu: 'Hen registry',
+      title: 'Laying-hen inventory report',
+      subtitle:
+        'HEN stock per flock over time, with slaughter and live-bird transfers to members by day.',
+      kpi: {
+        stock: 'Stock (end of range)',
+        intake: 'Intake',
+        slaughter: 'Slaughter',
+        transfer: 'Hen transfer',
+        mortality: 'Mortality',
+      },
+      stock_timeseries_title: 'Stock over time (by flock)',
+      alom_title: 'Breakdown by flock',
+      alom_name: 'Flock',
+      slaughter_chart_title: 'Slaughter by day and member',
+      members_title: 'Member totals (slaughter / transfer)',
+      member_name: 'Member',
+      member_account: 'Account',
+      member_total: 'Total (head)',
+      totals_row: 'Total',
+      slaughter_empty:
+        'No member hen outflows in this period. The report counts every HEN 1300→member-pocket booking, including the slaughter template.',
+      outflow_empty: 'No slaughter or transfers in this period.',
+      empty: 'No hen traffic for this period. Try another date range.',
       error: 'Could not load the report.',
       retry: 'Retry',
     },

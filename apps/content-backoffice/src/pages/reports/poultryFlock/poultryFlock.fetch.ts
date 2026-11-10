@@ -1,11 +1,10 @@
 import { strapiHttpClient } from 'ra-strapi';
 
 import type { ContentHttpClient } from '../../../data/receiptDraft';
-import { POULTRY_STOCK_ORGANIZATION_NAME } from '../../../workflows/bulk-quantity/poolTransfer';
 
-import { boundsForPreset } from '../eggInventory/dateRange';
+import { loadPoultryHenHouses } from '../shared/poultryHenHouses';
+import { boundsForPreset } from '../shared/reportDateRange';
 import {
-  fetchStrapiList,
   loadReportTransactions,
   REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
   type ReportTransactionStatusFilter,
@@ -20,11 +19,6 @@ import {
   type DateRangePreset,
   type PoultryFlockReport,
 } from './types';
-
-type OrgRow = {
-  documentId?: string;
-  name?: string | null;
-};
 
 type TxRow = {
   date?: string | null;
@@ -45,36 +39,6 @@ const reportPopulate = {
 function parseAmount(value: string | number | null | undefined): number {
   const n = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
-}
-
-async function loadHenHouseNames(
-  httpClient: ContentHttpClient,
-): Promise<Map<string, string>> {
-  const parents = await fetchStrapiList<OrgRow>(
-    httpClient,
-    '/api/organizations',
-    {
-      filters: { name: { $eq: POULTRY_STOCK_ORGANIZATION_NAME } },
-      fields: ['documentId', 'name'],
-    },
-  );
-  const parentId = parents[0]?.documentId;
-  const names = new Map<string, string>();
-  if (!parentId) return names;
-  const children = await fetchStrapiList<OrgRow>(
-    httpClient,
-    '/api/organizations',
-    {
-      filters: { parent: { documentId: { $eq: parentId } } },
-      fields: ['documentId', 'name'],
-      sort: ['name:asc'],
-    },
-  );
-  for (const row of children) {
-    if (!row.documentId) continue;
-    names.set(row.documentId, row.name?.trim() || row.documentId);
-  }
-  return names;
 }
 
 function mapTx(row: TxRow): FlockReportTx | null {
@@ -113,8 +77,8 @@ export async function fetchPoultryFlockReport(
     options.transactionStatus ?? REPORT_TRANSACTION_STATUS_FILTER_DEFAULT;
   const bounds = boundsForPreset(preset, options.now);
 
-  const [henHouseNames, rows] = await Promise.all([
-    loadHenHouseNames(httpClient),
+  const [henHouses, rows] = await Promise.all([
+    loadPoultryHenHouses(httpClient),
     loadReportTransactions<TxRow>(httpClient, transactionStatus, {
       filters: {
         $and: [
@@ -141,5 +105,10 @@ export async function fetchPoultryFlockReport(
     .map(mapTx)
     .filter((row): row is FlockReportTx => row != null && row.amount !== 0);
 
-  return aggregatePoultryFlockReport(txs, { henHouseNames }, preset, bounds);
+  return aggregatePoultryFlockReport(
+    txs,
+    { henHouseNames: henHouses.names },
+    preset,
+    bounds,
+  );
 }

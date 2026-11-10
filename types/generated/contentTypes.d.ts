@@ -543,6 +543,61 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAuditLogAuditLog extends Struct.CollectionTypeSchema {
+  collectionName: 'audit_logs';
+  info: {
+    description: 'HTTP request audit trail (written by global middleware; not for Content API access).';
+    displayName: 'Audit log';
+    pluralName: 'audit-logs';
+    singularName: 'audit-log';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: true;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+  };
+  attributes: {
+    actor_id: Schema.Attribute.String;
+    actor_label: Schema.Attribute.String;
+    actor_role: Schema.Attribute.String;
+    actor_type: Schema.Attribute.Enumeration<
+      ['user', 'admin', 'api-token', 'anonymous']
+    > &
+      Schema.Attribute.Required;
+    body: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    duration_ms: Schema.Attribute.Integer;
+    error: Schema.Attribute.Text;
+    ip: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::audit-log.audit-log'
+    > &
+      Schema.Attribute.Private;
+    method: Schema.Attribute.String & Schema.Attribute.Required;
+    occurred_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    path: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    query: Schema.Attribute.JSON;
+    request_id: Schema.Attribute.String;
+    route: Schema.Attribute.String;
+    status: Schema.Attribute.Integer;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user_agent: Schema.Attribute.Text;
+  };
+}
+
 export interface ApiCurrencyCategoryCurrencyCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'currency_categories';
@@ -831,7 +886,7 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     valid_from: Schema.Attribute.DateTime &
       Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'2026-11-06T12:59:48.108Z'>;
+      Schema.Attribute.DefaultTo<'2026-11-09T11:19:12.393Z'>;
     valid_to: Schema.Attribute.DateTime;
   };
 }
@@ -1776,6 +1831,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::account-category.account-category': ApiAccountCategoryAccountCategory;
       'api::account.account': ApiAccountAccount;
+      'api::audit-log.audit-log': ApiAuditLogAuditLog;
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;
       'api::currency-type.currency-type': ApiCurrencyTypeCurrencyType;

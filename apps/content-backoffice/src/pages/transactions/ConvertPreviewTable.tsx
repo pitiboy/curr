@@ -8,7 +8,12 @@ import {
 } from '@mui/material';
 import { useTranslate } from 'react-admin';
 
-import type { ConvertPreview } from '../../data/convertPreview';
+import {
+  appliedRateLabelParts,
+  memberRatioLabelParts,
+  type ConvertPreview,
+  type PreviewMovement,
+} from '../../data/convertPreview';
 
 function formatAmount(value: number): string {
   return value.toLocaleString('hu-HU', { maximumFractionDigits: 2 });
@@ -24,6 +29,43 @@ function currencyLabel(code: string | null, name: string | null): string {
   const trimmedName = name?.trim();
   if (trimmedName) return trimmedName;
   return '—';
+}
+
+function RateCaption({ movement }: { movement: PreviewMovement }) {
+  const translate = useTranslate();
+  const parts = appliedRateLabelParts(movement.rate);
+  if (!parts) return null;
+  const ratio = memberRatioLabelParts(movement.memberRatio);
+  return (
+    <Typography
+      color="text.secondary"
+      component="div"
+      data-testid="convert-preview-rate"
+      variant="caption"
+    >
+      {parts.validFrom
+        ? translate('app.transactions_convert_preview_rate', {
+            rate: parts.rate,
+            validFrom: parts.validFrom,
+          })
+        : translate('app.transactions_convert_preview_rate_same', {
+            rate: parts.rate,
+          })}
+      {ratio ? (
+        <Typography
+          color="text.secondary"
+          component="div"
+          data-testid="convert-preview-member-ratio"
+          variant="caption"
+        >
+          {translate('app.transactions_convert_preview_member_ratio', {
+            ratio: ratio.ratio,
+            membership: ratio.membership,
+          })}
+        </Typography>
+      ) : null}
+    </Typography>
+  );
 }
 
 export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
@@ -111,6 +153,7 @@ export function ConvertPreviewTable({ preview }: { preview: ConvertPreview }) {
               </TableCell>
               <TableCell>
                 {currencyLabel(movement.currency.code, movement.currency.name)}
+                <RateCaption movement={movement} />
               </TableCell>
             </TableRow>
           ))}

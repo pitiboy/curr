@@ -1,0 +1,6 @@
+# Strapi-generated types (source of truth: src/api/**/content-types/**/schema.json)
+types/generated/
+
+# Documentation plugin output (develop/build regenerates; use schemas and routes instead)
+src/extensions/documentation/documentation/**/full_documentation.json
+src/extensions/documentation/public/index.html

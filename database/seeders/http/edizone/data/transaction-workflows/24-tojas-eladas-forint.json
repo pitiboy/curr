@@ -20,7 +20,8 @@
       "credit_code": "1001",
       "currency": "HUF",
       "organization": "Tyúktartás",
-      "transaction_type": "Készpénz"
+      "transaction_type": "Készpénz",
+      "apply_currency_rate": true
     },
     {
       "description": "Tojás eladás (bevétel)",
@@ -29,7 +30,8 @@
       "credit_code": "1000",
       "currency": "HUF",
       "organization": "Tyúktartás",
-      "transaction_type": "Átvezetés"
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
     }
   ]
 }

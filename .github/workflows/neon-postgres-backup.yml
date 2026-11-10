@@ -1,0 +1,94 @@
+name: Neon Postgres backup
+
+on:
+  schedule:
+    # 02:30 UTC ≈ 03:30 Budapest (téli idő) / 04:30 (nyári idő); a GitHub queue csúsztathat.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: neon-postgres-backup
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Preflight secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate secrets and variables
+        env:
+          NEON_BACKUP_DATABASE_URL_ZEP: ${{ secrets.NEON_BACKUP_DATABASE_URL_ZEP }}
+          NEON_BACKUP_DATABASE_URL_EDIZONE: ${{ secrets.NEON_BACKUP_DATABASE_URL_EDIZONE }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+        run: bash scripts/backup/preflight.sh
+
+  backup:
+    name: Backup db-${{ matrix.db_key }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        db_key: [zep, edizone]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL 18 client and age
+        run: |
+          bash scripts/backup/install-pg18-client.sh
+          echo "$PATH"
+          pg_dump --version
+      - name: Run logical backup
+        id: run_backup
+        env:
+          DB_KEY: ${{ matrix.db_key }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+          NEON_BACKUP_DATABASE_URL_ZEP: ${{ secrets.NEON_BACKUP_DATABASE_URL_ZEP }}
+          NEON_BACKUP_DATABASE_URL_EDIZONE: ${{ secrets.NEON_BACKUP_DATABASE_URL_EDIZONE }}
+        run: bash scripts/backup/run-backup.sh
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neon-pg-backup-db-${{ matrix.db_key }}-${{ github.run_id }}
+          path: ${{ steps.run_backup.outputs.artifact_dir }}/
+          retention-days: 30
+          if-no-files-found: error
+
+  aggregate:
+    name: Aggregate summary
+    needs: backup
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download backup manifests
+        if: ${{ needs.backup.result != 'cancelled' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: neon-pg-backup-db-*-${{ github.run_id }}
+          merge-multiple: true
+          path: backup-artifacts
+      - name: Write combined summary
+        if: ${{ needs.backup.result != 'cancelled' }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' manifests < <(find backup-artifacts -name 'manifest-db-*.json' -print0)
+          if ((${#manifests[@]} == 0)); then
+            echo "## Összesítés" >>"$GITHUB_STEP_SUMMARY"
+            echo "" >>"$GITHUB_STEP_SUMMARY"
+            echo "Nincs letölthető manifest (minden backup job elbukott?)." >>"$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          bash scripts/backup/aggregate-summary.sh "${manifests[@]}" >>"$GITHUB_STEP_SUMMARY" || true
+      - name: Fail workflow when any backup failed
+        if: ${{ needs.backup.result != 'success' }}
+        run: |
+          echo "Legalább egy db backup job sikertelen; lásd a matrix job logokat." >&2
+          exit 1

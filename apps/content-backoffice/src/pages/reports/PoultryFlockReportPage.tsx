@@ -10,8 +10,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -27,7 +25,7 @@ import { LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
 import { useState, type ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
-import { ReportTransactionStatusFilterControl } from './components/ReportTransactionStatusFilter';
+import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
 import { usePoultryFlockReport } from './poultryFlock/usePoultryFlockReport';
 import type {
   DateRangePreset,
@@ -39,14 +37,6 @@ import {
   REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
   type ReportTransactionStatusFilter as ReportTxStatusMode,
 } from './shared/reportTransactionStatus';
-
-const RANGE_PRESETS: DateRangePreset[] = [
-  'all',
-  'thisMonth',
-  'lastMonth',
-  'last7',
-  'thisYear',
-];
 
 const CHART_MARGIN = { left: 52, right: 16, top: 28, bottom: 40 } as const;
 const CHART_HEIGHT = 280;
@@ -94,33 +84,12 @@ export function PoultryFlockReportPage() {
         </Typography>
       </Stack>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        sx={{ mb: 2, flexWrap: 'wrap' }}
-      >
-        <ToggleButtonGroup
-          color="primary"
-          exclusive
-          onChange={(_e, value: DateRangePreset | null) => {
-            if (value) setRange(value);
-          }}
-          size="small"
-          sx={{ flexWrap: 'wrap' }}
-          value={range}
-        >
-          {RANGE_PRESETS.map((preset) => (
-            <ToggleButton key={preset} value={preset}>
-              {translate(`app.egg_inventory.range.${preset}`)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-
-        <ReportTransactionStatusFilterControl
-          onChange={setTransactionStatus}
-          value={transactionStatus}
-        />
-      </Stack>
+      <ReportRangeFilterToolbar
+        onRangeChange={setRange}
+        onTransactionStatusChange={setTransactionStatus}
+        range={range}
+        transactionStatus={transactionStatus}
+      />
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (

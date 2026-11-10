@@ -80,3 +80,6 @@ playwright-report/
 .impeccable/build/
 .impeccable/live/
 .env.e2e
+
+# claude code (personal)
+.claude/settings.local.json

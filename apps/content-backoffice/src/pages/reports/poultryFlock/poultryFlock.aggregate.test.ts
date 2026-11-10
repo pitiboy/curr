@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   aggregatePoultryFlockReport,
   classifyFlockTx,
-  enumeratePeriods,
   type FlockReportCatalog,
   type FlockReportTx,
 } from './poultryFlock.aggregate';
@@ -57,22 +56,6 @@ describe('classifyFlockTx', () => {
         tx({ date: 'd', amount: 1, debitCode: '1300', creditCode: '1300' }),
       ),
     ).toBeNull();
-  });
-});
-
-describe('enumeratePeriods', () => {
-  it('builds continuous day and month buckets', () => {
-    expect(enumeratePeriods('2026-02-27', '2026-03-01', 'day')).toEqual([
-      '2026-02-27',
-      '2026-02-28',
-      '2026-03-01',
-    ]);
-    expect(enumeratePeriods('2025-11-15', '2026-02-01', 'month')).toEqual([
-      '2025-11',
-      '2025-12',
-      '2026-01',
-      '2026-02',
-    ]);
   });
 });
 

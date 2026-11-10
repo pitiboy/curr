@@ -10,6 +10,7 @@ import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
+import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
 import { MembershipShareReportPage } from './pages/reports/MembershipShareReportPage';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from './pages/reports/membershipShare/types';
 import { PoultryFlockReportPage } from './pages/reports/PoultryFlockReportPage';
@@ -62,6 +63,17 @@ export function App() {
               </WorkflowFormGate>
             }
             path="/reports/egg-inventory"
+          />
+          <Route
+            element={
+              <WorkflowFormGate
+                roles={eggDailyEntryConfig.roles}
+                workflowId={eggDailyEntryConfig.workflowId}
+              >
+                <HenInventoryReportPage />
+              </WorkflowFormGate>
+            }
+            path="/reports/hen-inventory"
           />
           <Route
             element={

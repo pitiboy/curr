@@ -36,20 +36,12 @@ import {
   MEMBER_POCKET_ACCOUNT_CODE,
   MEMBER_SHARE_ACCOUNT_CODE,
 } from './membershipShare/types';
-import { ReportTransactionStatusFilterControl } from './components/ReportTransactionStatusFilter';
+import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
 import {
   REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
   type ReportTransactionStatusFilter as ReportTxStatusMode,
 } from './shared/reportTransactionStatus';
 import { useMembershipShareReport } from './membershipShare/useMembershipShareReport';
-
-const RANGE_PRESETS: DateRangePreset[] = [
-  'all',
-  'thisMonth',
-  'lastMonth',
-  'last7',
-  'thisYear',
-];
 
 const LEDGER_FOCUSES: LedgerFocus[] = ['both', 'share', 'pocket'];
 
@@ -99,28 +91,12 @@ export function MembershipShareReportPage() {
         </Typography>
       </Stack>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        sx={{ mb: 2, flexWrap: 'wrap' }}
+      <ReportRangeFilterToolbar
+        onRangeChange={setRange}
+        onTransactionStatusChange={setTransactionStatus}
+        range={range}
+        transactionStatus={transactionStatus}
       >
-        <ToggleButtonGroup
-          color="primary"
-          exclusive
-          onChange={(_e, value: DateRangePreset | null) => {
-            if (value) setRange(value);
-          }}
-          size="small"
-          sx={{ flexWrap: 'wrap' }}
-          value={range}
-        >
-          {RANGE_PRESETS.map((preset) => (
-            <ToggleButton key={preset} value={preset}>
-              {translate(`app.membership_share.range.${preset}`)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-
         <ToggleButtonGroup
           color="primary"
           exclusive
@@ -137,12 +113,7 @@ export function MembershipShareReportPage() {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-
-        <ReportTransactionStatusFilterControl
-          onChange={setTransactionStatus}
-          value={transactionStatus}
-        />
-      </Stack>
+      </ReportRangeFilterToolbar>
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (

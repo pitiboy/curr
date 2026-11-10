@@ -14,7 +14,7 @@
  * every movement before the selected range.
  */
 
-export type { DateRangePreset } from '../eggInventory/types';
+export type { DateRangePreset } from '../shared/reportDateRange';
 
 export const POULTRY_FLOCK_FEATURE_ID = 'poultry-flock';
 

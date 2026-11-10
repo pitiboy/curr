@@ -197,7 +197,7 @@ erDiagram
 The [use cases](#use-cases) above are the product core: member balance and history, scheduled fees, invoice registration, file import, and project or board reports. Backoffice operations, list performance, and delivery order are in the [v2 roadmap](prd/0002-content-backoffice-v2.md). The data-model rules for this loop:
 
 - **Stored balances**: aggregates by organization, account, currency, and period. A list row does not recompute the balance.
-- **Rate at booking**: the transaction stores the currency and the rate used when it was recorded. A later change to `CurrencyRate` does not rewrite old balances.
+- **Amount fixed at booking**: the transaction stores the currency and the final amount, not the exchange rate. When an amount is computed with a `CurrencyRate` (e.g. the transaction-workflow Convert), it is computed once and stays fixed; a later change to `CurrencyRate` does not rewrite old balances.
 - **Idempotent scheduled fees**: retrying a member-fee run does not insert a second row.
 - **Import with a reject log**: statement and chart-of-accounts import shows a preview and keeps the rejected rows.
 
