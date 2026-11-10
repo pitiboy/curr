@@ -13,7 +13,7 @@ import {
   type EggReportMemberRef,
   type EggReportTx,
 } from './eggInventory.aggregate';
-import { boundsForPreset } from './dateRange';
+import { boundsForPreset, type DateRangeBounds } from './dateRange';
 import type { DateRangePreset, EggInventoryReport } from './types';
 import { loadPoultryHenHouses } from '../shared/poultryHenHouses';
 import {
@@ -110,11 +110,10 @@ function mapTx(row: TxRow): EggReportTx | null {
 
 async function loadTransactions(
   httpClient: ContentHttpClient,
-  preset: DateRangePreset,
+  bounds: DateRangeBounds,
   saleCurrency: string,
   transactionStatus: ReportTransactionStatusFilter,
 ): Promise<EggReportTx[]> {
-  const bounds = boundsForPreset(preset);
   const dateFilter: Record<string, string> = { $lte: bounds.to };
   if (bounds.from) dateFilter.$gte = bounds.from;
 
@@ -153,6 +152,8 @@ export async function fetchEggInventoryReport(
     saleCurrency?: string;
     httpClient?: ContentHttpClient;
     transactionStatus?: ReportTransactionStatusFilter;
+    /** Explicit range (custom dates); defaults to the preset's bounds. */
+    bounds?: DateRangeBounds;
   } = {},
 ): Promise<EggInventoryReport | null> {
   const httpClient = options.httpClient ?? strapiHttpClient();
@@ -163,7 +164,12 @@ export async function fetchEggInventoryReport(
   const [henHouses, members, txs] = await Promise.all([
     loadPoultryHenHouses(httpClient),
     loadMembers(httpClient),
-    loadTransactions(httpClient, preset, saleCurrency, transactionStatus),
+    loadTransactions(
+      httpClient,
+      options.bounds ?? boundsForPreset(preset),
+      saleCurrency,
+      transactionStatus,
+    ),
   ]);
 
   // Drop unrelated HUF noise client-side (keep EGG + sale cash legs).

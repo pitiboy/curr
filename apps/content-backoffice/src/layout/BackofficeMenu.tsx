@@ -10,16 +10,22 @@ import { useLocation } from 'react-router-dom';
 
 import { isContentRole, isEditorLikeRole } from '../auth/roles';
 import {
+  TRANSACTIONS_LIST_PATH,
   transactionListMode,
-  transactionsMenuTo,
-  type TransactionListMode,
 } from '../data/transactionListLocation';
+import type { TransactionMenuMode } from '../filters/globalTransactionFilters';
+import {
+  useGlobalTransactionFilters,
+  useApplyMenuOverride,
+} from '../filters/globalTransactionFiltersAtom';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
 import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
+
+import { AdministrationMenuItem } from './AdministrationMenuItem';
 
 export function BackofficeMenu() {
   const translate = useTranslate();
@@ -54,13 +60,13 @@ export function BackofficeMenu() {
           to={form.path}
         />
       ))}
-      {canWrite && (
+      {canWrite ? (
         <Menu.Item
           leftIcon={<PostAddIcon />}
           primaryText={translate('app.transactions_create')}
           to="/transactions/create"
         />
-      )}
+      ) : null}
       {canReadEggInventory ? (
         <>
           <Menu.Item
@@ -89,13 +95,14 @@ export function BackofficeMenu() {
           to="/reports/project-balance"
         />
       ) : null}
-      {canReview && (
+      {canReview ? (
         <TransactionListMenuItem
           icon={<FactCheckIcon />}
           label={translate('app.transactions_review')}
           mode="draft"
         />
-      )}
+      ) : null}
+      <AdministrationMenuItem />
     </Menu>
   );
 }
@@ -107,14 +114,18 @@ function TransactionListMenuItem({
 }: {
   icon: ReactNode;
   label: string;
-  mode: TransactionListMode;
+  mode: TransactionMenuMode;
 }) {
   const location = useLocation();
+  const [filters] = useGlobalTransactionFilters();
+  const applyMenuOverride = useApplyMenuOverride();
   const active =
-    transactionListMode(location.pathname, location.search) === mode;
+    transactionListMode(location.pathname, filters.status) === mode;
   return (
     <Menu.Item
       leftIcon={icon}
+      // Override status + converted in the global filters, keep the rest.
+      onClick={() => applyMenuOverride(mode)}
       primaryText={label}
       sx={
         active
@@ -125,7 +136,7 @@ function TransactionListMenuItem({
               },
             }
       }
-      to={transactionsMenuTo(mode)}
+      to={TRANSACTIONS_LIST_PATH}
     />
   );
 }

@@ -21,12 +21,11 @@ import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
 import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
 import { LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
-import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
+import { useGlobalReportParams } from '../../filters/globalTransactionFiltersAtom';
 import type {
-  DateRangePreset,
   HenInventoryReport,
   HenMemberOutflowRow,
   HenOutflowTimeseriesPoint,
@@ -34,12 +33,12 @@ import type {
 } from './henInventory/types';
 import { useHenInventoryReport } from './henInventory/useHenInventoryReport';
 import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter,
-} from './shared/reportTransactionStatus';
-
-const CHART_MARGIN = { left: 52, right: 16, top: 28, bottom: 40 } as const;
-const CHART_HEIGHT = 280;
+  ReportPageHeader,
+  ReportPageShell,
+  ReportScrollX,
+  reportBarAreaMinWidth,
+  useReportChartMetrics,
+} from './shared/reportLayout';
 
 const MEMBER_BAR_COLORS = [
   '#346C3E',
@@ -56,33 +55,16 @@ function formatQty(n: number): string {
 
 export function HenInventoryReportPage() {
   const translate = useTranslate();
-  const [range, setRange] = useState<DateRangePreset>('thisMonth');
-  const [transactionStatus, setTransactionStatus] =
-    useState<ReportTransactionStatusFilter>(
-      REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-    );
-  const { status, report, reload } = useHenInventoryReport(
-    range,
-    transactionStatus,
-  );
+  // Date range + transaction status come from the global sidebar filters.
+  const params = useGlobalReportParams();
+  const { status, report, reload } = useHenInventoryReport(params);
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1100 }}>
+    <ReportPageShell>
       <Title title="app.hen_inventory.title" />
-      <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography component="h1" variant="h5">
-          {translate('app.hen_inventory.title')}
-        </Typography>
-        <Typography color="text.secondary" variant="body2">
-          {translate('app.hen_inventory.subtitle')}
-        </Typography>
-      </Stack>
-
-      <ReportRangeFilterToolbar
-        onRangeChange={setRange}
-        onTransactionStatusChange={setTransactionStatus}
-        range={range}
-        transactionStatus={transactionStatus}
+      <ReportPageHeader
+        subtitle={translate('app.hen_inventory.subtitle')}
+        title={translate('app.hen_inventory.title')}
       />
 
       {status === 'loading' ? <ReportSkeleton /> : null}
@@ -105,7 +87,7 @@ export function HenInventoryReportPage() {
         </Alert>
       ) : null}
       {status === 'success' && report ? <ReportBody report={report} /> : null}
-    </Box>
+    </ReportPageShell>
   );
 }
 
@@ -175,32 +157,38 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
       </Section>
 
       <Section title={translate('app.hen_inventory.alom_title')}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>{translate('app.hen_inventory.alom_name')}</TableCell>
-              <TableCell align="right">
-                {translate('app.hen_inventory.kpi.stock')}
-              </TableCell>
-              <TableCell align="right">
-                {translate('app.hen_inventory.kpi.intake')}
-              </TableCell>
-              <TableCell align="right">
-                {translate('app.hen_inventory.kpi.mortality')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {byAlom.map((row) => (
-              <TableRow key={row.alomName}>
-                <TableCell>{row.alomName}</TableCell>
-                <TableCell align="right">{formatQty(row.stockEnd)}</TableCell>
-                <TableCell align="right">{formatQty(row.intake)}</TableCell>
-                <TableCell align="right">{formatQty(row.mortality)}</TableCell>
+        <ReportScrollX>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  {translate('app.hen_inventory.alom_name')}
+                </TableCell>
+                <TableCell align="right">
+                  {translate('app.hen_inventory.kpi.stock')}
+                </TableCell>
+                <TableCell align="right">
+                  {translate('app.hen_inventory.kpi.intake')}
+                </TableCell>
+                <TableCell align="right">
+                  {translate('app.hen_inventory.kpi.mortality')}
+                </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {byAlom.map((row) => (
+                <TableRow key={row.alomName}>
+                  <TableCell>{row.alomName}</TableCell>
+                  <TableCell align="right">{formatQty(row.stockEnd)}</TableCell>
+                  <TableCell align="right">{formatQty(row.intake)}</TableCell>
+                  <TableCell align="right">
+                    {formatQty(row.mortality)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ReportScrollX>
       </Section>
 
       <Section title={translate('app.hen_inventory.slaughter_chart_title')}>
@@ -218,66 +206,68 @@ function ReportBody({ report }: { report: HenInventoryReport }) {
             {translate('app.hen_inventory.outflow_empty')}
           </Typography>
         ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  {translate('app.hen_inventory.member_name')}
-                </TableCell>
-                <TableCell>
-                  {translate('app.hen_inventory.member_account')}
-                </TableCell>
-                <TableCell align="right">
-                  {translate('app.hen_inventory.kpi.slaughter')}
-                </TableCell>
-                <TableCell align="right">
-                  {translate('app.hen_inventory.kpi.transfer')}
-                </TableCell>
-                <TableCell align="right">
-                  {translate('app.hen_inventory.member_total')}
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {byMember.map((row) => (
-                <TableRow key={row.memberId}>
-                  <TableCell>{row.memberName}</TableCell>
-                  <TableCell>{row.accountLabel}</TableCell>
-                  <TableCell align="right">
-                    {formatQty(row.slaughterQty)}
+          <ReportScrollX minWidth={480}>
+            <Table size="small" sx={{ minWidth: 480 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    {translate('app.hen_inventory.member_name')}
+                  </TableCell>
+                  <TableCell>
+                    {translate('app.hen_inventory.member_account')}
                   </TableCell>
                   <TableCell align="right">
-                    {formatQty(row.transferQty)}
+                    {translate('app.hen_inventory.kpi.slaughter')}
                   </TableCell>
                   <TableCell align="right">
-                    {formatQty(row.transferQty)}
+                    {translate('app.hen_inventory.kpi.transfer')}
+                  </TableCell>
+                  <TableCell align="right">
+                    {translate('app.hen_inventory.member_total')}
                   </TableCell>
                 </TableRow>
-              ))}
-              <TableRow>
-                <TableCell colSpan={2}>
-                  <Typography sx={{ fontWeight: 600 }} variant="body2">
-                    {translate('app.hen_inventory.totals_row')}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography sx={{ fontWeight: 600 }} variant="body2">
-                    {formatQty(kpis.slaughterInPeriod)}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography sx={{ fontWeight: 600 }} variant="body2">
-                    {formatQty(kpis.transferInPeriod)}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography sx={{ fontWeight: 600 }} variant="body2">
-                    {formatQty(kpis.transferInPeriod)}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {byMember.map((row) => (
+                  <TableRow key={row.memberId}>
+                    <TableCell>{row.memberName}</TableCell>
+                    <TableCell>{row.accountLabel}</TableCell>
+                    <TableCell align="right">
+                      {formatQty(row.slaughterQty)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {formatQty(row.transferQty)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {formatQty(row.transferQty)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={2}>
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {translate('app.hen_inventory.totals_row')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.slaughterInPeriod)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.transferInPeriod)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.transferInPeriod)}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </ReportScrollX>
         )}
       </Section>
     </Stack>
@@ -295,37 +285,42 @@ function HenStockLineChart({
   alomNames: string[];
   alomColors: string[];
 }) {
+  const chartMetrics = useReportChartMetrics();
   return (
-    <ChartsContainer
-      height={CHART_HEIGHT}
-      margin={CHART_MARGIN}
-      series={alomNames.map((name, index) => ({
-        type: 'line' as const,
-        id: name,
-        label: name,
-        data: timeseries.map((point) => point.byAlom[name] ?? 0),
-        color: alomColors[index] ?? alomColors[0],
-        curve: 'linear' as const,
-        showMark: periods.length <= 31,
-      }))}
-      xAxis={[
-        {
-          id: 'period',
-          data: periods,
-          scaleType: 'band',
-          tickLabelStyle: { fontSize: 11 },
-        },
-      ]}
-      yAxis={[{ id: 'qty', width: 48, min: 0 }]}
+    <ReportScrollX
+      minWidth={reportBarAreaMinWidth(periods.length, chartMetrics.narrow)}
     >
-      <ChartsGrid horizontal />
-      <LinePlot />
-      <MarkPlot />
-      <ChartsXAxis axisId="period" />
-      <ChartsYAxis axisId="qty" />
-      <ChartsLegend direction="horizontal" />
-      <ChartsTooltip />
-    </ChartsContainer>
+      <ChartsContainer
+        height={chartMetrics.narrow ? 250 : 280}
+        margin={chartMetrics.containerMargin}
+        series={alomNames.map((name, index) => ({
+          type: 'line' as const,
+          id: name,
+          label: name,
+          data: timeseries.map((point) => point.byAlom[name] ?? 0),
+          color: alomColors[index] ?? alomColors[0],
+          curve: 'linear' as const,
+          showMark: periods.length <= 31,
+        }))}
+        xAxis={[
+          {
+            id: 'period',
+            data: periods,
+            scaleType: 'band',
+            tickLabelStyle: { fontSize: 11 },
+          },
+        ]}
+        yAxis={[{ id: 'qty', width: chartMetrics.yAxisWidth, min: 0 }]}
+      >
+        <ChartsGrid horizontal />
+        <LinePlot />
+        <MarkPlot />
+        <ChartsXAxis axisId="period" />
+        <ChartsYAxis axisId="qty" />
+        <ChartsLegend direction="horizontal" />
+        <ChartsTooltip />
+      </ChartsContainer>
+    </ReportScrollX>
   );
 }
 
@@ -340,6 +335,7 @@ function OutflowMemberBarChart({
   mode: 'slaughter' | 'transfer';
   emptyLabel: string;
 }) {
+  const chartMetrics = useReportChartMetrics();
   const activeMembers = members.filter((m) =>
     mode === 'slaughter' ? m.slaughterQty > 0 : m.transferQty > 0,
   );
@@ -355,33 +351,37 @@ function OutflowMemberBarChart({
   const field = mode === 'slaughter' ? 'slaughterByMember' : 'transferByMember';
 
   return (
-    <ChartsContainer
-      height={CHART_HEIGHT}
-      margin={CHART_MARGIN}
-      series={activeMembers.map((member, index) => ({
-        type: 'bar' as const,
-        id: member.memberId,
-        label: member.memberName,
-        data: timeseries.map((point) => point[field][member.memberId] ?? 0),
-        color: MEMBER_BAR_COLORS[index % MEMBER_BAR_COLORS.length],
-      }))}
-      xAxis={[
-        {
-          id: 'period',
-          data: periods,
-          scaleType: 'band',
-          tickLabelStyle: { fontSize: 11 },
-        },
-      ]}
-      yAxis={[{ id: 'qty', width: 48, min: 0 }]}
+    <ReportScrollX
+      minWidth={reportBarAreaMinWidth(periods.length, chartMetrics.narrow)}
     >
-      <ChartsGrid horizontal />
-      <BarPlot />
-      <ChartsXAxis axisId="period" />
-      <ChartsYAxis axisId="qty" />
-      <ChartsLegend direction="horizontal" />
-      <ChartsTooltip />
-    </ChartsContainer>
+      <ChartsContainer
+        height={chartMetrics.narrow ? 250 : 280}
+        margin={chartMetrics.containerMargin}
+        series={activeMembers.map((member, index) => ({
+          type: 'bar' as const,
+          id: member.memberId,
+          label: member.memberName,
+          data: timeseries.map((point) => point[field][member.memberId] ?? 0),
+          color: MEMBER_BAR_COLORS[index % MEMBER_BAR_COLORS.length],
+        }))}
+        xAxis={[
+          {
+            id: 'period',
+            data: periods,
+            scaleType: 'band',
+            tickLabelStyle: { fontSize: 11 },
+          },
+        ]}
+        yAxis={[{ id: 'qty', width: chartMetrics.yAxisWidth, min: 0 }]}
+      >
+        <ChartsGrid horizontal />
+        <BarPlot />
+        <ChartsXAxis axisId="period" />
+        <ChartsYAxis axisId="qty" />
+        <ChartsLegend direction="horizontal" />
+        <ChartsTooltip />
+      </ChartsContainer>
+    </ReportScrollX>
   );
 }
 
@@ -423,7 +423,16 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <Typography component="h2" sx={{ mb: 1 }} variant="subtitle1">
         {title}
       </Typography>
-      <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', p: 1.5 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          border: 1,
+          borderColor: 'divider',
+          maxWidth: '100%',
+          minWidth: 0,
+          p: { xs: 1, sm: 1.5 },
+        }}
+      >
         {children}
       </Paper>
     </Box>

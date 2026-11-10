@@ -162,8 +162,10 @@ const mobileChrome: ThemeOptions = {
           [`& .RaLayout-content`]: {
             maxWidth: '100%',
             minWidth: 0,
-            overflow: 'hidden',
+            overflowX: 'hidden',
+            overflowY: 'auto',
             overflowAnchor: 'none',
+            WebkitOverflowScrolling: 'touch',
           },
         },
       },
@@ -271,16 +273,27 @@ const brandSecondary = {
   500: brandGreen,
 };
 
+/** Menu + global filters share one drawer; 240 clipped Hungarian filter labels. */
+const filterSidebar: ThemeOptions = {
+  sidebar: {
+    width: 320,
+    closedWidth: 50,
+  },
+};
+
 export const lightTheme = deepmerge(
   defaultLightTheme,
   deepmerge(
     mobileChrome,
-    deepmerge(readableButtons, {
-      palette: {
-        primary: { main: brandGreen },
-        secondary: brandSecondary,
-      },
-    }),
+    deepmerge(
+      readableButtons,
+      deepmerge(filterSidebar, {
+        palette: {
+          primary: { main: brandGreen },
+          secondary: brandSecondary,
+        },
+      }),
+    ),
   ),
 );
 
@@ -288,11 +301,14 @@ export const darkTheme = deepmerge(
   defaultDarkTheme,
   deepmerge(
     mobileChrome,
-    deepmerge(readableButtons, {
-      palette: {
-        primary: { main: brandGreenOnDark },
-        secondary: brandSecondary,
-      },
-    }),
+    deepmerge(
+      readableButtons,
+      deepmerge(filterSidebar, {
+        palette: {
+          primary: { main: brandGreenOnDark },
+          secondary: brandSecondary,
+        },
+      }),
+    ),
   ),
 );

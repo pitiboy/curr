@@ -27,11 +27,18 @@ export type TransactionListLink = {
 };
 
 export type ProjectBalanceDrilldownContext = {
+  /** Granularity preset (chart buckets). */
   range: DateRangePreset;
+  /** Active report range; defaults to the preset's bounds. */
+  bounds?: DateRangeBounds;
   transactionStatus: ReportTransactionStatusFilter;
   currencyCode: string;
   toolbarOrganizationId: string | null;
 };
+
+function rangeBounds(context: ProjectBalanceDrilldownContext): DateRangeBounds {
+  return context.bounds ?? boundsForPreset(context.range);
+}
 
 function listStatusFromReport(
   mode: ReportTransactionStatusFilter,
@@ -99,7 +106,7 @@ export function drilldownForTableProjectName(
   context: ProjectBalanceDrilldownContext,
   organizationId: string,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   return buildTransactionsDrilldownUrl({
     ...baseDrill(context, bounds),
     organizationId,
@@ -112,7 +119,7 @@ export function drilldownForTablePeriodLeg(
   organizationId: string,
   leg: ProjectBalanceLeg,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   return buildTransactionsDrilldownUrl({
     ...baseDrill(context, bounds),
     organizationId,
@@ -125,7 +132,7 @@ export function drilldownForTablePeriodAllLegs(
   context: ProjectBalanceDrilldownContext,
   organizationId: string,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   return buildTransactionsDrilldownUrl({
     ...baseDrill(context, bounds),
     organizationId,
@@ -138,7 +145,7 @@ export function drilldownForTableCumulative(
   context: ProjectBalanceDrilldownContext,
   organizationId: string,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   return buildTransactionsDrilldownUrl({
     ...baseDrill(context, bounds),
     organizationId,

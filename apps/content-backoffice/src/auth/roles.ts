@@ -21,6 +21,12 @@ export function isEditorLikeRole(value: unknown): value is EditorLikeRole {
   );
 }
 
+/** Whether `role` is allowed by a role list that may name `editor` for both editor-like roles. */
+export function roleAllowed(allowed: readonly string[], role: string): boolean {
+  if (allowed.includes(role)) return true;
+  return isEditorLikeRole(role) && allowed.includes('editor');
+}
+
 /** Controller-only: expanded/storno purge and general delete. */
 export function canPurgeExpansion(value: unknown): boolean {
   return value === 'controller';
