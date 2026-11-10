@@ -3,7 +3,10 @@ import type { AuthProvider, UserIdentity } from 'react-admin';
 
 import { STRAPI_URL } from '../config';
 import { isGoogleOAuthReturn } from './googleLogin';
-import { persistStrapiAuthSession } from './strapiAuthStorage';
+import {
+  notifyStrapiAuthChanged,
+  persistStrapiAuthSession,
+} from './strapiAuthStorage';
 
 type StrapiMeResponse = {
   id: number;
@@ -37,6 +40,16 @@ export const authProvider: AuthProvider = {
       throw { message: false };
     }
     return innerAuthProvider.checkAuth(params);
+  },
+  login: async (params) => {
+    await innerAuthProvider.login(params);
+    // ra-strapi writes the JWT itself; notify config (and similar) listeners.
+    notifyStrapiAuthChanged();
+  },
+  logout: async (params) => {
+    const result = await innerAuthProvider.logout(params);
+    notifyStrapiAuthChanged();
+    return result;
   },
   getIdentity: async (): Promise<UserIdentity> => {
     const user = await fetchCurrentUser();

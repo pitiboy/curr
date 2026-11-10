@@ -21,22 +21,17 @@ import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
 import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
 import { LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
-import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
+import { useGlobalReportParams } from '../../filters/globalTransactionFiltersAtom';
 import type {
-  DateRangePreset,
   HenInventoryReport,
   HenMemberOutflowRow,
   HenOutflowTimeseriesPoint,
   HenStockTimeseriesPoint,
 } from './henInventory/types';
 import { useHenInventoryReport } from './henInventory/useHenInventoryReport';
-import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter,
-} from './shared/reportTransactionStatus';
 import {
   ReportPageHeader,
   ReportPageShell,
@@ -60,15 +55,9 @@ function formatQty(n: number): string {
 
 export function HenInventoryReportPage() {
   const translate = useTranslate();
-  const [range, setRange] = useState<DateRangePreset>('thisMonth');
-  const [transactionStatus, setTransactionStatus] =
-    useState<ReportTransactionStatusFilter>(
-      REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-    );
-  const { status, report, reload } = useHenInventoryReport(
-    range,
-    transactionStatus,
-  );
+  // Date range + transaction status come from the global sidebar filters.
+  const params = useGlobalReportParams();
+  const { status, report, reload } = useHenInventoryReport(params);
 
   return (
     <ReportPageShell>
@@ -76,13 +65,6 @@ export function HenInventoryReportPage() {
       <ReportPageHeader
         subtitle={translate('app.hen_inventory.subtitle')}
         title={translate('app.hen_inventory.title')}
-      />
-
-      <ReportRangeFilterToolbar
-        onRangeChange={setRange}
-        onTransactionStatusChange={setTransactionStatus}
-        range={range}
-        transactionStatus={transactionStatus}
       />
 
       {status === 'loading' ? <ReportSkeleton /> : null}

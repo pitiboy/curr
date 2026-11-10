@@ -174,9 +174,11 @@ export function aggregateProjectBalanceReport(
     organizationId?: string | null;
     unclassifiedCount?: number;
     loadTruncated?: boolean;
+    /** Explicit range (custom dates); defaults to the preset's bounds. */
+    bounds?: DateRangeBounds;
   } = {},
 ): ProjectBalanceReport | null {
-  const bounds = boundsForPreset(preset);
+  const bounds = options.bounds ?? boundsForPreset(preset);
   const orgFilter = options.organizationId?.trim() || null;
 
   const filtered = orgFilter ? txs.filter((tx) => tx.orgId === orgFilter) : txs;

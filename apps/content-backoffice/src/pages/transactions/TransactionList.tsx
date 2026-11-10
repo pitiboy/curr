@@ -4,21 +4,12 @@ import { Box, Button, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import {
-  AutocompleteInput,
   Datagrid,
-  DateInput,
-  FilterButton,
   FunctionField,
   List,
   NumberField,
-  NumberInput,
-  ReferenceInput,
-  SelectArrayInput,
   SelectField,
-  SelectInput,
   TextField,
-  TextInput,
-  TopToolbar,
   useListContext,
   useLocaleState,
   usePermissions,
@@ -32,17 +23,12 @@ import { isEditorLikeRole } from '../../auth/roles';
 import { receiptCount } from '../../data/receiptDraft';
 import {
   CONVERTED_EXPANDED,
-  CONVERTED_FILTER_NONE,
   CONVERTED_ORIGINAL,
   CONVERTED_STORNO,
-  DEFAULT_CONVERTED_FILTER,
   firstReceiptVendor,
   sumTransactionAmountsByCurrency,
 } from '../../data/transactionList';
-import {
-  defaultTransactionDisplayedFilters,
-  defaultTransactionListFilter,
-} from '../../data/transactionListLocation';
+import { TransactionListFilterBridge } from '../../filters/TransactionListFilterBridge';
 import { bandedRow } from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
@@ -56,151 +42,16 @@ const statusChoices = [
   { id: 'published', name: 'app.status.published' },
 ];
 
-const convertedChoices = [
-  { id: CONVERTED_FILTER_NONE, name: 'app.converted.none' },
-  { id: CONVERTED_EXPANDED, name: 'app.converted.expanded' },
-  { id: CONVERTED_STORNO, name: 'app.converted.storno' },
-  { id: CONVERTED_ORIGINAL, name: 'app.converted.original' },
-];
-
 const convertedFieldChoices = [
   { id: CONVERTED_EXPANDED, name: 'app.converted.expanded' },
   { id: CONVERTED_STORNO, name: 'app.converted.storno' },
   { id: CONVERTED_ORIGINAL, name: 'app.converted.original' },
 ];
 
-function accountOptionText(record: RaRecord): string {
-  const account = record as { code?: string | null; name?: string | null };
-  return [account.code, account.name].filter(Boolean).join(' ');
-}
-
-function accountFilterToQuery(searchText: string) {
-  const query = searchText.trim();
-  if (!query) return {};
-  return {
-    $or: [{ name: { $containsi: query } }, { code: { $containsi: query } }],
-  };
-}
-
-function nameFilterToQuery(searchText: string) {
-  const query = searchText.trim();
-  // Nested operator: ra-strapi 1.0.3 slices the `_containsi` suffix one character short.
-  return query ? { name: { $containsi: query } } : {};
-}
-
-const transactionFilters = [
-  <SelectInput
-    alwaysOn
-    choices={statusChoices}
-    emptyText="app.filters.status_all"
-    key="status"
-    label="resources.transactions.fields.status"
-    source="status"
-    translateChoice
-  />,
-  <SelectArrayInput
-    alwaysOn
-    choices={convertedChoices}
-    key="converted_to_workflow"
-    label="resources.transactions.fields.converted_to_workflow"
-    source="converted_to_workflow"
-    translateChoice
-  />,
-  <DateInput key="date_gte" label="app.filters.date_from" source="date_gte" />,
-  <DateInput key="date_lte" label="app.filters.date_to" source="date_lte" />,
-  <DateInput
-    key="createdAt_gte"
-    label="app.filters.created_from"
-    source="createdAt_gte"
-  />,
-  <DateInput
-    key="createdAt_lte"
-    label="app.filters.created_to"
-    source="createdAt_lte"
-  />,
-  <NumberInput
-    key="amount_gte"
-    label="app.filters.amount_from"
-    source="amount_gte"
-  />,
-  <NumberInput
-    key="amount_lte"
-    label="app.filters.amount_to"
-    source="amount_lte"
-  />,
-  <ReferenceInput
-    key="organization"
-    perPage={100}
-    reference="organizations"
-    sort={{ field: 'name', order: 'ASC' }}
-    source="organization"
-  >
-    <AutocompleteInput filterToQuery={nameFilterToQuery} optionText="name" />
-  </ReferenceInput>,
-  <ReferenceInput
-    key="debit_account"
-    label={<AccountFieldLabel kind="debit" />}
-    perPage={100}
-    reference="accounts"
-    sort={{ field: 'code', order: 'ASC' }}
-    source="debit_account"
-  >
-    <AutocompleteInput
-      filterToQuery={accountFilterToQuery}
-      label={<AccountFieldLabel kind="debit" />}
-      optionText={accountOptionText}
-    />
-  </ReferenceInput>,
-  <ReferenceInput
-    key="credit_account"
-    label={<AccountFieldLabel kind="credit" />}
-    perPage={100}
-    reference="accounts"
-    sort={{ field: 'code', order: 'ASC' }}
-    source="credit_account"
-  >
-    <AutocompleteInput
-      filterToQuery={accountFilterToQuery}
-      label={<AccountFieldLabel kind="credit" />}
-      optionText={accountOptionText}
-    />
-  </ReferenceInput>,
-  <TextInput key="description" source="description" />,
-  <TextInput key="vendor" source="vendor" />,
-];
-
 function relationName(value: unknown): string {
   if (!value || typeof value !== 'object') return '—';
   const name = (value as { name?: string | null }).name;
   return name || '—';
-}
-
-function ClearFiltersButton() {
-  const translate = useTranslate();
-  const { setFilters } = useListContext();
-  return (
-    <Button
-      size="small"
-      variant="outlined"
-      onClick={() =>
-        setFilters(
-          defaultTransactionListFilter('all'),
-          defaultTransactionDisplayedFilters('all'),
-        )
-      }
-    >
-      {translate('app.filters.clear')}
-    </Button>
-  );
-}
-
-function TransactionListActions() {
-  return (
-    <TopToolbar>
-      <ClearFiltersButton />
-      <FilterButton />
-    </TopToolbar>
-  );
 }
 
 function TransactionOpenField(_props: {
@@ -527,16 +378,14 @@ export function TransactionList() {
 
   return (
     <List
-      actions={<TransactionListActions />}
+      actions={false}
       empty={false}
       exporter={false}
-      filterDefaultValues={{
-        converted_to_workflow: [...DEFAULT_CONVERTED_FILTER],
-      }}
-      filters={transactionFilters}
       perPage={25}
       sort={{ field: 'entryId', order: 'DESC' }}
     >
+      {/* Filters come from the global sidebar panel (Jotai atom). */}
+      <TransactionListFilterBridge />
       <Box
         sx={{
           maxWidth: '100%',

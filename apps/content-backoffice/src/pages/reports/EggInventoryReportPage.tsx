@@ -22,7 +22,7 @@ import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
 import { LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import {
@@ -31,16 +31,11 @@ import {
   producedInPeriod,
 } from './eggInventory/eggInventory.mock';
 import type {
-  DateRangePreset,
   EggInventoryReport,
   EggMemberRow,
   EggTimeseriesPoint,
 } from './eggInventory/types';
-import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
-import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter as ReportTxStatusMode,
-} from './shared/reportTransactionStatus';
+import { useGlobalReportParams } from '../../filters/globalTransactionFiltersAtom';
 import { useEggInventoryReport } from './eggInventory/useEggInventoryReport';
 import {
   ReportPageHeader,
@@ -68,13 +63,9 @@ function formatMoney(n: number, currency: string): string {
 
 export function EggInventoryReportPage() {
   const translate = useTranslate();
-  const [range, setRange] = useState<DateRangePreset>('thisMonth');
-  const [transactionStatus, setTransactionStatus] =
-    useState<ReportTxStatusMode>(REPORT_TRANSACTION_STATUS_FILTER_DEFAULT);
-  const { status, report, reload } = useEggInventoryReport(
-    range,
-    transactionStatus,
-  );
+  // Date range + transaction status come from the global sidebar filters.
+  const params = useGlobalReportParams();
+  const { status, report, reload } = useEggInventoryReport(params);
 
   return (
     <ReportPageShell>
@@ -82,13 +73,6 @@ export function EggInventoryReportPage() {
       <ReportPageHeader
         subtitle={translate('app.egg_inventory.subtitle')}
         title={translate('app.egg_inventory.title')}
-      />
-
-      <ReportRangeFilterToolbar
-        onRangeChange={setRange}
-        onTransactionStatusChange={setTransactionStatus}
-        range={range}
-        transactionStatus={transactionStatus}
       />
 
       {status === 'loading' ? <ReportSkeleton /> : null}

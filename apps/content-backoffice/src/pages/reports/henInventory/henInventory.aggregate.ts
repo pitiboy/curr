@@ -11,6 +11,7 @@ import {
   endDateOfPeriod,
   periodKeyForPreset,
   periodsInRange,
+  type DateRangeBounds,
   type DateRangePreset,
 } from '../shared/reportDateRange';
 import type {
@@ -132,8 +133,10 @@ export function aggregateHenInventoryReport(
   catalog: HenReportCatalog,
   preset: DateRangePreset,
   now = new Date(),
+  /** Explicit range (custom dates); defaults to the preset's bounds. */
+  explicitBounds?: DateRangeBounds,
 ): HenInventoryReport | null {
-  const bounds = boundsForPreset(preset, now);
+  const bounds = explicitBounds ?? boundsForPreset(preset, now);
   const sorted = [...txs].sort((a, b) =>
     normalizeDate(a.date).localeCompare(normalizeDate(b.date)),
   );

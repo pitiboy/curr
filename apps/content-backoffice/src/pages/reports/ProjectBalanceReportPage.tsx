@@ -29,9 +29,11 @@ import {
   type ReactNode,
 } from 'react';
 import { Title, useTranslate } from 'react-admin';
-import { useNavigate } from 'react-router-dom';
 
-import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
+import {
+  useGlobalReportParams,
+  useOpenDrilldown,
+} from '../../filters/globalTransactionFiltersAtom';
 import {
   fetchProjectBalanceOrganizations,
   type OrganizationOption,
@@ -51,11 +53,6 @@ import {
   type ProjectBalanceLeg,
 } from './projectBalance/drilldown';
 import type { ProjectBalanceReport } from './projectBalance/types';
-import type { DateRangePreset } from './shared/reportDateRange';
-import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter,
-} from './shared/reportTransactionStatus';
 import { useProjectBalanceReport } from './projectBalance/useProjectBalanceReport';
 import {
   ReportPageHeader,
@@ -79,16 +76,12 @@ function formatMoney(amount: number, currency: string): string {
 
 export function ProjectBalanceReportPage() {
   const translate = useTranslate();
-  const [range, setRange] = useState<DateRangePreset>('thisMonth');
-  const [transactionStatus, setTransactionStatus] =
-    useState<ReportTransactionStatusFilter>(
-      REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-    );
+  // Date range + transaction status come from the global sidebar filters.
+  const params = useGlobalReportParams();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<OrganizationOption[]>([]);
   const { status, report, reload } = useProjectBalanceReport(
-    range,
-    transactionStatus,
+    params,
     organizationId,
   );
   const [currency, setCurrency] = useState<string | null>(null);
@@ -129,12 +122,7 @@ export function ProjectBalanceReportPage() {
         title={translate('app.project_balance.title')}
       />
 
-      <ReportRangeFilterToolbar
-        onRangeChange={setRange}
-        onTransactionStatusChange={setTransactionStatus}
-        range={range}
-        transactionStatus={transactionStatus}
-      >
+      <Box sx={{ mb: 2, maxWidth: 360 }}>
         <Autocomplete
           onChange={(_e, value) => setOrganizationId(value?.documentId ?? null)}
           options={organizations}
@@ -154,7 +142,7 @@ export function ProjectBalanceReportPage() {
           sx={{ maxWidth: '100%', width: { xs: '100%', sm: 360 } }}
           value={selectedOrg}
         />
-      </ReportRangeFilterToolbar>
+      </Box>
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (
@@ -192,8 +180,9 @@ export function ProjectBalanceReportPage() {
           <ReportBody
             currency={currency}
             drilldownContext={{
-              range,
-              transactionStatus,
+              range: params.preset,
+              bounds: params.bounds,
+              transactionStatus: params.transactionStatus,
               currencyCode: currency,
               toolbarOrganizationId: organizationId,
             }}
@@ -219,15 +208,9 @@ function ReportBody({
 }) {
   const translate = useTranslate();
   const theme = useTheme();
-  const navigate = useNavigate();
   const chartMetrics = useReportChartMetrics();
-
-  const openDrilldown = useCallback(
-    (link: { pathname: '/transactions'; search: string }) => {
-      navigate({ pathname: link.pathname, search: link.search });
-    },
-    [navigate],
-  );
+  // Drill-down: merge the link's filter into the global atom, then the list.
+  const openDrilldown = useOpenDrilldown();
 
   const onBarClick = useCallback(
     (

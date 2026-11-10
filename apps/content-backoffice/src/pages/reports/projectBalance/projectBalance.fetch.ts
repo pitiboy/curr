@@ -10,6 +10,7 @@ import {
 import type { ContentHttpClient } from '../../../data/receiptDraft';
 import {
   boundsForPreset,
+  type DateRangeBounds,
   type DateRangePreset,
 } from '../shared/reportDateRange';
 import {
@@ -84,12 +85,14 @@ export async function fetchProjectBalanceReport(
     httpClient?: ContentHttpClient;
     transactionStatus?: ReportTransactionStatusFilter;
     organizationId?: string | null;
+    /** Explicit range (custom dates); defaults to the preset's bounds. */
+    bounds?: DateRangeBounds;
   },
 ): Promise<ProjectBalanceReport | null> {
   const httpClient = options.httpClient ?? strapiHttpClient();
   const transactionStatus =
     options.transactionStatus ?? REPORT_TRANSACTION_STATUS_FILTER_DEFAULT;
-  const bounds = boundsForPreset(preset);
+  const bounds = options.bounds ?? boundsForPreset(preset);
 
   const convertedClauses = convertedToWorkflowFilterClauses([
     ...DEFAULT_CONVERTED_FILTER,
@@ -158,6 +161,7 @@ export async function fetchProjectBalanceReport(
   }
 
   return aggregateProjectBalanceReport(txs, preset, {
+    bounds,
     organizationId: options.organizationId ?? null,
     unclassifiedCount,
     loadTruncated,

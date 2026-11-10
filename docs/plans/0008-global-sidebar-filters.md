@@ -1,6 +1,6 @@
 # Implementation plan: Globális sidebar szűrők
 
-**Status:** planned  
+**Status:** implemented  
 **Date:** 2026-11-10  
 **Kapcsolódó:** [ADR 0001 — React Admin content UI](../adr/0001-react-admin-content-ui.md), [PRD 0001 — Content backoffice v1](../prd/0001-content-backoffice-v1.md)  
 **Érintett kód:** [`apps/content-backoffice/src/filters/`](../../apps/content-backoffice/src/filters/) (új), [`FrameSidebar.tsx`](../../apps/content-backoffice/src/layout/FrameSidebar.tsx), [`BackofficeMenu.tsx`](../../apps/content-backoffice/src/layout/BackofficeMenu.tsx), [`TransactionList.tsx`](../../apps/content-backoffice/src/pages/transactions/TransactionList.tsx), [`transactionListLocation.ts`](../../apps/content-backoffice/src/data/transactionListLocation.ts), report page-ek + hooks + drilldown

@@ -16,6 +16,7 @@ import {
 import type { HenInventoryReport } from './types';
 import {
   boundsForPreset,
+  type DateRangeBounds,
   type DateRangePreset,
 } from '../shared/reportDateRange';
 import { loadPoultryHenHouses } from '../shared/poultryHenHouses';
@@ -112,10 +113,9 @@ function mapTx(row: TxRow): HenReportTx | null {
 
 async function loadTransactions(
   httpClient: ContentHttpClient,
-  preset: DateRangePreset,
+  bounds: DateRangeBounds,
   transactionStatus: ReportTransactionStatusFilter,
 ): Promise<HenReportTx[]> {
-  const bounds = boundsForPreset(preset);
   const dateFilter: Record<string, string> = { $lte: bounds.to };
 
   const rows = await loadReportTransactions<TxRow>(
@@ -153,8 +153,11 @@ export async function fetchHenInventoryReport(
   options: {
     httpClient?: ContentHttpClient;
     transactionStatus?: ReportTransactionStatusFilter;
+    /** Explicit range (custom dates); defaults to the preset's bounds. */
+    bounds?: DateRangeBounds;
   } = {},
 ): Promise<HenInventoryReport | null> {
+  const bounds = options.bounds ?? boundsForPreset(preset);
   const httpClient = options.httpClient ?? strapiHttpClient();
   const transactionStatus =
     options.transactionStatus ?? REPORT_TRANSACTION_STATUS_FILTER_DEFAULT;
@@ -162,7 +165,7 @@ export async function fetchHenInventoryReport(
   const [henHouses, members, txs] = await Promise.all([
     loadPoultryHenHouses(httpClient),
     loadMembers(httpClient),
-    loadTransactions(httpClient, preset, transactionStatus),
+    loadTransactions(httpClient, bounds, transactionStatus),
   ]);
 
   const catalog: HenReportCatalog = {
@@ -172,5 +175,5 @@ export async function fetchHenInventoryReport(
     members,
   };
 
-  return aggregateHenInventoryReport(txs, catalog, preset);
+  return aggregateHenInventoryReport(txs, catalog, preset, new Date(), bounds);
 }

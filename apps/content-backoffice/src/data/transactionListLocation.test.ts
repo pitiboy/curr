@@ -1,62 +1,32 @@
-import { parse } from 'query-string';
 import { describe, expect, it } from 'vitest';
 
 import {
   filterFromListSearch,
   transactionListMode,
-  transactionsMenuTo,
 } from './transactionListLocation';
 
-function filterAsReactAdmin(search: string): Record<string, unknown> {
-  const query = parse(search);
-  const raw = query.filter;
-  if (typeof raw !== 'string') return {};
-  return JSON.parse(raw) as Record<string, unknown>;
-}
-
-describe('transactionsMenuTo', () => {
-  it('opens Review on the shared list with draft status and every deal expansion', () => {
-    const target = transactionsMenuTo('draft');
-    expect(target.pathname).toBe('/transactions');
-    expect(filterFromListSearch(target.search)).toEqual({
+describe('filterFromListSearch', () => {
+  it('parses the React Admin filter param', () => {
+    const params = new URLSearchParams();
+    params.set('filter', JSON.stringify({ status: 'draft' }));
+    expect(filterFromListSearch(`?${params.toString()}`)).toEqual({
       status: 'draft',
-      converted_to_workflow: ['none', 'expanded', 'storno', 'original'],
     });
-    expect(filterAsReactAdmin(target.search)).toEqual({
-      status: 'draft',
-      converted_to_workflow: ['none', 'expanded', 'storno', 'original'],
-    });
-    expect(target.search).not.toContain('/transactions/review');
   });
 
-  it('opens Transactions hiding originals and replaces a stored draft filter', () => {
-    const draft = transactionsMenuTo('draft');
-    const all = transactionsMenuTo('all');
-    expect(filterFromListSearch(draft.search)).toEqual({
-      status: 'draft',
-      converted_to_workflow: ['none', 'expanded', 'storno', 'original'],
-    });
-    expect(filterFromListSearch(all.search)).toEqual({
-      converted_to_workflow: ['none', 'expanded'],
-    });
-    expect(filterAsReactAdmin(all.search)).toEqual({
-      converted_to_workflow: ['none', 'expanded'],
-    });
-    expect(all.pathname).toBe(draft.pathname);
-    expect(all.search).not.toBe(draft.search);
+  it('returns an empty filter for missing or invalid JSON', () => {
+    expect(filterFromListSearch('')).toEqual({});
+    expect(filterFromListSearch('?filter=%5B1%5D')).toEqual({});
+    expect(filterFromListSearch('?filter=nope')).toEqual({});
   });
+});
 
-  it('highlights Review only while the list filter status is draft', () => {
-    const draft = transactionsMenuTo('draft');
-    const all = transactionsMenuTo('all');
-    expect(transactionListMode(draft.pathname, draft.search)).toBe('draft');
-    expect(transactionListMode(all.pathname, all.search)).toBe('all');
-    expect(
-      transactionListMode(
-        '/transactions',
-        '?filter={"status":"draft","date_gte":"2026-01-01"}',
-      ),
-    ).toBe('draft');
-    expect(transactionListMode('/transactions/create', all.search)).toBeNull();
+describe('transactionListMode', () => {
+  it('highlights Review only on the list while the global status is draft', () => {
+    expect(transactionListMode('/transactions', 'draft')).toBe('draft');
+    expect(transactionListMode('/transactions', 'all')).toBe('all');
+    expect(transactionListMode('/transactions', 'preview')).toBe('all');
+    expect(transactionListMode('/transactions/create', 'draft')).toBeNull();
+    expect(transactionListMode('/reports/egg-inventory', 'all')).toBeNull();
   });
 });

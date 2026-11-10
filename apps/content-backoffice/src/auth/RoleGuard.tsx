@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { usePermissions } from 'react-admin';
 
 import type { ContentRole } from './roles';
-import { isContentRole } from './roles';
+import { roleAllowed } from './roles';
 
 type RoleGuardProps = {
   allow: ContentRole[];
@@ -11,14 +11,14 @@ type RoleGuardProps = {
 };
 
 export function RoleGuard({ allow, children }: RoleGuardProps) {
-  const { permissions, isLoading } = usePermissions();
+  const { permissions, isPending } = usePermissions();
 
-  if (isLoading) {
+  if (isPending) {
     return null;
   }
 
-  if (!isContentRole(permissions) || !allow.includes(permissions)) {
-    return <Navigate to="/transactions" replace />;
+  if (typeof permissions !== 'string' || !roleAllowed(allow, permissions)) {
+    return <Navigate replace to="/transactions" />;
   }
 
   return children;

@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react';
 
+import type { ReportParams } from '../../../filters/globalTransactionFilters';
+
 import { useBackofficeConfig } from '../../../workflows/useBackofficeConfig';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../../../workflows/bulk-quantity/eggDailyEntry.constants';
 import { eggSaleCurrencyForWorkflow } from '../../../workflows/parseBackofficeConfig';
 
 import { fetchEggInventoryReport } from './eggInventory.fetch';
-import type {
-  DateRangePreset,
-  EggInventoryReport,
-  EggInventoryStatus,
-} from './types';
-import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter,
-} from '../shared/reportTransactionStatus';
+import type { EggInventoryReport, EggInventoryStatus } from './types';
 
 export type EggInventoryQuery = {
   status: EggInventoryStatus;
@@ -22,17 +16,16 @@ export type EggInventoryQuery = {
   reload: () => void;
 };
 
-export function useEggInventoryReport(
-  preset: DateRangePreset,
-  transactionStatus: ReportTransactionStatusFilter = REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-): EggInventoryQuery {
+/** Report for the global filter range / status (see {@link ReportParams}). */
+export function useEggInventoryReport(params: ReportParams): EggInventoryQuery {
+  const { preset, bounds, transactionStatus, key: paramsKey } = params;
   const config = useBackofficeConfig();
   const saleCurrency = eggSaleCurrencyForWorkflow(
     config,
     EGG_PRODUCTION_WORKFLOW_ID,
   );
   const [reloadToken, setReloadToken] = useState(0);
-  const requestKey = `${preset}:${saleCurrency}:${transactionStatus}:${reloadToken}`;
+  const requestKey = `${paramsKey}:${saleCurrency}:${reloadToken}`;
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
   const [report, setReport] = useState<EggInventoryReport | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,15 +39,17 @@ export function useEggInventoryReport(
       };
     }
 
-    fetchEggInventoryReport(preset, { saleCurrency, transactionStatus })
+    fetchEggInventoryReport(preset, {
+      saleCurrency,
+      transactionStatus,
+      bounds,
+    })
       .then((data) => {
         if (!active) return;
         setReport(data);
         setFailed(false);
         setErrorMessage(null);
-        setResolvedKey(
-          `${preset}:${saleCurrency}:${transactionStatus}:${reloadToken}`,
-        );
+        setResolvedKey(requestKey);
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -63,15 +58,15 @@ export function useEggInventoryReport(
         setErrorMessage(
           err instanceof Error ? err.message : 'egg inventory load failed',
         );
-        setResolvedKey(
-          `${preset}:${saleCurrency}:${transactionStatus}:${reloadToken}`,
-        );
+        setResolvedKey(requestKey);
       });
 
     return () => {
       active = false;
     };
-  }, [preset, reloadToken, saleCurrency, transactionStatus, config.ready]);
+    // paramsKey covers preset, bounds and transactionStatus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey, reloadToken, saleCurrency, config.ready]);
 
   const status: EggInventoryStatus = !config.ready
     ? 'loading'

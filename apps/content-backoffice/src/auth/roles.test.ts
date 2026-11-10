@@ -6,6 +6,7 @@ import {
   EDITOR_LIKE_ROLES,
   isContentRole,
   isEditorLikeRole,
+  roleAllowed,
 } from './roles';
 
 describe('content roles', () => {
@@ -26,6 +27,12 @@ describe('content roles', () => {
     expect(isContentRole('editor')).toBe(true);
     expect(isContentRole('controller')).toBe(true);
     expect(isContentRole('admin')).toBe(false);
+  });
+
+  it('lets controller pass gates that list editor', () => {
+    expect(roleAllowed(['dataentry', 'editor'], 'controller')).toBe(true);
+    expect(roleAllowed(['dataentry'], 'controller')).toBe(false);
+    expect(roleAllowed(['controller'], 'controller')).toBe(true);
   });
 
   it('limits purge-expansion to controller', () => {
