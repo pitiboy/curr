@@ -2,7 +2,7 @@ import { Box, Divider } from '@mui/material';
 import type { SidebarProps } from 'react-admin';
 import { Sidebar, useSidebarState } from 'react-admin';
 
-import { GlobalTransactionFilters } from '../filters/GlobalTransactionFilters';
+import { GlobalTransactionFiltersPanel } from '../filters/GlobalTransactionFiltersPanel';
 import { SidebarMobileHeader } from './SidebarMobileHeader';
 
 export function FrameSidebar(props: SidebarProps) {
@@ -26,7 +26,7 @@ export function FrameSidebar(props: SidebarProps) {
         <>
           <Divider />
           <Box sx={{ overflowY: 'auto' }}>
-            <GlobalTransactionFilters />
+            <GlobalTransactionFiltersPanel />
           </Box>
         </>
       ) : null}

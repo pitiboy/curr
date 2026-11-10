@@ -13,9 +13,9 @@ vi.mock('react-admin', async (importOriginal) => {
   };
 });
 
-import { GlobalTransactionFilters } from './GlobalTransactionFilters';
 import { applyMenuOverride } from './globalTransactionFilters';
 import { globalTransactionFiltersAtom } from './globalTransactionFiltersAtom';
+import { GlobalTransactionFiltersPanel } from './GlobalTransactionFiltersPanel';
 
 afterEach(cleanup);
 
@@ -23,13 +23,13 @@ function renderPanel() {
   const store = createStore();
   render(
     <Provider store={store}>
-      <GlobalTransactionFilters />
+      <GlobalTransactionFiltersPanel />
     </Provider>,
   );
   return store;
 }
 
-describe('GlobalTransactionFilters panel', () => {
+describe('GlobalTransactionFiltersPanel', () => {
   it('selects a date preset in the shared atom', async () => {
     const store = renderPanel();
     expect(store.get(globalTransactionFiltersAtom).datePreset).toBe(

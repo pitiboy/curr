@@ -64,7 +64,7 @@ const OPTIONAL_FILTER_LABEL: Record<GlobalOptionalFilterKey, string> = {
 };
 
 /** Sidebar panel: global transaction filters for the list and the reports. */
-export function GlobalTransactionFilters() {
+export function GlobalTransactionFiltersPanel() {
   const translate = useTranslate();
   const [state, setState] = useGlobalTransactionFilters();
   const [added, setAdded] = useState<GlobalOptionalFilterKey[]>([]);
