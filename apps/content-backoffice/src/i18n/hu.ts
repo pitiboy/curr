@@ -397,6 +397,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       session_missing: 'A Google-belépés megszakadt. Próbáld újra.',
       provider_disabled: 'A Google-belépés jelenleg ki van kapcsolva.',
     },
+    administration: {
+      menu: 'Adminisztráció',
+    },
     static_nav: 'Statikus oldalak',
     static_privacy: 'Adatkezelési tájékoztató',
     static_terms: 'Felhasználási feltételek',

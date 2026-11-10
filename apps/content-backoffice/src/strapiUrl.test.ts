@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveStrapiUrl } from './strapiUrl';
+import { resolveStrapiUrl, strapiAdminUrl } from './strapiUrl';
 
 describe('resolveStrapiUrl', () => {
   it('uses local Strapi in dev', () => {
@@ -38,5 +38,16 @@ describe('resolveStrapiUrl', () => {
         envUrl: 'http://127.0.0.1:1337/',
       }),
     ).toBe('http://127.0.0.1:1337');
+  });
+});
+
+describe('strapiAdminUrl', () => {
+  it('appends /admin to the Strapi origin', () => {
+    expect(strapiAdminUrl('http://localhost:1337')).toBe(
+      'http://localhost:1337/admin',
+    );
+    expect(strapiAdminUrl('https://kor.fejlesztesek.hu/')).toBe(
+      'https://kor.fejlesztesek.hu/admin',
+    );
   });
 });
