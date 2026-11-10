@@ -69,7 +69,7 @@ A [domain use case-ek](../readme.md#use-cases) magja. A lista önmagában nem he
 - Egyenleg és előzmény tagonként, illetve projektenként; a boardnak összesítve. Az egyenleg előre számolt összesítés (szervezet, számla, pénznem, időszak), nem lista-soronként újraszámolt összeg.
 - Ismétlődő tagdíj és ütemezett terhelés, idempotens futással: egy újrafuttatás nem dupláz sort.
 - Kivonat- és számlatükör-import előnézettel és az elutasított sorok naplójával.
-- A pénznem és az árfolyam a rögzítéskor rögzített érték a tranzakción. A későbbi törzsadat-változás a régi egyenleget nem írja át. A részletes adatmodell-megjegyzés a [readme](../readme.md#accounting-loop-before-new-domains) alatt van.
+- A tranzakción a pénznem és a végső összeg rögzül, az árfolyam **nem** (döntés, 2026-11-08). Az árfolyammal számolt összeg (pl. a transaction-workflow Convert árfolyamos lépése) a rögzítéskor fix, a későbbi `currency-rate` változás a régi egyenleget nem írja át. A részletes adatmodell-megjegyzés a [readme](../readme.md#accounting-loop-before-new-domains) alatt van.
 
 ### 3.6 AJAX loading spinner
 
@@ -108,11 +108,11 @@ A pre-commit hook ([`lefthook.yml`](../../lefthook.yml)) és a CI ([`.github/wor
 
 ## 5. Teljesítmény
 
-Amíg az adat még kicsi, a lista- és jelentésút legyen olcsó. Állapot: **nincs implementálva.** A lista ma minden draft és published sort végiglapoz 100-asával, és az SPA-ban rendez és lapoz ([`dataProvider.ts`](../../apps/content-backoffice/src/data/dataProvider.ts) `fetchTransactions`, [`transactionList.ts`](../../apps/content-backoffice/src/data/transactionList.ts) `assembleTransactionList`). A `populate` a listán is bővebb a javasoltnál. A [`currency-rate`](../../src/api/currency-rate/services/currency-rate.ts) service üres core service, dátum szerinti lookup nincs. A tranzakció sémában nincs árfolyam mező ([`transaction/schema.json`](../../src/api/transaction/content-types/transaction/schema.json)). Az egyetlen index az `entered_key` részleges unique indexe.
+Amíg az adat még kicsi, a lista- és jelentésút legyen olcsó. Állapot: **nincs implementálva.** A lista ma minden draft és published sort végiglapoz 100-asával, és az SPA-ban rendez és lapoz ([`dataProvider.ts`](../../apps/content-backoffice/src/data/dataProvider.ts) `fetchTransactions`, [`transactionList.ts`](../../apps/content-backoffice/src/data/transactionList.ts) `assembleTransactionList`). A `populate` a listán is bővebb a javasoltnál. A [`currency-rate`](../../src/api/currency-rate/services/currency-rate.ts) service üres core service, dátum szerinti lookup nincs (a `findLatestRate` a [0002 plan §5.1](../plans/0002-transaction-workflow-content-type.md#51-árfolyamos-lépés-apply_currency_rate) része). A tranzakció sémában nincs árfolyam mező, és nem is lesz ([`transaction/schema.json`](../../src/api/transaction/content-types/transaction/schema.json)). Az egyetlen index az `entered_key` részleges unique indexe.
 
 - A lista lapozott, szűk mezőlistával: dátum, összeg, státusz, szervezet, debit és credit kód, bizonylat azonosító. A teljes `populate` a részletezőn marad.
 - Index a szűrőoszlopokra: `date`, publikált státusz, szervezet, debit és credit számla. A Strapi draft és published párokat státuszszűrővel kéri az API.
-- Árfolyam dátum szerint cache-elt lookup, nem soronkénti rate-lekérdezés. A rögzítéskori árfolyam a [§3.5](#35-könyvelési-kör) szerint a tranzakción van.
+- Árfolyam dátum szerint cache-elt lookup, nem soronkénti rate-lekérdezés. A tranzakció árfolyamot nem tárol, csak a rögzítéskor fixált összeget ([§3.5](#35-könyvelési-kör)).
 - A listában a bizonylat bélyegkép vagy link. Az eredeti fájl a Cloudinaryn marad, a részletező tölti le.
 - Az SPA resource-onként töltődik. Az organizations, members és accounts képernyők nincsenek az első bundle-ben.
 
@@ -131,7 +131,7 @@ Ezek a könyvelési kör és az üzemeltetési alap után jönnek.
 3. A `main` branch protection bekapcsolása és a Strapi lint a kapuban (a hook és a CI már megvan)
 4. AJAX loading spinner a még hiányzó helyeken
 5. Lapozott lista, szűk mezők, indexek, bizonylat bélyegkép
-6. Rögzítéskori árfolyam a tranzakción, cache-elt rate lookup, előre számolt egyenleg
+6. Cache-elt rate lookup, előre számolt egyenleg
 7. Tag- és projektegyenleg, ismétlődő tagdíj, import előnézettel
 8. Receipt N:M UI, majd a QA sor (értesítés, hozzárendelés, visszautasítás megjegyzéssel)
 9. Csak utána: menükatalógus (resource-onkénti bundle-lel), user–member összerendelés, avatar, további OAuth, jelszó-reset, meghívó, subdomain
@@ -169,7 +169,7 @@ A nyitott tételekből a [CURR - KÖR project](https://github.com/users/pitiboy/
 | Profil avatar feltöltés és megjelenítés                             | §3.2     | 3   |
 | Receipt több tranzakcióhoz (N:M) és meglévő receipt választása      | §3.3     | 5   |
 | QA workflow: értesítés, hozzárendelés, visszautasítás megjegyzéssel | §3.4     | 8   |
-| Rögzítéskori árfolyam a tranzakción és cache-elt rate lookup        | §3.5, §5 | 5   |
+| Cache-elt rate lookup (árfolyam nem kerül a tranzakcióra)           | §3.5, §5 | 5   |
 | Egyenleg tagonként és projektenként (előre számolt összesítés)      | §3.5     | 8   |
 | Ismétlődő tagdíj és ütemezett terhelés                              | §3.5     | 8   |
 | Kivonat- és számlatükör-import előnézettel és hibanaplóval          | §3.5     | 8   |

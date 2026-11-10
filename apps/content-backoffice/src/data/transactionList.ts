@@ -1,3 +1,5 @@
+import { classifyLedgerMovement } from '../pages/reports/projectBalance/projectBalance.classify';
+
 export type PublicationStatus = 'draft' | 'published';
 
 /** Source row after Convert. */
@@ -73,7 +75,60 @@ export type StrapiTransaction = {
     document?: { url?: string | null } | { url?: string | null }[] | null;
     receipt_type?: { documentId?: string; name?: string | null } | null;
   }> | null;
+  related_transaction?: {
+    documentId?: string;
+    date?: string | null;
+    amount?: string | number | null;
+    description?: string | null;
+    converted_to_workflow?: ConvertedToWorkflow | boolean | null;
+    currency_type?: { code?: string | null; name?: string | null } | null;
+  } | null;
+  related_transactions?: Array<{
+    documentId?: string;
+    date?: string | null;
+    amount?: string | number | null;
+    description?: string | null;
+    converted_to_workflow?: ConvertedToWorkflow | boolean | null;
+    currency_type?: { code?: string | null; name?: string | null } | null;
+  }> | null;
 };
+
+export function parseTransactionAmount(
+  value: string | number | null | undefined,
+): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  const n = Number(
+    String(value ?? '')
+      .replace(',', '.')
+      .trim(),
+  );
+  return Number.isFinite(n) ? n : 0;
+}
+
+function currencyCodeFromRow(
+  currency: StrapiTransaction['currency_type'],
+): string {
+  if (!currency || typeof currency !== 'object') return '—';
+  const code = currency.code?.trim();
+  if (code) return code;
+  const name = currency.name?.trim();
+  return name || '—';
+}
+
+/** Sum amounts on the current list page, grouped by currency code. */
+export function sumTransactionAmountsByCurrency(
+  rows: ReadonlyArray<Pick<StrapiTransaction, 'amount' | 'currency_type'>>,
+): { currency: string; amount: number }[] {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    const amount = parseTransactionAmount(row.amount);
+    const code = currencyCodeFromRow(row.currency_type);
+    totals.set(code, (totals.get(code) ?? 0) + amount);
+  }
+  return [...totals.entries()]
+    .map(([currency, amount]) => ({ currency, amount }))
+    .sort((a, b) => a.currency.localeCompare(b.currency));
+}
 
 /** Vendor of the first receipt, or an empty string when there is none. */
 export function firstReceiptVendor(receipts: unknown): string {
@@ -94,10 +149,34 @@ export const transactionPopulate = {
   debit_account: true,
   credit_account: true,
   related_transaction: {
-    fields: ['documentId', 'date', 'description'],
+    fields: [
+      'id',
+      'documentId',
+      'date',
+      'amount',
+      'description',
+      'converted_to_workflow',
+    ],
+    populate: {
+      currency_type: { fields: ['code', 'name'] },
+      debit_account: { fields: ['code', 'name'] },
+      credit_account: { fields: ['code', 'name'] },
+    },
   },
   related_transactions: {
-    fields: ['documentId', 'date', 'amount'],
+    fields: [
+      'id',
+      'documentId',
+      'date',
+      'amount',
+      'description',
+      'converted_to_workflow',
+    ],
+    populate: {
+      currency_type: { fields: ['code', 'name'] },
+      debit_account: { fields: ['code', 'name'] },
+      credit_account: { fields: ['code', 'name'] },
+    },
   },
   currency_type: {
     populate: {
@@ -111,6 +190,16 @@ export const transactionPopulate = {
     },
   },
 };
+
+/** Client-only list filter from project balance drill-down (not sent to Strapi). */
+export const PROJECT_BALANCE_LEG_FILTER_KEY = 'project_balance_leg' as const;
+
+/** Client-only: exclude tagi 1101/1001 belső átvezetések (membership-share riport). */
+export const MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY =
+  'membership_share_external' as const;
+
+/** Strapi `credit_account.documentId.$in` a membership-share drill-downból. */
+export const CREDIT_ACCOUNT_IN_FILTER_KEY = 'credit_account_in' as const;
 
 export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
   /** React-admin id: Strapi documentId (not the numeric PK). */
@@ -244,8 +333,14 @@ export function assembleTransactionList(
   params: ListParams,
 ): { data: TransactionRow[]; total: number } {
   const { status } = buildTransactionFilters(params.filter ?? {});
-  const merged = mergeByStatus(drafts, published, status).filter((row) =>
-    matchesFirstReceiptVendor(row.receipts, params.filter?.vendor),
+  const filter = params.filter ?? {};
+  const leg = filter[PROJECT_BALANCE_LEG_FILTER_KEY];
+  const membershipExternal = filter[MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY];
+  const merged = mergeByStatus(drafts, published, status).filter(
+    (row) =>
+      matchesFirstReceiptVendor(row.receipts, filter.vendor) &&
+      matchesProjectBalanceLeg(row, leg) &&
+      matchesMembershipShareExternal(row, membershipExternal),
   );
   const sorted = sortTransactionRows(
     merged,
@@ -289,14 +384,37 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   if (isPresent(filter.organization)) {
     strapiFilters.organization = { documentId: { $eq: filter.organization } };
   }
+  if (typeof filter.currency_type === 'string' && filter.currency_type.trim()) {
+    strapiFilters.currency_type = {
+      code: { $eq: filter.currency_type.trim() },
+    };
+  }
   if (isPresent(filter.debit_account)) {
     strapiFilters.debit_account = {
       documentId: { $eq: filter.debit_account },
     };
   }
-  if (isPresent(filter.credit_account)) {
+  const creditAccountIn = normalizeStringIdList(
+    filter[CREDIT_ACCOUNT_IN_FILTER_KEY],
+  );
+  if (creditAccountIn?.length === 1) {
+    strapiFilters.credit_account = {
+      documentId: { $eq: creditAccountIn[0] },
+    };
+  } else if (creditAccountIn && creditAccountIn.length > 1) {
+    strapiFilters.credit_account = {
+      documentId: { $in: creditAccountIn },
+    };
+  } else if (isPresent(filter.credit_account)) {
     strapiFilters.credit_account = {
       documentId: { $eq: filter.credit_account },
+    };
+  } else if (
+    typeof filter.credit_account_code === 'string' &&
+    filter.credit_account_code.trim()
+  ) {
+    strapiFilters.credit_account = {
+      code: { $eq: filter.credit_account_code.trim() },
     };
   }
   if (typeof filter.description === 'string' && filter.description.trim()) {
@@ -497,6 +615,38 @@ function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const parsed = parseFloat(String(value ?? ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+const MEMBER_LEDGER_DEBIT_CODES = new Set(['1101', '1001']);
+
+function matchesMembershipShareExternal(
+  row: Pick<StrapiTransaction, 'debit_account'>,
+  enabled: unknown,
+): boolean {
+  if (enabled !== true) return true;
+  const debitCode = String(row.debit_account?.code ?? '').trim();
+  return !MEMBER_LEDGER_DEBIT_CODES.has(debitCode);
+}
+
+function normalizeStringIdList(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const ids = raw
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean);
+  return ids.length > 0 ? ids : undefined;
+}
+
+function matchesProjectBalanceLeg(
+  row: Pick<StrapiTransaction, 'debit_account' | 'credit_account'>,
+  leg: unknown,
+): boolean {
+  if (leg !== 'revenue' && leg !== 'cost') return true;
+  const kind = classifyLedgerMovement(
+    row.debit_account?.code,
+    row.credit_account?.code,
+  );
+  if (leg === 'revenue') return kind === 'revenue';
+  return kind === 'cost';
 }
 
 function matchesFirstReceiptVendor(receipts: unknown, query: unknown): boolean {

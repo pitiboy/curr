@@ -1,0 +1,76 @@
+{
+  "kind": "collectionType",
+  "collectionName": "audit_logs",
+  "info": {
+    "singularName": "audit-log",
+    "pluralName": "audit-logs",
+    "displayName": "Audit log",
+    "description": "HTTP request audit trail (written by global middleware; not for Content API access)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "occurred_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string",
+      "required": true
+    },
+    "path": {
+      "type": "string",
+      "required": true
+    },
+    "route": {
+      "type": "string"
+    },
+    "query": {
+      "type": "json"
+    },
+    "status": {
+      "type": "integer"
+    },
+    "duration_ms": {
+      "type": "integer"
+    },
+    "actor_type": {
+      "type": "enumeration",
+      "enum": ["user", "admin", "api-token", "anonymous"],
+      "required": true
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "actor_label": {
+      "type": "string"
+    },
+    "actor_role": {
+      "type": "string"
+    },
+    "ip": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "text"
+    },
+    "body": {
+      "type": "json"
+    },
+    "error": {
+      "type": "text"
+    }
+  }
+}

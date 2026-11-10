@@ -23,7 +23,51 @@ export type PreviewMovement = {
   percent: number | null;
   copyReceipt: boolean;
   organizationDocumentId: string | null;
+  /** Set on `apply_currency_rate` steps (currency-rate used by Convert). */
+  rate?: PreviewAppliedRate | null;
+  /** Member ratio (`rules[<source currency>]`) that multiplied this step. */
+  memberRatio?: PreviewMemberRatio | null;
 };
+
+export type PreviewMemberRatio = {
+  ratio: number;
+  membershipDocumentId: string | null;
+  membershipName: string | null;
+  source: 'membership' | 'membership_type';
+};
+
+/** `{ ratio, membership }` for the preview caption; null when no ratio applied. */
+export function memberRatioLabelParts(
+  memberRatio: PreviewMemberRatio | null | undefined,
+): { ratio: string; membership: string } | null {
+  if (!memberRatio || !Number.isFinite(memberRatio.ratio)) return null;
+  return {
+    ratio: memberRatio.ratio.toLocaleString('hu-HU', {
+      maximumFractionDigits: 6,
+    }),
+    membership: memberRatio.membershipName?.trim() || '—',
+  };
+}
+
+export type PreviewAppliedRate = {
+  fromCurrencyDocumentId: string;
+  toCurrencyDocumentId: string;
+  rate: number;
+  /** null when source and step currency match (implicit rate 1). */
+  validFrom: string | null;
+  currencyRateDocumentId: string | null;
+};
+
+/** `{ rate, validFrom }` for the preview table, or null without a rate. */
+export function appliedRateLabelParts(
+  rate: PreviewAppliedRate | null | undefined,
+): { rate: string; validFrom: string | null } | null {
+  if (!rate || !Number.isFinite(rate.rate)) return null;
+  return {
+    rate: rate.rate.toLocaleString('hu-HU', { maximumFractionDigits: 6 }),
+    validFrom: rate.validFrom ? rate.validFrom.slice(0, 10) : null,
+  };
+}
 
 export type ConvertPreview = {
   workflow: {

@@ -1,0 +1,17 @@
+{
+  "name": "Állat elhullás (kakas)",
+  "debit_account_code": 5810,
+  "credit_account_code": 1300,
+  "currency": "ROOSTER",
+  "steps": [
+    {
+      "description": "Elhullás (kakas) – {original.description}",
+      "percent": 100,
+      "debit_code": "5810",
+      "credit_code": "1300",
+      "currency": "ROOSTER",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

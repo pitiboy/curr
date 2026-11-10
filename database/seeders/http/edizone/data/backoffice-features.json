@@ -46,5 +46,10 @@
     "key": "membership-share",
     "enabled": false,
     "config": {}
+  },
+  {
+    "key": "project-balance",
+    "enabled": true,
+    "config": {}
   }
 ]

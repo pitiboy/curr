@@ -50,10 +50,16 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_currency: 'Currency',
     transactions_convert_preview_steps_total:
       'Step total: %{steps} (original: %{original})',
+    transactions_convert_preview_rate: 'rate × %{rate} (from %{validFrom})',
+    transactions_convert_preview_rate_same: 'rate × %{rate}',
+    transactions_convert_preview_member_ratio:
+      'member ratio × %{ratio} (%{membership})',
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',
+    transactions_related_current: 'this row',
     transactions_none: 'No transactions.',
+    transactions_page_total: 'Total (rows on this page)',
     transactions_finalize: 'Finalize',
     description_clear_comments: 'Remove comments',
     transactions_finalized: 'Transaction finalized.',
@@ -125,6 +131,13 @@ export const enMessages = mergeTranslations(englishMessages, {
     account_profile_workflow_dropped:
       'The selected transaction template no longer matches the chosen accounts.',
     reports: {
+      range: {
+        all: 'All time',
+        thisMonth: 'This month',
+        lastMonth: 'Last month',
+        last7: 'Last 7 days',
+        thisYear: 'This year',
+      },
       transaction_status: {
         label: 'Transactions',
         /** Published/live books view — default, same as before. */
@@ -168,6 +181,34 @@ export const enMessages = mergeTranslations(englishMessages, {
       sale_revenue: 'Sale revenue',
       member_total: 'Total (qty)',
       empty: 'No egg traffic for this period. Try another date range.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
+    hen_inventory: {
+      menu: 'Hen registry',
+      title: 'Laying-hen inventory report',
+      subtitle:
+        'HEN stock per flock over time, with slaughter and live-bird transfers to members by day.',
+      kpi: {
+        stock: 'Stock (end of range)',
+        intake: 'Intake',
+        slaughter: 'Slaughter',
+        transfer: 'Hen transfer',
+        mortality: 'Mortality',
+      },
+      stock_timeseries_title: 'Stock over time (by flock)',
+      alom_title: 'Breakdown by flock',
+      alom_name: 'Flock',
+      slaughter_chart_title: 'Slaughter by day and member',
+      members_title: 'Member totals (slaughter / transfer)',
+      member_name: 'Member',
+      member_account: 'Account',
+      member_total: 'Total (head)',
+      totals_row: 'Total',
+      slaughter_empty:
+        'No member hen outflows in this period. The report counts every HEN 1300→member-pocket booking, including the slaughter template.',
+      outflow_empty: 'No slaughter or transfers in this period.',
+      empty: 'No hen traffic for this period. Try another date range.',
       error: 'Could not load the report.',
       retry: 'Retry',
     },
@@ -215,6 +256,47 @@ export const enMessages = mergeTranslations(englishMessages, {
       empty: 'No member payments for this period. Try another range or ledger.',
       error: 'Could not load the report.',
       retry: 'Retry',
+      drilldown: {
+        hint: 'Click: filtered transaction list',
+      },
+    },
+    project_balance: {
+      menu: 'Project balances',
+      title: 'Project balances',
+      subtitle:
+        'Per project: production (inflow / revenue-style lines) and investment (5xx/15xx). Default: published only — include drafts via the Transactions filter.',
+      project_filter: 'Project (all)',
+      currency: 'Currency',
+      revenue: 'Production',
+      cost: 'Investment',
+      kpi: {
+        cumulative: 'Cumulative balance · %{currency}',
+        period_revenue: 'Period production · %{currency}',
+        period_cost: 'Period investment · %{currency}',
+        period_net: 'Period net · %{currency}',
+      },
+      by_project_title: 'Production and investment by project (%{currency})',
+      history_title: 'Production and investment over time (%{currency})',
+      history_empty: 'No time series for this currency.',
+      table_title: 'Project table',
+      col: {
+        project: 'Project',
+        period_revenue: 'Production (%{currency})',
+        period_cost: 'Investment (%{currency})',
+        period_net: 'Profit (%{currency})',
+        cumulative: 'Total (%{currency})',
+      },
+      empty:
+        'No project activity in this range. Try another period or publication filter.',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+      warn_truncated:
+        'Transaction load hit the safety cap — older rows may be missing. Narrow the date range or add a backend aggregate later.',
+      warn_unclassified:
+        '%{count} booked rows have a project but no production/investment pattern (e.g. 1900↔1100 transfers only). Convert templates or fix account pairs may help.',
+      drilldown: {
+        hint: 'Click: filtered transaction list',
+      },
     },
     profile: 'Profile',
     profile_name: 'Name',
@@ -237,6 +319,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     feature_flags_empty: 'No workflows to toggle.',
     feature_flags_reset: 'Use server list',
     workflows: {
+      'project-balance': 'Project balance report',
       'egg-production': 'Daily egg entry',
       'member-fee': 'Member fee',
       'membership-share': 'Share capital report',

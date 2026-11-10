@@ -3,7 +3,12 @@ pre-commit:
   commands:
     prettier:
       glob: '*.{js,ts,tsx,json,md,yml,yaml,css,html}'
-      exclude: 'package-lock.json'
+      exclude:
+        - 'package-lock.json'
+        - '.claude/agents/*.md' # symlinks to .cursor/agents; prettier rejects explicit symlinks
+        - 'types/generated/**'
+        - 'src/extensions/documentation/documentation/**/full_documentation.json'
+        - 'src/extensions/documentation/public/index.html'
       run: npx prettier --write {staged_files}
     backoffice-lint:
       glob: 'apps/content-backoffice/**/*.{ts,tsx}'

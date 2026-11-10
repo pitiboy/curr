@@ -7,8 +7,9 @@
  * split by currency; never summed across FX.
  */
 
-export type DateRangePreset =
-  'all' | 'thisMonth' | 'lastMonth' | 'last7' | 'thisYear';
+import type { DateRangePreset } from '../shared/reportDateRange';
+
+export type { DateRangePreset };
 
 /** Which member ledger(s) the report focuses on. */
 export type LedgerFocus = 'share' | 'pocket' | 'both';
@@ -44,6 +45,10 @@ export type MembershipShareKpis = {
 export type MembershipMemberRow = {
   memberId: string;
   memberName: string;
+  /** Tagi részjegy (1101) számla documentId — drill-down. */
+  shareAccountId?: string | null;
+  /** Tagi zseb (1001) számla documentId — drill-down. */
+  pocketAccountId?: string | null;
   /** Amounts credited to this member's 1101, by currency. */
   shareByCurrency: CurrencyAmount[];
   /** Amounts credited to this member's 1001, by currency. */

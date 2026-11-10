@@ -14,6 +14,7 @@ import {
   type TransactionListMode,
 } from '../data/transactionListLocation';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
+import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
 import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
@@ -34,6 +35,8 @@ export function BackofficeMenu() {
     canReadReports && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
     canReadReports && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
+  const canReadProjectBalance =
+    canReadReports && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
 
   return (
     <Menu>
@@ -58,17 +61,31 @@ export function BackofficeMenu() {
         />
       )}
       {canReadEggInventory ? (
-        <Menu.Item
-          leftIcon={<AssessmentOutlinedIcon />}
-          primaryText={translate('app.egg_inventory.menu')}
-          to="/reports/egg-inventory"
-        />
+        <>
+          <Menu.Item
+            leftIcon={<AssessmentOutlinedIcon />}
+            primaryText={translate('app.egg_inventory.menu')}
+            to="/reports/egg-inventory"
+          />
+          <Menu.Item
+            leftIcon={<AssessmentOutlinedIcon />}
+            primaryText={translate('app.hen_inventory.menu')}
+            to="/reports/hen-inventory"
+          />
+        </>
       ) : null}
       {canReadMembershipShare ? (
         <Menu.Item
           leftIcon={<SavingsOutlinedIcon />}
           primaryText={translate('app.membership_share.menu')}
           to="/reports/membership-share"
+        />
+      ) : null}
+      {canReadProjectBalance ? (
+        <Menu.Item
+          leftIcon={<AssessmentOutlinedIcon />}
+          primaryText={translate('app.project_balance.menu')}
+          to="/reports/project-balance"
         />
       ) : null}
       {permissions === 'editor' && (
