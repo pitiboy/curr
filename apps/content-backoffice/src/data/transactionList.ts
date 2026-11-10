@@ -620,7 +620,7 @@ function toNumber(value: string | number | null | undefined): number {
 const MEMBER_LEDGER_DEBIT_CODES = new Set(['1101', '1001']);
 
 function matchesMembershipShareExternal(
-  row: StrapiTransaction,
+  row: Pick<StrapiTransaction, 'debit_account'>,
   enabled: unknown,
 ): boolean {
   if (enabled !== true) return true;
@@ -637,7 +637,7 @@ function normalizeStringIdList(raw: unknown): string[] | undefined {
 }
 
 function matchesProjectBalanceLeg(
-  row: StrapiTransaction,
+  row: Pick<StrapiTransaction, 'debit_account' | 'credit_account'>,
   leg: unknown,
 ): boolean {
   if (leg !== 'revenue' && leg !== 'cost') return true;

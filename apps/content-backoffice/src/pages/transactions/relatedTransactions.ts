@@ -4,6 +4,7 @@ import {
   CONVERTED_EXPANDED,
   CONVERTED_ORIGINAL,
   CONVERTED_STORNO,
+  isExpandableConvertedValue,
   type ConvertedToWorkflow,
 } from '../../data/transactionList';
 
@@ -137,7 +138,7 @@ const convertedI18nKey: Record<string, string> = {
 export function convertedLabelKey(
   value: RelatedTransactionItem['converted_to_workflow'],
 ): string | null {
-  if (value == null || value === '' || value === false) return null;
+  if (isExpandableConvertedValue(value)) return null;
   if (typeof value === 'string' && value in convertedI18nKey) {
     return convertedI18nKey[value];
   }
