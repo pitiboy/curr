@@ -57,6 +57,13 @@ import {
   type ReportTransactionStatusFilter,
 } from './shared/reportTransactionStatus';
 import { useProjectBalanceReport } from './projectBalance/useProjectBalanceReport';
+import {
+  ReportPageHeader,
+  ReportPageShell,
+  ReportScrollX,
+  reportBarAreaMinWidth,
+  useReportChartMetrics,
+} from './shared/reportLayout';
 
 function formatMoney(amount: number, currency: string): string {
   try {
@@ -115,16 +122,12 @@ export function ProjectBalanceReportPage() {
   );
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1100 }}>
+    <ReportPageShell>
       <Title title="app.project_balance.title" />
-      <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography component="h1" variant="h5">
-          {translate('app.project_balance.title')}
-        </Typography>
-        <Typography color="text.secondary" variant="body2">
-          {translate('app.project_balance.subtitle')}
-        </Typography>
-      </Stack>
+      <ReportPageHeader
+        subtitle={translate('app.project_balance.subtitle')}
+        title={translate('app.project_balance.title')}
+      />
 
       <ReportRangeFilterToolbar
         onRangeChange={setRange}
@@ -144,10 +147,11 @@ export function ProjectBalanceReportPage() {
               {...params}
               label={translate('app.project_balance.project_filter')}
               size="small"
-              sx={{ minWidth: 240 }}
+              sx={{ minWidth: { xs: 0, sm: 240 }, width: '100%' }}
             />
           )}
           size="small"
+          sx={{ maxWidth: '100%', width: { xs: '100%', sm: 360 } }}
           value={selectedOrg}
         />
       </ReportRangeFilterToolbar>
@@ -198,7 +202,7 @@ export function ProjectBalanceReportPage() {
           />
         </>
       ) : null}
-    </Box>
+    </ReportPageShell>
   );
 }
 
@@ -216,6 +220,7 @@ function ReportBody({
   const translate = useTranslate();
   const theme = useTheme();
   const navigate = useNavigate();
+  const chartMetrics = useReportChartMetrics();
 
   const openDrilldown = useCallback(
     (link: { pathname: '/transactions'; search: string }) => {
@@ -253,7 +258,13 @@ function ReportBody({
   return (
     <Stack spacing={3}>
       {showCurrencyPicker ? (
-        <FormControl size="small" sx={{ maxWidth: 200 }}>
+        <FormControl
+          size="small"
+          sx={{
+            maxWidth: { xs: '100%', sm: 200 },
+            width: { xs: '100%', sm: 'auto' },
+          }}
+        >
           <InputLabel id="project-balance-currency-label">
             {translate('app.project_balance.currency')}
           </InputLabel>
@@ -306,40 +317,59 @@ function ReportBody({
       <Section
         title={translate('app.project_balance.by_project_title', { currency })}
       >
-        <BarChart
-          height={Math.max(280, report.byProject.length * 36)}
-          margin={{ left: 72, right: 16, top: 24, bottom: 80 }}
-          onItemClick={onBarClick((dataIndex, leg) =>
-            drilldownForProjectChart(
-              drilldownContext,
-              report.byProject[dataIndex]?.orgId ?? '',
-              leg,
-            ),
+        <ReportScrollX
+          minWidth={reportBarAreaMinWidth(
+            report.byProject.length,
+            chartMetrics.narrow,
           )}
-          series={[
-            {
-              id: 'revenue',
-              label: translate('app.project_balance.revenue'),
-              data: revenueByProject,
-              color: theme.palette.success.main,
-            },
-            {
-              id: 'cost',
-              label: translate('app.project_balance.cost'),
-              data: costByProject,
-              color: theme.palette.error.main,
-            },
-          ]}
-          slotProps={{ legend: { direction: 'horizontal' } }}
-          xAxis={[
-            {
-              data: projectLabels,
-              scaleType: 'band',
-              tickLabelStyle: { fontSize: 10, angle: 25, textAnchor: 'start' },
-            },
-          ]}
-          yAxis={[{ width: 64 }]}
-        />
+        >
+          <BarChart
+            height={Math.max(
+              chartMetrics.narrow ? 260 : 280,
+              report.byProject.length * (chartMetrics.narrow ? 30 : 36),
+            )}
+            margin={{
+              left: chartMetrics.bandYAxisWidth,
+              right: chartMetrics.narrow ? 8 : 16,
+              top: 24,
+              bottom: chartMetrics.narrow ? 96 : 80,
+            }}
+            onItemClick={onBarClick((dataIndex, leg) =>
+              drilldownForProjectChart(
+                drilldownContext,
+                report.byProject[dataIndex]?.orgId ?? '',
+                leg,
+              ),
+            )}
+            series={[
+              {
+                id: 'revenue',
+                label: translate('app.project_balance.revenue'),
+                data: revenueByProject,
+                color: theme.palette.success.main,
+              },
+              {
+                id: 'cost',
+                label: translate('app.project_balance.cost'),
+                data: costByProject,
+                color: theme.palette.error.main,
+              },
+            ]}
+            slotProps={{ legend: { direction: 'horizontal' } }}
+            xAxis={[
+              {
+                data: projectLabels,
+                scaleType: 'band',
+                tickLabelStyle: {
+                  fontSize: chartMetrics.narrow ? 9 : 10,
+                  angle: chartMetrics.narrow ? 35 : 25,
+                  textAnchor: 'start',
+                },
+              },
+            ]}
+            yAxis={[{ width: chartMetrics.projectYAxisWidth }]}
+          />
+        </ReportScrollX>
       </Section>
 
       <Section
@@ -350,46 +380,61 @@ function ReportBody({
             {translate('app.project_balance.history_empty')}
           </Typography>
         ) : (
-          <BarChart
-            height={320}
-            margin={{ left: 72, right: 16, top: 24, bottom: 40 }}
-            onItemClick={onBarClick((dataIndex, leg) =>
-              drilldownForHistoryChart(
-                drilldownContext,
-                history[dataIndex]?.period ?? '',
-                leg,
-              ),
+          <ReportScrollX
+            minWidth={reportBarAreaMinWidth(
+              history.length,
+              chartMetrics.narrow,
             )}
-            series={[
-              {
-                id: 'revenue',
-                label: translate('app.project_balance.revenue'),
-                data: history.map((point) => point.revenue),
-                color: theme.palette.success.main,
-              },
-              {
-                id: 'cost',
-                label: translate('app.project_balance.cost'),
-                data: history.map((point) => point.cost),
-                color: theme.palette.error.main,
-              },
-            ]}
-            slotProps={{ legend: { direction: 'horizontal' } }}
-            xAxis={[
-              {
-                data: history.map((point) => point.period),
-                scaleType: 'band',
-                tickLabelStyle: { fontSize: 11 },
-              },
-            ]}
-            yAxis={[{ width: 64 }]}
-          />
+          >
+            <BarChart
+              height={chartMetrics.narrow ? 280 : 320}
+              margin={{
+                left: chartMetrics.bandYAxisWidth,
+                right: chartMetrics.narrow ? 8 : 16,
+                top: 24,
+                bottom: chartMetrics.narrow ? 56 : 40,
+              }}
+              onItemClick={onBarClick((dataIndex, leg) =>
+                drilldownForHistoryChart(
+                  drilldownContext,
+                  history[dataIndex]?.period ?? '',
+                  leg,
+                ),
+              )}
+              series={[
+                {
+                  id: 'revenue',
+                  label: translate('app.project_balance.revenue'),
+                  data: history.map((point) => point.revenue),
+                  color: theme.palette.success.main,
+                },
+                {
+                  id: 'cost',
+                  label: translate('app.project_balance.cost'),
+                  data: history.map((point) => point.cost),
+                  color: theme.palette.error.main,
+                },
+              ]}
+              slotProps={{ legend: { direction: 'horizontal' } }}
+              xAxis={[
+                {
+                  data: history.map((point) => point.period),
+                  scaleType: 'band',
+                  tickLabelStyle: { fontSize: chartMetrics.narrow ? 10 : 11 },
+                },
+              ]}
+              yAxis={[{ width: chartMetrics.projectYAxisWidth }]}
+            />
+          </ReportScrollX>
         )}
       </Section>
 
       <Section title={translate('app.project_balance.table_title')}>
-        <Paper sx={{ overflowX: 'auto' }} variant="outlined">
-          <Table size="small">
+        <Paper sx={{ maxWidth: '100%', overflowX: 'auto' }} variant="outlined">
+          <Table
+            size="small"
+            sx={{ minWidth: chartMetrics.narrow ? 520 : undefined }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell>

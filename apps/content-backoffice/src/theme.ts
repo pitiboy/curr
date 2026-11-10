@@ -162,8 +162,10 @@ const mobileChrome: ThemeOptions = {
           [`& .RaLayout-content`]: {
             maxWidth: '100%',
             minWidth: 0,
-            overflow: 'hidden',
+            overflowX: 'hidden',
+            overflowY: 'auto',
             overflowAnchor: 'none',
+            WebkitOverflowScrolling: 'touch',
           },
         },
       },

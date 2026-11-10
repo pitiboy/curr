@@ -54,6 +54,13 @@ import {
   type MembershipShareLedgerLeg,
 } from './membershipShare/drilldown';
 import { useMembershipShareReport } from './membershipShare/useMembershipShareReport';
+import {
+  ReportPageHeader,
+  ReportPageShell,
+  ReportScrollX,
+  reportBarAreaMinWidth,
+  useReportChartMetrics,
+} from './shared/reportLayout';
 
 const LEDGER_FOCUSES: LedgerFocus[] = ['both', 'share', 'pocket'];
 
@@ -92,16 +99,12 @@ export function MembershipShareReportPage() {
   );
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1100 }}>
+    <ReportPageShell>
       <Title title="app.membership_share.title" />
-      <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography component="h1" variant="h5">
-          {translate('app.membership_share.title')}
-        </Typography>
-        <Typography color="text.secondary" variant="body2">
-          {translate('app.membership_share.subtitle')}
-        </Typography>
-      </Stack>
+      <ReportPageHeader
+        subtitle={translate('app.membership_share.subtitle')}
+        title={translate('app.membership_share.title')}
+      />
 
       <ReportRangeFilterToolbar
         onRangeChange={setRange}
@@ -153,7 +156,7 @@ export function MembershipShareReportPage() {
           report={report}
         />
       ) : null}
-    </Box>
+    </ReportPageShell>
   );
 }
 
@@ -169,6 +172,7 @@ function ReportBody({
   const translate = useTranslate();
   const theme = useTheme();
   const navigate = useNavigate();
+  const chartMetrics = useReportChartMetrics();
   const { kpis, byMember, history, historyCurrency } = report;
 
   const openDrilldown = useCallback(
@@ -349,45 +353,62 @@ function ReportBody({
               {translate('app.membership_share.empty')}
             </Typography>
           ) : (
-            <BarChart
-              height={Math.max(220, byMember.length * 36)}
-              layout="horizontal"
-              margin={{ left: 72, right: 16, top: 16, bottom: 24 }}
-              onItemClick={onMemberBarClick}
-              series={[
-                ...(showShare
-                  ? [
-                      {
-                        data: shareBarData,
-                        label: translate('app.membership_share.ledger.share'),
-                        color: theme.palette.primary.main,
-                        id: 'share',
-                        stack: 'total',
-                      },
-                    ]
-                  : []),
-                ...(showPocket
-                  ? [
-                      {
-                        data: pocketBarData,
-                        label: translate('app.membership_share.ledger.pocket'),
-                        color: theme.palette.warning.main,
-                        id: 'pocket',
-                        stack: 'total',
-                      },
-                    ]
-                  : []),
-              ]}
-              slotProps={{ legend: { direction: 'horizontal' } }}
-              xAxis={[{ min: 0 }]}
-              yAxis={[
-                {
-                  data: memberLabels,
-                  scaleType: 'band',
-                  width: 72,
-                },
-              ]}
-            />
+            <ReportScrollX
+              minWidth={reportBarAreaMinWidth(
+                byMember.length,
+                chartMetrics.narrow,
+              )}
+            >
+              <BarChart
+                height={Math.max(
+                  chartMetrics.narrow ? 200 : 220,
+                  byMember.length * (chartMetrics.narrow ? 30 : 36),
+                )}
+                layout="horizontal"
+                margin={{
+                  left: chartMetrics.bandYAxisWidth,
+                  right: chartMetrics.narrow ? 8 : 16,
+                  top: 16,
+                  bottom: 24,
+                }}
+                onItemClick={onMemberBarClick}
+                series={[
+                  ...(showShare
+                    ? [
+                        {
+                          data: shareBarData,
+                          label: translate('app.membership_share.ledger.share'),
+                          color: theme.palette.primary.main,
+                          id: 'share',
+                          stack: 'total',
+                        },
+                      ]
+                    : []),
+                  ...(showPocket
+                    ? [
+                        {
+                          data: pocketBarData,
+                          label: translate(
+                            'app.membership_share.ledger.pocket',
+                          ),
+                          color: theme.palette.warning.main,
+                          id: 'pocket',
+                          stack: 'total',
+                        },
+                      ]
+                    : []),
+                ]}
+                slotProps={{ legend: { direction: 'horizontal' } }}
+                xAxis={[{ min: 0 }]}
+                yAxis={[
+                  {
+                    data: memberLabels,
+                    scaleType: 'band',
+                    width: chartMetrics.bandYAxisWidth,
+                  },
+                ]}
+              />
+            </ReportScrollX>
           )}
         </Section>
 
@@ -406,7 +427,7 @@ function ReportBody({
             </Typography>
           ) : (
             <PieChart
-              height={260}
+              height={chartMetrics.narrow ? 220 : 260}
               margin={{ top: 16, bottom: 16, left: 16, right: 16 }}
               onItemClick={onPieClick}
               series={[
@@ -434,94 +455,99 @@ function ReportBody({
             {translate('app.membership_share.empty')}
           </Typography>
         ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  {translate('app.membership_share.member_name')}
-                </TableCell>
-                {showShare
-                  ? currencies.map((currency) => (
-                      <TableCell align="right" key={`h-share-${currency}`}>
-                        {translate('app.membership_share.col.share', {
-                          currency,
-                          code: MEMBER_SHARE_ACCOUNT_CODE,
-                        })}
-                      </TableCell>
-                    ))
-                  : null}
-                {showPocket
-                  ? currencies.map((currency) => (
-                      <TableCell align="right" key={`h-pocket-${currency}`}>
-                        {translate('app.membership_share.col.pocket', {
-                          currency,
-                          code: MEMBER_POCKET_ACCOUNT_CODE,
-                        })}
-                      </TableCell>
-                    ))
-                  : null}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {byMember.map((row) => (
-                <TableRow key={row.memberId}>
-                  <DrilldownCell
-                    align="left"
-                    onOpen={() =>
-                      openDrilldown(
-                        drilldownForMemberRow(drilldownContext, row),
-                      )
-                    }
-                    title={drillTip}
-                  >
-                    {row.memberName}
-                  </DrilldownCell>
+          <ReportScrollX minWidth={chartMetrics.narrow ? 520 : undefined}>
+            <Table
+              size="small"
+              sx={{ minWidth: chartMetrics.narrow ? 520 : 0 }}
+            >
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    {translate('app.membership_share.member_name')}
+                  </TableCell>
                   {showShare
                     ? currencies.map((currency) => (
-                        <AmountDrilldownCell
-                          align="right"
-                          amounts={row.shareByCurrency}
-                          currency={currency}
-                          key={`s-${currency}`}
-                          onOpen={() =>
-                            openDrilldown(
-                              drilldownForMemberCell(
-                                drilldownContext,
-                                row,
-                                currency,
-                                'share',
-                              ),
-                            )
-                          }
-                          title={drillTip}
-                        />
+                        <TableCell align="right" key={`h-share-${currency}`}>
+                          {translate('app.membership_share.col.share', {
+                            currency,
+                            code: MEMBER_SHARE_ACCOUNT_CODE,
+                          })}
+                        </TableCell>
                       ))
                     : null}
                   {showPocket
                     ? currencies.map((currency) => (
-                        <AmountDrilldownCell
-                          align="right"
-                          amounts={row.pocketByCurrency}
-                          currency={currency}
-                          key={`p-${currency}`}
-                          onOpen={() =>
-                            openDrilldown(
-                              drilldownForMemberCell(
-                                drilldownContext,
-                                row,
-                                currency,
-                                'pocket',
-                              ),
-                            )
-                          }
-                          title={drillTip}
-                        />
+                        <TableCell align="right" key={`h-pocket-${currency}`}>
+                          {translate('app.membership_share.col.pocket', {
+                            currency,
+                            code: MEMBER_POCKET_ACCOUNT_CODE,
+                          })}
+                        </TableCell>
                       ))
                     : null}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {byMember.map((row) => (
+                  <TableRow key={row.memberId}>
+                    <DrilldownCell
+                      align="left"
+                      onOpen={() =>
+                        openDrilldown(
+                          drilldownForMemberRow(drilldownContext, row),
+                        )
+                      }
+                      title={drillTip}
+                    >
+                      {row.memberName}
+                    </DrilldownCell>
+                    {showShare
+                      ? currencies.map((currency) => (
+                          <AmountDrilldownCell
+                            align="right"
+                            amounts={row.shareByCurrency}
+                            currency={currency}
+                            key={`s-${currency}`}
+                            onOpen={() =>
+                              openDrilldown(
+                                drilldownForMemberCell(
+                                  drilldownContext,
+                                  row,
+                                  currency,
+                                  'share',
+                                ),
+                              )
+                            }
+                            title={drillTip}
+                          />
+                        ))
+                      : null}
+                    {showPocket
+                      ? currencies.map((currency) => (
+                          <AmountDrilldownCell
+                            align="right"
+                            amounts={row.pocketByCurrency}
+                            currency={currency}
+                            key={`p-${currency}`}
+                            onOpen={() =>
+                              openDrilldown(
+                                drilldownForMemberCell(
+                                  drilldownContext,
+                                  row,
+                                  currency,
+                                  'pocket',
+                                ),
+                              )
+                            }
+                            title={drillTip}
+                          />
+                        ))
+                      : null}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ReportScrollX>
         )}
       </Section>
 
@@ -538,34 +564,46 @@ function ReportBody({
             {translate('app.membership_share.empty')}
           </Typography>
         ) : (
-          <BarChart
-            height={320}
-            margin={{ left: 64, right: 16, top: 24, bottom: 40 }}
-            onItemClick={onHistoryBarClick}
-            series={byMember.map((member, index) => ({
-              id: member.memberId,
-              label: member.memberName,
-              data: history.map((point) =>
-                historyAmountForFocus(
-                  point.byMember[member.memberId] ?? {
-                    share: 0,
-                    pocket: 0,
-                  },
-                  focus,
+          <ReportScrollX
+            minWidth={reportBarAreaMinWidth(
+              history.length,
+              chartMetrics.narrow,
+            )}
+          >
+            <BarChart
+              height={chartMetrics.narrow ? 280 : 320}
+              margin={{
+                left: chartMetrics.historyYAxisWidth,
+                right: chartMetrics.narrow ? 8 : 16,
+                top: 24,
+                bottom: chartMetrics.narrow ? 56 : 40,
+              }}
+              onItemClick={onHistoryBarClick}
+              series={byMember.map((member, index) => ({
+                id: member.memberId,
+                label: member.memberName,
+                data: history.map((point) =>
+                  historyAmountForFocus(
+                    point.byMember[member.memberId] ?? {
+                      share: 0,
+                      pocket: 0,
+                    },
+                    focus,
+                  ),
                 ),
-              ),
-              color: seriesColors[index % seriesColors.length],
-            }))}
-            slotProps={{ legend: { direction: 'horizontal' } }}
-            xAxis={[
-              {
-                data: history.map((point) => point.period),
-                scaleType: 'band',
-                tickLabelStyle: { fontSize: 11 },
-              },
-            ]}
-            yAxis={[{ min: 0, width: 56 }]}
-          />
+                color: seriesColors[index % seriesColors.length],
+              }))}
+              slotProps={{ legend: { direction: 'horizontal' } }}
+              xAxis={[
+                {
+                  data: history.map((point) => point.period),
+                  scaleType: 'band',
+                  tickLabelStyle: { fontSize: 11 },
+                },
+              ]}
+              yAxis={[{ min: 0, width: chartMetrics.historyYAxisWidth }]}
+            />
+          </ReportScrollX>
         )}
       </Section>
     </Stack>
@@ -667,7 +705,16 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <Typography component="h2" sx={{ mb: 1 }} variant="subtitle1">
         {title}
       </Typography>
-      <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', p: 1.5 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          border: 1,
+          borderColor: 'divider',
+          maxWidth: '100%',
+          minWidth: 0,
+          p: { xs: 1, sm: 1.5 },
+        }}
+      >
         {children}
       </Paper>
     </Box>
