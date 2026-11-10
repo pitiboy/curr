@@ -4,7 +4,7 @@ import {
   contentApiActor,
   relationDocumentId,
   type PublishGuardStrapi,
-} from './publish-guard.ts';
+} from './publish-guard';
 
 const TRANSACTION_UID = 'api::transaction.transaction';
 const RECEIPT_UID = 'api::receipt.receipt';
