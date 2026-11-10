@@ -144,3 +144,48 @@ export function convertedLabelKey(
   }
   return null;
 }
+
+/** Controller per-row delete: only `expanded` rows (storno via purge). */
+export function canDeleteRelatedRow(item: RelatedTransactionItem): boolean {
+  return item.converted_to_workflow === CONVERTED_EXPANDED;
+}
+
+/**
+ * `original` documentId for **Kifejtés törlése** when the group still has
+ * expanded or storno rows; otherwise null. On the original's Show the items
+ * are only its children, so the shown record is checked as well.
+ */
+export function purgeExpansionTarget(
+  items: RelatedTransactionItem[],
+  record?: RaRecord | null,
+): string | null {
+  const self = record
+    ? parseRelatedTransactionItem({
+        ...record,
+        documentId: record.documentId ?? String(record.id),
+      })
+    : null;
+  const original = [...(self ? [self] : []), ...items].find(
+    (item) => item.converted_to_workflow === CONVERTED_ORIGINAL,
+  );
+  if (!original) return null;
+  const hasExpansion = items.some(
+    (item) =>
+      item.converted_to_workflow === CONVERTED_EXPANDED ||
+      item.converted_to_workflow === CONVERTED_STORNO,
+  );
+  return hasExpansion ? original.documentId : null;
+}
+
+/** documentIds removed by a purge of `items` (expanded + storno rows). */
+export function expansionDocumentIds(
+  items: RelatedTransactionItem[],
+): string[] {
+  return items
+    .filter(
+      (item) =>
+        item.converted_to_workflow === CONVERTED_EXPANDED ||
+        item.converted_to_workflow === CONVERTED_STORNO,
+    )
+    .map((item) => item.documentId);
+}

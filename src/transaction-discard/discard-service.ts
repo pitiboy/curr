@@ -1,9 +1,10 @@
 /**
- * Editor-only discard of a draft transaction and its draft receipts.
+ * Editor-like (editor / controller) discard of a draft transaction and its draft receipts.
  * Does not grant generic Content API delete on transactions.
  */
 import {
   contentApiActor,
+  isEditorLikeRole,
   relationDocumentId,
   type PublishGuardStrapi,
 } from '../publish-guard';
@@ -47,9 +48,9 @@ async function assertEditor(strapi: DiscardDraftStrapi): Promise<void> {
   if (!actor) {
     throw new DiscardDraftError('Forbidden', 403);
   }
-  if (actor.roleType !== 'editor') {
+  if (!isEditorLikeRole(actor.roleType)) {
     throw new DiscardDraftError(
-      'Only the editor role can discard draft transactions',
+      'Only the editor or controller role can discard draft transactions',
       403,
     );
   }
@@ -138,7 +139,9 @@ async function removeUploadFile(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    strapi.log.warn(`discard-draft: upload remove failed for id ${fileId}: ${message}`);
+    strapi.log.warn(
+      `discard-draft: upload remove failed for id ${fileId}: ${message}`,
+    );
   }
 }
 

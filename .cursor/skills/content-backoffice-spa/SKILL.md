@@ -35,7 +35,7 @@ const dataProvider = withDocumentId(
 
 A `loginPage` a react-admin `LoginWithEmail`, plusz egy Google gomb. A Google a Strapi `/api/connect/google` flow-ja. A visszakapott Content JWT-t ugyanoda tedd, ahová a `strapiAuthProvider` a local login tokenjét írja; a tárolást a telepített `ra-strapi` auth provider forrásából olvasd ki, ne találj ki második tokenkulcsot.
 
-Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry` vagy `editor`. Az `ra-strapi` ezt nem tölti ki.
+Az `authProvider.getPermissions` a `/api/users/me?populate=role` válaszából a role `type` értéket adja: `dataentry`, `editor` vagy `controller`. Az `ra-strapi` ezt nem tölti ki. Editor-kapuknál `isEditorLike(permissions)` (`src/auth/roles.ts`), ne `=== 'editor'`: a `controller` minden editor flow-t megkap. Törlés-UI csak `canPurgeExpansion` (controller): a Show kapcsolódó szekciójában soronkénti Törlés az `expanded` sorokon és **Kifejtés törlése** (Confirm, published rekordnál figyelmeztetés; `deleteTransaction` / `purgeExpansion` a `dataProvider`-ben).
 
 A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél is. A REST status nélkül publishedet ír, és a szerver a `dataentry` publisht 403-mal elutasítja.
 
@@ -43,13 +43,13 @@ A transaction create mindig `status=draft`, `dataentry` és `editor` szerepnél 
 
 Egy resource, neve `transactions` (a séma `pluralName`). Egyedi List, Create és megtekintés. Guesser nincs az éles fában. Külön review lista nincs.
 
-| Route                    | Szerep                | Viselkedés                                                                                                                                                                             |
-| ------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/transactions/create`   | `dataentry`, `editor` | Create. Mentés draft. Publish nincs.                                                                                                                                                   |
-| `/transactions/:id/show` | mindkettő             | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít és **Piszkozat törlése** (Confirm, `discardTransaction` helper, lista redirect). Same-person nem tiltja a törlést. Más esetben nincs csatolás, Véglegesít és törlés.                                 |
-| `/transactions`          | mindkettő             | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés. |
-| `/login`                 | vendég                | Email/jelszó és Google.                                                                                                                                                                |
-| `/profile`               | mindkettő             | Név, email. Jelszócsere csak `provider === 'local'`.                                                                                                                                   |
+| Route                    | Szerep                | Viselkedés                                                                                                                                                                                                                                                                 |
+| ------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/transactions/create`   | `dataentry`, `editor` | Create. Mentés draft. Publish nincs.                                                                                                                                                                                                                                       |
+| `/transactions/:id/show` | mindkettő             | Readonly megtekintés, `documentId`. `editor` + draft: bizonylat csatolható, az adatok után Véglegesít és **Piszkozat törlése** (Confirm, `discardTransaction` helper, lista redirect). Same-person nem tiltja a törlést. Más esetben nincs csatolás, Véglegesít és törlés. |
+| `/transactions`          | mindkettő             | Draft és published. Szűrő. Szűrők törlése. Nincs create, edit, publish, nincs sor-kattintás. A státusz oszlop után egy gomb: `editor` + draft soron Ellenőrzés, egyébként Megtekintés.                                                                                     |
+| `/login`                 | vendég                | Email/jelszó és Google.                                                                                                                                                                                                                                                    |
+| `/profile`               | mindkettő             | Név, email. Jelszócsere csak `provider === 'local'`.                                                                                                                                                                                                                       |
 
 A menü mindkét szerepnek mutatja a create elemet és a tranzakciólistát. Az Ellenőrzés menüt csak az `editor` látja: a `/transactions` listát nyitja, a státuszszűrő már `draft`. A tranzakciók menü ugyanazt a listát szűrő nélkül nyitja. A két menüpont nem hagyja rajta a másik szűrőjét. Ismeretlen szerep egyik író oldalt sem kapja meg.
 

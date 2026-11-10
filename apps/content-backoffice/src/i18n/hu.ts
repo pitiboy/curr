@@ -111,6 +111,21 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_discard_confirm: 'Törlés',
     transactions_discard_done: 'A piszkozat tranzakció törölve.',
     transactions_discard_error: 'A piszkozat törlése sikertelen.',
+    transactions_delete_row: 'Törlés',
+    transactions_delete_row_title: 'Kifejtett sor törlése',
+    transactions_delete_row_body:
+      'A kifejtett sor és a hozzá tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek.',
+    transactions_delete_row_done: 'A kifejtett sor törölve.',
+    transactions_delete_row_error: 'A sor törlése sikertelen.',
+    transactions_purge_expansion: 'Kifejtés törlése',
+    transactions_purge_expansion_title: 'Kifejtés törlése',
+    transactions_purge_expansion_body:
+      'Az összes kifejtett és storno sor, valamint a hozzájuk tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek. Az eredeti tranzakció újra kifejthető lesz.',
+    transactions_purge_expansion_done:
+      'A kifejtés törölve; az eredeti újra kifejthető.',
+    transactions_purge_expansion_error: 'A kifejtés törlése sikertelen.',
+    transactions_delete_published_warning:
+      'Figyelem: véglegesített (published) tranzakciót törölsz. A könyvelt sorok és bizonylatok visszavonhatatlanul eltűnnek.',
     transactions_leave_title: 'A tranzakció még piszkozat',
     transactions_leave_body: 'A véglegesítés még hátravan. Elhagyod az oldalt?',
     transactions_leave_unsaved_title: 'A tranzakció még nincs mentve',
@@ -306,6 +321,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     profile_email: 'E-mail',
     profile_role: 'Szerepkör',
     roles: {
+      controller: 'Kontroller',
       editor: 'Szerkesztő',
       dataentry: 'Adatrögzítő',
       authenticated: 'Bejelentkezett felhasználó',

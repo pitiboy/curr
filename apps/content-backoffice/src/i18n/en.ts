@@ -110,6 +110,21 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_discard_confirm: 'Delete',
     transactions_discard_done: 'Draft transaction deleted.',
     transactions_discard_error: 'Could not delete the draft.',
+    transactions_delete_row: 'Delete',
+    transactions_delete_row_title: 'Delete expanded row',
+    transactions_delete_row_body:
+      'The expanded row and its receipts (with uploaded files) are permanently deleted.',
+    transactions_delete_row_done: 'Expanded row deleted.',
+    transactions_delete_row_error: 'Could not delete the row.',
+    transactions_purge_expansion: 'Delete expansion',
+    transactions_purge_expansion_title: 'Delete expansion',
+    transactions_purge_expansion_body:
+      'Every expanded and storno row and their receipts (with uploaded files) are permanently deleted. The original transaction becomes expandable again.',
+    transactions_purge_expansion_done:
+      'Expansion deleted; the original can be expanded again.',
+    transactions_purge_expansion_error: 'Could not delete the expansion.',
+    transactions_delete_published_warning:
+      'Warning: you are deleting published transactions. Posted rows and receipts are removed irreversibly.',
     transactions_leave_title: 'This transaction is still a draft',
     transactions_leave_body: 'Finalizing is still pending. Leave this page?',
     transactions_leave_unsaved_title: 'This transaction is not saved yet',
@@ -303,6 +318,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     profile_email: 'Email',
     profile_role: 'Role',
     roles: {
+      controller: 'Controller',
       editor: 'Editor',
       dataentry: 'Data entry',
       authenticated: 'Authenticated user',

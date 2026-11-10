@@ -1,21 +1,40 @@
 import {
+  Alert,
   Box,
   Button,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableRow,
   Typography,
 } from '@mui/material';
-import { Link, useGetOne, useTranslate, type RaRecord } from 'react-admin';
+import { useState } from 'react';
+import {
+  Confirm,
+  Link,
+  useGetOne,
+  useNotify,
+  usePermissions,
+  useRedirect,
+  useRefresh,
+  useTranslate,
+  type RaRecord,
+} from 'react-admin';
 
+import { canPurgeExpansion } from '../../auth/roles';
+import { deleteTransaction, purgeExpansion } from '../../data/dataProvider';
+import { strapiErrorMessage } from '../../data/transactionPublish';
 import { AccountValue } from './accountField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionDateValue } from './dateField';
 import {
+  canDeleteRelatedRow,
   convertedLabelKey,
+  expansionDocumentIds,
   needsParentFetch,
   parentDocumentId,
+  purgeExpansionTarget,
   relatedItemsFromRecord,
   type RelatedTransactionItem,
 } from './relatedTransactions';
@@ -26,12 +45,22 @@ type RelatedTransactionsSectionProps = {
   record: RaRecord;
 };
 
+type PendingDelete =
+  | { kind: 'row'; documentId: string }
+  | { kind: 'purge'; originalDocumentId: string; removed: string[] };
+
 export function RelatedTransactionsSection({
   locale,
   locales,
   record,
 }: RelatedTransactionsSectionProps) {
   const translate = useTranslate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const redirect = useRedirect();
+  const { permissions, isPending: permissionsPending } = usePermissions();
+  const [pending, setPending] = useState<PendingDelete | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const parentId = parentDocumentId(record);
   const fetchParent = needsParentFetch(record);
   const { data: parentRecord, isPending } = useGetOne(
@@ -57,6 +86,52 @@ export function RelatedTransactionsSection({
   }
 
   const currentId = String(record.id);
+  const canDelete = !permissionsPending && canPurgeExpansion(permissions);
+  const purgeTarget = canDelete ? purgeExpansionTarget(items, record) : null;
+  const published = record.status === 'published';
+
+  const onConfirm = () => {
+    if (!pending || deleting) return;
+    setDeleting(true);
+    const run =
+      pending.kind === 'row'
+        ? deleteTransaction(pending.documentId)
+        : purgeExpansion(pending.originalDocumentId);
+    const doneKey =
+      pending.kind === 'row'
+        ? 'app.transactions_delete_row_done'
+        : 'app.transactions_purge_expansion_done';
+    const errorKey =
+      pending.kind === 'row'
+        ? 'app.transactions_delete_row_error'
+        : 'app.transactions_purge_expansion_error';
+    void run
+      .then(() => {
+        notify(doneKey, { type: 'success' });
+        const target = pending;
+        setPending(null);
+        if (target.kind === 'row' && target.documentId === currentId) {
+          redirect('list', 'transactions');
+        } else if (
+          target.kind === 'purge' &&
+          target.removed.includes(currentId)
+        ) {
+          redirect('show', 'transactions', target.originalDocumentId);
+        } else {
+          refresh();
+        }
+      })
+      .catch((error: unknown) => {
+        const message = strapiErrorMessage(error);
+        notify(message || errorKey, { type: 'error' });
+      })
+      .finally(() => setDeleting(false));
+  };
+
+  const confirmBody =
+    pending?.kind === 'purge'
+      ? 'app.transactions_purge_expansion_body'
+      : 'app.transactions_delete_row_body';
 
   return (
     <Box sx={{ maxWidth: '100%', minWidth: 0, overflowX: 'auto' }}>
@@ -69,10 +144,60 @@ export function RelatedTransactionsSection({
               key={item.documentId}
               locale={locale}
               locales={locales}
+              onDelete={
+                canDelete && canDeleteRelatedRow(item)
+                  ? () =>
+                      setPending({ kind: 'row', documentId: item.documentId })
+                  : undefined
+              }
             />
           ))}
         </TableBody>
       </Table>
+      {purgeTarget ? (
+        <Stack direction="row" sx={{ justifyContent: 'flex-end', mt: 1 }}>
+          <Button
+            color="error"
+            onClick={() =>
+              setPending({
+                kind: 'purge',
+                originalDocumentId: purgeTarget,
+                removed: expansionDocumentIds(items),
+              })
+            }
+            size="small"
+            variant="outlined"
+          >
+            {translate('app.transactions_purge_expansion')}
+          </Button>
+        </Stack>
+      ) : null}
+      <Confirm
+        cancel="ra.action.cancel"
+        confirm="app.transactions_discard_confirm"
+        confirmColor="warning"
+        content={
+          <Stack spacing={1}>
+            {published ? (
+              <Alert severity="warning">
+                {translate('app.transactions_delete_published_warning')}
+              </Alert>
+            ) : null}
+            <Typography variant="body2">{translate(confirmBody)}</Typography>
+          </Stack>
+        }
+        isOpen={pending != null}
+        loading={deleting}
+        onClose={() => {
+          if (!deleting) setPending(null);
+        }}
+        onConfirm={onConfirm}
+        title={
+          pending?.kind === 'purge'
+            ? 'app.transactions_purge_expansion_title'
+            : 'app.transactions_delete_row_title'
+        }
+      />
     </Box>
   );
 }
@@ -82,11 +207,13 @@ function RelatedTransactionRow({
   item,
   locale,
   locales,
+  onDelete,
 }: {
   currentId: string;
   item: RelatedTransactionItem;
   locale: string;
   locales: string;
+  onDelete?: () => void;
 }) {
   const translate = useTranslate();
   const isCurrent = item.documentId === currentId;
@@ -142,9 +269,12 @@ function RelatedTransactionRow({
       <TableCell sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}>
         <AccountValue kind="debit" value={item.debit_account} />
       </TableCell>
-      <TableCell align="right" sx={{ pl: 1, verticalAlign: 'top' }}>
+      <TableCell
+        align="right"
+        sx={{ pl: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}
+      >
         {isCurrent ? (
-          <Typography color="text.secondary" variant="body2">
+          <Typography color="text.secondary" component="span" variant="body2">
             —
           </Typography>
         ) : (
@@ -158,6 +288,17 @@ function RelatedTransactionRow({
             {translate('app.transactions_show')}
           </Button>
         )}
+        {onDelete ? (
+          <Button
+            aria-label={`${translate('app.transactions_delete_row')} ${item.entryId ?? item.documentId}`}
+            color="error"
+            onClick={onDelete}
+            size="small"
+            variant="text"
+          >
+            {translate('app.transactions_delete_row')}
+          </Button>
+        ) : null}
       </TableCell>
     </TableRow>
   );

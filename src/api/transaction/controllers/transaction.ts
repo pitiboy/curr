@@ -12,10 +12,72 @@ import {
   DiscardDraftError,
   type DiscardDraftStrapi,
 } from '../../../transaction-discard/discard-service';
+import {
+  deleteTransactionWithReceipts,
+  purgeExpansion,
+  TransactionDeleteError,
+  type TransactionDeleteStrapi,
+} from '../../../transaction-delete/delete-service';
+
+function documentIdParam(ctx): string {
+  const rawId = ctx.params?.id;
+  return typeof rawId === 'string' ? rawId.trim() : '';
+}
+
+function writeDeleteError(ctx, error: TransactionDeleteError) {
+  ctx.status = error.status;
+  ctx.body = {
+    data: null,
+    error: {
+      status: error.status,
+      name: error.name,
+      message: error.message,
+    },
+  };
+}
 
 export default factories.createCoreController(
   'api::transaction.transaction',
   ({ strapi }) => ({
+    /**
+     * Content API users (controller role) go through the guarded delete with
+     * receipt cascade. API tokens (seeders, reset scripts) keep the core delete.
+     */
+    async delete(ctx) {
+      if (ctx.state?.auth?.strategy?.name !== 'users-permissions') {
+        return super.delete(ctx);
+      }
+      const documentId = documentIdParam(ctx);
+      try {
+        await deleteTransactionWithReceipts(
+          strapi as unknown as TransactionDeleteStrapi,
+          documentId,
+        );
+      } catch (error) {
+        if (error instanceof TransactionDeleteError) {
+          writeDeleteError(ctx, error);
+          return;
+        }
+        throw error;
+      }
+      ctx.status = 204;
+    },
+    async purgeExpansion(ctx) {
+      const documentId = documentIdParam(ctx);
+      try {
+        const result = await purgeExpansion(
+          strapi as unknown as TransactionDeleteStrapi,
+          documentId,
+        );
+        ctx.body = { data: { documentId, ...result } };
+      } catch (error) {
+        if (error instanceof TransactionDeleteError) {
+          writeDeleteError(ctx, error);
+          return;
+        }
+        throw error;
+      }
+    },
     async discardDraft(ctx) {
       const rawId = ctx.params?.id;
       const documentId = typeof rawId === 'string' ? rawId.trim() : '';

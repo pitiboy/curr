@@ -2,6 +2,7 @@ import { Stack } from '@mui/material';
 import { useMemo } from 'react';
 import { usePermissions, useRecordContext, type RaRecord } from 'react-admin';
 
+import { isEditorLike } from '../../auth/roles';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import {
   isExpandableConvertedValue,
@@ -34,7 +35,7 @@ export function TransactionConvertField(_props: {
     };
   }, [record, workflow]);
 
-  if (!record || isPending || permissions !== 'editor') return null;
+  if (!record || isPending || !isEditorLike(permissions)) return null;
   if (!isExpandableConvertedValue(record.converted_to_workflow)) return null;
   if (!workflow || !previewInput) return null;
 

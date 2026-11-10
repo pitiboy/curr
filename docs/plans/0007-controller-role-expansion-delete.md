@@ -1,6 +1,6 @@
 # Implementation plan: Controller role és kifejtés-törlés
 
-**Status:** planned  
+**Status:** done (első slice)  
 **Date:** 2026-11-10  
 **Kapcsolódó:** [PRD 0002 — Content Backoffice v2](../prd/0002-content-backoffice-v2.md), [Ügyletek](../transaction-workflow.md), [v1 discardDraft](../prd/0001-content-backoffice-v1.md)  
 **Érintett kód:** [`src/index.ts`](../../src/index.ts), [`src/publish-guard.ts`](../../src/publish-guard.ts), új `src/transaction-delete/`, [`apps/content-backoffice/src/auth/roles.ts`](../../apps/content-backoffice/src/auth/roles.ts), [`RelatedTransactionsSection.tsx`](../../apps/content-backoffice/src/pages/transactions/RelatedTransactionsSection.tsx), [`TransactionShow.tsx`](../../apps/content-backoffice/src/pages/transactions/TransactionShow.tsx)

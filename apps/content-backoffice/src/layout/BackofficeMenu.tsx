@@ -13,6 +13,7 @@ import {
   transactionsMenuTo,
   type TransactionListMode,
 } from '../data/transactionListLocation';
+import { isContentRole, isEditorLike } from '../auth/roles';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
@@ -29,8 +30,7 @@ export function BackofficeMenu() {
     enabled,
     typeof permissions === 'string' ? permissions : '',
   );
-  const canReadReports =
-    permissions === 'dataentry' || permissions === 'editor';
+  const canReadReports = isContentRole(permissions);
   const canReadEggInventory =
     canReadReports && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
@@ -53,7 +53,7 @@ export function BackofficeMenu() {
           to={form.path}
         />
       ))}
-      {(permissions === 'dataentry' || permissions === 'editor') && (
+      {isContentRole(permissions) && (
         <Menu.Item
           leftIcon={<PostAddIcon />}
           primaryText={translate('app.transactions_create')}
@@ -88,7 +88,7 @@ export function BackofficeMenu() {
           to="/reports/project-balance"
         />
       ) : null}
-      {permissions === 'editor' && (
+      {isEditorLike(permissions) && (
         <TransactionListMenuItem
           icon={<FactCheckIcon />}
           label={translate('app.transactions_review')}

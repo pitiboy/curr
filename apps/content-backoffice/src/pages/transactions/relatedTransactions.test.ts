@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  canDeleteRelatedRow,
+  expansionDocumentIds,
   hasRelatedTransactionLink,
   needsParentFetch,
   parentDocumentId,
+  purgeExpansionTarget,
   relatedItemsFromRecord,
   relatedTransactionCountHint,
 } from './relatedTransactions';
@@ -115,5 +118,42 @@ describe('relatedTransactionCountHint', () => {
         related_transactions: [{ documentId: 'a' }, { documentId: 'b' }],
       }),
     ).toBe(2);
+  });
+});
+
+describe('expansion delete helpers', () => {
+  const family = [
+    { documentId: 'orig', converted_to_workflow: 'original' as const },
+    { documentId: 'storno', converted_to_workflow: 'storno' as const },
+    { documentId: 'step', converted_to_workflow: 'expanded' as const },
+    { documentId: 'plain', converted_to_workflow: null },
+  ];
+
+  it('allows per-row delete on expanded rows only', () => {
+    expect(family.map((item) => canDeleteRelatedRow(item))).toEqual([
+      false,
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it('targets the original while expanded or storno rows remain', () => {
+    expect(purgeExpansionTarget(family)).toBe('orig');
+    expect(purgeExpansionTarget([family[0], family[1]])).toBe('orig');
+    expect(purgeExpansionTarget([family[0], family[3]])).toBeNull();
+    expect(purgeExpansionTarget([family[1], family[2]])).toBeNull();
+    // Original's Show: items are only the children.
+    expect(
+      purgeExpansionTarget([family[1], family[2]], {
+        id: 'orig',
+        documentId: 'orig',
+        converted_to_workflow: 'original',
+      }),
+    ).toBe('orig');
+  });
+
+  it('lists the documentIds removed by a purge', () => {
+    expect(expansionDocumentIds(family)).toEqual(['storno', 'step']);
   });
 });
