@@ -13,3 +13,8 @@ export function resolveStrapiUrl(options: {
   const fromWindow = options.windowOrigin?.trim();
   return fromWindow || 'http://localhost:1337';
 }
+
+/** Strapi admin UI (`/admin` on the Strapi origin). */
+export function strapiAdminUrl(strapiOrigin: string): string {
+  return `${strapiOrigin.replace(/\/+$/, '')}/admin`;
+}

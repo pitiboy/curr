@@ -19,6 +19,7 @@ import {
   type RaRecord,
 } from 'react-admin';
 
+import { isEditorLikeRole } from '../../auth/roles';
 import { receiptCount } from '../../data/receiptDraft';
 import {
   CONVERTED_EXPANDED,
@@ -62,7 +63,7 @@ function TransactionOpenField(_props: {
   const { permissions, isPending } = usePermissions();
   const translate = useTranslate();
   if (!record || isPending) return null;
-  const review = permissions === 'editor' && record.status === 'draft';
+  const review = isEditorLikeRole(permissions) && record.status === 'draft';
   return (
     <Button
       component={Link}
@@ -373,7 +374,7 @@ export function TransactionList() {
   const [locale] = useLocaleState();
   const mobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const { permissions, isPending } = usePermissions();
-  const editorBulkApprove = !isPending && permissions === 'editor';
+  const editorBulkApprove = !isPending && isEditorLikeRole(permissions);
 
   return (
     <List

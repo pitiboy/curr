@@ -79,6 +79,22 @@ A v1 a jogosultság betöltése alatt üresen hagyja a felületet. **Részben k�
 - A spinner a válaszra leáll. Üres találatnál az üres állapot, hibánál az üzenet látszik.
 - Több blokkoló kérésnél a spinner az utolsó lezárásáig marad. A kész képernyőn futó háttérkérés nem rak ki új, teljes oldalas spinnert.
 
+### 3.7 Controller role és kifejtés-törlés
+
+Terv: [plans/0007](../plans/0007-controller-role-expansion-delete.md). **Kész** (első slice, 2026-11-10).
+
+- **Role:** új Users & Permissions role `controller` (Kontroller). Az editor összes joga (review, publish, Convert, convert-preview, `discardDraft`) + `api::transaction.transaction.delete`, `api::receipt.receipt.delete` és a `purgeExpansion` custom action. A bootstrap ([`src/index.ts`](../../src/index.ts), action listák: [`src/content-roles.ts`](../../src/content-roles.ts)) hozza létre és additívan tölti fel.
+- **Editor-like:** a publish őr ([`publish-guard.ts`](../../src/publish-guard.ts) `isEditorLikeRole`) és a discard az `editor` és `controller` szerepet egyformán kezeli (publish, `published_by` audit, linked receipt publish, same-person szabály).
+- **Szerver szabályok** ([`src/transaction-delete/`](../../src/transaction-delete/delete-service.ts)), a `converted_to_workflow` alapján, csak `controller`:
+  - `original` csak akkor törölhető, ha már nincs `expanded` / `storno` gyereke (különben 403);
+  - `expanded` törölhető;
+  - `storno` csak akkor, ha nincs testvér `expanded` sor (különben 403); törlése után az original `converted_to_workflow → null` (újra kifejthető);
+  - `null` (nem kifejtett) törölhető.
+- **API:** `DELETE /api/transactions/:id` users-permissions hívónál az őrzött szolgáltatáson megy (API token — seeder/reset — a core delete-et kapja). `POST /api/transactions/:id/actions/purge-expansion` (`:id` = a csoport szülője): egy DB tranzakcióban törli az összes `expanded`, majd a `storno` gyereket; ha a szülő `original`, végül `converted_to_workflow: null` (draft és published sor is). Nem-original szülő (pl. bulk tojás-rögzítés horgonya, ahol csak egyes lábak kifejtettek) is elfogadott, ha van legalább egy `expanded`/`storno` gyereke (különben 409); ekkor nincs reset.
+- **Cascade:** a törölt tranzakció minden (draft és published) bizonylata törlődik, a feltöltött fájl az upload szolgáltatással a commit után (a [`discard-service`](../../src/transaction-discard/discard-service.ts) mintája). Figyelem: a `copy_receipt` lépés a forrás bizonylatát a stepre köti át — a step törlése ezt a bizonylatot is törli.
+- **Show UI** ([`RelatedTransactionsSection.tsx`](../../apps/content-backoffice/src/pages/transactions/RelatedTransactionsSection.tsx)), csak `controller`: a kapcsolódó szekció tetején magyarázó sor + **Kifejtett sorok törlése (N)** gomb (a csoport összes expanded + storno sora), ha a csoport szülőjének (original vagy bármely horgony) van kifejtett/storno gyereke; soronként kuka ikon minden soron, de egyenként azonnal csak az `expanded` sor törölhető; minden más sor (storno, original, nem kifejtett) csak akkor, ha a csoportban már nincs `expanded`, az `original` ezen felül csak a storno után. A tiltott ikon szürke, a tooltip megmondja, mit kell előbb törölni. A szekció a megjelenített sort is listázza ("ez a sor"), gyerekes sornál a szülőjét is ("szülő"). A Confirm felsorolja a törlendő sorokat (ID · összeg · leírás). Draft és published Show-n is (draftnál a review alatt). Published rekordnál a Confirm figyelmeztetést mutat. Siker után frissítés; ha az aktuális sor tűnt el, redirect (lista, illetve az original Show).
+- **Nem része (első slice):** lista oldali törlés, részleges multi-select, `original` törlése a UI-ból, audit log bővítés.
+
 ## 4. Hosting és CI/CD
 
 ### 4.1 Subdomain (opcionális)
@@ -161,27 +177,28 @@ Nem v2-tétel, de a v2 felületét érinti és megvan: az **Ügylet kifejtése**
 
 A nyitott tételekből a [CURR - KÖR project](https://github.com/users/pitiboy/projects/2)-ben draft backlog item készült (Status: Backlog). Becslés story pointban.
 
-| Item                                                                | PRD      | SP  |
-| ------------------------------------------------------------------- | -------- | --- |
-| Org–user ACL szerveroldali szűréssel                                | §2.1     | 8   |
-| User ↔ member összerendelés                                         | §2.2     | 3   |
-| Menükatalógus: törzsadat resource-ok az SPA-ban                     | §3.1, §5 | 8   |
-| Profil avatar feltöltés és megjelenítés                             | §3.2     | 3   |
-| Receipt több tranzakcióhoz (N:M) és meglévő receipt választása      | §3.3     | 5   |
-| QA workflow: értesítés, hozzárendelés, visszautasítás megjegyzéssel | §3.4     | 8   |
-| Cache-elt rate lookup (árfolyam nem kerül a tranzakcióra)           | §3.5, §5 | 5   |
-| Egyenleg tagonként és projektenként (előre számolt összesítés)      | §3.5     | 8   |
-| Ismétlődő tagdíj és ütemezett terhelés                              | §3.5     | 8   |
-| Kivonat- és számlatükör-import előnézettel és hibanaplóval          | §3.5     | 8   |
-| AJAX loading spinner a hiányzó helyeken                             | §3.6     | 3   |
-| `main` branch protection bekapcsolása                               | §4.2     | 1   |
-| Strapi lint a minőségkapuban                                        | §4.2     | 2   |
-| Subdomain a backoffice-nak (opcionális)                             | §4.1     | 2   |
-| Sentry bekötés: kérésazonosítós log, hibagyűjtő, session replay     | §4.3     | 8   |
-| Health endpoint és üzemeltetési jegyzet                             | §4.3     | 2   |
-| Lapozott lista szerveroldalon, szűk mezőkkel                        | §5       | 8   |
-| Adatbázis indexek a szűrőoszlopokra                                 | §5       | 2   |
-| Bizonylat bélyegkép a listában                                      | §5       | 2   |
-| További OAuth providerek                                            | §6       | 3   |
-| Jelszó reset self-service                                           | §6       | 3   |
-| Meghívó email UX                                                    | §6       | 2   |
+| Item                                                                        | PRD      | SP  |
+| --------------------------------------------------------------------------- | -------- | --- |
+| Controller: lista oldali törlés, részleges multi-select, original törlés UI | §3.7     | 5   |
+| Org–user ACL szerveroldali szűréssel                                        | §2.1     | 8   |
+| User ↔ member összerendelés                                                 | §2.2     | 3   |
+| Menükatalógus: törzsadat resource-ok az SPA-ban                             | §3.1, §5 | 8   |
+| Profil avatar feltöltés és megjelenítés                                     | §3.2     | 3   |
+| Receipt több tranzakcióhoz (N:M) és meglévő receipt választása              | §3.3     | 5   |
+| QA workflow: értesítés, hozzárendelés, visszautasítás megjegyzéssel         | §3.4     | 8   |
+| Cache-elt rate lookup (árfolyam nem kerül a tranzakcióra)                   | §3.5, §5 | 5   |
+| Egyenleg tagonként és projektenként (előre számolt összesítés)              | §3.5     | 8   |
+| Ismétlődő tagdíj és ütemezett terhelés                                      | §3.5     | 8   |
+| Kivonat- és számlatükör-import előnézettel és hibanaplóval                  | §3.5     | 8   |
+| AJAX loading spinner a hiányzó helyeken                                     | §3.6     | 3   |
+| `main` branch protection bekapcsolása                                       | §4.2     | 1   |
+| Strapi lint a minőségkapuban                                                | §4.2     | 2   |
+| Subdomain a backoffice-nak (opcionális)                                     | §4.1     | 2   |
+| Sentry bekötés: kérésazonosítós log, hibagyűjtő, session replay             | §4.3     | 8   |
+| Health endpoint és üzemeltetési jegyzet                                     | §4.3     | 2   |
+| Lapozott lista szerveroldalon, szűk mezőkkel                                | §5       | 8   |
+| Adatbázis indexek a szűrőoszlopokra                                         | §5       | 2   |
+| Bizonylat bélyegkép a listában                                              | §5       | 2   |
+| További OAuth providerek                                                    | §6       | 3   |
+| Jelszó reset self-service                                                   | §6       | 3   |
+| Meghívó email UX                                                            | §6       | 2   |

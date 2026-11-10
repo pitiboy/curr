@@ -8,7 +8,7 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { Menu, usePermissions, useTranslate } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 
-import { isEditorLike } from '../auth/roles';
+import { isContentRole, isEditorLikeRole } from '../auth/roles';
 import {
   TRANSACTIONS_LIST_PATH,
   transactionListMode,
@@ -25,20 +25,25 @@ import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
 
+import { AdministrationMenuItem } from './AdministrationMenuItem';
+
 export function BackofficeMenu() {
   const translate = useTranslate();
   const { permissions } = usePermissions();
   const { enabled } = useBackofficeConfig();
-  const role = typeof permissions === 'string' ? permissions : '';
-  const workflows = visibleWorkflowForms(workflowForms, enabled, role);
-  const canWrite = permissions === 'dataentry' || isEditorLike(permissions);
-  const canReadReports = canWrite;
+  const workflows = visibleWorkflowForms(
+    workflowForms,
+    enabled,
+    typeof permissions === 'string' ? permissions : '',
+  );
+  const canWrite = isContentRole(permissions);
+  const canReview = isEditorLikeRole(permissions);
   const canReadEggInventory =
-    canReadReports && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
+    canWrite && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
-    canReadReports && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
+    canWrite && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
   const canReadProjectBalance =
-    canReadReports && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
+    canWrite && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
 
   return (
     <Menu>
@@ -90,13 +95,14 @@ export function BackofficeMenu() {
           to="/reports/project-balance"
         />
       ) : null}
-      {isEditorLike(permissions) ? (
+      {canReview ? (
         <TransactionListMenuItem
           icon={<FactCheckIcon />}
           label={translate('app.transactions_review')}
           mode="draft"
         />
       ) : null}
+      <AdministrationMenuItem />
     </Menu>
   );
 }

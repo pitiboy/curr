@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../data/dataProvider', () => ({
   createNewTransactionDraft: vi.fn(),
@@ -28,7 +28,10 @@ vi.mock('react-admin', async (importOriginal) => {
 
 vi.mock('../../workflows/useTransactionWorkflowCatalog', () => ({
   useTransactionWorkflowCatalog: () => ({
+    workflows: [],
+    loading: false,
     matchFor: () => null,
+    isEditor: true,
   }),
 }));
 
@@ -54,6 +57,10 @@ vi.mock('react-hook-form', async (importOriginal) => {
 });
 
 describe('TransactionCreateToolbarGate', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('shows only save for dataentry (no convert CTA)', () => {
     usePermissions.mockReturnValue({
       permissions: 'dataentry',
@@ -70,5 +77,21 @@ describe('TransactionCreateToolbarGate', () => {
     expect(
       screen.queryByRole('button', { name: /app\.transactions_convert_save/i }),
     ).toBeNull();
+  });
+
+  it('renders the editor-like toolbar for controller', () => {
+    usePermissions.mockReturnValue({
+      permissions: 'controller',
+      isPending: false,
+    });
+    render(
+      <TransactionCreateToolbarGate
+        accounts={[]}
+        receiptCards={[]}
+        onSaveSucceeded={() => undefined}
+      />,
+    );
+    // Editor-like path mounts TransactionCreateToolbar (SaveButton still present).
+    expect(screen.getByRole('button', { name: 'Mentés' })).toBeVisible();
   });
 });

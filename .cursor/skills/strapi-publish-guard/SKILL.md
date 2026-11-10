@@ -80,7 +80,9 @@ Engedélyezendő actionök, ha a listában szerepelnek:
 
 A Content API sanitize leveszi a `role` relációt, ha nincs `role.find`. Azt ne add ki: a `GET /roles` a szereplistát nyitná meg. A `src/extensions/users-permissions/strapi-server.ts` a `/api/users/me` válaszba a hívó saját role-ját teszi vissza (`type` a `ctx.state.user.role`-ból).
 
-Delete, users-permissions user admin és az upload destroy kimarad. A publishhez nincs külön action: az őr dönt. Az `editor` kap editor-only `api::transaction.transaction.discardDraft` jogot (`POST …/actions/discard-draft`): csak draft tranzakció, draft receipt cascade, published elutasítás; nem helyettesíti az általános CRUD delete-et.
+A harmadik role, a `controller` (Kontroller) editor-like: a publish őr és a discard `isEditorLikeRole` (`editor | controller`) alapján dönt, ne `=== 'editor'`-ral. A controller ezen felül `api::transaction.transaction.delete`, `api::receipt.receipt.delete` és `api::transaction.transaction.purgeExpansion` jogot kap (action listák: `src/content-roles.ts`). A users-permissions `DELETE /api/transactions/:id` a `src/transaction-delete/` őrén megy (`original` 403; `storno` csak expanded nélkül, utána original `converted_to_workflow → null`; receipt + upload cascade); API token hívó a core delete-et kapja. `POST …/actions/purge-expansion` az összes expanded + storno gyereket törli egy DB tranzakcióban.
+
+A `dataentry` és `editor` szerepnél a delete, users-permissions user admin és az upload destroy kimarad. A publishhez nincs külön action: az őr dönt. Az `editor` kap editor-only `api::transaction.transaction.discardDraft` jogot (`POST …/actions/discard-draft`): csak draft tranzakció, draft receipt cascade, published elutasítás; nem helyettesíti az általános CRUD delete-et.
 
 A permission rekord a `plugin::users-permissions.permission` query, `action` + `role`. Ismételt bootstrap ne duplikálja a sort.
 

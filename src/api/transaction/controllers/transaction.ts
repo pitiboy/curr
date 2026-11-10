@@ -12,10 +12,32 @@ import {
   DiscardDraftError,
   type DiscardDraftStrapi,
 } from '../../../transaction-discard/discard-service';
+import {
+  handlePurgeExpansion,
+  handleTransactionDelete,
+} from '../../../transaction-delete/delete-handlers';
+import { type TransactionDeleteStrapi } from '../../../transaction-delete/delete-service';
 
 export default factories.createCoreController(
   'api::transaction.transaction',
   ({ strapi }) => ({
+    /**
+     * Content API users (controller role) go through the guarded delete with
+     * receipt cascade. API tokens (seeders, reset scripts) keep the core delete.
+     */
+    async delete(ctx) {
+      return handleTransactionDelete(
+        strapi as unknown as TransactionDeleteStrapi,
+        ctx,
+        () => super.delete(ctx),
+      );
+    },
+    async purgeExpansion(ctx) {
+      await handlePurgeExpansion(
+        strapi as unknown as TransactionDeleteStrapi,
+        ctx,
+      );
+    },
     async discardDraft(ctx) {
       const rawId = ctx.params?.id;
       const documentId = typeof rawId === 'string' ? rawId.trim() : '';

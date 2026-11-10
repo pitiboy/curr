@@ -80,6 +80,12 @@
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "organization"
+    },
+    "content_users": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "mappedBy": "organizations"
     }
   }
 }

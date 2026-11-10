@@ -9,6 +9,7 @@ import {
   useTranslate,
 } from 'react-admin';
 
+import { isEditorLikeRole } from '../../auth/roles';
 import {
   buildTransactionWorkflowMatchInput,
   profileModeMatchCount,
@@ -261,7 +262,7 @@ export function TransactionCreateToolbarGate({
   const requireOrganization =
     accountRow?.resolved.activeWorkflow?.requires_source_organization === true;
   const formReady = useCreateFormReady(receiptCards, requireOrganization);
-  if (!isPending && permissions === 'editor') {
+  if (!isPending && isEditorLikeRole(permissions)) {
     return (
       <TransactionCreateToolbar
         accounts={accounts}

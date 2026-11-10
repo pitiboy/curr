@@ -57,6 +57,10 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',
+    transactions_related_parent_row: 'parent',
+    transactions_delete_blocked_expanded:
+      'Delete the expanded rows of the group first (one by one or with “Delete expanded rows”).',
+    transactions_delete_blocked_storno: 'Delete the storno row first.',
     transactions_related_current: 'this row',
     transactions_none: 'No transactions.',
     transactions_page_total: 'Total (rows on this page)',
@@ -110,6 +114,30 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_discard_confirm: 'Delete',
     transactions_discard_done: 'Draft transaction deleted.',
     transactions_discard_error: 'Could not delete the draft.',
+    transactions_delete_row: 'Delete',
+    transactions_delete_row_title: 'Delete expanded row',
+    transactions_delete_row_body:
+      'The expanded row below and its receipts (with uploaded files) are permanently deleted.',
+    transactions_delete_row_done: 'Expanded row deleted.',
+    transactions_delete_row_error: 'Could not delete the row.',
+    transactions_delete_any_row_title: 'Delete transaction',
+    transactions_delete_any_row_body:
+      'The transaction below and its receipts (with uploaded files) are permanently deleted. Other rows of the group stay; rows linked to this one lose that link.',
+    transactions_delete_any_row_done: 'Transaction deleted.',
+    transactions_purge_expansion: 'Delete expanded rows (%{count})',
+    transactions_purge_expansion_hint:
+      'This group has %{count} expanded row(s); you can delete them all at once. Delete single rows with the bin icon at the row end.',
+    transactions_purge_expansion_title: 'Delete expanded rows',
+    transactions_purge_expansion_rows_body:
+      'The expanded rows below and their receipts (with uploaded files) are permanently deleted. Other rows of the group stay.',
+    transactions_purge_expansion_rows_done: 'Expanded rows deleted.',
+    transactions_purge_expansion_body:
+      'The expanded and storno rows below and their receipts (with uploaded files) are permanently deleted. The original transaction becomes expandable again.',
+    transactions_purge_expansion_done:
+      'Expansion deleted; the original can be expanded again.',
+    transactions_purge_expansion_error: 'Could not delete the expansion.',
+    transactions_delete_published_warning:
+      'Warning: you are deleting published transactions. Posted rows and receipts are removed irreversibly.',
     transactions_leave_title: 'This transaction is still a draft',
     transactions_leave_body: 'Finalizing is still pending. Leave this page?',
     transactions_leave_unsaved_title: 'This transaction is not saved yet',
@@ -303,6 +331,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     profile_email: 'Email',
     profile_role: 'Role',
     roles: {
+      controller: 'Controller',
       editor: 'Editor',
       dataentry: 'Data entry',
       controller: 'Controller',
@@ -393,6 +422,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       email_taken: 'This email address already belongs to another account.',
       session_missing: 'The Google sign-in was interrupted. Please try again.',
       provider_disabled: 'Google sign-in is currently turned off.',
+    },
+    administration: {
+      menu: 'Administration',
     },
     static_nav: 'Static pages',
     static_privacy: 'Privacy Policy',

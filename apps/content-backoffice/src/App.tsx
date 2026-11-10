@@ -3,6 +3,7 @@ import { Admin, CustomRoutes, Resource } from 'react-admin';
 import { Route } from 'react-router-dom';
 
 import { authProvider } from './auth/authProvider';
+import { CONTENT_ROLES } from './auth/roles';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
 import { i18nProvider } from './i18n';
@@ -48,7 +49,7 @@ export function App() {
           <CustomRoutes>
             <Route
               element={
-                <RoleGuard allow={['dataentry', 'editor', 'controller']}>
+                <RoleGuard allow={[...CONTENT_ROLES]}>
                   <TransactionCreate />
                 </RoleGuard>
               }
@@ -80,7 +81,7 @@ export function App() {
             <Route
               element={
                 <WorkflowFormGate
-                  roles={['dataentry', 'editor']}
+                  roles={CONTENT_ROLES}
                   workflowId={MEMBERSHIP_SHARE_FEATURE_ID}
                 >
                   <MembershipShareReportPage />
@@ -91,7 +92,7 @@ export function App() {
             <Route
               element={
                 <WorkflowFormGate
-                  roles={['dataentry', 'editor']}
+                  roles={CONTENT_ROLES}
                   workflowId={PROJECT_BALANCE_FEATURE_ID}
                 >
                   <ProjectBalanceReportPage />

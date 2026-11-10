@@ -1,5 +1,6 @@
 import { errors } from '@strapi/utils';
 
+import { EDITOR_LIKE_ROLE_TYPES } from './content-roles';
 import {
   DEFAULT_PUBLISH_POLICY,
   readPublishPolicy,
@@ -18,7 +19,17 @@ const RECEIPT_UID = 'api::receipt.receipt';
 const GUARDED_UIDS = new Set([TRANSACTION_UID, RECEIPT_UID]);
 
 const PUBLISH_FORBIDDEN =
-  'Only the editor role can publish transactions and receipts';
+  'Only the editor or controller role can publish transactions and receipts';
+
+export { EDITOR_LIKE_ROLE_TYPES as EDITOR_LIKE_ROLES } from './content-roles';
+
+/** Editor or controller: full editor workflow (review, publish, convert, discard). */
+export function isEditorLikeRole(roleType: string | null | undefined): boolean {
+  return (
+    typeof roleType === 'string' &&
+    (EDITOR_LIKE_ROLE_TYPES as readonly string[]).includes(roleType)
+  );
+}
 const DRAFT_ONLY =
   'Transactions and receipts are saved as drafts; publishing on create or update is disabled';
 const SAME_PERSON = 'The person who entered the document cannot publish it';
@@ -167,7 +178,7 @@ export function guardEffect(
 
   if (
     actor &&
-    actor.roleType !== 'editor' &&
+    !isEditorLikeRole(actor.roleType) &&
     publishing &&
     !dataentryEggAutoPublish
   ) {
@@ -195,7 +206,8 @@ export function guardEffect(
     return { type: 'forbid', message: SAME_PERSON };
   }
 
-  const editorPublishing = actor.roleType === 'editor' && publishing;
+  const editorLike = isEditorLikeRole(actor.roleType);
+  const editorPublishing = editorLike && publishing;
   const dataentryEggPublishing = dataentryEggAutoPublish && publishing;
   const email = actor.email.length > 0 ? actor.email : undefined;
 
@@ -205,11 +217,11 @@ export function guardEffect(
     enteredBy: action === 'create' ? email : undefined,
     publishedByOnData: editorPublishing && writing ? email : undefined,
     draftPublishedBy:
-      action === 'publish' && actor.roleType === 'editor'
+      action === 'publish' && editorLike
         ? (email ?? null)
         : action === 'publish' && dataentryEggAutoPublish
           ? (email ?? null)
-          : action === 'unpublish' && actor.roleType === 'editor'
+          : action === 'unpublish' && editorLike
             ? null
             : undefined,
     publishLinkedReceipt:

@@ -16,6 +16,7 @@ import {
   type RaRecord,
 } from 'react-admin';
 
+import { canPurgeExpansion, isEditorLikeRole } from '../../auth/roles';
 import { receiptIsPresent } from '../../data/receiptDraft';
 import {
   CONVERTED_EXPANDED,
@@ -78,14 +79,16 @@ function TransactionShowBody() {
   if (record.status === 'draft' && isPending) return null;
   const locales = locale === 'en' ? 'en' : 'hu-HU';
   const canReview =
-    !isPending && permissions === 'editor' && record.status === 'draft';
+    !isPending && isEditorLikeRole(permissions) && record.status === 'draft';
 
   if (canReview) {
     return (
       <TransactionShowReview
         key={String(record.id)}
         locale={locale}
+        locales={locales}
         record={record}
+        showRelated={canPurgeExpansion(permissions)}
       />
     );
   }
@@ -102,19 +105,35 @@ function TransactionShowBody() {
 
 function TransactionShowReview({
   locale,
+  locales,
   record,
+  showRelated,
 }: {
   locale: string;
+  locales: string;
   record: TransactionRow;
+  /** Controller: related section (expanded row delete / purge) on drafts too. */
+  showRelated: boolean;
 }) {
   const [cards, setCards] = useState<ReceiptCardValue[]>([]);
   return (
-    <TransactionReviewEditor
-      cards={cards}
-      locale={locale}
-      record={record}
-      onCardsChange={setCards}
-    />
+    <>
+      <TransactionReviewEditor
+        cards={cards}
+        locale={locale}
+        record={record}
+        onCardsChange={setCards}
+      />
+      {showRelated ? (
+        <Box sx={showBetweenBandsInset}>
+          <RelatedTransactionsAccordion
+            locale={locale}
+            locales={locales}
+            record={record}
+          />
+        </Box>
+      ) : null}
+    </>
   );
 }
 

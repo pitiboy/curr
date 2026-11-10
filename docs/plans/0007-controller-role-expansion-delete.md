@@ -1,6 +1,6 @@
 # Implementation plan: Controller role és kifejtés-törlés
 
-**Status:** planned  
+**Status:** done (első slice)  
 **Date:** 2026-11-10  
 **Kapcsolódó:** [PRD 0002 — Content Backoffice v2](../prd/0002-content-backoffice-v2.md), [Ügyletek](../transaction-workflow.md), [v1 discardDraft](../prd/0001-content-backoffice-v1.md)  
 **Érintett kód:** [`src/index.ts`](../../src/index.ts), [`src/publish-guard.ts`](../../src/publish-guard.ts), új `src/transaction-delete/`, [`apps/content-backoffice/src/auth/roles.ts`](../../apps/content-backoffice/src/auth/roles.ts), [`RelatedTransactionsSection.tsx`](../../apps/content-backoffice/src/pages/transactions/RelatedTransactionsSection.tsx), [`TransactionShow.tsx`](../../apps/content-backoffice/src/pages/transactions/TransactionShow.tsx)
@@ -94,6 +94,20 @@ flowchart TD
 4. Delete/purge-expansion service + őr + cascade + tesztek.
 5. SPA roles helpers, editor-like kapuk, i18n.
 6. TransactionShow related UI: expanded sor törlés + Kifejtés törlése + Confirm.
+
+## 8a. Javítás (2026-11-10): csoportos törlés nem-original szülőnél
+
+**Hiba:** a **Kifejtés törlése** gomb csak akkor jelent meg, ha a csoportban volt `original`. Bulk-rögzítésből (pl. tojás napi rögzítés horgonya) származó csoportban, ahol csak egyes lábak `expanded`-ek, csak a soronkénti szöveges „Törlés” látszott a „Megtekintés” mellett — nem volt egyértelmű, mit töröl, és nem lehetett egyszerre törölni.
+
+**Javítás:**
+
+- Szerver: `purgeExpansion(:id)` bármely szülőre működik, ha van `expanded`/`storno` gyereke (különben 409); reset csak `original` szülőnél.
+- SPA: `purgeExpansionPlan(items, record)` (szülő = a megjelenített rekord, ha vannak gyerekei, különben a `related_transaction`); a szekció tetején magyarázó szöveg + **Kifejtett sorok törlése (N)**; soronként kuka ikon tooltippel; a Confirm listázza a törlendő sorokat.
+- Tesztek: backend horgony-purge; Vitest plan helper + bulk-csoport purge.
+- Soronkénti törlés (felhasználói döntés, 2026-11-10): kuka minden soron, de azonnal csak `expanded`; storno / original / nem kifejtett sor csak ha nincs több `expanded` a csoportban, az original a storno után (`relatedRowDeleteState`). Tiltott sor: disabled ikon + tooltip az okkal. Szerver: `original` törölhető, ha nincs `expanded`/`storno` gyereke.
+- Megtekintés-zavar: gyerekes sor Show-ja eddig csak a gyerekeit listázta (önmagát és a szülőt nem), és a `getOne` rekord numerikus ID-je (`entryId`) hiányzott („—”). Most: szülő + saját sor + gyerekek, a `entryId` fallbackkel.
+
+**Miért volt csak az 1954 `expanded`:** `expanded` értéket csak a Convert ír ([`convert-service.ts`](../../src/transaction-workflow/convert-service.ts)); a bulk tojás-űrlap új sorai `null`-lal jönnek létre. A bulk mentés duplikátum-keresése ([`duplicateFetch.ts`](../../apps/content-backoffice/src/workflows/bulk-quantity/duplicateFetch.ts)) dátum + szervezet + pénznem + tartozik/követel számla alapján talál meglévő sort, `converted_to_workflow` szűrés nélkül, és találat esetén azt **frissíti** (`saveTransactionDraft`). A bevétel-láb (`1000` → `4000`, HUF, Tyúktartás) pontosan egyezik a „Tojás eladás forintért” workflow 3. lépésével, így egy korábbi Convert által létrehozott `expanded` sort írt felül: leírás, összeg és `related_transaction` (→ bulk horgony) változott, a `converted_to_workflow: expanded` megmaradt. A tojás- és kp-láb a tag saját számláját (`1002`) használja, a workflow `1001`-et, ezért ott nem volt egyezés → új `null` sor. Javítási javaslat (nyitott): a duplikátum-keresés csak `converted_to_workflow: null` sorokat vegyen figyelembe.
 
 ## 9. Kész, ha
 
