@@ -334,7 +334,6 @@ export const enMessages = mergeTranslations(englishMessages, {
       controller: 'Controller',
       editor: 'Editor',
       dataentry: 'Data entry',
-      controller: 'Controller',
       authenticated: 'Authenticated user',
     },
     sidebar: {
