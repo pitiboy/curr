@@ -305,6 +305,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     roles: {
       editor: 'Editor',
       dataentry: 'Data entry',
+      controller: 'Controller',
       authenticated: 'Authenticated user',
     },
     profile_password_heading: 'Change password',

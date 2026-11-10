@@ -306,7 +306,7 @@ describe('registerPublishGuard', () => {
         }),
       (error: unknown) => {
         assert.ok(error instanceof Error);
-        assert.match(error.message, /editor role/);
+        assert.match(error.message, /editor or controller role/);
         return true;
       },
     );

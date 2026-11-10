@@ -54,6 +54,6 @@ export const eggDailyEntryConfig: BulkQuantityWorkflowConfig = {
   creditAccountCode: CREDIT_ACCOUNT_CODE,
   transactionTypeName: 'Átvezetés',
   descriptionKey: 'app.bulk_quantity.description.egg',
-  roles: ['dataentry', 'editor'],
+  roles: ['dataentry', 'editor', 'controller'],
   distribution: eggDistributionConfig,
 };
