@@ -30,7 +30,13 @@ export function ReportTransactionStatusFilterControl({
   };
 
   return (
-    <FormControl size="small" sx={{ minWidth: 200 }}>
+    <FormControl
+      size="small"
+      sx={{
+        minWidth: { xs: '100%', sm: 200 },
+        width: { xs: '100%', sm: 'auto' },
+      }}
+    >
       <InputLabel id="report-transaction-status-filter-label">
         {translate('app.reports.transaction_status.label')}
       </InputLabel>
