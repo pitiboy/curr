@@ -130,6 +130,9 @@ describe('visibleWorkflowForms', () => {
     expect(
       visibleWorkflowForms(forms, [EGG_PRODUCTION_WORKFLOW_ID], 'editor'),
     ).toEqual([forms[0]]);
+    expect(
+      visibleWorkflowForms(forms, [EGG_PRODUCTION_WORKFLOW_ID], 'controller'),
+    ).toEqual([forms[0]]);
   });
 
   it('uses egg-production as the shared feature flag id', () => {

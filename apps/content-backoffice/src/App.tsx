@@ -48,7 +48,7 @@ export function App() {
           <CustomRoutes>
             <Route
               element={
-                <RoleGuard allow={['dataentry', 'editor']}>
+                <RoleGuard allow={['dataentry', 'editor', 'controller']}>
                   <TransactionCreate />
                 </RoleGuard>
               }

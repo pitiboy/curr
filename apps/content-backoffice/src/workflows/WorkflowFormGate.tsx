@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { usePermissions } from 'react-admin';
 
 import type { ContentRole } from '../auth/roles';
+import { roleAllowed } from '../auth/roles';
 import { useBackofficeConfig } from './useBackofficeConfig';
 
 type WorkflowFormGateProps = {
@@ -17,15 +18,16 @@ export function WorkflowFormGate({
   children,
 }: WorkflowFormGateProps) {
   const { enabled, ready } = useBackofficeConfig();
-  const { permissions, isLoading } = usePermissions();
+  const { permissions, isPending } = usePermissions();
 
-  if (!ready || isLoading) {
+  if (!ready || isPending) {
     return null;
   }
 
   if (
     !enabled.includes(workflowId) ||
-    !roles.some((role) => role === permissions)
+    typeof permissions !== 'string' ||
+    !roleAllowed(roles, permissions)
   ) {
     return <Navigate to="/transactions" replace />;
   }

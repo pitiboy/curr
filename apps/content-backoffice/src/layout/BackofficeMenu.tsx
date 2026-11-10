@@ -8,6 +8,7 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { Menu, usePermissions, useTranslate } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 
+import { isEditorLike } from '../auth/roles';
 import {
   TRANSACTIONS_LIST_PATH,
   transactionListMode,
@@ -28,13 +29,10 @@ export function BackofficeMenu() {
   const translate = useTranslate();
   const { permissions } = usePermissions();
   const { enabled } = useBackofficeConfig();
-  const workflows = visibleWorkflowForms(
-    workflowForms,
-    enabled,
-    typeof permissions === 'string' ? permissions : '',
-  );
-  const canReadReports =
-    permissions === 'dataentry' || permissions === 'editor';
+  const role = typeof permissions === 'string' ? permissions : '';
+  const workflows = visibleWorkflowForms(workflowForms, enabled, role);
+  const canWrite = permissions === 'dataentry' || isEditorLike(permissions);
+  const canReadReports = canWrite;
   const canReadEggInventory =
     canReadReports && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
@@ -57,13 +55,13 @@ export function BackofficeMenu() {
           to={form.path}
         />
       ))}
-      {(permissions === 'dataentry' || permissions === 'editor') && (
+      {canWrite ? (
         <Menu.Item
           leftIcon={<PostAddIcon />}
           primaryText={translate('app.transactions_create')}
           to="/transactions/create"
         />
-      )}
+      ) : null}
       {canReadEggInventory ? (
         <>
           <Menu.Item
@@ -92,13 +90,13 @@ export function BackofficeMenu() {
           to="/reports/project-balance"
         />
       ) : null}
-      {permissions === 'editor' && (
+      {isEditorLike(permissions) ? (
         <TransactionListMenuItem
           icon={<FactCheckIcon />}
           label={translate('app.transactions_review')}
           mode="draft"
         />
-      )}
+      ) : null}
     </Menu>
   );
 }
