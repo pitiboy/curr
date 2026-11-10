@@ -5,6 +5,7 @@ import { errors } from '@strapi/utils';
 import {
   contentApiActor,
   guardEffect,
+  isEditorLikeRole,
   missingStoredPublishFields,
   missingTransactionFields,
   readPublishPolicy,
@@ -16,6 +17,7 @@ import {
 
 const dataentry = { roleType: 'dataentry', email: 'entry@example.com' };
 const editor = { roleType: 'editor', email: 'editor@example.com' };
+const controller = { roleType: 'controller', email: 'controller@example.com' };
 const transaction = 'api::transaction.transaction';
 const receipt = 'api::receipt.receipt';
 
@@ -158,11 +160,46 @@ describe('guardEffect', () => {
     assert.equal(unpublish.publishLinkedReceipt, false);
   });
 
+  it('treats the controller role as editor-like for publish and audit', () => {
+    const publish = guardEffect(transaction, 'publish', undefined, controller);
+    assert.equal(publish.type, 'allow');
+    if (publish.type !== 'allow') return;
+    assert.equal(publish.draftPublishedBy, controller.email);
+    assert.equal(publish.publishLinkedReceipt, true);
+
+    const unpublish = guardEffect(
+      transaction,
+      'unpublish',
+      undefined,
+      controller,
+    );
+    assert.equal(unpublish.type, 'allow');
+    if (unpublish.type !== 'allow') return;
+    assert.equal(unpublish.draftPublishedBy, null);
+  });
+
+  it('applies the same-person rule to the controller role', () => {
+    const effect = guardEffect(transaction, 'publish', undefined, controller, {
+      enteredBy: controller.email,
+    });
+    assert.equal(effect.type, 'forbid');
+  });
+
   it('does not cascade a receipt publish back onto transactions', () => {
     const effect = guardEffect(receipt, 'publish', undefined, editor);
     assert.equal(effect.type, 'allow');
     if (effect.type !== 'allow') return;
     assert.equal(effect.publishLinkedReceipt, false);
+  });
+});
+
+describe('isEditorLikeRole', () => {
+  it('accepts editor and controller only', () => {
+    assert.equal(isEditorLikeRole('editor'), true);
+    assert.equal(isEditorLikeRole('controller'), true);
+    assert.equal(isEditorLikeRole('dataentry'), false);
+    assert.equal(isEditorLikeRole(''), false);
+    assert.equal(isEditorLikeRole(undefined), false);
   });
 });
 

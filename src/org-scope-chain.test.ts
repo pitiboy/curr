@@ -20,6 +20,12 @@ import { errors } from '@strapi/utils';
 
 import { registerOrgScopeMiddleware } from './org-scope-middleware.ts';
 import {
+  deleteTransactionWithReceipts,
+  purgeExpansion,
+  TransactionDeleteError,
+  type TransactionDeleteStrapi,
+} from './transaction-delete/delete-service.ts';
+import {
   DEFAULT_PUBLISH_POLICY,
   registerPublishGuard,
   type PublishGuardStrapi,
@@ -361,6 +367,13 @@ function createWorld() {
         if (row) Object.assign(row, data);
         return row ?? null;
       },
+      // Raw db layer (no middleware), as used by transaction-delete.
+      findMany: async ({ where }: Row) => select(uid, where),
+      updateMany: async ({ where, data }: { where: Row; data: Row }) => {
+        for (const row of tables[uid] ?? []) {
+          if (matches(hydrate(uid, row), where)) Object.assign(row, data);
+        }
+      },
     }),
   };
 
@@ -368,6 +381,8 @@ function createWorld() {
     documents,
     db,
     requestContext: { get: () => requestState },
+    log: { warn: () => {} },
+    plugin: () => ({ service: () => ({ remove: async () => undefined }) }),
   } as unknown as PublishGuardStrapi;
 
   // Same order as src/index.ts register().
@@ -377,6 +392,7 @@ function createWorld() {
   return {
     tables,
     executed,
+    strapi,
     docs: (uid: string) =>
       strapi.documents(uid) as unknown as Record<
         string,
@@ -1219,4 +1235,59 @@ describe('org scope chain — lifecycle actions', () => {
     await w.docs(TX).delete!({ documentId: 'tx-c1' });
     assert.equal(w.txRow('tx-c1'), undefined);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Controller delete / purge-expansion through the same chain (plan 0007)
+// ---------------------------------------------------------------------------
+
+describe('org scope chain — transaction-delete service', () => {
+  const svc = () => w.strapi as unknown as TransactionDeleteStrapi;
+
+  it('controller deletes a transaction of any organization with its receipts', async () => {
+    w.as('controller');
+    const result = await deleteTransactionWithReceipts(svc(), 'tx-c1');
+    assert.deepEqual(result.deleted, ['tx-c1']);
+    assert.deepEqual(result.receipts, ['rc-c1']);
+    assert.equal(w.txRow('tx-c1'), undefined);
+    assert.equal(w.receiptRow('rc-c1'), undefined);
+    // Both deletes reached the store unfiltered (controller bypass).
+    assert.deepEqual(
+      w.executed.map((e) => `${e.action}:${e.uid}`),
+      [`delete:${RECEIPT}`, `delete:${TX}`],
+    );
+  });
+
+  it('controller purges an expansion across the chain and resets the original', async () => {
+    w.as('controller');
+    const txs = w.tables[TX]!;
+    w.txRow('tx-a1')!.converted_to_workflow = 'original';
+    txs.push(
+      seedTransaction(40, 'tx-a1-step', 'org-a', {
+        converted_to_workflow: 'expanded',
+        related_transaction: { documentId: 'tx-a1' },
+      }),
+      seedTransaction(41, 'tx-a1-storno', 'org-a', {
+        converted_to_workflow: 'storno',
+        related_transaction: { documentId: 'tx-a1' },
+      }),
+    );
+    const result = await purgeExpansion(svc(), 'tx-a1');
+    assert.deepEqual(result.deleted, ['tx-a1-step', 'tx-a1-storno']);
+    assert.equal(w.txRow('tx-a1')!.converted_to_workflow, null);
+    assert.ok(w.txRow('tx-a1'), 'original kept');
+    assert.ok(w.receiptRow('rc-a1'), "original's receipt kept");
+  });
+
+  for (const key of ['editorAB', 'dataentryA'] as const) {
+    it(`${key} is rejected by the service before any document is deleted`, async () => {
+      w.as(key);
+      await assert.rejects(
+        () => deleteTransactionWithReceipts(svc(), 'tx-a1'),
+        (e: unknown) => e instanceof TransactionDeleteError && e.status === 403,
+      );
+      assert.deepEqual(w.executed, []);
+      assert.ok(w.txRow('tx-a1'));
+    });
+  }
 });

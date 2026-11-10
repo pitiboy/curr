@@ -13,6 +13,10 @@ import {
 } from './transactionList';
 import { loadTransactionRecord } from './transactionRecord';
 import { discardTransactionDraft } from './transactionDiscard';
+import {
+  deleteTransactionRow,
+  purgeTransactionExpansion,
+} from './transactionDelete';
 import { publishTransactionDraft } from './transactionPublish';
 import { convertTransaction as postConvertTransaction } from './transactionWorkflow';
 import {
@@ -116,6 +120,16 @@ export function publishTransaction(
 
 export function discardTransaction(documentId: string) {
   return discardTransactionDraft(httpClient, STRAPI_URL, documentId);
+}
+
+/** Controller-only guarded delete of one transaction (receipts cascade). */
+export function deleteTransaction(documentId: string) {
+  return deleteTransactionRow(httpClient, STRAPI_URL, documentId);
+}
+
+/** Controller-only: delete all expanded + storno rows of an `original`. */
+export function purgeExpansion(originalDocumentId: string) {
+  return purgeTransactionExpansion(httpClient, STRAPI_URL, originalDocumentId);
 }
 
 export function saveTransactionDraft(
