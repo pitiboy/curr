@@ -18,8 +18,11 @@ import {
 } from '@mui/material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
-import { useState, type ReactNode } from 'react';
+import type { BarItemIdentifier } from '@mui/x-charts/models';
+import type { PieItemIdentifier } from '@mui/x-charts/models';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
 
 import {
   historyAmountForFocus,
@@ -41,6 +44,15 @@ import {
   REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
   type ReportTransactionStatusFilter as ReportTxStatusMode,
 } from './shared/reportTransactionStatus';
+import {
+  drilldownForHistoryBar,
+  drilldownForMemberBar,
+  drilldownForMemberCell,
+  drilldownForMemberRow,
+  drilldownForPieSlice,
+  type MembershipShareDrilldownContext,
+  type MembershipShareLedgerLeg,
+} from './membershipShare/drilldown';
 import { useMembershipShareReport } from './membershipShare/useMembershipShareReport';
 
 const LEDGER_FOCUSES: LedgerFocus[] = ['both', 'share', 'pocket'];
@@ -135,7 +147,11 @@ export function MembershipShareReportPage() {
         </Alert>
       ) : null}
       {status === 'success' && report ? (
-        <ReportBody focus={focus} report={report} />
+        <ReportBody
+          drilldownContext={{ range, transactionStatus, focus }}
+          focus={focus}
+          report={report}
+        />
       ) : null}
     </Box>
   );
@@ -144,13 +160,25 @@ export function MembershipShareReportPage() {
 function ReportBody({
   report,
   focus,
+  drilldownContext,
 }: {
   report: MembershipShareReport;
   focus: LedgerFocus;
+  drilldownContext: MembershipShareDrilldownContext;
 }) {
   const translate = useTranslate();
   const theme = useTheme();
+  const navigate = useNavigate();
   const { kpis, byMember, history, historyCurrency } = report;
+
+  const openDrilldown = useCallback(
+    (link: { pathname: '/transactions'; search: string }) => {
+      navigate({ pathname: link.pathname, search: link.search });
+    },
+    [navigate],
+  );
+
+  const drillTip = translate('app.membership_share.drilldown.hint');
 
   const showShare = focus === 'both' || focus === 'share';
   const showPocket = focus === 'both' || focus === 'pocket';
@@ -207,6 +235,55 @@ function ReportBody({
                   : theme.palette.info.main,
           }),
         );
+
+  const onMemberBarClick = useCallback(
+    (_event: unknown, item: BarItemIdentifier) => {
+      const seriesId = String(item.seriesId);
+      if (seriesId !== 'share' && seriesId !== 'pocket') return;
+      const member = byMember[item.dataIndex];
+      if (!member) return;
+      openDrilldown(
+        drilldownForMemberBar(
+          drilldownContext,
+          member,
+          seriesId as MembershipShareLedgerLeg,
+          primaryCurrency,
+        ),
+      );
+    },
+    [byMember, drilldownContext, openDrilldown, primaryCurrency],
+  );
+
+  const onHistoryBarClick = useCallback(
+    (_event: unknown, item: BarItemIdentifier) => {
+      const member = byMember.find(
+        (row) => row.memberId === String(item.seriesId),
+      );
+      const period = history[item.dataIndex]?.period;
+      if (!member || !period) return;
+      openDrilldown(
+        drilldownForHistoryBar(
+          drilldownContext,
+          member,
+          period,
+          historyCurrency,
+        ),
+      );
+    },
+    [byMember, drilldownContext, history, historyCurrency, openDrilldown],
+  );
+
+  const onPieClick = useCallback(
+    (_event: unknown, item: PieItemIdentifier) => {
+      const slice = pieData[item.dataIndex];
+      if (!slice) return;
+      const currency = focus === 'both' ? primaryCurrency : String(slice.id);
+      openDrilldown(
+        drilldownForPieSlice(drilldownContext, String(slice.id), currency),
+      );
+    },
+    [drilldownContext, focus, openDrilldown, pieData, primaryCurrency],
+  );
 
   return (
     <Stack spacing={3}>
@@ -276,6 +353,7 @@ function ReportBody({
               height={Math.max(220, byMember.length * 36)}
               layout="horizontal"
               margin={{ left: 72, right: 16, top: 16, bottom: 24 }}
+              onItemClick={onMemberBarClick}
               series={[
                 ...(showShare
                   ? [
@@ -330,6 +408,7 @@ function ReportBody({
             <PieChart
               height={260}
               margin={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              onItemClick={onPieClick}
               series={[
                 {
                   data: pieData,
@@ -386,25 +465,57 @@ function ReportBody({
             <TableBody>
               {byMember.map((row) => (
                 <TableRow key={row.memberId}>
-                  <TableCell>{row.memberName}</TableCell>
+                  <DrilldownCell
+                    align="left"
+                    onOpen={() =>
+                      openDrilldown(
+                        drilldownForMemberRow(drilldownContext, row),
+                      )
+                    }
+                    title={drillTip}
+                  >
+                    {row.memberName}
+                  </DrilldownCell>
                   {showShare
                     ? currencies.map((currency) => (
-                        <TableCell align="right" key={`s-${currency}`}>
-                          <AmountCell
-                            amounts={row.shareByCurrency}
-                            currency={currency}
-                          />
-                        </TableCell>
+                        <AmountDrilldownCell
+                          align="right"
+                          amounts={row.shareByCurrency}
+                          currency={currency}
+                          key={`s-${currency}`}
+                          onOpen={() =>
+                            openDrilldown(
+                              drilldownForMemberCell(
+                                drilldownContext,
+                                row,
+                                currency,
+                                'share',
+                              ),
+                            )
+                          }
+                          title={drillTip}
+                        />
                       ))
                     : null}
                   {showPocket
                     ? currencies.map((currency) => (
-                        <TableCell align="right" key={`p-${currency}`}>
-                          <AmountCell
-                            amounts={row.pocketByCurrency}
-                            currency={currency}
-                          />
-                        </TableCell>
+                        <AmountDrilldownCell
+                          align="right"
+                          amounts={row.pocketByCurrency}
+                          currency={currency}
+                          key={`p-${currency}`}
+                          onOpen={() =>
+                            openDrilldown(
+                              drilldownForMemberCell(
+                                drilldownContext,
+                                row,
+                                currency,
+                                'pocket',
+                              ),
+                            )
+                          }
+                          title={drillTip}
+                        />
                       ))
                     : null}
                 </TableRow>
@@ -430,6 +541,7 @@ function ReportBody({
           <BarChart
             height={320}
             margin={{ left: 64, right: 16, top: 24, bottom: 40 }}
+            onItemClick={onHistoryBarClick}
             series={byMember.map((member, index) => ({
               id: member.memberId,
               label: member.memberName,
@@ -460,29 +572,67 @@ function ReportBody({
   );
 }
 
-function AmountCell({
+function AmountDrilldownCell({
+  align,
   amounts,
   currency,
+  onOpen,
+  title,
 }: {
+  align: 'left' | 'right';
   amounts: CurrencyAmount[];
   currency: string;
+  onOpen: () => void;
+  title: string;
 }) {
   const amount = amounts.find((row) => row.currency === currency)?.amount ?? 0;
   if (amount === 0) {
     return (
-      <Typography color="text.secondary" variant="body2">
-        —
-      </Typography>
+      <TableCell align={align}>
+        <Typography color="text.secondary" variant="body2">
+          —
+        </Typography>
+      </TableCell>
     );
   }
   return (
-    <Typography
-      component="span"
-      sx={{ fontVariantNumeric: 'tabular-nums' }}
-      variant="body2"
-    >
+    <DrilldownCell align={align} onOpen={onOpen} title={title}>
       {formatMoney(amount, currency)}
-    </Typography>
+    </DrilldownCell>
+  );
+}
+
+function DrilldownCell({
+  align,
+  children,
+  onOpen,
+  title,
+}: {
+  align: 'left' | 'right';
+  children: ReactNode;
+  onOpen: () => void;
+  title: string;
+}) {
+  return (
+    <TableCell
+      align={align}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+      role="button"
+      sx={{
+        cursor: 'pointer',
+        '&:hover': { textDecoration: 'underline' },
+      }}
+      tabIndex={0}
+      title={title}
+    >
+      {children}
+    </TableCell>
   );
 }
 

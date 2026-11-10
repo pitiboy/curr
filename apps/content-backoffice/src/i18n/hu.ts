@@ -257,6 +257,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         'Nincs megjeleníthető tagi befizetés ebben az időszakban. Válassz másik tartományt vagy számlát.',
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
+      drilldown: {
+        hint: 'Kattintás: szűrt tranzakciólista',
+      },
     },
     project_balance: {
       menu: 'Projektek egyenlege',

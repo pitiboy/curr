@@ -117,6 +117,13 @@ export const transactionPopulate = {
 /** Client-only list filter from project balance drill-down (not sent to Strapi). */
 export const PROJECT_BALANCE_LEG_FILTER_KEY = 'project_balance_leg' as const;
 
+/** Client-only: exclude tagi 1101/1001 belső átvezetések (membership-share riport). */
+export const MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY =
+  'membership_share_external' as const;
+
+/** Strapi `credit_account.documentId.$in` a membership-share drill-downból. */
+export const CREDIT_ACCOUNT_IN_FILTER_KEY = 'credit_account_in' as const;
+
 export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
   /** React-admin id: Strapi documentId (not the numeric PK). */
   id: string;
@@ -251,10 +258,12 @@ export function assembleTransactionList(
   const { status } = buildTransactionFilters(params.filter ?? {});
   const filter = params.filter ?? {};
   const leg = filter[PROJECT_BALANCE_LEG_FILTER_KEY];
+  const membershipExternal = filter[MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY];
   const merged = mergeByStatus(drafts, published, status).filter(
     (row) =>
       matchesFirstReceiptVendor(row.receipts, filter.vendor) &&
-      matchesProjectBalanceLeg(row, leg),
+      matchesProjectBalanceLeg(row, leg) &&
+      matchesMembershipShareExternal(row, membershipExternal),
   );
   const sorted = sortTransactionRows(
     merged,
@@ -308,9 +317,27 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
       documentId: { $eq: filter.debit_account },
     };
   }
-  if (isPresent(filter.credit_account)) {
+  const creditAccountIn = normalizeStringIdList(
+    filter[CREDIT_ACCOUNT_IN_FILTER_KEY],
+  );
+  if (creditAccountIn?.length === 1) {
+    strapiFilters.credit_account = {
+      documentId: { $eq: creditAccountIn[0] },
+    };
+  } else if (creditAccountIn && creditAccountIn.length > 1) {
+    strapiFilters.credit_account = {
+      documentId: { $in: creditAccountIn },
+    };
+  } else if (isPresent(filter.credit_account)) {
     strapiFilters.credit_account = {
       documentId: { $eq: filter.credit_account },
+    };
+  } else if (
+    typeof filter.credit_account_code === 'string' &&
+    filter.credit_account_code.trim()
+  ) {
+    strapiFilters.credit_account = {
+      code: { $eq: filter.credit_account_code.trim() },
     };
   }
   if (typeof filter.description === 'string' && filter.description.trim()) {
@@ -511,6 +538,25 @@ function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const parsed = parseFloat(String(value ?? ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+const MEMBER_LEDGER_DEBIT_CODES = new Set(['1101', '1001']);
+
+function matchesMembershipShareExternal(
+  row: StrapiTransaction,
+  enabled: unknown,
+): boolean {
+  if (enabled !== true) return true;
+  const debitCode = String(row.debit_account?.code ?? '').trim();
+  return !MEMBER_LEDGER_DEBIT_CODES.has(debitCode);
+}
+
+function normalizeStringIdList(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const ids = raw
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean);
+  return ids.length > 0 ? ids : undefined;
 }
 
 function matchesProjectBalanceLeg(

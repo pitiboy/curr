@@ -254,6 +254,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       empty: 'No member payments for this period. Try another range or ledger.',
       error: 'Could not load the report.',
       retry: 'Retry',
+      drilldown: {
+        hint: 'Click: filtered transaction list',
+      },
     },
     project_balance: {
       menu: 'Project balances',
