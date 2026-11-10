@@ -34,10 +34,17 @@ export function parseRelatedTransactionItem(
   const documentId = (value as { documentId?: string }).documentId;
   if (!documentId) return null;
   const rawId = (value as { id?: unknown }).id;
+  // getOne records carry the numeric key as `entryId` (`id` = documentId).
+  const rawEntryId = (value as { entryId?: unknown }).entryId;
   const row = value as RelatedTransactionItem;
   return {
     documentId,
-    entryId: typeof rawId === 'number' ? rawId : undefined,
+    entryId:
+      typeof rawId === 'number'
+        ? rawId
+        : typeof rawEntryId === 'number'
+          ? rawEntryId
+          : undefined,
     date: row.date,
     amount: row.amount,
     description: row.description,
@@ -67,13 +74,23 @@ export function parentDocumentId(record: RaRecord): string | null {
   return id ?? null;
 }
 
+/** The parent row is loaded whenever the record links to one. */
 export function needsParentFetch(record: RaRecord): boolean {
-  const children = record.related_transactions;
-  const hasChildren = Array.isArray(children) && children.length > 0;
-  if (hasChildren) return false;
   return parentDocumentId(record) != null;
 }
 
+function selfItem(record: RaRecord): RelatedTransactionItem | null {
+  return parseRelatedTransactionItem({
+    ...record,
+    documentId: record.documentId ?? String(record.id),
+  });
+}
+
+/**
+ * Rows of the related section. A record with children shows its parent (if
+ * any), itself and its children; a leaf shows its parent and the siblings
+ * (itself included). The shown record is always in the list.
+ */
 export function relatedItemsFromRecord(
   record: RaRecord,
   parentRecord?: RaRecord | null,
@@ -83,24 +100,29 @@ export function relatedItemsFromRecord(
         .map(parseRelatedTransactionItem)
         .filter((item): item is RelatedTransactionItem => item != null)
     : [];
+  const self = selfItem(record);
+  const parent =
+    parseRelatedTransactionItem(parentRecord) ??
+    parseRelatedTransactionItem(record.related_transaction);
 
   if (children.length > 0) {
-    return sortRelatedItems(children);
+    const merged = [
+      ...(parent ? [parent] : []),
+      ...(self ? [self] : []),
+      ...children,
+    ];
+    return sortRelatedItems(dedupeByDocumentId(merged));
   }
 
-  if (parentRecord) {
-    const parent = parseRelatedTransactionItem(parentRecord);
-    const siblings = Array.isArray(parentRecord.related_transactions)
+  if (!parent) return [];
+  const siblings =
+    parentRecord && Array.isArray(parentRecord.related_transactions)
       ? parentRecord.related_transactions
           .map(parseRelatedTransactionItem)
           .filter((item): item is RelatedTransactionItem => item != null)
       : [];
-    const merged = parent ? [parent, ...siblings] : siblings;
-    return sortRelatedItems(dedupeByDocumentId(merged));
-  }
-
-  const parentOnly = parseRelatedTransactionItem(record.related_transaction);
-  return parentOnly ? [parentOnly] : [];
+  const merged = [parent, ...siblings, ...(self ? [self] : [])];
+  return sortRelatedItems(dedupeByDocumentId(merged));
 }
 
 function dedupeByDocumentId(
@@ -145,47 +167,87 @@ export function convertedLabelKey(
   return null;
 }
 
-/** Controller per-row delete: only `expanded` rows (storno via purge). */
-export function canDeleteRelatedRow(item: RelatedTransactionItem): boolean {
-  return item.converted_to_workflow === CONVERTED_EXPANDED;
+export type RelatedRowDeleteState =
+  | 'allowed'
+  /** An `expanded` row is still in the group: delete those first. */
+  | 'blocked_expanded'
+  /** The `original` still has a `storno` row: delete that first. */
+  | 'blocked_storno';
+
+/**
+ * Controller per-row delete. Only `expanded` rows are deletable right away;
+ * every other row (storno, original, not expanded) only once no `expanded`
+ * row is left in the group, and the `original` also needs its storno gone.
+ */
+export function relatedRowDeleteState(
+  item: RelatedTransactionItem,
+  items: readonly RelatedTransactionItem[],
+): RelatedRowDeleteState {
+  if (item.converted_to_workflow === CONVERTED_EXPANDED) return 'allowed';
+  const others = items.filter((row) => row.documentId !== item.documentId);
+  if (others.some((row) => row.converted_to_workflow === CONVERTED_EXPANDED)) {
+    return 'blocked_expanded';
+  }
+  if (
+    item.converted_to_workflow === CONVERTED_ORIGINAL &&
+    others.some((row) => row.converted_to_workflow === CONVERTED_STORNO)
+  ) {
+    return 'blocked_storno';
+  }
+  return 'allowed';
+}
+
+export type PurgeExpansionPlan = {
+  /** documentId posted to `purge-expansion` (the group parent). */
+  parentDocumentId: string;
+  /** Parent is an `original`: storno goes too and it becomes expandable again. */
+  isOriginal: boolean;
+  /** Rows the purge removes (expanded + storno children of the parent). */
+  rows: RelatedTransactionItem[];
+};
+
+function isExpansionRow(item: RelatedTransactionItem): boolean {
+  return (
+    item.converted_to_workflow === CONVERTED_EXPANDED ||
+    item.converted_to_workflow === CONVERTED_STORNO
+  );
 }
 
 /**
- * `original` documentId for **Kifejtés törlése** when the group still has
- * expanded or storno rows; otherwise null. On the original's Show the items
- * are only its children, so the shown record is checked as well.
+ * Group-level **Kifejtett sorok törlése**: the group parent (the shown record
+ * when it has children, else its `related_transaction`) and the expanded /
+ * storno children to remove. The parent need not be an `original` — e.g. a
+ * bulk-entry anchor whose legs were partly expanded. Null when nothing to do.
  */
-export function purgeExpansionTarget(
+export function purgeExpansionPlan(
   items: RelatedTransactionItem[],
-  record?: RaRecord | null,
-): string | null {
-  const self = record
-    ? parseRelatedTransactionItem({
-        ...record,
-        documentId: record.documentId ?? String(record.id),
-      })
-    : null;
-  const original = [...(self ? [self] : []), ...items].find(
-    (item) => item.converted_to_workflow === CONVERTED_ORIGINAL,
-  );
-  if (!original) return null;
-  const hasExpansion = items.some(
-    (item) =>
-      item.converted_to_workflow === CONVERTED_EXPANDED ||
-      item.converted_to_workflow === CONVERTED_STORNO,
-  );
-  return hasExpansion ? original.documentId : null;
-}
+  record: RaRecord,
+): PurgeExpansionPlan | null {
+  const self = selfItem(record);
+  const grandParentId = parentDocumentId(record);
+  const ownChildren =
+    Array.isArray(record.related_transactions) &&
+    record.related_transactions.length > 0;
+  const parentId = ownChildren
+    ? (self?.documentId ?? null)
+    : parentDocumentId(record);
+  if (!parentId) return null;
 
-/** documentIds removed by a purge of `items` (expanded + storno rows). */
-export function expansionDocumentIds(
-  items: RelatedTransactionItem[],
-): string[] {
-  return items
-    .filter(
-      (item) =>
-        item.converted_to_workflow === CONVERTED_EXPANDED ||
-        item.converted_to_workflow === CONVERTED_STORNO,
-    )
-    .map((item) => item.documentId);
+  const parent =
+    self?.documentId === parentId
+      ? self
+      : items.find((item) => item.documentId === parentId);
+  const rows = items.filter(
+    (item) =>
+      item.documentId !== parentId &&
+      // On a record with children, its own parent is listed too.
+      !(ownChildren && item.documentId === grandParentId) &&
+      isExpansionRow(item),
+  );
+  if (rows.length === 0) return null;
+  return {
+    parentDocumentId: parentId,
+    isOriginal: parent?.converted_to_workflow === CONVERTED_ORIGINAL,
+    rows,
+  };
 }

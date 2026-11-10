@@ -58,6 +58,10 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
+    transactions_related_parent_row: 'szülő',
+    transactions_delete_blocked_expanded:
+      'Előbb a csoport kifejtett sorait töröld (egyenként vagy a „Kifejtett sorok törlése” gombbal).',
+    transactions_delete_blocked_storno: 'Előbb a storno sort töröld.',
     transactions_related_current: 'ez a sor',
     transactions_none: 'Nincs tranzakció.',
     transactions_page_total: 'Összesen (látható sorok)',
@@ -114,13 +118,22 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_delete_row: 'Törlés',
     transactions_delete_row_title: 'Kifejtett sor törlése',
     transactions_delete_row_body:
-      'A kifejtett sor és a hozzá tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek.',
+      'Az alábbi kifejtett sor és a hozzá tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek.',
     transactions_delete_row_done: 'A kifejtett sor törölve.',
     transactions_delete_row_error: 'A sor törlése sikertelen.',
-    transactions_purge_expansion: 'Kifejtés törlése',
-    transactions_purge_expansion_title: 'Kifejtés törlése',
+    transactions_delete_any_row_title: 'Tranzakció törlése',
+    transactions_delete_any_row_body:
+      'Az alábbi tranzakció és a hozzá tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek. A csoport többi sora megmarad; ha más sorok ehhez kapcsolódtak, a kapcsolatuk megszűnik.',
+    transactions_delete_any_row_done: 'A tranzakció törölve.',
+    transactions_purge_expansion: 'Kifejtett sorok törlése (%{count})',
+    transactions_purge_expansion_hint:
+      'A csoportban %{count} kifejtett sor van; ezeket egyszerre is törölheted. Egyes sorokat a sor végi kuka ikonnal törölhetsz.',
+    transactions_purge_expansion_title: 'Kifejtett sorok törlése',
+    transactions_purge_expansion_rows_body:
+      'Az alábbi kifejtett sorok és a hozzájuk tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek. A csoport többi sora megmarad.',
+    transactions_purge_expansion_rows_done: 'A kifejtett sorok törölve.',
     transactions_purge_expansion_body:
-      'Az összes kifejtett és storno sor, valamint a hozzájuk tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek. Az eredeti tranzakció újra kifejthető lesz.',
+      'Az alábbi kifejtett és storno sorok, valamint a hozzájuk tartozó bizonylatok (feltöltött fájlokkal) véglegesen törlődnek. Az eredeti tranzakció újra kifejthető lesz.',
     transactions_purge_expansion_done:
       'A kifejtés törölve; az eredeti újra kifejthető.',
     transactions_purge_expansion_error: 'A kifejtés törlése sikertelen.',

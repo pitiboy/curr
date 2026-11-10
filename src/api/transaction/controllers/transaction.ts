@@ -13,28 +13,10 @@ import {
   type DiscardDraftStrapi,
 } from '../../../transaction-discard/discard-service';
 import {
-  deleteTransactionWithReceipts,
-  purgeExpansion,
-  TransactionDeleteError,
-  type TransactionDeleteStrapi,
-} from '../../../transaction-delete/delete-service';
-
-function documentIdParam(ctx): string {
-  const rawId = ctx.params?.id;
-  return typeof rawId === 'string' ? rawId.trim() : '';
-}
-
-function writeDeleteError(ctx, error: TransactionDeleteError) {
-  ctx.status = error.status;
-  ctx.body = {
-    data: null,
-    error: {
-      status: error.status,
-      name: error.name,
-      message: error.message,
-    },
-  };
-}
+  handlePurgeExpansion,
+  handleTransactionDelete,
+} from '../../../transaction-delete/delete-handlers';
+import { type TransactionDeleteStrapi } from '../../../transaction-delete/delete-service';
 
 export default factories.createCoreController(
   'api::transaction.transaction',
@@ -44,39 +26,17 @@ export default factories.createCoreController(
      * receipt cascade. API tokens (seeders, reset scripts) keep the core delete.
      */
     async delete(ctx) {
-      if (ctx.state?.auth?.strategy?.name !== 'users-permissions') {
-        return super.delete(ctx);
-      }
-      const documentId = documentIdParam(ctx);
-      try {
-        await deleteTransactionWithReceipts(
-          strapi as unknown as TransactionDeleteStrapi,
-          documentId,
-        );
-      } catch (error) {
-        if (error instanceof TransactionDeleteError) {
-          writeDeleteError(ctx, error);
-          return;
-        }
-        throw error;
-      }
-      ctx.status = 204;
+      return handleTransactionDelete(
+        strapi as unknown as TransactionDeleteStrapi,
+        ctx,
+        () => super.delete(ctx),
+      );
     },
     async purgeExpansion(ctx) {
-      const documentId = documentIdParam(ctx);
-      try {
-        const result = await purgeExpansion(
-          strapi as unknown as TransactionDeleteStrapi,
-          documentId,
-        );
-        ctx.body = { data: { documentId, ...result } };
-      } catch (error) {
-        if (error instanceof TransactionDeleteError) {
-          writeDeleteError(ctx, error);
-          return;
-        }
-        throw error;
-      }
+      await handlePurgeExpansion(
+        strapi as unknown as TransactionDeleteStrapi,
+        ctx,
+      );
     },
     async discardDraft(ctx) {
       const rawId = ctx.params?.id;

@@ -2,14 +2,15 @@
  * Controller-only transaction delete with receipt (+ upload) cascade.
  *
  * Rules on `converted_to_workflow`:
- * - `original` cannot be deleted (purge its expansion first);
+ * - `original` only once no `expanded` / `storno` child is left (else purge
+ *   its expansion first);
  * - `expanded` can be deleted;
  * - `storno` only when no sibling `expanded` row remains; afterwards the
  *   parent `original` is reset to `null` (expandable again);
  * - `null` (not expanded) can be deleted.
  *
- * `purgeExpansion` removes every expanded + storno child of an `original`
- * and resets the source in one database transaction.
+ * `purgeExpansion` removes every expanded + storno child of a parent in one
+ * database transaction and resets the parent when it is an `original`.
  */
 import {
   contentApiActor,
@@ -139,6 +140,20 @@ async function hasExpandedChild(
   return row != null;
 }
 
+/** Any `expanded` or `storno` child left under the parent. */
+async function hasExpansionChild(
+  strapi: TransactionDeleteStrapi,
+  parentDocumentId: string,
+): Promise<boolean> {
+  const row = await strapi.db.query(TRANSACTION_UID).findOne({
+    where: {
+      related_transaction: { documentId: parentDocumentId },
+      converted_to_workflow: { $in: [CONVERTED_EXPANDED, CONVERTED_STORNO] },
+    },
+  });
+  return row != null;
+}
+
 type ReceiptRef = { documentId: string; fileIds: number[] };
 
 /** All receipts (draft + published rows) linked to the transaction. */
@@ -247,7 +262,10 @@ export async function deleteTransactionWithReceipts(
   await assertController(strapi);
   const tx = await loadTransaction(strapi, id);
 
-  if (tx.kinds.has(CONVERTED_ORIGINAL)) {
+  if (
+    tx.kinds.has(CONVERTED_ORIGINAL) &&
+    (await hasExpansionChild(strapi, id))
+  ) {
     throw new TransactionDeleteError(
       'An expanded original transaction cannot be deleted; purge its expansion first',
       403,
@@ -280,23 +298,20 @@ export async function deleteTransactionWithReceipts(
 }
 
 /**
- * Deletes every `expanded` and `storno` child of an `original` transaction
- * (expanded first, storno last, receipts cascaded), then resets the source to
- * `converted_to_workflow: null`.
+ * Deletes every `expanded` and `storno` child of a parent transaction
+ * (expanded first, storno last, receipts cascaded). When the parent is an
+ * `original` it is reset to `converted_to_workflow: null` (expandable again),
+ * even if no child remains. Any other parent (e.g. a bulk-entry anchor whose
+ * group holds expanded rows) needs at least one such child, else 409.
  */
 export async function purgeExpansion(
   strapi: TransactionDeleteStrapi,
-  originalDocumentId: string,
+  parentDocumentId: string,
 ): Promise<TransactionDeleteResult> {
-  const id = requireDocumentId(originalDocumentId);
+  const id = requireDocumentId(parentDocumentId);
   await assertController(strapi);
   const tx = await loadTransaction(strapi, id);
-  if (!tx.kinds.has(CONVERTED_ORIGINAL)) {
-    throw new TransactionDeleteError(
-      'Transaction is not an expanded original',
-      409,
-    );
-  }
+  const isOriginal = tx.kinds.has(CONVERTED_ORIGINAL);
 
   const children = await strapi.db.query(TRANSACTION_UID).findMany({
     where: {
@@ -314,6 +329,12 @@ export async function purgeExpansion(
       bucket.push(childId);
     }
   }
+  if (!isOriginal && expanded.length === 0 && storno.length === 0) {
+    throw new TransactionDeleteError(
+      'Transaction has no expanded rows to purge',
+      409,
+    );
+  }
 
   const result: TransactionDeleteResult = { deleted: [], receipts: [] };
   const fileIds = await inTransaction(strapi, async () => {
@@ -321,8 +342,10 @@ export async function purgeExpansion(
     for (const childId of [...expanded, ...storno]) {
       files.push(...(await deleteRowWithReceipts(strapi, childId, result)));
     }
-    await resetOriginal(strapi, id);
-    result.resetOriginal = id;
+    if (isOriginal) {
+      await resetOriginal(strapi, id);
+      result.resetOriginal = id;
+    }
     return files;
   });
   await removeUploadFiles(strapi, fileIds);
