@@ -13,58 +13,13 @@ import { registerMembershipValidFromFormDefault } from './membership-valid-from-
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
 import { registerWakeRoutes } from './wake/register-wake';
+import { CONTENT_ROLE_AUTH_ACTIONS, contentRoleActions } from './content-roles';
 
 const enabled = { enabled: true, policy: '' };
 
 function allow(actions: string[]) {
   return Object.fromEntries(actions.map((action) => [action, enabled]));
 }
-
-/** Auth actions not returned by getActions() but required for Content users. */
-const CONTENT_ROLE_AUTH_ACTIONS = [
-  'plugin::users-permissions.auth.changePassword',
-] as const;
-
-/** Content API actions for dataentry and editor (no delete). */
-const CONTENT_ROLE_ACTIONS = [
-  'api::transaction.transaction.find',
-  'api::transaction.transaction.findOne',
-  'api::transaction.transaction.create',
-  'api::transaction.transaction.update',
-  'api::receipt.receipt.find',
-  'api::receipt.receipt.findOne',
-  'api::receipt.receipt.create',
-  'api::receipt.receipt.update',
-  'api::organization.organization.find',
-  'api::organization.organization.findOne',
-  'api::account.account.find',
-  'api::account.account.findOne',
-  'api::currency-type.currency-type.find',
-  'api::currency-type.currency-type.findOne',
-  'api::currency-rate.currency-rate.find',
-  'api::currency-rate.currency-rate.findOne',
-  'api::member.member.find',
-  'api::member.member.findOne',
-  'api::membership.membership.find',
-  'api::membership.membership.findOne',
-  'api::membership-type.membership-type.find',
-  'api::membership-type.membership-type.findOne',
-  'api::transaction-type.transaction-type.find',
-  'api::transaction-type.transaction-type.findOne',
-  'api::receipt-type.receipt-type.find',
-  'api::receipt-type.receipt-type.findOne',
-  'plugin::upload.content-api.upload',
-  'plugin::users-permissions.user.me',
-  'api::backoffice.backoffice.config',
-  'api::transaction-workflow.transaction-workflow.find',
-  'api::transaction-workflow.transaction-workflow.findOne',
-] as const;
-
-const EDITOR_ONLY_CONTENT_ACTIONS = [
-  'api::transaction.transaction.discardDraft',
-  'api::transaction-workflow.transaction-workflow.convert',
-  'api::transaction-workflow.transaction-workflow.convertPreview',
-] as const;
 
 const usersPermissionsRolePermissions = {
   'api::transaction': {
@@ -165,6 +120,12 @@ const usersPermissionsRoles = [
     name: 'editor',
     type: 'editor',
     description: 'Tranzakció és nyugta rögzítése, ellenőrzése és közzététele.',
+  },
+  {
+    name: 'controller',
+    type: 'controller',
+    description:
+      'Szerkesztői jogok, plusz tranzakció és nyugta törlése (kifejtés törlése).',
   },
 ];
 
@@ -298,11 +259,7 @@ async function ensureUsersPermissionsRoles(strapi: StrapiLike) {
       throw new Error(`Failed to ensure role "${roleDef.type}"`);
     }
 
-    const roleActions = [
-      ...CONTENT_ROLE_ACTIONS,
-      ...CONTENT_ROLE_AUTH_ACTIONS,
-      ...(roleDef.type === 'editor' ? EDITOR_ONLY_CONTENT_ACTIONS : []),
-    ];
+    const roleActions = contentRoleActions(roleDef.type);
 
     for (const action of roleActions) {
       if (

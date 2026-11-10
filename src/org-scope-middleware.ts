@@ -8,6 +8,7 @@ import {
 
 const TRANSACTION_UID = 'api::transaction.transaction';
 const RECEIPT_UID = 'api::receipt.receipt';
+const ORGANIZATION_UID = 'api::organization.organization';
 
 /**
  * Content types whose primary org dimension is `organization` (transactions for
@@ -17,7 +18,11 @@ const RECEIPT_UID = 'api::receipt.receipt';
  * `transaction-workflow` is not listed: it has no organization field; workflow
  * templates stay globally readable for convert.
  */
-export const ORG_SCOPED_DOCUMENT_UIDS = [TRANSACTION_UID, RECEIPT_UID] as const;
+export const ORG_SCOPED_DOCUMENT_UIDS = [
+  TRANSACTION_UID,
+  RECEIPT_UID,
+  ORGANIZATION_UID,
+] as const;
 
 export const ORG_SCOPED_DOCUMENT_UID_SET = new Set<string>(
   ORG_SCOPED_DOCUMENT_UIDS,
@@ -30,6 +35,9 @@ export const ORG_SCOPED_DOCUMENT_UID_SET = new Set<string>(
  * roles pass through unscoped unless we add them here.
  */
 export const ORG_SCOPE_CONTENT_ROLE_TYPES = new Set(['dataentry', 'editor']);
+
+/** Controller bypasses org membership checks on every Document Service action. */
+export const ORG_SCOPE_BYPASS_CONTENT_ROLE_TYPES = new Set(['controller']);
 
 /** No Document Service org filter for these actions (not passed to db query). */
 const ACTIONS_WITHOUT_FILTERS = new Set([
@@ -74,6 +82,18 @@ function mergeOrgFilter(
   return { $and: [existing, { organization: orgPredicate }] };
 }
 
+/** Organization rows are filtered by their own `documentId`, not a nested `organization` field. */
+function mergeOrganizationSelfFilter(
+  existing: Record<string, unknown> | undefined,
+  orgDocumentIds: string[],
+): Record<string, unknown> {
+  const pred = organizationDocumentIdFilter(orgDocumentIds);
+  if (!existing || Object.keys(existing).length === 0) {
+    return pred;
+  }
+  return { $and: [existing, pred] };
+}
+
 /** Receipt has no `organization`; scope through the linked transaction. */
 function mergeReceiptOrgFilter(
   existing: Record<string, unknown> | undefined,
@@ -92,6 +112,9 @@ export function mergeScopedFilter(
   existing: Record<string, unknown> | undefined,
   orgDocumentIds: string[],
 ): Record<string, unknown> {
+  if (uid === ORGANIZATION_UID) {
+    return mergeOrganizationSelfFilter(existing, orgDocumentIds);
+  }
   if (uid === RECEIPT_UID) {
     return mergeReceiptOrgFilter(existing, orgDocumentIds);
   }
@@ -245,6 +268,14 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
     const roleType = actor?.roleType ?? null;
 
     if (
+      strategyName === 'users-permissions' &&
+      roleType != null &&
+      ORG_SCOPE_BYPASS_CONTENT_ROLE_TYPES.has(roleType)
+    ) {
+      return next();
+    }
+
+    if (
       !shouldApplyOrgScope({
         uid: context.uid,
         action: context.action,
@@ -272,12 +303,18 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
       'count',
     ]);
 
+    const isOrganizationUid = context.uid === ORGANIZATION_UID;
+
     if (readOrCountActions.has(context.action)) {
       params.filters = mergeScopedFilter(
         context.uid,
         params.filters as Record<string, unknown> | undefined,
         orgDocumentIds,
       );
+    }
+
+    if (isOrganizationUid) {
+      return next();
     }
 
     if (context.action === 'create') {
