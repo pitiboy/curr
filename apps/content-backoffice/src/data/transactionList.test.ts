@@ -8,7 +8,9 @@ import {
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
+  parseTransactionAmount,
   pickMatchingWorkflow,
+  sumTransactionAmountsByCurrency,
   preferTransaction,
   transactionPopulate,
   workflowMatchesTransaction,
@@ -224,6 +226,25 @@ describe('assembleTransactionList', () => {
     );
     expect(total).toBe(0);
     expect(data).toEqual([]);
+  });
+});
+
+describe('sumTransactionAmountsByCurrency', () => {
+  it('groups by currency code on the current page slice', () => {
+    expect(
+      sumTransactionAmountsByCurrency([
+        { amount: '1000', currency_type: { code: 'HUF' } },
+        { amount: 500, currency_type: { code: 'HUF' } },
+        { amount: '2.5', currency_type: { code: 'EUR' } },
+      ]),
+    ).toEqual([
+      { currency: 'EUR', amount: 2.5 },
+      { currency: 'HUF', amount: 1500 },
+    ]);
+  });
+
+  it('parses comma decimals', () => {
+    expect(parseTransactionAmount('1,5')).toBe(1.5);
   });
 });
 

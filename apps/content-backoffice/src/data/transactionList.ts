@@ -75,7 +75,60 @@ export type StrapiTransaction = {
     document?: { url?: string | null } | { url?: string | null }[] | null;
     receipt_type?: { documentId?: string; name?: string | null } | null;
   }> | null;
+  related_transaction?: {
+    documentId?: string;
+    date?: string | null;
+    amount?: string | number | null;
+    description?: string | null;
+    converted_to_workflow?: ConvertedToWorkflow | boolean | null;
+    currency_type?: { code?: string | null; name?: string | null } | null;
+  } | null;
+  related_transactions?: Array<{
+    documentId?: string;
+    date?: string | null;
+    amount?: string | number | null;
+    description?: string | null;
+    converted_to_workflow?: ConvertedToWorkflow | boolean | null;
+    currency_type?: { code?: string | null; name?: string | null } | null;
+  }> | null;
 };
+
+export function parseTransactionAmount(
+  value: string | number | null | undefined,
+): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  const n = Number(
+    String(value ?? '')
+      .replace(',', '.')
+      .trim(),
+  );
+  return Number.isFinite(n) ? n : 0;
+}
+
+function currencyCodeFromRow(
+  currency: StrapiTransaction['currency_type'],
+): string {
+  if (!currency || typeof currency !== 'object') return '—';
+  const code = currency.code?.trim();
+  if (code) return code;
+  const name = currency.name?.trim();
+  return name || '—';
+}
+
+/** Sum amounts on the current list page, grouped by currency code. */
+export function sumTransactionAmountsByCurrency(
+  rows: ReadonlyArray<Pick<StrapiTransaction, 'amount' | 'currency_type'>>,
+): { currency: string; amount: number }[] {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    const amount = parseTransactionAmount(row.amount);
+    const code = currencyCodeFromRow(row.currency_type);
+    totals.set(code, (totals.get(code) ?? 0) + amount);
+  }
+  return [...totals.entries()]
+    .map(([currency, amount]) => ({ currency, amount }))
+    .sort((a, b) => a.currency.localeCompare(b.currency));
+}
 
 /** Vendor of the first receipt, or an empty string when there is none. */
 export function firstReceiptVendor(receipts: unknown): string {
@@ -96,10 +149,28 @@ export const transactionPopulate = {
   debit_account: true,
   credit_account: true,
   related_transaction: {
-    fields: ['documentId', 'date', 'description'],
+    fields: [
+      'documentId',
+      'date',
+      'amount',
+      'description',
+      'converted_to_workflow',
+    ],
+    populate: {
+      currency_type: { fields: ['code', 'name'] },
+    },
   },
   related_transactions: {
-    fields: ['documentId', 'date', 'amount'],
+    fields: [
+      'documentId',
+      'date',
+      'amount',
+      'description',
+      'converted_to_workflow',
+    ],
+    populate: {
+      currency_type: { fields: ['code', 'name'] },
+    },
   },
   currency_type: {
     populate: {
