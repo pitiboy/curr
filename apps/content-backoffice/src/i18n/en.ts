@@ -407,9 +407,10 @@ export const enMessages = mergeTranslations(englishMessages, {
       amount_from: 'Amount from',
       amount_to: 'Amount to',
       panel_title: 'Filters',
+      date_range: 'Period',
       add: 'Add filter',
       remove: 'Remove',
-      custom_date: 'Custom date range',
+      custom_date: 'Custom',
       report_drilldown: 'Report drill-down filters',
     },
     converted: {

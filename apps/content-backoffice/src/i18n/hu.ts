@@ -413,9 +413,10 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       amount_from: 'Összegtől',
       amount_to: 'Összegig',
       panel_title: 'Szűrők',
+      date_range: 'Időszak',
       add: 'Szűrő hozzáadása',
       remove: 'Eltávolítás',
-      custom_date: 'Egyedi dátumtartomány',
+      custom_date: 'Egyedi',
       report_drilldown: 'Riport-lefúrás szűrői',
     },
     converted: {

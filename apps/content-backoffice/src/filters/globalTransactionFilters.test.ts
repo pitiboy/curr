@@ -16,6 +16,7 @@ import {
   optionalFilterHasValue,
   REVIEW_CONVERTED_FILTER,
   resetGlobalFilters,
+  enterCustomDatePreset,
   selectDatePreset,
   setCustomDate,
   stableFilterKey,
@@ -191,6 +192,16 @@ describe('date UX', () => {
     expect(next.datePreset).toBe('last7');
     expect(next.date_gte).toBeUndefined();
     expect(next.date_lte).toBeUndefined();
+  });
+
+  it('enterCustomDatePreset seeds bounds from the active preset', () => {
+    const next = enterCustomDatePreset(resetGlobalFilters(), NOW);
+    expect(next).toMatchObject({
+      datePreset: 'custom',
+      date_gte: '2026-11-01',
+      date_lte: '2026-11-10',
+    });
+    expect(enterCustomDatePreset(next, NOW)).toBe(next);
   });
 
   it('custom date edit switches to custom, seeded from the active preset', () => {

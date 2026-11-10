@@ -11,12 +11,9 @@ import {
   ListItemText,
   Menu,
   MenuItem,
-  OutlinedInput,
   Select,
   Stack,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
   type SelectChangeEvent,
@@ -34,17 +31,16 @@ import {
   type ConvertedFilterValue,
 } from '../data/transactionList';
 import { ReportTransactionStatusFilterControl } from '../pages/reports/components/ReportTransactionStatusFilter';
-import {
-  REPORT_RANGE_PRESETS,
-  type DateRangePreset,
-} from '../pages/reports/shared/reportDateRange';
+import { REPORT_RANGE_PRESETS } from '../pages/reports/shared/reportDateRange';
 import {
   clearOptionalFilter,
+  enterCustomDatePreset,
   GLOBAL_OPTIONAL_FILTER_KEYS,
   optionalFilterHasValue,
   resetGlobalFilters,
   selectDatePreset,
   setCustomDate,
+  type GlobalDatePreset,
   type GlobalOptionalFilterKey,
   type GlobalTransactionFilters as GlobalFilterState,
 } from './globalTransactionFilters';
@@ -52,8 +48,15 @@ import { useGlobalTransactionFilters } from './globalTransactionFiltersAtom';
 
 const TEXT_COMMIT_DELAY_MS = 400;
 
-const OPTIONAL_FILTER_LABEL: Record<GlobalOptionalFilterKey, string> = {
-  date: 'app.filters.custom_date',
+/** Always-on date range owns `custom`; keep it out of „Szűrő hozzáadása”. */
+const ADDABLE_OPTIONAL_FILTER_KEYS = GLOBAL_OPTIONAL_FILTER_KEYS.filter(
+  (key): key is Exclude<GlobalOptionalFilterKey, 'date'> => key !== 'date',
+);
+
+const OPTIONAL_FILTER_LABEL: Record<
+  Exclude<GlobalOptionalFilterKey, 'date'>,
+  string
+> = {
   createdAt: 'resources.transactions.fields.createdAt',
   amount: 'resources.transactions.fields.amount',
   organization: 'resources.transactions.fields.organization',
@@ -63,23 +66,31 @@ const OPTIONAL_FILTER_LABEL: Record<GlobalOptionalFilterKey, string> = {
   vendor: 'resources.transactions.fields.vendor',
 };
 
+const filterControlSx = {
+  maxWidth: '100%',
+  minWidth: 0,
+  width: '100%',
+} as const;
+
 /** Sidebar panel: global transaction filters for the list and the reports. */
 export function GlobalTransactionFiltersPanel() {
   const translate = useTranslate();
   const [state, setState] = useGlobalTransactionFilters();
-  const [added, setAdded] = useState<GlobalOptionalFilterKey[]>([]);
+  const [added, setAdded] = useState<
+    Array<Exclude<GlobalOptionalFilterKey, 'date'>>
+  >([]);
 
-  const visible = GLOBAL_OPTIONAL_FILTER_KEYS.filter(
+  const visible = ADDABLE_OPTIONAL_FILTER_KEYS.filter(
     (key) => added.includes(key) || optionalFilterHasValue(state, key),
   );
-  const addable = GLOBAL_OPTIONAL_FILTER_KEYS.filter(
+  const addable = ADDABLE_OPTIONAL_FILTER_KEYS.filter(
     (key) => !visible.includes(key),
   );
 
   const update = (patch: Partial<GlobalFilterState>) =>
     setState((prev) => ({ ...prev, ...patch }));
 
-  const removeOptional = (key: GlobalOptionalFilterKey) => {
+  const removeOptional = (key: Exclude<GlobalOptionalFilterKey, 'date'>) => {
     setAdded((prev) => prev.filter((item) => item !== key));
     setState((prev) => clearOptionalFilter(prev, key));
   };
@@ -89,36 +100,51 @@ export function GlobalTransactionFiltersPanel() {
       aria-label={translate('app.filters.panel_title')}
       component="section"
       spacing={1.5}
-      sx={{ px: 1.5, py: 1.5 }}
+      sx={{
+        boxSizing: 'border-box',
+        maxWidth: '100%',
+        minWidth: 0,
+        px: 1.5,
+        py: 1.5,
+        width: '100%',
+        '& .MuiFormControl-root': filterControlSx,
+        '& .MuiAutocomplete-root': filterControlSx,
+      }}
     >
       <Typography color="text.secondary" variant="overline">
         {translate('app.filters.panel_title')}
       </Typography>
 
-      <ToggleButtonGroup
-        aria-label={translate('resources.transactions.fields.date')}
-        color="primary"
-        exclusive
-        onChange={(_e, value: DateRangePreset | null) => {
-          if (value) setState((prev) => selectDatePreset(prev, value));
+      <DateRangeSelect
+        onChange={(preset) => {
+          if (preset === 'custom') {
+            setState((prev) => enterCustomDatePreset(prev));
+            return;
+          }
+          setState((prev) => selectDatePreset(prev, preset));
         }}
-        size="small"
-        sx={{
-          flexWrap: 'wrap',
-          '& .MuiToggleButton-root': { flexGrow: 1, px: 1, py: 0.25 },
-        }}
-        value={state.datePreset === 'custom' ? null : state.datePreset}
-      >
-        {REPORT_RANGE_PRESETS.map((preset) => (
-          <ToggleButton key={preset} value={preset}>
-            {translate(`app.reports.range.${preset}`)}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+        value={state.datePreset}
+      />
+
+      {state.datePreset === 'custom' ? (
+        <RangeInputs
+          fromLabel={translate('app.filters.date_from')}
+          fromValue={state.date_gte}
+          onFrom={(value) =>
+            setState((prev) => setCustomDate(prev, 'date_gte', value))
+          }
+          onTo={(value) =>
+            setState((prev) => setCustomDate(prev, 'date_lte', value))
+          }
+          toLabel={translate('app.filters.date_to')}
+          toValue={state.date_lte}
+          type="date"
+        />
+      ) : null}
 
       <ReportTransactionStatusFilterControl
         onChange={(status) => update({ status })}
-        sx={{ minWidth: 0 }}
+        sx={filterControlSx}
         value={state.status}
       />
 
@@ -152,12 +178,17 @@ export function GlobalTransactionFiltersPanel() {
             })
           }
           size="small"
-          sx={{ alignSelf: 'flex-start' }}
+          sx={{ alignSelf: 'flex-start', maxWidth: '100%' }}
           variant="outlined"
         />
       ) : null}
 
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{ flexWrap: 'wrap', width: '100%' }}
+      >
         <AddFilterButton
           keys={addable}
           onAdd={(key) => setAdded((prev) => [...prev, key])}
@@ -168,12 +199,48 @@ export function GlobalTransactionFiltersPanel() {
             setState(resetGlobalFilters());
           }}
           size="small"
+          sx={{ flex: '1 1 auto', minWidth: 0 }}
           variant="outlined"
         >
           {translate('app.filters.clear')}
         </Button>
       </Stack>
     </Stack>
+  );
+}
+
+function DateRangeSelect({
+  value,
+  onChange,
+}: {
+  value: GlobalDatePreset;
+  onChange: (value: GlobalDatePreset) => void;
+}) {
+  const translate = useTranslate();
+  const label = translate('app.filters.date_range');
+  return (
+    <FormControl fullWidth size="small" sx={filterControlSx}>
+      <InputLabel id="global-date-range-filter-label">{label}</InputLabel>
+      <Select<GlobalDatePreset>
+        label={label}
+        labelId="global-date-range-filter-label"
+        onChange={(event: SelectChangeEvent<GlobalDatePreset>) => {
+          onChange(event.target.value as GlobalDatePreset);
+        }}
+        sx={filterControlSx}
+        value={value}
+        variant="filled"
+      >
+        {REPORT_RANGE_PRESETS.map((preset) => (
+          <MenuItem key={preset} value={preset}>
+            {translate(`app.reports.range.${preset}`)}
+          </MenuItem>
+        ))}
+        <MenuItem value="custom">
+          {translate('app.filters.custom_date')}
+        </MenuItem>
+      </Select>
+    </FormControl>
   );
 }
 
@@ -188,11 +255,14 @@ function ConvertedSelect({
   const label = translate(
     'resources.transactions.fields.converted_to_workflow',
   );
+  const summary = value
+    .map((item) => translate(`app.converted.${item}`))
+    .join(', ');
   return (
-    <FormControl size="small">
+    <FormControl fullWidth size="small" sx={filterControlSx}>
       <InputLabel id="global-converted-filter-label">{label}</InputLabel>
       <Select<ConvertedFilterValue[]>
-        input={<OutlinedInput label={label} />}
+        label={label}
         labelId="global-converted-filter-label"
         multiple
         onChange={(event: SelectChangeEvent<ConvertedFilterValue[]>) => {
@@ -203,10 +273,17 @@ function ConvertedSelect({
               : raw) as ConvertedFilterValue[],
           );
         }}
-        renderValue={(selected) =>
-          selected.map((item) => translate(`app.converted.${item}`)).join(', ')
-        }
+        renderValue={() => summary}
+        sx={{
+          ...filterControlSx,
+          '& .MuiSelect-select': {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          },
+        }}
         value={value}
+        variant="filled"
       >
         {CONVERTED_TO_WORKFLOW_CHOICES.map((choice) => (
           <MenuItem key={choice} value={choice}>
@@ -222,8 +299,8 @@ function AddFilterButton({
   keys,
   onAdd,
 }: {
-  keys: readonly GlobalOptionalFilterKey[];
-  onAdd: (key: GlobalOptionalFilterKey) => void;
+  keys: readonly Exclude<GlobalOptionalFilterKey, 'date'>[];
+  onAdd: (key: Exclude<GlobalOptionalFilterKey, 'date'>) => void;
 }) {
   const translate = useTranslate();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -291,7 +368,7 @@ function OptionalFilterInput({
   state,
   setState,
 }: {
-  filterKey: GlobalOptionalFilterKey;
+  filterKey: Exclude<GlobalOptionalFilterKey, 'date'>;
   state: GlobalFilterState;
   setState: SetState;
 }) {
@@ -308,22 +385,6 @@ function OptionalFilterInput({
     });
 
   switch (filterKey) {
-    case 'date':
-      return (
-        <RangeInputs
-          fromLabel={translate('app.filters.date_from')}
-          fromValue={state.datePreset === 'custom' ? state.date_gte : undefined}
-          onFrom={(value) =>
-            setState((prev) => setCustomDate(prev, 'date_gte', value))
-          }
-          onTo={(value) =>
-            setState((prev) => setCustomDate(prev, 'date_lte', value))
-          }
-          toLabel={translate('app.filters.date_to')}
-          toValue={state.datePreset === 'custom' ? state.date_lte : undefined}
-          type="date"
-        />
-      );
     case 'createdAt':
       return (
         <RangeInputs

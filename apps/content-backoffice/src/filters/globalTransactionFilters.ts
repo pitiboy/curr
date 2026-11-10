@@ -148,6 +148,20 @@ export function selectDatePreset(
   return next;
 }
 
+/** Switch to custom range, seeding bounds from the active preset when needed. */
+export function enterCustomDatePreset(
+  state: GlobalTransactionFilters,
+  now = new Date(),
+): GlobalTransactionFilters {
+  if (state.datePreset === 'custom') return state;
+  const bounds = boundsForPreset(state.datePreset, now);
+  const next: GlobalTransactionFilters = { ...state, datePreset: 'custom' };
+  if (bounds.from) next.date_gte = bounds.from;
+  else delete next.date_gte;
+  next.date_lte = bounds.to;
+  return next;
+}
+
 /** Custom date bound edit: switches to `custom`, seeding from the active preset. */
 export function setCustomDate(
   state: GlobalTransactionFilters,

@@ -17,15 +17,32 @@ export function FrameSidebar(props: SidebarProps) {
           backgroundColor: 'background.paper',
           borderRight: '1px solid',
           borderColor: 'divider',
+          overflow: 'hidden',
+        },
+        // Keep nav pinned: overflow must stay hidden so only the filter pane scrolls.
+        '& .RaSidebar-fixed': {
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          overflow: 'hidden',
         },
       }}
     >
       <SidebarMobileHeader />
-      {children}
+      <Box sx={{ flexShrink: 0, minWidth: 0, width: '100%' }}>{children}</Box>
       {open ? (
         <>
-          <Divider />
-          <Box sx={{ overflowY: 'auto' }}>
+          <Divider sx={{ flexShrink: 0 }} />
+          <Box
+            sx={{
+              flex: '1 1 auto',
+              minHeight: 0,
+              minWidth: 0,
+              overflowX: 'hidden',
+              overflowY: 'auto',
+              width: '100%',
+            }}
+          >
             <GlobalTransactionFiltersPanel />
           </Box>
         </>

@@ -34,7 +34,11 @@ export function ReportTransactionStatusFilterControl({
   };
 
   return (
-    <FormControl size="small" sx={sx ?? { minWidth: 200 }}>
+    <FormControl
+      fullWidth
+      size="small"
+      sx={sx ?? { minWidth: 200, maxWidth: '100%' }}
+    >
       <InputLabel id="report-transaction-status-filter-label">
         {translate('app.reports.transaction_status.label')}
       </InputLabel>
@@ -42,7 +46,16 @@ export function ReportTransactionStatusFilterControl({
         label={translate('app.reports.transaction_status.label')}
         labelId="report-transaction-status-filter-label"
         onChange={handleChange}
+        sx={{
+          maxWidth: '100%',
+          '& .MuiSelect-select': {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          },
+        }}
         value={value}
+        variant="filled"
       >
         {OPTIONS.map((option) => (
           <MenuItem key={option} value={option}>
