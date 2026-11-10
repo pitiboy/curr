@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { Link, useGetOne, useTranslate, type RaRecord } from 'react-admin';
 
+import { AccountValue } from './accountField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionDateValue } from './dateField';
 import {
@@ -59,7 +60,7 @@ export function RelatedTransactionsSection({
 
   return (
     <Box sx={{ maxWidth: '100%', minWidth: 0, overflowX: 'auto' }}>
-      <Table padding="none" size="small" sx={{ minWidth: 320 }}>
+      <Table padding="none" size="small" sx={{ minWidth: 540 }}>
         <TableBody>
           {items.map((item) => (
             <RelatedTransactionRow
@@ -103,6 +104,14 @@ function RelatedTransactionRow({
           : {}),
       }}
     >
+      <TableCell
+        align="right"
+        sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}
+      >
+        <Typography component="span" variant="body2">
+          {item.entryId ?? '—'}
+        </Typography>
+      </TableCell>
       <TableCell sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}>
         <TransactionDateValue locale={locale} value={item.date} />
       </TableCell>
@@ -126,6 +135,12 @@ function RelatedTransactionRow({
             {translate('app.transactions_related_current')}
           </Typography>
         ) : null}
+      </TableCell>
+      <TableCell sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+        <AccountValue kind="credit" value={item.credit_account} />
+      </TableCell>
+      <TableCell sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+        <AccountValue kind="debit" value={item.debit_account} />
       </TableCell>
       <TableCell align="right" sx={{ pl: 1, verticalAlign: 'top' }}>
         {isCurrent ? (

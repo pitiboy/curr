@@ -150,6 +150,7 @@ export const transactionPopulate = {
   credit_account: true,
   related_transaction: {
     fields: [
+      'id',
       'documentId',
       'date',
       'amount',
@@ -158,10 +159,13 @@ export const transactionPopulate = {
     ],
     populate: {
       currency_type: { fields: ['code', 'name'] },
+      debit_account: { fields: ['code', 'name'] },
+      credit_account: { fields: ['code', 'name'] },
     },
   },
   related_transactions: {
     fields: [
+      'id',
       'documentId',
       'date',
       'amount',
@@ -170,6 +174,8 @@ export const transactionPopulate = {
     ],
     populate: {
       currency_type: { fields: ['code', 'name'] },
+      debit_account: { fields: ['code', 'name'] },
+      credit_account: { fields: ['code', 'name'] },
     },
   },
   currency_type: {

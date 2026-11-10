@@ -9,17 +9,17 @@ import {
 } from './relatedTransactions';
 
 describe('relatedItemsFromRecord', () => {
-  it('lists populated children when the record is the parent', () => {
+  it('lists populated children sorted by entry id ascending', () => {
     const record = {
       id: 'anchor',
       related_transactions: [
-        { documentId: 'b', date: '2026-02-02', amount: 10 },
-        { documentId: 'a', date: '2026-02-01', amount: 5 },
+        { id: 20, documentId: 'b', date: '2026-02-02', amount: 10 },
+        { id: 10, documentId: 'a', date: '2026-03-01', amount: 5 },
       ],
     };
     expect(relatedItemsFromRecord(record)).toEqual([
-      { documentId: 'a', date: '2026-02-01', amount: 5 },
-      { documentId: 'b', date: '2026-02-02', amount: 10 },
+      { documentId: 'a', entryId: 10, date: '2026-03-01', amount: 5 },
+      { documentId: 'b', entryId: 20, date: '2026-02-02', amount: 10 },
     ]);
   });
 
@@ -29,18 +29,18 @@ describe('relatedItemsFromRecord', () => {
       related_transaction: { documentId: 'anchor', date: '2026-02-01' },
     };
     const parent = {
-      id: 'anchor',
+      id: 100,
       documentId: 'anchor',
       date: '2026-02-01',
       related_transactions: [
-        { documentId: 'child-a', date: '2026-02-02', amount: 1 },
-        { documentId: 'child-b', date: '2026-02-03', amount: 2 },
+        { id: 300, documentId: 'child-b', date: '2026-02-03', amount: 2 },
+        { id: 200, documentId: 'child-a', date: '2026-02-02', amount: 1 },
       ],
     };
     expect(relatedItemsFromRecord(record, parent)).toEqual([
-      { documentId: 'anchor', date: '2026-02-01' },
-      { documentId: 'child-a', date: '2026-02-02', amount: 1 },
-      { documentId: 'child-b', date: '2026-02-03', amount: 2 },
+      { documentId: 'anchor', entryId: 100, date: '2026-02-01' },
+      { documentId: 'child-a', entryId: 200, date: '2026-02-02', amount: 1 },
+      { documentId: 'child-b', entryId: 300, date: '2026-02-03', amount: 2 },
     ]);
   });
 
@@ -48,6 +48,7 @@ describe('relatedItemsFromRecord', () => {
     const record = {
       id: 'child',
       related_transaction: {
+        id: 55,
         documentId: 'anchor',
         date: '2026-02-01',
         amount: 100,
@@ -56,6 +57,7 @@ describe('relatedItemsFromRecord', () => {
     expect(relatedItemsFromRecord(record)).toEqual([
       {
         documentId: 'anchor',
+        entryId: 55,
         date: '2026-02-01',
         amount: 100,
       },

@@ -9,11 +9,21 @@ import {
 
 export type RelatedTransactionItem = {
   documentId: string;
+  /** Strapi numeric primary key (list „ID” column). */
+  entryId?: number;
   date?: string | null;
   amount?: string | number | null;
   description?: string | null;
   converted_to_workflow?: ConvertedToWorkflow | boolean | null;
   currency_type?: { code?: string | null; name?: string | null } | null;
+  debit_account?: {
+    code?: string | null;
+    name?: string | null;
+  } | null;
+  credit_account?: {
+    code?: string | null;
+    name?: string | null;
+  } | null;
 };
 
 export function parseRelatedTransactionItem(
@@ -22,14 +32,18 @@ export function parseRelatedTransactionItem(
   if (!value || typeof value !== 'object') return null;
   const documentId = (value as { documentId?: string }).documentId;
   if (!documentId) return null;
+  const rawId = (value as { id?: unknown }).id;
   const row = value as RelatedTransactionItem;
   return {
     documentId,
+    entryId: typeof rawId === 'number' ? rawId : undefined,
     date: row.date,
     amount: row.amount,
     description: row.description,
     converted_to_workflow: row.converted_to_workflow,
     currency_type: row.currency_type,
+    debit_account: row.debit_account,
+    credit_account: row.credit_account,
   };
 }
 
@@ -105,8 +119,11 @@ function sortRelatedItems(
   items: RelatedTransactionItem[],
 ): RelatedTransactionItem[] {
   return [...items].sort((a, b) => {
-    const byDate = (a.date ?? '').localeCompare(b.date ?? '');
-    if (byDate !== 0) return byDate;
+    const aId = a.entryId;
+    const bId = b.entryId;
+    if (aId != null && bId != null && aId !== bId) return aId - bId;
+    if (aId != null && bId == null) return -1;
+    if (aId == null && bId != null) return 1;
     return a.documentId.localeCompare(b.documentId);
   });
 }
