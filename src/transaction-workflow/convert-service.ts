@@ -2,9 +2,10 @@
  * Convert API Strapi layer: load templates/transactions, expand, then create/publish/delete.
  * keep_original: mark source original, then storno + step rows (related_transaction -> original);
  * converted_to_workflow: original on source, storno on storno, expanded on steps.
- * Generated step rows follow steps_published. Source and storno publish only when
- * they meet the seven publish-required fields (incomplete draft v1 may omit
- * organization / accounts); otherwise they stay draft while steps may still publish.
+ * Generated step rows follow steps_published when keep_original is false, or when
+ * the source is publishable. With keep_original, step rows link to the source;
+ * Strapi drops that relation on publish if the source is still draft-only, so
+ * steps stay draft until the source (and storno) can publish too.
  * Partial keep_original failure rolls back created rows and clears the source mark.
  * keep_original false: delete original, step chain; receipt only on copy_receipt steps.
  * apply_currency_rate steps: rates and the member ratio resolve before any write
@@ -485,8 +486,16 @@ export async function convertTransactions(
       const stornoShape = buildStornoRowShape(transaction);
       // Mirror the source gate: incomplete draft must not force-publish storno
       // (publish-guard 400 would otherwise leave original+storno orphans).
+      const sourceDraftForPublish = await loadDraftForPublishCheck(
+        strapi,
+        transaction.documentId,
+      );
       const publishStorno = shouldPublishConvertedSource(
         stornoPublishFields(stornoShape),
+        published,
+      );
+      const publishSteps = shouldPublishConvertedSource(
+        sourceDraftForPublish,
         published,
       );
       const rollbackIds: string[] = [];
@@ -523,10 +532,10 @@ export async function convertTransactions(
               row,
               transaction,
               transaction.documentId,
-              published,
+              publishSteps,
               copyReceipts,
             ),
-            published,
+            publishSteps,
           );
           rollbackIds.push(documentId);
           createdDocumentIds.push(documentId);

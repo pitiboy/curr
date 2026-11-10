@@ -3,9 +3,14 @@ import { describe, expect, it } from 'vitest';
 import {
   assembleTransactionList,
   buildTransactionFilters,
+  PROJECT_BALANCE_LEG_FILTER_KEY,
+  CREDIT_ACCOUNT_IN_FILTER_KEY,
+  MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
+  parseTransactionAmount,
   pickMatchingWorkflow,
+  sumTransactionAmountsByCurrency,
   preferTransaction,
   transactionPopulate,
   workflowMatchesTransaction,
@@ -167,6 +172,52 @@ describe('assembleTransactionList', () => {
     expect(data.map((row) => row.id)).toEqual(['empty', 'a', 'z']);
   });
 
+  it('filters membership-share external payments on the client', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'ext',
+        date: '2026-01-01',
+        debit_account: { code: '1000' },
+        credit_account: { code: '1101', documentId: 'acc-a' },
+      },
+      {
+        documentId: 'int',
+        date: '2026-01-02',
+        debit_account: { code: '1001', documentId: 'acc-b' },
+        credit_account: { code: '1101', documentId: 'acc-a' },
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      filter: { [MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY]: true },
+    });
+    expect(data.map((row) => row.id)).toEqual(['ext']);
+  });
+
+  it('filters by project balance leg using account classification', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'rev',
+        date: '2026-01-01',
+        debit_account: { code: '1200' },
+        credit_account: { code: '4000' },
+      },
+      {
+        documentId: 'cost',
+        date: '2026-01-02',
+        debit_account: { code: '5200' },
+        credit_account: { code: '1100' },
+      },
+    ];
+    const { data: revenueOnly } = assembleTransactionList([], rows, {
+      filter: { [PROJECT_BALANCE_LEG_FILTER_KEY]: 'revenue' },
+    });
+    expect(revenueOnly.map((row) => row.id)).toEqual(['rev']);
+    const { data: costOnly } = assembleTransactionList([], rows, {
+      filter: { [PROJECT_BALANCE_LEG_FILTER_KEY]: 'cost' },
+    });
+    expect(costOnly.map((row) => row.id)).toEqual(['cost']);
+  });
+
   it('ignores rows without a documentId', () => {
     const { data, total } = assembleTransactionList(
       [{ id: 9, description: 'no document' }],
@@ -175,6 +226,25 @@ describe('assembleTransactionList', () => {
     );
     expect(total).toBe(0);
     expect(data).toEqual([]);
+  });
+});
+
+describe('sumTransactionAmountsByCurrency', () => {
+  it('groups by currency code on the current page slice', () => {
+    expect(
+      sumTransactionAmountsByCurrency([
+        { amount: '1000', currency_type: { code: 'HUF' } },
+        { amount: 500, currency_type: { code: 'HUF' } },
+        { amount: '2.5', currency_type: { code: 'EUR' } },
+      ]),
+    ).toEqual([
+      { currency: 'EUR', amount: 2.5 },
+      { currency: 'HUF', amount: 1500 },
+    ]);
+  });
+
+  it('parses comma decimals', () => {
+    expect(parseTransactionAmount('1,5')).toBe(1.5);
   });
 });
 
@@ -199,6 +269,7 @@ describe('buildTransactionFilters', () => {
         amount_gte: 1000,
         amount_lte: 1500,
         organization: 'org-1',
+        currency_type: 'HUF',
         debit_account: 'acc-debit',
         credit_account: 'acc-credit',
         description: '  kávé  ',
@@ -210,6 +281,7 @@ describe('buildTransactionFilters', () => {
         date: { $gte: '2026-01-01', $lte: '2026-01-31' },
         amount: { $gte: 1000, $lte: 1500 },
         organization: { documentId: { $eq: 'org-1' } },
+        currency_type: { code: { $eq: 'HUF' } },
         debit_account: { documentId: { $eq: 'acc-debit' } },
         credit_account: { documentId: { $eq: 'acc-credit' } },
         description: { $containsi: 'kávé' },
@@ -261,6 +333,31 @@ describe('buildTransactionFilters', () => {
           { converted_to_workflow: { $null: true } },
           { converted_to_workflow: { $eq: 'expanded' } },
         ],
+      },
+    });
+  });
+
+  it('maps credit_account_in and credit_account_code for membership drill-down', () => {
+    expect(
+      buildTransactionFilters({
+        [CREDIT_ACCOUNT_IN_FILTER_KEY]: ['acc-a', 'acc-b'],
+        credit_account_code: '1101',
+      }),
+    ).toEqual({
+      status: undefined,
+      strapiFilters: {
+        credit_account: { documentId: { $in: ['acc-a', 'acc-b'] } },
+        $or: [
+          { converted_to_workflow: { $null: true } },
+          { converted_to_workflow: { $eq: 'expanded' } },
+        ],
+      },
+    });
+    expect(
+      buildTransactionFilters({ credit_account_code: '1101' }),
+    ).toMatchObject({
+      strapiFilters: {
+        credit_account: { code: { $eq: '1101' } },
       },
     });
   });

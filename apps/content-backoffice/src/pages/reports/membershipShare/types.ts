@@ -45,6 +45,10 @@ export type MembershipShareKpis = {
 export type MembershipMemberRow = {
   memberId: string;
   memberName: string;
+  /** Tagi részjegy (1101) számla documentId — drill-down. */
+  shareAccountId?: string | null;
+  /** Tagi zseb (1001) számla documentId — drill-down. */
+  pocketAccountId?: string | null;
   /** Amounts credited to this member's 1101, by currency. */
   shareByCurrency: CurrencyAmount[];
   /** Amounts credited to this member's 1001, by currency. */

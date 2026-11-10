@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  boundsForPeriodBucket,
   boundsForPreset,
   chartBucketGranularity,
   endDateOfPeriod,
   periodKeyForPreset,
   periodsInRange,
+  startDateOfPeriod,
   toIsoDate,
 } from './reportDateRange';
 
@@ -63,6 +65,20 @@ describe('endDateOfPeriod', () => {
   it('returns last day of month for monthly buckets', () => {
     expect(endDateOfPeriod('2026-02', 'all')).toBe('2026-02-28');
     expect(endDateOfPeriod('2026-11-09', 'thisMonth')).toBe('2026-11-09');
+  });
+});
+
+describe('startDateOfPeriod and boundsForPeriodBucket', () => {
+  it('returns month start and full bucket bounds', () => {
+    expect(startDateOfPeriod('2026-02', 'all')).toBe('2026-02-01');
+    expect(boundsForPeriodBucket('2026-02', 'all')).toEqual({
+      from: '2026-02-01',
+      to: '2026-02-28',
+    });
+    expect(boundsForPeriodBucket('2026-11-09', 'thisMonth')).toEqual({
+      from: '2026-11-09',
+      to: '2026-11-09',
+    });
   });
 });
 

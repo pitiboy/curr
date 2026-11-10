@@ -97,6 +97,19 @@ function addPeriodStep(periodKey: string, preset: DateRangePreset): string {
   return toIsoDate(d);
 }
 
+/** Inclusive first calendar day of a chart bucket. */
+export function startDateOfPeriod(
+  periodKey: string,
+  preset: DateRangePreset,
+): string {
+  if (chartBucketGranularity(preset) === 'month') {
+    const [y, m] = periodKey.split('-').map(Number);
+    const first = new Date(y!, (m ?? 1) - 1, 1);
+    return toIsoDate(first);
+  }
+  return periodKey.slice(0, 10);
+}
+
 /** Inclusive last calendar day of a chart bucket (for stock snapshots). */
 export function endDateOfPeriod(
   periodKey: string,
@@ -108,6 +121,17 @@ export function endDateOfPeriod(
     return toIsoDate(last);
   }
   return periodKey.slice(0, 10);
+}
+
+/** Inclusive date range for one chart X bucket (day or month). */
+export function boundsForPeriodBucket(
+  periodKey: string,
+  preset: DateRangePreset,
+): DateRangeBounds {
+  return {
+    from: startDateOfPeriod(periodKey, preset),
+    to: endDateOfPeriod(periodKey, preset),
+  };
 }
 
 /**

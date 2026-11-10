@@ -64,15 +64,22 @@ export function mergeReportTransactionsByDocumentId<
   return [...byId.values()];
 }
 
+export type FetchStrapiListOptions = {
+  /** Default {@link MAX_PAGES}. Use a higher cap (e.g. 500) for heavy report aggregates. */
+  maxPages?: number;
+};
+
 /** Paginated Strapi list (any collection path). */
 export async function fetchStrapiList<T>(
   httpClient: ContentHttpClient,
   path: string,
   queryBase: Record<string, unknown>,
+  options: FetchStrapiListOptions = {},
 ): Promise<T[]> {
   const rows: T[] = [];
   let page = 1;
   let pageCount = 1;
+  const maxPages = options.maxPages ?? MAX_PAGES;
   do {
     const query = encodeStrapiQuery({
       ...queryBase,
@@ -84,7 +91,7 @@ export async function fetchStrapiList<T>(
     rows.push(...(json.data ?? []));
     pageCount = json.meta?.pagination?.pageCount ?? 1;
     page += 1;
-  } while (page <= pageCount && page <= MAX_PAGES);
+  } while (page <= pageCount && page <= maxPages);
   return rows;
 }
 
@@ -96,24 +103,40 @@ export async function loadReportTransactions<T>(
   httpClient: ContentHttpClient,
   mode: ReportTransactionStatusFilter,
   queryBase: Record<string, unknown>,
+  options: FetchStrapiListOptions = {},
 ): Promise<T[]> {
   if (mode !== 'all') {
     const extra = transactionStatusQuery(mode);
-    return fetchStrapiList<T>(httpClient, '/api/transactions', {
-      ...queryBase,
-      ...extra,
-    });
+    return fetchStrapiList<T>(
+      httpClient,
+      '/api/transactions',
+      {
+        ...queryBase,
+        ...extra,
+      },
+      options,
+    );
   }
   const [draftRows, publishedRows] = await Promise.all([
-    fetchStrapiList<T>(httpClient, '/api/transactions', {
-      ...queryBase,
-      status: 'draft',
-      publicationFilter: 'never-published',
-    }),
-    fetchStrapiList<T>(httpClient, '/api/transactions', {
-      ...queryBase,
-      status: 'published',
-    }),
+    fetchStrapiList<T>(
+      httpClient,
+      '/api/transactions',
+      {
+        ...queryBase,
+        status: 'draft',
+        publicationFilter: 'never-published',
+      },
+      options,
+    ),
+    fetchStrapiList<T>(
+      httpClient,
+      '/api/transactions',
+      {
+        ...queryBase,
+        status: 'published',
+      },
+      options,
+    ),
   ]);
   return mergeReportTransactionsByDocumentId(draftRows, publishedRows);
 }

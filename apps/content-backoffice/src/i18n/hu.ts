@@ -58,7 +58,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
+    transactions_related_current: 'ez a sor',
     transactions_none: 'Nincs tranzakció.',
+    transactions_page_total: 'Összesen (látható sorok)',
     transactions_finalize: 'Véglegesít',
     description_clear_comments: 'Megjegyzések kitakarítása',
     transactions_finalized: 'A tranzakció véglegesítve.',
@@ -257,6 +259,47 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         'Nincs megjeleníthető tagi befizetés ebben az időszakban. Válassz másik tartományt vagy számlát.',
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
+      drilldown: {
+        hint: 'Kattintás: szűrt tranzakciólista',
+      },
+    },
+    project_balance: {
+      menu: 'Projektek egyenlege',
+      title: 'Projektek egyenlege',
+      subtitle:
+        'Projektenként termelés (bevétel jellegű beérkezés) és beruházás költség-, eszköz-, import- és ügylet-sorokból. Alapból csak közzétett tranzakciók — piszkozatok a „Tranzakciók” szűrőnél.',
+      project_filter: 'Projekt (összes)',
+      currency: 'Pénznem',
+      revenue: 'Termelés',
+      cost: 'Beruházás',
+      kpi: {
+        cumulative: 'Halmozott egyenleg · %{currency}',
+        period_revenue: 'Időszaki termelés · %{currency}',
+        period_cost: 'Időszaki beruházás · %{currency}',
+        period_net: 'Időszaki nettó · %{currency}',
+      },
+      by_project_title: 'Projektenként: termelés és beruházás (%{currency})',
+      history_title: 'Termelés és beruházás időben (%{currency})',
+      history_empty: 'Nincs időbeli adat ebben a pénznemben.',
+      table_title: 'Projekt táblázat',
+      col: {
+        project: 'Projekt',
+        period_revenue: 'Termelés (%{currency})',
+        period_cost: 'Beruházás (%{currency})',
+        period_net: 'Profit (%{currency})',
+        cumulative: 'Total (%{currency})',
+      },
+      empty:
+        'Nincs megjeleníthető projekt forgalom ebben az időszakban. Válassz másik tartományt vagy státuszt.',
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+      warn_truncated:
+        'A betöltött tranzakciók száma elérte a biztonsági limitet — régebbi sorok kimaradhatnak. Szűkítsd az időszakot, vagy később backend összesítés kell.',
+      warn_unclassified:
+        '%{count} könyvelt sor van projekten, de nem termelés/beruházás minta (pl. csak 1900↔1100 átvezetés). Ügylet kifejtés vagy számlapár ellenőrzés segíthet.',
+      drilldown: {
+        hint: 'Kattintás: szűrt tranzakciólista',
+      },
     },
     profile: 'Profil',
     profile_name: 'Név',
@@ -279,6 +322,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     feature_flags_empty: 'Nincs kapcsolható ügylet.',
     feature_flags_reset: 'Szerver szerinti lista',
     workflows: {
+      'project-balance': 'Projekt egyenleg kimutatás',
       'egg-production': 'Napi tojás rögzítés',
       'member-fee': 'Tagdíj',
       'membership-share': 'Részjegy kimutatás',
