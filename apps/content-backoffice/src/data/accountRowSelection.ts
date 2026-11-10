@@ -15,6 +15,7 @@ export const WORKFLOW_OPTION_PREFIX = 'workflow:' as const;
 export const TRANSACTION_WORKFLOW_PREFILL_ROLES = [
   'dataentry',
   'editor',
+  'controller',
 ] as const;
 
 export type TransactionWorkflowPrefillRole =

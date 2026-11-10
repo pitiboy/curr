@@ -16,6 +16,7 @@ import {
   type RaRecord,
 } from 'react-admin';
 
+import { isEditorLikeRole } from '../../auth/roles';
 import { receiptIsPresent } from '../../data/receiptDraft';
 import {
   CONVERTED_EXPANDED,
@@ -78,7 +79,7 @@ function TransactionShowBody() {
   if (record.status === 'draft' && isPending) return null;
   const locales = locale === 'en' ? 'en' : 'hu-HU';
   const canReview =
-    !isPending && permissions === 'editor' && record.status === 'draft';
+    !isPending && isEditorLikeRole(permissions) && record.status === 'draft';
 
   if (canReview) {
     return (

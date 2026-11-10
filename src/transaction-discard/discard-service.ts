@@ -1,9 +1,10 @@
 /**
- * Editor-only discard of a draft transaction and its draft receipts.
+ * Editor-like discard of a draft transaction and its draft receipts.
  * Does not grant generic Content API delete on transactions.
  */
 import {
   contentApiActor,
+  isEditorLikeRole,
   relationDocumentId,
   type PublishGuardStrapi,
 } from '../publish-guard';
@@ -42,14 +43,14 @@ function documentsApi(strapi: DiscardDraftStrapi, uid: string): DocumentsApi {
   return strapi.documents(uid) as unknown as DocumentsApi;
 }
 
-async function assertEditor(strapi: DiscardDraftStrapi): Promise<void> {
+async function assertEditorLike(strapi: DiscardDraftStrapi): Promise<void> {
   const actor = await contentApiActor(strapi as PublishGuardStrapi);
   if (!actor) {
     throw new DiscardDraftError('Forbidden', 403);
   }
-  if (actor.roleType !== 'editor') {
+  if (!isEditorLikeRole(actor.roleType)) {
     throw new DiscardDraftError(
-      'Only the editor role can discard draft transactions',
+      'Only the editor or controller role can discard draft transactions',
       403,
     );
   }
@@ -138,7 +139,9 @@ async function removeUploadFile(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    strapi.log.warn(`discard-draft: upload remove failed for id ${fileId}: ${message}`);
+    strapi.log.warn(
+      `discard-draft: upload remove failed for id ${fileId}: ${message}`,
+    );
   }
 }
 
@@ -154,7 +157,7 @@ export async function discardDraftTransaction(
     throw new DiscardDraftError('Missing document id', 400);
   }
 
-  await assertEditor(strapi);
+  await assertEditorLike(strapi);
   await assertDraftOnlyTransaction(strapi, trimmed);
 
   const receipts = await loadDraftReceipts(strapi, trimmed);

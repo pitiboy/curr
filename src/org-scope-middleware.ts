@@ -173,36 +173,35 @@ function asRecord(v: unknown): Record<string, unknown> {
     : {};
 }
 
+/**
+ * Target documentIds of a relation write: `'id'`, `{ documentId }`,
+ * `{ connect: ... }` or `{ set: ... }` (each as a single item or an array).
+ * `disconnect` only removes links, so it is not a target.
+ */
+export function relationTargetDocumentIds(value: unknown): string[] {
+  if (typeof value === 'string') {
+    return value.trim() ? [value.trim()] : [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => relationTargetDocumentIds(item));
+  }
+  if (!value || typeof value !== 'object') {
+    return [];
+  }
+  const v = value as Record<string, unknown>;
+  if (typeof v.documentId === 'string' && v.documentId.trim()) {
+    return [v.documentId.trim()];
+  }
+  return [
+    ...relationTargetDocumentIds(v.connect),
+    ...relationTargetDocumentIds(v.set),
+  ];
+}
+
 function transactionDocumentIdsFromReceiptData(
   data: Record<string, unknown>,
 ): string[] {
-  const tx = data.transaction;
-  if (typeof tx === 'string' && tx.trim()) {
-    return [tx.trim()];
-  }
-  if (tx && typeof tx === 'object' && !Array.isArray(tx)) {
-    const t = tx as Record<string, unknown>;
-    if (typeof t.documentId === 'string' && t.documentId.trim()) {
-      return [t.documentId.trim()];
-    }
-    const conn = t.connect;
-    if (Array.isArray(conn)) {
-      const ids: string[] = [];
-      for (const c of conn) {
-        if (typeof c === 'string' && c.trim()) ids.push(c.trim());
-        else if (c && typeof c === 'object' && 'documentId' in c) {
-          const id = relationDocumentId(c);
-          if (id) ids.push(id);
-        }
-      }
-      return ids;
-    }
-    if (conn && typeof conn === 'object' && !Array.isArray(conn)) {
-      const id = relationDocumentId(conn);
-      if (id) return [id];
-    }
-  }
-  return [];
+  return relationTargetDocumentIds(data.transaction);
 }
 
 async function assertTransactionsInAllowedOrgs(
@@ -228,33 +227,7 @@ async function assertTransactionsInAllowedOrgs(
 }
 
 function connectDocumentIds(data: Record<string, unknown>): string[] {
-  const org = data.organization;
-  if (typeof org === 'string' && org.trim()) {
-    return [org.trim()];
-  }
-  if (org && typeof org === 'object' && !Array.isArray(org)) {
-    const o = org as Record<string, unknown>;
-    if (typeof o.documentId === 'string' && o.documentId.trim()) {
-      return [o.documentId.trim()];
-    }
-    const conn = o.connect;
-    if (Array.isArray(conn)) {
-      const ids: string[] = [];
-      for (const c of conn) {
-        if (typeof c === 'string' && c.trim()) ids.push(c.trim());
-        else if (c && typeof c === 'object' && 'documentId' in c) {
-          const id = relationDocumentId(c);
-          if (id) ids.push(id);
-        }
-      }
-      return ids;
-    }
-    if (conn && typeof conn === 'object' && !Array.isArray(conn)) {
-      const id = relationDocumentId(conn);
-      if (id) return [id];
-    }
-  }
-  return [];
+  return relationTargetDocumentIds(data.organization);
 }
 
 /**

@@ -308,6 +308,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     roles: {
       editor: 'Szerkesztő',
       dataentry: 'Adatrögzítő',
+      controller: 'Kontroller',
       authenticated: 'Bejelentkezett felhasználó',
     },
     profile_password_heading: 'Jelszó módosítása',
