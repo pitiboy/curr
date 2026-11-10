@@ -1,5 +1,11 @@
 import { strapiHttpClient } from 'ra-strapi';
 
+import {
+  CONVERTED_ORIGINAL,
+  CONVERTED_STORNO,
+  convertedToWorkflowFilterClauses,
+  DEFAULT_CONVERTED_FILTER,
+} from '../../../data/transactionList';
 import type { ContentHttpClient } from '../../../data/receiptDraft';
 
 import {
@@ -84,6 +90,7 @@ function mapTx(row: TxRow): MembershipShareTx | null {
   const creditAccountId = row.credit_account?.documentId ?? '';
   const debitAccountId = row.debit_account?.documentId ?? '';
   if (!creditCode || !currencyCode || !creditAccountId) return null;
+  const debitCode = String(row.debit_account?.code ?? '').trim();
   return {
     date: row.date,
     amount: parseAmount(row.amount),
@@ -91,7 +98,12 @@ function mapTx(row: TxRow): MembershipShareTx | null {
     debitAccountId,
     creditAccountId,
     creditCode,
+    debitCode,
   };
+}
+
+function keepMembershipShareRow(converted: string | null | undefined): boolean {
+  return converted !== CONVERTED_ORIGINAL && converted !== CONVERTED_STORNO;
 }
 
 async function loadTransactions(
@@ -103,34 +115,59 @@ async function loadTransactions(
   const dateFilter: Record<string, string> = { $lte: bounds.to };
   if (bounds.from) dateFilter.$gte = bounds.from;
 
-  const rows = await loadReportTransactions<TxRow>(
-    httpClient,
-    transactionStatus,
-    {
-      filters: {
-        $and: [
-          { date: dateFilter },
-          {
-            credit_account: {
-              code: {
-                $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
-              },
-            },
+  const convertedClauses = convertedToWorkflowFilterClauses([
+    ...DEFAULT_CONVERTED_FILTER,
+  ]);
+  const convertedFilter =
+    convertedClauses.length === 1
+      ? convertedClauses[0]
+      : convertedClauses.length > 1
+        ? { $or: convertedClauses }
+        : {};
+
+  const memberLegFilter = {
+    $or: [
+      {
+        credit_account: {
+          code: {
+            $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
           },
-        ],
+        },
       },
-      populate: reportPopulate,
-      sort: ['date:asc'],
+      {
+        debit_account: {
+          code: {
+            $in: [MEMBER_SHARE_ACCOUNT_CODE, MEMBER_POCKET_ACCOUNT_CODE],
+          },
+        },
+      },
+    ],
+  };
+
+  const rows = await loadReportTransactions<
+    TxRow & { converted_to_workflow?: string | null }
+  >(httpClient, transactionStatus, {
+    filters: {
+      $and: [
+        { date: dateFilter },
+        ...(Object.keys(convertedFilter).length > 0 ? [convertedFilter] : []),
+        memberLegFilter,
+      ],
     },
-  );
+    populate: reportPopulate,
+    fields: ['documentId', 'date', 'amount', 'converted_to_workflow'],
+    sort: ['date:asc'],
+  });
 
   return rows
+    .filter((row) => keepMembershipShareRow(row.converted_to_workflow ?? null))
     .map(mapTx)
     .filter((row): row is MembershipShareTx => row != null && row.amount !== 0);
 }
 
 /**
- * Load 1101/1001 inflows from the Content API and aggregate.
+ * Load 1101/1001 external leg movements (credits and debits) from the Content API
+ * and aggregate. Excludes ügylet `original` / `storno` rows like the drill-down list.
  * Returns null when the range has no matching payments.
  */
 export async function fetchMembershipShareReport(

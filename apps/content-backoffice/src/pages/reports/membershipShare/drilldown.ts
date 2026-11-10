@@ -17,10 +17,7 @@ import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
 
 export type MembershipShareLedgerLeg = 'share' | 'pocket';
 
-/**
- * Report load does not cap `converted_to_workflow`, so ügylet-kifejtés utáni
- * `original` forrás sorok is benne vannak. A lista alapértelmezése ezeket rejti.
- */
+/** Matches report fetch: hide ügylet `original` and `storno` rows in drill-down. */
 export const MEMBERSHIP_SHARE_DRILLDOWN_CONVERTED_FILTER: ConvertedFilterValue[] =
   [...DEFAULT_CONVERTED_FILTER, CONVERTED_ORIGINAL];
 
