@@ -24,7 +24,11 @@ import {
   firstReceiptVendor,
   type TransactionRow,
 } from '../../data/transactionList';
-import { bandedShow, bandedSpanClass } from '../../theme';
+import {
+  bandedShow,
+  bandedSpanClass,
+  showBetweenBandsInset,
+} from '../../theme';
 import { AccountFieldLabel, AccountValue } from './accountField';
 import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
@@ -71,14 +75,24 @@ function TransactionShowBody() {
   const { permissions, isPending } = usePermissions();
   const [locale] = useLocaleState();
   if (!record) return null;
+  if (record.status === 'draft' && isPending) return null;
   const locales = locale === 'en' ? 'en' : 'hu-HU';
   const canReview =
     !isPending && permissions === 'editor' && record.status === 'draft';
 
+  if (canReview) {
+    return (
+      <TransactionShowReview
+        key={String(record.id)}
+        locale={locale}
+        record={record}
+      />
+    );
+  }
+
   return (
-    <TransactionShowContent
+    <TransactionShowReadonly
       key={String(record.id)}
-      canReview={canReview}
       locale={locale}
       locales={locales}
       record={record}
@@ -86,31 +100,35 @@ function TransactionShowBody() {
   );
 }
 
-function TransactionShowContent({
-  canReview,
+function TransactionShowReview({
+  locale,
+  record,
+}: {
+  locale: string;
+  record: TransactionRow;
+}) {
+  const [cards, setCards] = useState<ReceiptCardValue[]>([]);
+  return (
+    <TransactionReviewEditor
+      cards={cards}
+      locale={locale}
+      record={record}
+      onCardsChange={setCards}
+    />
+  );
+}
+
+function TransactionShowReadonly({
   locale,
   locales,
   record,
 }: {
-  canReview: boolean;
   locale: string;
   locales: string;
   record: TransactionRow;
 }) {
   const translate = useTranslate();
-  const [cards, setCards] = useState<ReceiptCardValue[]>([]);
   const saved = hasSavedReceipts(record.receipts);
-
-  if (canReview) {
-    return (
-      <TransactionReviewEditor
-        cards={cards}
-        locale={locale}
-        record={record}
-        onCardsChange={setCards}
-      />
-    );
-  }
 
   return (
     <Box>
@@ -138,7 +156,9 @@ function TransactionShowContent({
                 verticalAlign: 'middle',
               }}
             >
-              <span>{formatAmount(row.amount, locales)}</span>
+              <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                {formatAmount(row.amount, locales)}
+              </Box>
               <CurrencyValue value={row.currency_type} />
             </Box>
           )}
@@ -192,7 +212,7 @@ function TransactionShowContent({
         ) : null}
       </SimpleShowLayout>
       {record.status === 'published' ? (
-        <Box sx={{ px: 1 }}>
+        <Box sx={showBetweenBandsInset}>
           <RelatedTransactionsAccordion
             locale={locale}
             locales={locales}
@@ -201,7 +221,7 @@ function TransactionShowContent({
         </Box>
       ) : null}
       {saved ? (
-        <Box sx={{ px: 1 }}>
+        <Box sx={showBetweenBandsInset}>
           <SavedReceiptSection receipts={record.receipts} />
         </Box>
       ) : null}
