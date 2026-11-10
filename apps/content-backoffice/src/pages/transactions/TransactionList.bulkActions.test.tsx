@@ -104,6 +104,10 @@ vi.mock('./DescriptionText', () => ({
   DescriptionText: () => null,
 }));
 
+vi.mock('../../filters/TransactionListFilterBridge', () => ({
+  TransactionListFilterBridge: () => null,
+}));
+
 import { TransactionList } from './TransactionList';
 
 describe('TransactionList bulk actions', () => {
