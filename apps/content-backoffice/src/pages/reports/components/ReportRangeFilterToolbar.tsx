@@ -30,10 +30,14 @@ export function ReportRangeFilterToolbar({
 
   return (
     <Stack
-      alignItems={{ xs: 'stretch', sm: 'center' }}
       direction={{ xs: 'column', sm: 'row' }}
       spacing={1.5}
-      sx={{ mb: { xs: 1.5, sm: 2 }, flexWrap: 'wrap', width: '100%' }}
+      sx={{
+        alignItems: { xs: 'stretch', sm: 'center' },
+        mb: { xs: 1.5, sm: 2 },
+        flexWrap: 'wrap',
+        width: '100%',
+      }}
     >
       <ToggleButtonGroup
         color="primary"
