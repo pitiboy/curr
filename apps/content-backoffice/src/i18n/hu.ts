@@ -3,6 +3,49 @@ import { mergeTranslations } from 'react-admin';
 
 /** Hungarian message catalog (react-admin + app labels). */
 export const huMessages = mergeTranslations(hungarianMessages, {
+  // Keys missing from ra-language-hungarian (present in ra-language-english).
+  ra: {
+    action: {
+      reset: 'Visszaállítás',
+      search_columns: 'Oszlopok keresése',
+      select_all_button: 'Összes kijelölése',
+      update_application: 'Alkalmazás újratöltése',
+    },
+    page: {
+      access_denied: 'Hozzáférés megtagadva',
+      authentication_error: 'Hitelesítési hiba',
+    },
+    message: {
+      access_denied: 'Nincs jogosultságod az oldal megtekintéséhez.',
+      authentication_error:
+        'A hitelesítő szerver hibát adott vissza, a belépési adatok nem ellenőrizhetők.',
+      select_all_limit_reached:
+        'Túl sok elem van ahhoz, hogy mindet kijelöld. Csak az első %{max} elem lett kijelölve.',
+      placeholder_data_warning:
+        'Hálózati hiba: az adatok frissítése nem sikerült.',
+    },
+    navigation: {
+      clear_filters: 'Szűrők törlése',
+      no_filtered_results: 'Nincs találat (%{name}) a jelenlegi szűrőkkel.',
+    },
+    auth: {
+      email: 'E-mail',
+    },
+    notification: {
+      not_authorized: 'Nincs jogosultságod ehhez az erőforráshoz.',
+      application_update_available: 'Új verzió érhető el.',
+      offline: 'Nincs kapcsolat. Az adatok nem tölthetők be.',
+    },
+    validation: {
+      unique: 'Egyedinek kell lennie',
+    },
+    guesser: {
+      empty: {
+        title: 'Nincs megjeleníthető adat',
+        message: 'Ellenőrizd az adatszolgáltatót (data provider).',
+      },
+    },
+  },
   app: {
     title: 'Kezelő felület',
     menu_placeholder: 'Nincs menüpont',
@@ -92,6 +135,25 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       '%{smart_count} tranzakció véglegesítése sikertelen. |||| %{smart_count} tranzakció véglegesítése sikertelen.',
     transactions_bulk_none_ready:
       'Egyetlen kijelölt tranzakció sem véglegesíthető.',
+    transactions_bulk_convert_title:
+      '%{smart_count} tranzakció kifejtése |||| %{smart_count} tranzakció kifejtése',
+    transactions_bulk_convert_body:
+      'A kijelölt tranzakciók ügyleti sablon szerint kifejtődnek (storno és lépéssorok). A tranzakció adatai nem változnak a kifejtés előtt.',
+    transactions_bulk_convert_body_partial:
+      'Ebből %{ready} tranzakciót kifejtünk. %{skipped} kijelölés kimarad (már kifejtve, nincs sablon, vagy több sablon is illeszkedik).',
+    transactions_bulk_convert_confirm: 'Kifejtés',
+    transactions_bulk_convert_done:
+      '%{smart_count} tranzakció kifejtve. |||| %{smart_count} tranzakció kifejtve.',
+    transactions_bulk_convert_skipped_converted:
+      'A kijelöltek közül %{smart_count} már kifejtett, ezért kimarad. |||| A kijelöltek közül %{smart_count} már kifejtett, ezért kimarad.',
+    transactions_bulk_convert_skipped_no_match:
+      'A kijelöltek közül %{smart_count}-nek nincs illeszkedő ügyleti sablonja. |||| A kijelöltek közül %{smart_count}-nek nincs illeszkedő ügyleti sablonja.',
+    transactions_bulk_convert_skipped_ambiguous:
+      'A kijelöltek közül %{smart_count}-nél több ügyleti sablon is illeszkedik. |||| A kijelöltek közül %{smart_count}-nél több ügyleti sablon is illeszkedik.',
+    transactions_bulk_convert_failed:
+      '%{smart_count} tranzakció kifejtése sikertelen. |||| %{smart_count} tranzakció kifejtése sikertelen.',
+    transactions_bulk_convert_none_ready:
+      'Egyetlen kijelölt tranzakció sem fejthető ki.',
     transactions_finalize_hint:
       'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg minden kimutatásban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
     transactions_finalize_no_receipt:

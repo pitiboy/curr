@@ -91,6 +91,25 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Failed to finalize %{smart_count} transaction. |||| Failed to finalize %{smart_count} transactions.',
     transactions_bulk_none_ready:
       'None of the selected transactions can be finalized.',
+    transactions_bulk_convert_title:
+      'Expand %{smart_count} deal |||| Expand %{smart_count} deals',
+    transactions_bulk_convert_body:
+      'Selected transactions will be expanded per their workflow template (storno and step rows). Transaction data is not edited before expansion.',
+    transactions_bulk_convert_body_partial:
+      '%{ready} transaction(s) will be expanded. %{skipped} selection(s) will be skipped (already expanded, no template, or multiple templates match).',
+    transactions_bulk_convert_confirm: 'Expand',
+    transactions_bulk_convert_done:
+      '%{smart_count} deal expanded. |||| %{smart_count} deals expanded.',
+    transactions_bulk_convert_skipped_converted:
+      '%{smart_count} selected row is already expanded and will be skipped. |||| %{smart_count} selected rows are already expanded and will be skipped.',
+    transactions_bulk_convert_skipped_no_match:
+      '%{smart_count} selected row has no matching workflow template. |||| %{smart_count} selected rows have no matching workflow template.',
+    transactions_bulk_convert_skipped_ambiguous:
+      '%{smart_count} selected row matches more than one workflow template. |||| %{smart_count} selected rows match more than one workflow template.',
+    transactions_bulk_convert_failed:
+      'Failed to expand %{smart_count} deal. |||| Failed to expand %{smart_count} deals.',
+    transactions_bulk_convert_none_ready:
+      'None of the selected transactions can be expanded.',
     transactions_finalize_hint:
       'This transaction is not finalized yet, which means it will not appear in financial statements. Once you have reviewed and found the data and attached receipts to be correct, finalize the transaction and its receipts.',
     transactions_finalize_no_receipt:
