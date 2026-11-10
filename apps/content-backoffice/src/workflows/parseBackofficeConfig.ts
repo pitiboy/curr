@@ -131,7 +131,7 @@ const EGG_PRODUCTION_WORKFLOW_ID = 'egg-production';
  * calls POST .../actions/publish after each successful save. Independent of the workflow
  * menu `enabled` flag (Strapi still controls menu visibility). Default `draft`.
  * After save the client calls publish with `eggAuto=1`; the server allows
- * `dataentry` or `editor` for that path when this flag is on.
+ * `dataentry`, `editor`, or `controller` for that path when this flag is on.
  */
 export function eggProductionInitialPublicationStatus(
   config: BackofficeConfigResponse,

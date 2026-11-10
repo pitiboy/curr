@@ -2,8 +2,8 @@ import { strapiHttpClient } from 'ra-strapi';
 import { useEffect, useMemo, useState } from 'react';
 import { usePermissions } from 'react-admin';
 
+import { isEditorLikeRole } from '../auth/roles';
 import { STRAPI_URL } from '../config';
-import { isEditorLike } from '../auth/roles';
 import { TRANSACTION_WORKFLOW_PREFILL_ROLES } from '../data/accountRowSelection';
 import { fetchPublishedWorkflows } from '../data/transactionWorkflow';
 import {
@@ -52,7 +52,7 @@ function mayLoadWorkflowCatalog(
 
 export function useTransactionWorkflowCatalog() {
   const { permissions, isPending } = usePermissions();
-  const isEditor = !isPending && isEditorLike(permissions);
+  const isEditor = !isPending && isEditorLikeRole(permissions);
   const canLoadCatalog = mayLoadWorkflowCatalog(permissions, isPending);
   const [workflows, setWorkflows] = useState<WorkflowTemplateHeader[]>(
     canLoadCatalog && cachedWorkflows ? cachedWorkflows : [],

@@ -141,9 +141,10 @@ describe('discardDraftTransaction', () => {
         { kind: 'delete', uid: TRANSACTION_UID, documentId: 'tx-1' },
       ],
     );
-    assert.deepEqual(ops.filter((o) => o.kind === 'uploadRemove'), [
-      { kind: 'uploadRemove', fileId: 99 },
-    ]);
+    assert.deepEqual(
+      ops.filter((o) => o.kind === 'uploadRemove'),
+      [{ kind: 'uploadRemove', fileId: 99 }],
+    );
   });
 
   it('rejects published transaction', async () => {
@@ -171,8 +172,30 @@ describe('discardDraftTransaction', () => {
       (error: unknown) => {
         assert.ok(error instanceof DiscardDraftError);
         assert.equal(error.status, 403);
+        assert.match(error.message, /editor or controller/);
         return true;
       },
+    );
+  });
+
+  it('allows controller role', async () => {
+    const { strapi, ops } = buildStrapi({
+      roleType: 'controller',
+      receipts: [{ documentId: 'rcpt-1', fileId: 9 }],
+    });
+
+    await discardDraftTransaction(strapi, 'tx-1');
+
+    assert.deepEqual(
+      ops.filter((o) => o.kind === 'delete'),
+      [
+        { kind: 'delete', uid: RECEIPT_UID, documentId: 'rcpt-1' },
+        { kind: 'delete', uid: TRANSACTION_UID, documentId: 'tx-1' },
+      ],
+    );
+    assert.deepEqual(
+      ops.filter((o) => o.kind === 'uploadRemove'),
+      [{ kind: 'uploadRemove', fileId: 9 }],
     );
   });
 

@@ -2,8 +2,10 @@ export const CONTENT_ROLES = ['dataentry', 'editor', 'controller'] as const;
 
 export type ContentRole = (typeof CONTENT_ROLES)[number];
 
-/** Roles with the full editor workflow (review, publish, convert, discard). */
+/** Editor workflow: review, publish, convert, discard (controller includes these). */
 export const EDITOR_LIKE_ROLES = ['editor', 'controller'] as const;
+
+export type EditorLikeRole = (typeof EDITOR_LIKE_ROLES)[number];
 
 export function isContentRole(value: unknown): value is ContentRole {
   return (
@@ -12,15 +14,14 @@ export function isContentRole(value: unknown): value is ContentRole {
   );
 }
 
-/** `editor` or `controller` (React Admin `permissions` is the role type). */
-export function isEditorLike(value: unknown): boolean {
+export function isEditorLikeRole(value: unknown): value is EditorLikeRole {
   return (
     typeof value === 'string' &&
     (EDITOR_LIKE_ROLES as readonly string[]).includes(value)
   );
 }
 
-/** Controller only: delete expanded rows and purge an expansion. */
+/** Controller-only: expanded/storno purge and general delete. */
 export function canPurgeExpansion(value: unknown): boolean {
   return value === 'controller';
 }

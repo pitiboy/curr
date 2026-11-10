@@ -1,23 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
-import { canPurgeExpansion, isContentRole, isEditorLike } from './roles';
+import {
+  canPurgeExpansion,
+  CONTENT_ROLES,
+  EDITOR_LIKE_ROLES,
+  isContentRole,
+  isEditorLikeRole,
+} from './roles';
 
 describe('content roles', () => {
-  it('accepts dataentry, editor and controller as content roles', () => {
-    expect(isContentRole('dataentry')).toBe(true);
-    expect(isContentRole('editor')).toBe(true);
-    expect(isContentRole('controller')).toBe(true);
-    expect(isContentRole('authenticated')).toBe(false);
+  it('lists dataentry, editor, and controller', () => {
+    expect(CONTENT_ROLES).toEqual(['dataentry', 'editor', 'controller']);
   });
 
   it('treats editor and controller as editor-like', () => {
-    expect(isEditorLike('editor')).toBe(true);
-    expect(isEditorLike('controller')).toBe(true);
-    expect(isEditorLike('dataentry')).toBe(false);
-    expect(isEditorLike(undefined)).toBe(false);
+    expect(EDITOR_LIKE_ROLES).toEqual(['editor', 'controller']);
+    expect(isEditorLikeRole('editor')).toBe(true);
+    expect(isEditorLikeRole('controller')).toBe(true);
+    expect(isEditorLikeRole('dataentry')).toBe(false);
+    expect(isEditorLikeRole(undefined)).toBe(false);
   });
 
-  it('allows purge-expansion for controller only', () => {
+  it('accepts all three content roles', () => {
+    expect(isContentRole('dataentry')).toBe(true);
+    expect(isContentRole('editor')).toBe(true);
+    expect(isContentRole('controller')).toBe(true);
+    expect(isContentRole('admin')).toBe(false);
+  });
+
+  it('limits purge-expansion to controller', () => {
     expect(canPurgeExpansion('controller')).toBe(true);
     expect(canPurgeExpansion('editor')).toBe(false);
     expect(canPurgeExpansion('dataentry')).toBe(false);

@@ -20,6 +20,7 @@ export type MembershipShareTx = {
   debitAccountId: string;
   creditAccountId: string;
   creditCode: string;
+  debitCode: string;
 };
 
 export type MembershipShareMemberRef = {
@@ -65,6 +66,24 @@ export function isMembershipSharePayment(
   return (
     tx.creditCode === MEMBER_SHARE_ACCOUNT_CODE ||
     tx.creditCode === MEMBER_POCKET_ACCOUNT_CODE
+  );
+}
+
+/**
+ * External outflow from a member ledger: debit leaves 1101/1001, credit is not
+ * another member account (excludes 1101↔1001 internals). Netted off credits in
+ * the report (e.g. ügylet-kifejtés lépések a zseben / részjegyen).
+ */
+export function isMembershipShareDeduction(
+  tx: MembershipShareTx,
+  memberAccountIds: ReadonlySet<string>,
+): boolean {
+  if (tx.amount === 0) return false;
+  if (!memberAccountIds.has(tx.debitAccountId)) return false;
+  if (memberAccountIds.has(tx.creditAccountId)) return false;
+  return (
+    tx.debitCode === MEMBER_SHARE_ACCOUNT_CODE ||
+    tx.debitCode === MEMBER_POCKET_ACCOUNT_CODE
   );
 }
 
@@ -117,21 +136,24 @@ export function aggregateMembershipShareReport(
   let sharePaymentCount = 0;
   let pocketPaymentCount = 0;
 
-  for (const tx of txs) {
-    if (!isMembershipSharePayment(tx, memberAccountIds)) continue;
-
-    const shareRef = byShareId.get(tx.creditAccountId);
-    const pocketRef = byPocketId.get(tx.creditAccountId);
-    const ref = shareRef ?? pocketRef;
-    if (!ref) continue;
-
-    const ledger: 'share' | 'pocket' = shareRef ? 'share' : 'pocket';
-    if (ledger === 'share') sharePaymentCount += 1;
-    else pocketPaymentCount += 1;
+  const applyMemberAmount = (
+    ref: MembershipShareMemberRef,
+    ledger: 'share' | 'pocket',
+    signedAmount: number,
+    tx: MembershipShareTx,
+    countPayment: boolean,
+  ) => {
+    if (countPayment) {
+      if (ledger === 'share') sharePaymentCount += 1;
+      else pocketPaymentCount += 1;
+    }
     const acc = ensure(ref);
     const target =
       ledger === 'share' ? acc.shareByCurrency : acc.pocketByCurrency;
-    target.set(tx.currencyCode, (target.get(tx.currencyCode) ?? 0) + tx.amount);
+    target.set(
+      tx.currencyCode,
+      (target.get(tx.currencyCode) ?? 0) + signedAmount,
+    );
 
     const period = periodKeyForPreset(normalizeDate(tx.date), preset);
     let periodMap = historyRaw.get(period);
@@ -148,9 +170,30 @@ export function aggregateMembershipShareReport(
       share: 0,
       pocket: 0,
     };
-    if (ledger === 'share') bucket.share += tx.amount;
-    else bucket.pocket += tx.amount;
+    if (ledger === 'share') bucket.share += signedAmount;
+    else bucket.pocket += signedAmount;
     currencyMap.set(tx.currencyCode, bucket);
+  };
+
+  for (const tx of txs) {
+    if (isMembershipSharePayment(tx, memberAccountIds)) {
+      const shareRef = byShareId.get(tx.creditAccountId);
+      const pocketRef = byPocketId.get(tx.creditAccountId);
+      const ref = shareRef ?? pocketRef;
+      if (!ref) continue;
+      const ledger: 'share' | 'pocket' = shareRef ? 'share' : 'pocket';
+      applyMemberAmount(ref, ledger, tx.amount, tx, true);
+      continue;
+    }
+
+    if (!isMembershipShareDeduction(tx, memberAccountIds)) continue;
+
+    const shareRef = byShareId.get(tx.debitAccountId);
+    const pocketRef = byPocketId.get(tx.debitAccountId);
+    const ref = shareRef ?? pocketRef;
+    if (!ref) continue;
+    const ledger: 'share' | 'pocket' = shareRef ? 'share' : 'pocket';
+    applyMemberAmount(ref, ledger, -tx.amount, tx, false);
   }
 
   if (accByMember.size === 0) {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   aggregateMembershipShareReport,
+  isMembershipShareDeduction,
   isMembershipSharePayment,
   memberCurrencyTotalsMatchHistory,
   type MembershipShareMemberRef,
@@ -41,6 +42,7 @@ describe('isMembershipSharePayment', () => {
           debitAccountId: 'acc-cash',
           creditAccountId: 'acc-peti-1101',
           creditCode: '1101',
+          debitCode: '1000',
         },
         memberIds,
       ),
@@ -57,6 +59,43 @@ describe('isMembershipSharePayment', () => {
           debitAccountId: 'acc-peti-1101',
           creditAccountId: 'acc-peti-1001',
           creditCode: '1001',
+          debitCode: '1101',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('isMembershipShareDeduction', () => {
+  it('accepts external debit from 1001 (Homály kiadás)', () => {
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2026-11-01',
+          amount: 12_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1001',
+          creditAccountId: 'acc-cost',
+          creditCode: '5510',
+          debitCode: '1001',
+        },
+        memberIds,
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects 1001→1101 internal transfer', () => {
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2026-11-01',
+          amount: 10_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1101',
+          creditAccountId: 'acc-peti-1001',
+          creditCode: '1001',
+          debitCode: '1101',
         },
         memberIds,
       ),
@@ -74,6 +113,7 @@ describe('aggregateMembershipShareReport', () => {
         debitAccountId: 'acc-cash',
         creditAccountId: 'acc-peti-1101',
         creditCode: '1101',
+        debitCode: '1000',
       },
       {
         date: '2026-11-10',
@@ -82,6 +122,7 @@ describe('aggregateMembershipShareReport', () => {
         debitAccountId: 'acc-cash',
         creditAccountId: 'acc-peti-1001',
         creditCode: '1001',
+        debitCode: '1000',
       },
       {
         date: '2026-11-10',
@@ -90,6 +131,7 @@ describe('aggregateMembershipShareReport', () => {
         debitAccountId: 'acc-bank',
         creditAccountId: 'acc-erika-1101',
         creditCode: '1101',
+        debitCode: '1100',
       },
       {
         date: '2026-11-10',
@@ -98,6 +140,7 @@ describe('aggregateMembershipShareReport', () => {
         debitAccountId: 'acc-peti-1101',
         creditAccountId: 'acc-peti-1001',
         creditCode: '1001',
+        debitCode: '1101',
       },
     ];
 
@@ -135,6 +178,7 @@ describe('aggregateMembershipShareReport', () => {
             debitAccountId: 'acc-peti-1101',
             creditAccountId: 'acc-peti-1001',
             creditCode: '1001',
+            debitCode: '1101',
           },
         ],
         members,
@@ -152,6 +196,7 @@ describe('aggregateMembershipShareReport', () => {
         debitAccountId: 'acc-cash',
         creditAccountId: 'acc-erika-1101',
         creditCode: '1101',
+        debitCode: '1000',
       },
       {
         date: '2026-11-06',
@@ -160,6 +205,7 @@ describe('aggregateMembershipShareReport', () => {
         debitAccountId: 'acc-bank',
         creditAccountId: 'acc-erika-1001',
         creditCode: '1001',
+        debitCode: '1100',
       },
     ];
     const report = aggregateMembershipShareReport(txs, members, 'thisMonth');
@@ -168,5 +214,57 @@ describe('aggregateMembershipShareReport', () => {
     expect(report.kpis.sharePaymentCount).toBe(1);
     expect(report.kpis.pocketPaymentCount).toBe(1);
     expect(report.kpis.paymentCount).toBe(2);
+  });
+
+  it('nets ügylet pocket inflow and cost (tagi befizetés ingatlanra)', () => {
+    const member: MembershipShareMemberRef[] = [
+      {
+        memberId: 'm-erika',
+        memberName: 'Erika',
+        shareAccountId: 'acc-erika-1101',
+        pocketAccountId: 'acc-erika-1001',
+      },
+    ];
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2026-11-05',
+        amount: 2_000_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-bank',
+        creditAccountId: 'acc-erika-1101',
+        creditCode: '1101',
+        debitCode: '1100',
+      },
+      {
+        date: '2026-11-05',
+        amount: 2_000_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-erika-1001',
+        creditAccountId: 'acc-bank',
+        creditCode: '1100',
+        debitCode: '1001',
+      },
+      {
+        date: '2026-11-05',
+        amount: 2_000_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-land',
+        creditAccountId: 'acc-erika-1001',
+        creditCode: '1001',
+        debitCode: '1520',
+      },
+    ];
+
+    const report = aggregateMembershipShareReport(txs, member, 'thisMonth');
+    expect(report).not.toBeNull();
+    if (!report) return;
+
+    expect(report.kpis.sharePaymentCount).toBe(1);
+    expect(report.kpis.pocketPaymentCount).toBe(1);
+    expect(report.byMember[0]?.shareByCurrency).toEqual([
+      { currency: 'HUF', amount: 2_000_000 },
+    ]);
+    expect(report.byMember[0]?.pocketByCurrency).toEqual([]);
+    expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
   });
 });

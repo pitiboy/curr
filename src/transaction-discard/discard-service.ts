@@ -1,5 +1,5 @@
 /**
- * Editor-like (editor / controller) discard of a draft transaction and its draft receipts.
+ * Editor-like discard of a draft transaction and its draft receipts.
  * Does not grant generic Content API delete on transactions.
  */
 import {
@@ -43,7 +43,7 @@ function documentsApi(strapi: DiscardDraftStrapi, uid: string): DocumentsApi {
   return strapi.documents(uid) as unknown as DocumentsApi;
 }
 
-async function assertEditor(strapi: DiscardDraftStrapi): Promise<void> {
+async function assertEditorLike(strapi: DiscardDraftStrapi): Promise<void> {
   const actor = await contentApiActor(strapi as PublishGuardStrapi);
   if (!actor) {
     throw new DiscardDraftError('Forbidden', 403);
@@ -157,7 +157,7 @@ export async function discardDraftTransaction(
     throw new DiscardDraftError('Missing document id', 400);
   }
 
-  await assertEditor(strapi);
+  await assertEditorLike(strapi);
   await assertDraftOnlyTransaction(strapi, trimmed);
 
   const receipts = await loadDraftReceipts(strapi, trimmed);

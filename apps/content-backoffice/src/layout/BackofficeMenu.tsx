@@ -8,12 +8,12 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { Menu, usePermissions, useTranslate } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 
+import { isContentRole, isEditorLikeRole } from '../auth/roles';
 import {
   transactionListMode,
   transactionsMenuTo,
   type TransactionListMode,
 } from '../data/transactionListLocation';
-import { isContentRole, isEditorLike } from '../auth/roles';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
@@ -30,13 +30,14 @@ export function BackofficeMenu() {
     enabled,
     typeof permissions === 'string' ? permissions : '',
   );
-  const canReadReports = isContentRole(permissions);
+  const canWrite = isContentRole(permissions);
+  const canReview = isEditorLikeRole(permissions);
   const canReadEggInventory =
-    canReadReports && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
+    canWrite && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
-    canReadReports && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
+    canWrite && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
   const canReadProjectBalance =
-    canReadReports && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
+    canWrite && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
 
   return (
     <Menu>
@@ -53,7 +54,7 @@ export function BackofficeMenu() {
           to={form.path}
         />
       ))}
-      {isContentRole(permissions) && (
+      {canWrite && (
         <Menu.Item
           leftIcon={<PostAddIcon />}
           primaryText={translate('app.transactions_create')}
@@ -88,7 +89,7 @@ export function BackofficeMenu() {
           to="/reports/project-balance"
         />
       ) : null}
-      {isEditorLike(permissions) && (
+      {canReview && (
         <TransactionListMenuItem
           icon={<FactCheckIcon />}
           label={translate('app.transactions_review')}
