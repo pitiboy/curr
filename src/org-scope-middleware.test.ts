@@ -13,6 +13,7 @@ import { type PublishGuardStrapi } from './publish-guard.ts';
 
 const transaction = 'api::transaction.transaction';
 const receipt = 'api::receipt.receipt';
+const organization = 'api::organization.organization';
 const account = 'api::account.account';
 
 type Middleware = (
@@ -53,6 +54,7 @@ function createMiddlewareHarness() {
 
 function fakeOrgScopeStrapi(options: {
   userId?: number;
+  roleType?: string;
   strategy?: string;
   organizations?: Array<{ documentId?: string }>;
   transactionOrgByDocId?: Record<string, string | undefined>;
@@ -94,7 +96,7 @@ function fakeOrgScopeStrapi(options: {
             return {
               id: options.userId,
               email: 'u@example.com',
-              role: { type: 'dataentry' },
+              role: { type: options.roleType ?? 'dataentry' },
               organizations: options.organizations ?? [],
             };
           }
@@ -205,6 +207,22 @@ describe('mergeScopedFilter', () => {
       transaction: { organization: { documentId: { $in: ['org-x'] } } },
     });
   });
+
+  it('scopes organization rows by their own documentId', () => {
+    const merged = mergeScopedFilter(organization, { code: { $eq: '1000' } }, [
+      'org-a',
+    ]);
+    assert.deepEqual(merged, {
+      $and: [{ code: { $eq: '1000' } }, { documentId: { $in: ['org-a'] } }],
+    });
+  });
+
+  it('uses no-access sentinel for organization list when user has no orgs', () => {
+    const merged = mergeScopedFilter(organization, undefined, []);
+    assert.deepEqual(merged, {
+      documentId: { $eq: '__org_scope_no_membership__' },
+    });
+  });
 });
 
 describe('loadUserOrgDocumentIds', () => {
@@ -276,6 +294,63 @@ describe('registerOrgScopeMiddleware', () => {
     assert.deepEqual(params.filters, {});
   });
 
+  it('merges documentId filter for organization findMany (editor)', async () => {
+    const strapi = fakeOrgScopeStrapi({
+      userId: 1,
+      roleType: 'editor',
+      organizations: [{ documentId: 'org-a' }, { documentId: 'org-b' }],
+    }) as ReturnType<typeof fakeOrgScopeStrapi> & {
+      __harness: ReturnType<typeof createMiddlewareHarness>;
+    };
+    registerOrgScopeMiddleware(strapi);
+    const params: Record<string, unknown> = { filters: {} };
+    await strapi.__harness.run(
+      { uid: organization, action: 'findMany', params },
+      async () => 'ok',
+    );
+    assert.deepEqual(params.filters, {
+      documentId: { $in: ['org-a', 'org-b'] },
+    });
+  });
+
+  it('leaves transaction filters unscoped for controller (no organizations)', async () => {
+    const strapi = fakeOrgScopeStrapi({
+      userId: 1,
+      roleType: 'controller',
+      organizations: [],
+    }) as ReturnType<typeof fakeOrgScopeStrapi> & {
+      __harness: ReturnType<typeof createMiddlewareHarness>;
+    };
+    registerOrgScopeMiddleware(strapi);
+    const params: Record<string, unknown> = {
+      filters: { description: { $containsi: 'x' } },
+    };
+    await strapi.__harness.run(
+      { uid: transaction, action: 'findMany', params },
+      async () => 'ok',
+    );
+    assert.deepEqual(params.filters, {
+      description: { $containsi: 'x' },
+    });
+  });
+
+  it('leaves organization findMany unscoped for controller', async () => {
+    const strapi = fakeOrgScopeStrapi({
+      userId: 1,
+      roleType: 'controller',
+      organizations: [],
+    }) as ReturnType<typeof fakeOrgScopeStrapi> & {
+      __harness: ReturnType<typeof createMiddlewareHarness>;
+    };
+    registerOrgScopeMiddleware(strapi);
+    const params: Record<string, unknown> = { filters: {} };
+    await strapi.__harness.run(
+      { uid: organization, action: 'findMany', params },
+      async () => 'ok',
+    );
+    assert.deepEqual(params.filters, {});
+  });
+
   it('rejects create when user has no organizations', async () => {
     const strapi = fakeOrgScopeStrapi({
       userId: 1,
@@ -300,9 +375,42 @@ describe('registerOrgScopeMiddleware', () => {
 });
 
 describe('ORG_SCOPED_DOCUMENT_UID_SET', () => {
-  it('lists transaction and receipt', () => {
+  it('lists transaction, receipt, and organization', () => {
     assert.equal(ORG_SCOPED_DOCUMENT_UID_SET.has(transaction), true);
     assert.equal(ORG_SCOPED_DOCUMENT_UID_SET.has(receipt), true);
+    assert.equal(ORG_SCOPED_DOCUMENT_UID_SET.has(organization), true);
     assert.equal(ORG_SCOPED_DOCUMENT_UID_SET.has(account), false);
+  });
+});
+
+describe('shouldApplyOrgScope — organization listing', () => {
+  it('applies for dataentry and editor on organization reads', () => {
+    assert.equal(
+      shouldApplyOrgScope({
+        uid: organization,
+        action: 'findMany',
+        strategyName: 'users-permissions',
+        roleType: 'dataentry',
+      }),
+      true,
+    );
+    assert.equal(
+      shouldApplyOrgScope({
+        uid: organization,
+        action: 'findMany',
+        strategyName: 'users-permissions',
+        roleType: 'editor',
+      }),
+      true,
+    );
+    assert.equal(
+      shouldApplyOrgScope({
+        uid: organization,
+        action: 'findMany',
+        strategyName: 'users-permissions',
+        roleType: 'controller',
+      }),
+      false,
+    );
   });
 });
