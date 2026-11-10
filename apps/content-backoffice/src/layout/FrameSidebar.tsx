@@ -1,10 +1,13 @@
+import { Box, Divider } from '@mui/material';
 import type { SidebarProps } from 'react-admin';
-import { Sidebar } from 'react-admin';
+import { Sidebar, useSidebarState } from 'react-admin';
 
+import { GlobalTransactionFilters } from '../filters/GlobalTransactionFilters';
 import { SidebarMobileHeader } from './SidebarMobileHeader';
 
 export function FrameSidebar(props: SidebarProps) {
   const { children, ...rest } = props;
+  const [open] = useSidebarState();
 
   return (
     <Sidebar
@@ -19,6 +22,14 @@ export function FrameSidebar(props: SidebarProps) {
     >
       <SidebarMobileHeader />
       {children}
+      {open ? (
+        <>
+          <Divider />
+          <Box sx={{ overflowY: 'auto' }}>
+            <GlobalTransactionFilters />
+          </Box>
+        </>
+      ) : null}
     </Sidebar>
   );
 }

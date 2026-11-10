@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 
+import type { ReportParams } from '../../../filters/globalTransactionFilters';
+
 import { useAccountCodePatterns } from '../../../workflows/useAccountCodePatterns';
-import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter,
-} from '../shared/reportTransactionStatus';
-import type { DateRangePreset } from '../shared/reportDateRange';
 
 import { fetchProjectBalanceReport } from './projectBalance.fetch';
 import type { ProjectBalanceReport, ProjectBalanceStatus } from './types';
@@ -17,14 +14,15 @@ export type ProjectBalanceQuery = {
   reload: () => void;
 };
 
+/** Report for the global filter range / status (see {@link ReportParams}). */
 export function useProjectBalanceReport(
-  preset: DateRangePreset,
-  transactionStatus: ReportTransactionStatusFilter = REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
+  params: ReportParams,
   organizationId: string | null = null,
 ): ProjectBalanceQuery {
+  const { preset, bounds, transactionStatus, key: paramsKey } = params;
   const patterns = useAccountCodePatterns();
   const [reloadToken, setReloadToken] = useState(0);
-  const requestKey = `${preset}:${transactionStatus}:${organizationId ?? ''}:${reloadToken}`;
+  const requestKey = `${paramsKey}:${organizationId ?? ''}:${reloadToken}`;
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
   const [report, setReport] = useState<ProjectBalanceReport | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,12 +30,13 @@ export function useProjectBalanceReport(
 
   useEffect(() => {
     let active = true;
-    const key = `${preset}:${transactionStatus}:${organizationId ?? ''}:${reloadToken}`;
+    const key = requestKey;
 
     fetchProjectBalanceReport(preset, {
       patterns,
       transactionStatus,
       organizationId,
+      bounds,
     })
       .then((data) => {
         if (!active) return;
@@ -59,7 +58,9 @@ export function useProjectBalanceReport(
     return () => {
       active = false;
     };
-  }, [preset, transactionStatus, organizationId, patterns, reloadToken]);
+    // paramsKey covers preset, bounds and transactionStatus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey, organizationId, patterns, reloadToken]);
 
   const status: ProjectBalanceStatus =
     resolvedKey !== requestKey

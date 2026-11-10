@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import type { ReportParams } from '../../../filters/globalTransactionFilters';
+
 import { fetchMembershipShareReport } from './membershipShare.fetch';
 import { filterReportByFocus } from './membershipShare.helpers';
-import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter,
-} from '../shared/reportTransactionStatus';
 import type {
-  DateRangePreset,
   LedgerFocus,
   MembershipShareReport,
   MembershipShareStatus,
@@ -20,13 +17,14 @@ export type MembershipShareQuery = {
   reload: () => void;
 };
 
+/** Report for the global filter range / status (see {@link ReportParams}). */
 export function useMembershipShareReport(
-  preset: DateRangePreset,
+  params: ReportParams,
   focus: LedgerFocus,
-  transactionStatus: ReportTransactionStatusFilter = REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
 ): MembershipShareQuery {
+  const { preset, bounds, transactionStatus, key: paramsKey } = params;
   const [reloadToken, setReloadToken] = useState(0);
-  const requestKey = `${preset}:${focus}:${transactionStatus}:${reloadToken}`;
+  const requestKey = `${paramsKey}:${focus}:${reloadToken}`;
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
   const [report, setReport] = useState<MembershipShareReport | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -35,15 +33,13 @@ export function useMembershipShareReport(
   useEffect(() => {
     let active = true;
 
-    fetchMembershipShareReport(preset, { transactionStatus })
+    fetchMembershipShareReport(preset, { transactionStatus, bounds })
       .then((data) => {
         if (!active) return;
         setReport(data ? filterReportByFocus(data, focus) : null);
         setFailed(false);
         setErrorMessage(null);
-        setResolvedKey(
-          `${preset}:${focus}:${transactionStatus}:${reloadToken}`,
-        );
+        setResolvedKey(requestKey);
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -52,15 +48,15 @@ export function useMembershipShareReport(
         setErrorMessage(
           err instanceof Error ? err.message : 'membership-share load failed',
         );
-        setResolvedKey(
-          `${preset}:${focus}:${transactionStatus}:${reloadToken}`,
-        );
+        setResolvedKey(requestKey);
       });
 
     return () => {
       active = false;
     };
-  }, [preset, focus, transactionStatus, reloadToken]);
+    // paramsKey covers preset, bounds and transactionStatus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey, focus, reloadToken]);
 
   const status: MembershipShareStatus =
     resolvedKey !== requestKey

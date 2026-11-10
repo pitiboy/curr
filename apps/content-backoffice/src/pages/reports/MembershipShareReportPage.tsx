@@ -22,7 +22,6 @@ import type { BarItemIdentifier } from '@mui/x-charts/models';
 import type { PieItemIdentifier } from '@mui/x-charts/models';
 import { useCallback, useState, type ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
-import { useNavigate } from 'react-router-dom';
 
 import {
   historyAmountForFocus,
@@ -31,7 +30,6 @@ import {
 } from './membershipShare/membershipShare.helpers';
 import type {
   CurrencyAmount,
-  DateRangePreset,
   LedgerFocus,
   MembershipShareReport,
 } from './membershipShare/types';
@@ -39,11 +37,10 @@ import {
   MEMBER_POCKET_ACCOUNT_CODE,
   MEMBER_SHARE_ACCOUNT_CODE,
 } from './membershipShare/types';
-import { ReportRangeFilterToolbar } from './components/ReportRangeFilterToolbar';
 import {
-  REPORT_TRANSACTION_STATUS_FILTER_DEFAULT,
-  type ReportTransactionStatusFilter as ReportTxStatusMode,
-} from './shared/reportTransactionStatus';
+  useGlobalReportParams,
+  useOpenDrilldown,
+} from '../../filters/globalTransactionFiltersAtom';
 import {
   drilldownForHistoryBar,
   drilldownForMemberBar,
@@ -81,15 +78,10 @@ function formatPlain(amount: number): string {
 
 export function MembershipShareReportPage() {
   const translate = useTranslate();
-  const [range, setRange] = useState<DateRangePreset>('thisMonth');
+  // Date range + transaction status come from the global sidebar filters.
+  const params = useGlobalReportParams();
   const [focus, setFocus] = useState<LedgerFocus>('both');
-  const [transactionStatus, setTransactionStatus] =
-    useState<ReportTxStatusMode>(REPORT_TRANSACTION_STATUS_FILTER_DEFAULT);
-  const { status, report, reload } = useMembershipShareReport(
-    range,
-    focus,
-    transactionStatus,
-  );
+  const { status, report, reload } = useMembershipShareReport(params, focus);
 
   return (
     <Box sx={{ p: 2, maxWidth: 1100 }}>
@@ -103,29 +95,22 @@ export function MembershipShareReportPage() {
         </Typography>
       </Stack>
 
-      <ReportRangeFilterToolbar
-        onRangeChange={setRange}
-        onTransactionStatusChange={setTransactionStatus}
-        range={range}
-        transactionStatus={transactionStatus}
+      <ToggleButtonGroup
+        color="primary"
+        exclusive
+        onChange={(_e, value: LedgerFocus | null) => {
+          if (value) setFocus(value);
+        }}
+        size="small"
+        sx={{ flexWrap: 'wrap', mb: 2 }}
+        value={focus}
       >
-        <ToggleButtonGroup
-          color="primary"
-          exclusive
-          onChange={(_e, value: LedgerFocus | null) => {
-            if (value) setFocus(value);
-          }}
-          size="small"
-          sx={{ flexWrap: 'wrap' }}
-          value={focus}
-        >
-          {LEDGER_FOCUSES.map((key) => (
-            <ToggleButton key={key} value={key}>
-              {translate(`app.membership_share.focus.${key}`)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </ReportRangeFilterToolbar>
+        {LEDGER_FOCUSES.map((key) => (
+          <ToggleButton key={key} value={key}>
+            {translate(`app.membership_share.focus.${key}`)}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (
@@ -148,7 +133,12 @@ export function MembershipShareReportPage() {
       ) : null}
       {status === 'success' && report ? (
         <ReportBody
-          drilldownContext={{ range, transactionStatus, focus }}
+          drilldownContext={{
+            range: params.preset,
+            bounds: params.bounds,
+            transactionStatus: params.transactionStatus,
+            focus,
+          }}
           focus={focus}
           report={report}
         />
@@ -168,15 +158,9 @@ function ReportBody({
 }) {
   const translate = useTranslate();
   const theme = useTheme();
-  const navigate = useNavigate();
   const { kpis, byMember, history, historyCurrency } = report;
-
-  const openDrilldown = useCallback(
-    (link: { pathname: '/transactions'; search: string }) => {
-      navigate({ pathname: link.pathname, search: link.search });
-    },
-    [navigate],
-  );
+  // Drill-down: merge the link's filter into the global atom, then the list.
+  const openDrilldown = useOpenDrilldown();
 
   const drillTip = translate('app.membership_share.drilldown.hint');
 

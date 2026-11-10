@@ -7,7 +7,7 @@ import {
   type MembershipShareMemberRef,
   type MembershipShareTx,
 } from './membershipShare.aggregate';
-import { boundsForPreset } from './dateRange';
+import { boundsForPreset, type DateRangeBounds } from './dateRange';
 import type { DateRangePreset, MembershipShareReport } from './types';
 import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
 import {
@@ -96,10 +96,9 @@ function mapTx(row: TxRow): MembershipShareTx | null {
 
 async function loadTransactions(
   httpClient: ContentHttpClient,
-  preset: DateRangePreset,
+  bounds: DateRangeBounds,
   transactionStatus: ReportTransactionStatusFilter,
 ): Promise<MembershipShareTx[]> {
-  const bounds = boundsForPreset(preset);
   const dateFilter: Record<string, string> = { $lte: bounds.to };
   if (bounds.from) dateFilter.$gte = bounds.from;
 
@@ -138,6 +137,8 @@ export async function fetchMembershipShareReport(
   options: {
     httpClient?: ContentHttpClient;
     transactionStatus?: ReportTransactionStatusFilter;
+    /** Explicit range (custom dates); defaults to the preset's bounds. */
+    bounds?: DateRangeBounds;
   } = {},
 ): Promise<MembershipShareReport | null> {
   const httpClient = options.httpClient ?? strapiHttpClient();
@@ -146,7 +147,11 @@ export async function fetchMembershipShareReport(
 
   const [members, txs] = await Promise.all([
     loadMembers(httpClient),
-    loadTransactions(httpClient, preset, transactionStatus),
+    loadTransactions(
+      httpClient,
+      options.bounds ?? boundsForPreset(preset),
+      transactionStatus,
+    ),
   ]);
 
   return aggregateMembershipShareReport(txs, members, preset);

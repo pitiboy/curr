@@ -9,10 +9,14 @@ import { Menu, usePermissions, useTranslate } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 
 import {
+  TRANSACTIONS_LIST_PATH,
   transactionListMode,
-  transactionsMenuTo,
-  type TransactionListMode,
 } from '../data/transactionListLocation';
+import type { TransactionMenuMode } from '../filters/globalTransactionFilters';
+import {
+  useGlobalTransactionFilters,
+  useApplyMenuOverride,
+} from '../filters/globalTransactionFiltersAtom';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
@@ -106,14 +110,18 @@ function TransactionListMenuItem({
 }: {
   icon: ReactNode;
   label: string;
-  mode: TransactionListMode;
+  mode: TransactionMenuMode;
 }) {
   const location = useLocation();
+  const [filters] = useGlobalTransactionFilters();
+  const applyMenuOverride = useApplyMenuOverride();
   const active =
-    transactionListMode(location.pathname, location.search) === mode;
+    transactionListMode(location.pathname, filters.status) === mode;
   return (
     <Menu.Item
       leftIcon={icon}
+      // Override status + converted in the global filters, keep the rest.
+      onClick={() => applyMenuOverride(mode)}
       primaryText={label}
       sx={
         active
@@ -124,7 +132,7 @@ function TransactionListMenuItem({
               },
             }
       }
-      to={transactionsMenuTo(mode)}
+      to={TRANSACTIONS_LIST_PATH}
     />
   );
 }

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@mui/x-charts": "^9.17.0",
+    "jotai": "^2.20.3",
     "ra-i18n-polyglot": "^5.13.3",
     "ra-language-english": "^5.13.3",
     "ra-language-hungarian": "^1.4.0",

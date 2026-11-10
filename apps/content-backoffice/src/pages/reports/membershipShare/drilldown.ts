@@ -30,7 +30,10 @@ export type TransactionListLink = {
 };
 
 export type MembershipShareDrilldownContext = {
+  /** Granularity preset (chart buckets). */
   range: DateRangePreset;
+  /** Active report range; defaults to the preset's bounds. */
+  bounds?: DateRangeBounds;
   transactionStatus: ReportTransactionStatusFilter;
   focus: LedgerFocus;
 };
@@ -44,6 +47,12 @@ type MembershipShareDrilldown = {
   creditAccountIn?: string[] | null;
   creditAccountCode?: string | null;
 };
+
+function rangeBounds(
+  context: MembershipShareDrilldownContext,
+): DateRangeBounds {
+  return context.bounds ?? boundsForPreset(context.range);
+}
 
 function listStatusFromReport(
   mode: ReportTransactionStatusFilter,
@@ -155,7 +164,7 @@ export function drilldownForMemberCell(
   currencyCode: string,
   leg: MembershipShareLedgerLeg,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   const credit = creditTargets(member, leg);
   return buildTransactionsDrilldownUrl({
     ...baseDrill(context, bounds, currencyCode),
@@ -167,7 +176,7 @@ export function drilldownForMemberRow(
   context: MembershipShareDrilldownContext,
   member: MembershipMemberRow,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   const leg = legForContext(context);
   const credit = creditTargets(member, leg);
   return buildTransactionsDrilldownUrl({
@@ -190,7 +199,7 @@ export function drilldownForPieSlice(
   sliceId: string,
   currencyCode: string,
 ): TransactionListLink {
-  const bounds = boundsForPreset(context.range);
+  const bounds = rangeBounds(context);
   if (context.focus === 'both') {
     const code =
       sliceId === 'pocket'

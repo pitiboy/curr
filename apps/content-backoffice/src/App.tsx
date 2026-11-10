@@ -1,3 +1,4 @@
+import { Provider as JotaiProvider } from 'jotai';
 import { Admin, CustomRoutes, Resource } from 'react-admin';
 import { Route } from 'react-router-dom';
 
@@ -27,89 +28,91 @@ import { WorkflowFormGate } from './workflows/WorkflowFormGate';
 export function App() {
   return (
     <BackofficeConfigProvider>
-      <Admin
-        authProvider={authProvider}
-        darkTheme={darkTheme}
-        dataProvider={dataProvider}
-        i18nProvider={i18nProvider}
-        layout={BackofficeLayout}
-        lightTheme={lightTheme}
-        loginPage={LoginPage}
-        title={<AppTitle />}
-      >
-        <Resource
-          list={TransactionList}
-          name="transactions"
-          options={{ label: 'app.transactions_list' }}
-          show={TransactionShow}
-        />
-        <CustomRoutes>
-          <Route
-            element={
-              <RoleGuard allow={['dataentry', 'editor']}>
-                <TransactionCreate />
-              </RoleGuard>
-            }
-            path="/transactions/create"
+      <JotaiProvider>
+        <Admin
+          authProvider={authProvider}
+          darkTheme={darkTheme}
+          dataProvider={dataProvider}
+          i18nProvider={i18nProvider}
+          layout={BackofficeLayout}
+          lightTheme={lightTheme}
+          loginPage={LoginPage}
+          title={<AppTitle />}
+        >
+          <Resource
+            list={TransactionList}
+            name="transactions"
+            options={{ label: 'app.transactions_list' }}
+            show={TransactionShow}
           />
-          <Route element={<ProfilePage />} path="/profile" />
-          <Route
-            element={
-              <WorkflowFormGate
-                roles={eggDailyEntryConfig.roles}
-                workflowId={eggDailyEntryConfig.workflowId}
-              >
-                <EggInventoryReportPage />
-              </WorkflowFormGate>
-            }
-            path="/reports/egg-inventory"
-          />
-          <Route
-            element={
-              <WorkflowFormGate
-                roles={eggDailyEntryConfig.roles}
-                workflowId={eggDailyEntryConfig.workflowId}
-              >
-                <HenInventoryReportPage />
-              </WorkflowFormGate>
-            }
-            path="/reports/hen-inventory"
-          />
-          <Route
-            element={
-              <WorkflowFormGate
-                roles={['dataentry', 'editor']}
-                workflowId={MEMBERSHIP_SHARE_FEATURE_ID}
-              >
-                <MembershipShareReportPage />
-              </WorkflowFormGate>
-            }
-            path="/reports/membership-share"
-          />
-          <Route
-            element={
-              <WorkflowFormGate
-                roles={['dataentry', 'editor']}
-                workflowId={PROJECT_BALANCE_FEATURE_ID}
-              >
-                <ProjectBalanceReportPage />
-              </WorkflowFormGate>
-            }
-            path="/reports/project-balance"
-          />
-          {workflowForms.map((form) => (
+          <CustomRoutes>
             <Route
-              key={form.id}
               element={
-                <WorkflowFormGate roles={form.roles} workflowId={form.id}>
-                  {form.element}
+                <RoleGuard allow={['dataentry', 'editor']}>
+                  <TransactionCreate />
+                </RoleGuard>
+              }
+              path="/transactions/create"
+            />
+            <Route element={<ProfilePage />} path="/profile" />
+            <Route
+              element={
+                <WorkflowFormGate
+                  roles={eggDailyEntryConfig.roles}
+                  workflowId={eggDailyEntryConfig.workflowId}
+                >
+                  <EggInventoryReportPage />
                 </WorkflowFormGate>
               }
-              path={form.path}
+              path="/reports/egg-inventory"
             />
-          ))}
-        </CustomRoutes>
-      </Admin>
+            <Route
+              element={
+                <WorkflowFormGate
+                  roles={eggDailyEntryConfig.roles}
+                  workflowId={eggDailyEntryConfig.workflowId}
+                >
+                  <HenInventoryReportPage />
+                </WorkflowFormGate>
+              }
+              path="/reports/hen-inventory"
+            />
+            <Route
+              element={
+                <WorkflowFormGate
+                  roles={['dataentry', 'editor']}
+                  workflowId={MEMBERSHIP_SHARE_FEATURE_ID}
+                >
+                  <MembershipShareReportPage />
+                </WorkflowFormGate>
+              }
+              path="/reports/membership-share"
+            />
+            <Route
+              element={
+                <WorkflowFormGate
+                  roles={['dataentry', 'editor']}
+                  workflowId={PROJECT_BALANCE_FEATURE_ID}
+                >
+                  <ProjectBalanceReportPage />
+                </WorkflowFormGate>
+              }
+              path="/reports/project-balance"
+            />
+            {workflowForms.map((form) => (
+              <Route
+                key={form.id}
+                element={
+                  <WorkflowFormGate roles={form.roles} workflowId={form.id}>
+                    {form.element}
+                  </WorkflowFormGate>
+                }
+                path={form.path}
+              />
+            ))}
+          </CustomRoutes>
+        </Admin>
+      </JotaiProvider>
     </BackofficeConfigProvider>
   );
 }
