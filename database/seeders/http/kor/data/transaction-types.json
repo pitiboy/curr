@@ -1,5 +1,15 @@
 [
   {
+    "name": "Részjegy",
+    "category": "internal",
+    "description": "Részjegy előírása"
+  },
+  {
+    "name": "Lekötés",
+    "category": "future",
+    "description": "Elrendelt projekt lekötés"
+  },
+  {
     "name": "Elrendelt",
     "category": "future",
     "description": "Tervezett/elrendelt kiadás"
@@ -22,7 +32,7 @@
   {
     "name": "Bányászás",
     "category": "internal",
-    "description": "Készpénz átvezetése a hivatalos bankszámláról a tag saját számlájára"
+    "description": "Készpénz átvezetése a bankszámláról a tag saját számlájára"
   },
   {
     "name": "Jutalék",

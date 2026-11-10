@@ -247,24 +247,19 @@ Accept: application/json
       const typeId = step.transaction_type
         ? wfTypeIds[step.transaction_type]
         : undefined;
-      if (
-        (!debitIsMember && !debitId) ||
-        (!creditIsMember && !creditId) ||
-        (!orgEmpty && !orgId) ||
-        !currencyId
-      ) {
+      // Name only what is missing; the description is just the step label.
+      const missing = [];
+      if (!debitIsMember && !debitId) missing.push("debit account " + debitCode);
+      if (!creditIsMember && !creditId) missing.push("credit account " + creditCode);
+      if (!orgEmpty && !orgId) missing.push("organization \"" + step.organization + "\"");
+      if (!currencyId) missing.push("currency \"" + step.currency + "\"");
+      if (missing.length) {
         skipReason =
-          "missing lookup for step \"" +
+          "not found: " +
+          missing.join(", ") +
+          " (step \"" +
           step.description +
-          "\" (debit " +
-          debitCode +
-          ", credit " +
-          creditCode +
-          ", org " +
-          step.organization +
-          ", currency " +
-          step.currency +
-          ")";
+          "\")";
         break;
       }
       if (step.transaction_type && !typeId) {

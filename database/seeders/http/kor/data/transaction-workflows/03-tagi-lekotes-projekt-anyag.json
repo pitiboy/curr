@@ -1,0 +1,44 @@
+{
+  "name": "Tagi lekötés projekt anyagköltségekre",
+  "debit_account_code": 5000,
+  "credit_account_code": 1101,
+  "transaction_type": "Lekötés",
+  "steps": [
+    {
+      "description": "{original.description} | Projekt anyagköltség",
+      "percent": 100,
+      "debit_code": "5000",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "{original.description} | Lekötés HUF fedezet",
+      "percent": 100,
+      "debit_code": "1900",
+      "credit_code": "5000",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "{original.description} | Korona kiutalás tagnak",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "1900",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "{original.description} | Tagi Lekötés Koronaként",
+      "percent": 1,
+      "debit_code": "5000",
+      "credit_code": "1101",
+      "currency": "KOR",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

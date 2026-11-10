@@ -1,5 +1,5 @@
 {
-  "name": "Készpénzes belterületi ingatlan vásárlás",
+  "name": "Közös készpénzes belterületi ingatlan vásárlás",
   "debit_account_code": 1520,
   "credit_account_code": 1000,
   "steps": [
