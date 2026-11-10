@@ -189,6 +189,10 @@ function TransactionShowReadonly({
           )}
           source="description"
         />
+        <FunctionField
+          render={(row: RaRecord) => relationName(row.transaction_type)}
+          source="transaction_type"
+        />
 
         <SelectField choices={statusChoices} source="status" translateChoice />
         <SelectField

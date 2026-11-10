@@ -68,7 +68,10 @@ export type StrapiTransaction = {
     name?: string | null;
   } | null;
   converted_to_workflow?: ConvertedToWorkflow | boolean | null;
-  transaction_type?: { documentId?: string } | null;
+  transaction_type?: {
+    documentId?: string;
+    name?: string | null;
+  } | null;
   receipts?: Array<{
     documentId?: string;
     vendor?: string | null;
@@ -183,6 +186,7 @@ export const transactionPopulate = {
       icon: { fields: ['url', 'name', 'mime'] },
     },
   },
+  transaction_type: { fields: ['documentId', 'name'] },
   receipts: {
     populate: {
       document: { fields: ['url', 'name', 'mime'] },
