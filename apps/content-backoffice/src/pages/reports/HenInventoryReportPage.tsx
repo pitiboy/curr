@@ -353,6 +353,7 @@ function OutflowMemberBarChart({
   mode: 'slaughter' | 'transfer';
   emptyLabel: string;
 }) {
+  const chartMetrics = useReportChartMetrics();
   const activeMembers = members.filter((m) =>
     mode === 'slaughter' ? m.slaughterQty > 0 : m.transferQty > 0,
   );
@@ -366,7 +367,6 @@ function OutflowMemberBarChart({
 
   const periods = timeseries.map((p) => p.period);
   const field = mode === 'slaughter' ? 'slaughterByMember' : 'transferByMember';
-  const chartMetrics = useReportChartMetrics();
 
   return (
     <ReportScrollX
