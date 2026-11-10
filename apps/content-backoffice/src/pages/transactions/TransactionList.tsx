@@ -49,6 +49,7 @@ import { CurrencyValue } from './currencyField';
 import { TransactionDateValue } from './dateField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionBulkApproveButton } from './TransactionBulkApproveButton';
+import { TransactionBulkConvertButton } from './TransactionBulkConvertButton';
 import { TransactionConvertField } from './TransactionConvertField';
 
 const statusChoices = [
@@ -546,7 +547,14 @@ export function TransactionList() {
       >
         <Datagrid
           bulkActionButtons={
-            editorBulkApprove ? <TransactionBulkApproveButton /> : false
+            editorBulkApprove ? (
+              <>
+                <TransactionBulkApproveButton />
+                <TransactionBulkConvertButton />
+              </>
+            ) : (
+              false
+            )
           }
           empty={<TransactionListEmpty />}
           hover={false}

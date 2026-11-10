@@ -88,6 +88,25 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       '%{smart_count} tranzakció véglegesítése sikertelen. |||| %{smart_count} tranzakció véglegesítése sikertelen.',
     transactions_bulk_none_ready:
       'Egyetlen kijelölt tranzakció sem véglegesíthető.',
+    transactions_bulk_convert_title:
+      '%{smart_count} tranzakció kifejtése |||| %{smart_count} tranzakció kifejtése',
+    transactions_bulk_convert_body:
+      'A kijelölt tranzakciók ügyleti sablon szerint kifejtődnek (storno és lépéssorok). A tranzakció adatai nem változnak a kifejtés előtt.',
+    transactions_bulk_convert_body_partial:
+      'Ebből %{ready} tranzakciót kifejtünk. %{skipped} kijelölés kimarad (már kifejtve, nincs sablon, vagy több sablon is illeszkedik).',
+    transactions_bulk_convert_confirm: 'Kifejtés',
+    transactions_bulk_convert_done:
+      '%{smart_count} tranzakció kifejtve. |||| %{smart_count} tranzakció kifejtve.',
+    transactions_bulk_convert_skipped_converted:
+      'A kijelöltek közül %{smart_count} már kifejtett, ezért kimarad. |||| A kijelöltek közül %{smart_count} már kifejtett, ezért kimarad.',
+    transactions_bulk_convert_skipped_no_match:
+      'A kijelöltek közül %{smart_count}-nek nincs illeszkedő ügyleti sablonja. |||| A kijelöltek közül %{smart_count}-nek nincs illeszkedő ügyleti sablonja.',
+    transactions_bulk_convert_skipped_ambiguous:
+      'A kijelöltek közül %{smart_count}-nél több ügyleti sablon is illeszkedik. |||| A kijelöltek közül %{smart_count}-nél több ügyleti sablon is illeszkedik.',
+    transactions_bulk_convert_failed:
+      '%{smart_count} tranzakció kifejtése sikertelen. |||| %{smart_count} tranzakció kifejtése sikertelen.',
+    transactions_bulk_convert_none_ready:
+      'Egyetlen kijelölt tranzakció sem fejthető ki.',
     transactions_finalize_hint:
       'Ez a tranzakció még nincs véglegesítve, ami azt jelenti, hogy nem jelenik meg minden kimutatásban. Miután átnézte és rendben találta az adatokat és a kapcsolt bizonylatokat, véglegesítse a tranzakciót és a bizonylatokat.',
     transactions_finalize_no_receipt:
