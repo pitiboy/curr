@@ -33,6 +33,20 @@ export type BulkConvertOutcome = {
   }>;
 };
 
+/**
+ * Bulk selection on the transaction list: a row is selectable when either
+ * bulk action applies — finalize (draft) or convert (not yet expanded and
+ * exactly one workflow template matches, same rule as the row convert button).
+ */
+export function isBulkActionSelectable(
+  record: TransactionRow,
+  workflows: readonly WorkflowTemplateHeader[],
+): boolean {
+  if (record.status === 'draft') return true;
+  if (!isExpandableConvertedValue(record.converted_to_workflow)) return false;
+  return pickMatchingWorkflow([...workflows], record) !== null;
+}
+
 export function classifyBulkConvertRows(
   records: TransactionRow[],
   workflows: WorkflowTemplateHeader[],

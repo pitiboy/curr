@@ -8,6 +8,7 @@ import {
 import {
   bulkConvertTransactions,
   classifyBulkConvertRows,
+  isBulkActionSelectable,
 } from './transactionBulkConvert';
 
 const ugyelet1Template: WorkflowTemplateHeader = {
@@ -43,6 +44,70 @@ function readyJobs(classification: ReturnType<typeof classifyBulkConvertRows>) {
     workflowDocumentId: item.workflow.documentId,
   }));
 }
+
+describe('isBulkActionSelectable', () => {
+  const published: TransactionRow = { ...baseDraft, status: 'published' };
+  const unmatched: TransactionRow = {
+    ...published,
+    debit_account: { code: '9999' },
+    credit_account: { code: '9998' },
+  };
+
+  it('allows draft rows (finalize) even without a matching template', () => {
+    expect(isBulkActionSelectable({ ...unmatched, status: 'draft' }, [])).toBe(
+      true,
+    );
+    expect(
+      isBulkActionSelectable(
+        { ...baseDraft, converted_to_workflow: 'expanded' },
+        [ugyelet1Template],
+      ),
+    ).toBe(true);
+  });
+
+  it.each([null, '', false, undefined] as const)(
+    'allows published expandable rows with one matching template (%s)',
+    (value) => {
+      expect(
+        isBulkActionSelectable(
+          {
+            ...published,
+            converted_to_workflow:
+              value as TransactionRow['converted_to_workflow'],
+          },
+          [ugyelet1Template, costTemplate],
+        ),
+      ).toBe(true);
+    },
+  );
+
+  it('rejects published expandable rows without a matching template', () => {
+    expect(
+      isBulkActionSelectable(unmatched, [ugyelet1Template, costTemplate]),
+    ).toBe(false);
+    expect(isBulkActionSelectable(published, [])).toBe(false);
+  });
+
+  it('rejects published rows with ambiguous templates', () => {
+    expect(
+      isBulkActionSelectable(published, [
+        ugyelet1Template,
+        { ...ugyelet1Template, documentId: 'wf-dup' },
+      ]),
+    ).toBe(false);
+  });
+
+  it.each(['original', 'expanded', 'storno'] as const)(
+    'rejects published rows already converted (%s)',
+    (value) => {
+      expect(
+        isBulkActionSelectable({ ...published, converted_to_workflow: value }, [
+          ugyelet1Template,
+        ]),
+      ).toBe(false);
+    },
+  );
+});
 
 describe('isExpandableConvertedValue (bulk convert selection)', () => {
   it.each([null, '', false] as const)(

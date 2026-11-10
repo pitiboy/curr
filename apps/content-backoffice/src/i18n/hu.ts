@@ -3,6 +3,49 @@ import { mergeTranslations } from 'react-admin';
 
 /** Hungarian message catalog (react-admin + app labels). */
 export const huMessages = mergeTranslations(hungarianMessages, {
+  // Keys missing from ra-language-hungarian (present in ra-language-english).
+  ra: {
+    action: {
+      reset: 'Visszaállítás',
+      search_columns: 'Oszlopok keresése',
+      select_all_button: 'Összes kijelölése',
+      update_application: 'Alkalmazás újratöltése',
+    },
+    page: {
+      access_denied: 'Hozzáférés megtagadva',
+      authentication_error: 'Hitelesítési hiba',
+    },
+    message: {
+      access_denied: 'Nincs jogosultságod az oldal megtekintéséhez.',
+      authentication_error:
+        'A hitelesítő szerver hibát adott vissza, a belépési adatok nem ellenőrizhetők.',
+      select_all_limit_reached:
+        'Túl sok elem van ahhoz, hogy mindet kijelöld. Csak az első %{max} elem lett kijelölve.',
+      placeholder_data_warning:
+        'Hálózati hiba: az adatok frissítése nem sikerült.',
+    },
+    navigation: {
+      clear_filters: 'Szűrők törlése',
+      no_filtered_results: 'Nincs találat (%{name}) a jelenlegi szűrőkkel.',
+    },
+    auth: {
+      email: 'E-mail',
+    },
+    notification: {
+      not_authorized: 'Nincs jogosultságod ehhez az erőforráshoz.',
+      application_update_available: 'Új verzió érhető el.',
+      offline: 'Nincs kapcsolat. Az adatok nem tölthetők be.',
+    },
+    validation: {
+      unique: 'Egyedinek kell lennie',
+    },
+    guesser: {
+      empty: {
+        title: 'Nincs megjeleníthető adat',
+        message: 'Ellenőrizd az adatszolgáltatót (data provider).',
+      },
+    },
+  },
   app: {
     title: 'Kezelő felület',
     menu_placeholder: 'Nincs menüpont',

@@ -3,6 +3,7 @@ import QuizIcon from '@mui/icons-material/Quiz';
 import { Box, Button, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
+import { useCallback } from 'react';
 import {
   AutocompleteInput,
   Datagrid,
@@ -38,6 +39,7 @@ import {
   DEFAULT_CONVERTED_FILTER,
   firstReceiptVendor,
   sumTransactionAmountsByCurrency,
+  type TransactionRow,
 } from '../../data/transactionList';
 import {
   defaultTransactionDisplayedFilters,
@@ -50,6 +52,8 @@ import { TransactionDateValue } from './dateField';
 import { DescriptionText } from './DescriptionText';
 import { TransactionBulkApproveButton } from './TransactionBulkApproveButton';
 import { TransactionBulkConvertButton } from './TransactionBulkConvertButton';
+import { isBulkActionSelectable } from '../../data/transactionBulkConvert';
+import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { TransactionConvertField } from './TransactionConvertField';
 
 const statusChoices = [
@@ -516,15 +520,17 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
   return columns;
 }
 
-function draftRowSelectable(record: RaRecord & { status?: string }) {
-  return record.status === 'draft';
-}
-
 export function TransactionList() {
   const [locale] = useLocaleState();
   const mobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const { permissions, isPending } = usePermissions();
   const editorBulkApprove = !isPending && isEditorLikeRole(permissions);
+  const { workflows } = useTransactionWorkflowCatalog();
+  const isRowSelectable = useCallback(
+    (record: RaRecord) =>
+      isBulkActionSelectable(record as TransactionRow, workflows),
+    [workflows],
+  );
 
   return (
     <List
@@ -558,7 +564,7 @@ export function TransactionList() {
           }
           empty={<TransactionListEmpty />}
           hover={false}
-          isRowSelectable={editorBulkApprove ? draftRowSelectable : undefined}
+          isRowSelectable={editorBulkApprove ? isRowSelectable : undefined}
           rowClick={false}
           rowSx={bandedRow}
           sx={{
