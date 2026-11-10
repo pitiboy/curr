@@ -30,6 +30,7 @@ import { CurrencyValue } from './currencyField';
 import { dateFieldProps } from './dateField';
 import { DescriptionText } from './DescriptionText';
 import { SavedReceiptSection, type ReceiptCardValue } from './ReceiptFields';
+import { RelatedTransactionsAccordion } from './RelatedTransactionsAccordion';
 import { TransactionReviewEditor } from './TransactionReviewEditor';
 
 const statusChoices = [
@@ -157,13 +158,15 @@ function TransactionShowContent({
           source="converted_to_workflow"
           translateChoice
         />
-        <FunctionField
-          label="resources.transactions.fields.related_group"
-          render={(row: RaRecord) =>
-            formatRelatedGroup(row, locales, translate)
-          }
-          source="related_transactions"
-        />
+        {record.status === 'draft' ? (
+          <FunctionField
+            label="resources.transactions.fields.related_group"
+            render={(row: RaRecord) =>
+              formatRelatedGroup(row, locales, translate)
+            }
+            source="related_transactions"
+          />
+        ) : null}
 
         <FunctionField
           label={<AccountFieldLabel kind="credit" />}
@@ -188,6 +191,15 @@ function TransactionShowContent({
           />
         ) : null}
       </SimpleShowLayout>
+      {record.status === 'published' ? (
+        <Box sx={{ px: 1 }}>
+          <RelatedTransactionsAccordion
+            locale={locale}
+            locales={locales}
+            record={record}
+          />
+        </Box>
+      ) : null}
       {saved ? (
         <Box sx={{ px: 1 }}>
           <SavedReceiptSection receipts={record.receipts} />
