@@ -1,10 +1,23 @@
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import type { SidebarProps } from 'react-admin';
 import { Sidebar, useSidebarState, useTranslate } from 'react-admin';
 
 import { GlobalTransactionFiltersPanel } from '../filters/GlobalTransactionFiltersPanel';
 import { SidebarMobileHeader } from './SidebarMobileHeader';
+
+const DEFAULT_SIDEBAR_WIDTH = 240;
+const DEFAULT_CLOSED_WIDTH = 55;
+
+function sidebarWidth(theme: Theme, open: boolean): number {
+  const sidebar = (
+    theme as Theme & { sidebar?: { width?: number; closedWidth?: number } }
+  ).sidebar;
+  return open
+    ? (sidebar?.width ?? DEFAULT_SIDEBAR_WIDTH)
+    : (sidebar?.closedWidth ?? DEFAULT_CLOSED_WIDTH);
+}
 
 export function FrameSidebar(props: SidebarProps) {
   const { children, ...rest } = props;
@@ -22,12 +35,17 @@ export function FrameSidebar(props: SidebarProps) {
           borderColor: 'divider',
           overflow: 'hidden',
         },
-        '& .RaSidebar-fixed': {
+        // RA's inner box is `position: fixed` without a width, so it sizes to
+        // content: a long nowrap Select value pushed filters past the drawer.
+        '& .RaSidebar-fixed': (theme: Theme) => ({
+          boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
+          maxWidth: sidebarWidth(theme, open),
           minWidth: 0,
           overflow: 'hidden',
-        },
+          width: sidebarWidth(theme, open),
+        }),
         // Closed rail: keep menu icons centered in the narrow strip.
         '&.RaSidebar-closed .RaMenu-closed .RaMenuItemLink-root': {
           justifyContent: 'center',
