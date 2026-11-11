@@ -74,17 +74,17 @@ flowchart LR
 | `draftAndPublish` | **`true`** — Convert csak **published** sablont használ |
 | `displayName`     | Transaction-workflow (Admin; később Ügylet)             |
 
-| Mező                  | Típus                                    | Kötelező                | Megjegyzés                                                                     |
-| --------------------- | ---------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
-| `name`                | string                                   | igen                    | Seed / Admin címke                                                             |
-| `debit_account_code`  | integer 1000–9999                        | igen                    | Match: forrás `debit_account.code`                                             |
-| `credit_account_code` | integer 1000–9999                        | igen                    | Match: forrás `credit_account.code`                                            |
-| `transaction_type`    | relation oneToOne → transaction-type     | nem                     | Ha van: szigorú match                                                          |
-| `currency_type`       | relation oneToOne → currency-type        | nem                     | Ha van: szigorú match                                                          |
-| `keep_original`       | boolean                                  | nem, default `true`     | Lásd 6.                                                                        |
-| `steps_published`     | boolean                                  | nem, default **`true`** | Generált step (+ storno) sorok `published` vs draft; Convert body felülírhatja |
-| `configuration`       | json                                     | nem                     | Fenntartott                                                                    |
-| `step`                | dynamic zone (három komponens, lásd 3.2) | igen, **min 1**         | Sorrend = kifejtés sorrendje                                                   |
+| Mező                  | Típus                                               | Kötelező                | Megjegyzés                                                                     |
+| --------------------- | --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| `name`                | string                                              | igen                    | Seed / Admin címke                                                             |
+| `debit_account_code`  | string (egzakt / glob `*` `?` / heurisztikus regex) | igen                    | Match: forrás `debit_account.code`                                             |
+| `credit_account_code` | string (ugyanaz)                                    | igen                    | Match: forrás `credit_account.code`                                            |
+| `transaction_type`    | relation oneToOne → transaction-type                | nem                     | Ha van: szigorú match                                                          |
+| `currency_type`       | relation oneToOne → currency-type                   | nem                     | Ha van: szigorú match                                                          |
+| `keep_original`       | boolean                                             | nem, default `true`     | Lásd 6.                                                                        |
+| `steps_published`     | boolean                                             | nem, default **`true`** | Generált step (+ storno) sorok `published` vs draft; Convert body felülírhatja |
+| `configuration`       | json                                                | nem                     | Fenntartott                                                                    |
+| `step`                | dynamic zone (három komponens, lásd 3.2)            | igen, **min 1**         | Sorrend = kifejtés sorrendje                                                   |
 
 **Jogosultság (javaslat):** sablon szerkesztés Strapi Admin; Content API `find`/`findOne` `dataentry`+`editor`; create/update/delete Content API-n tilos. Convert endpoint: külön jog (pl. `editor` vagy admin token).
 
@@ -120,7 +120,7 @@ Generált összeg: `amount = source.amount * percent / 100`; ha a stepen `apply_
 
 1. Sablon **published**.
 2. Forrás `converted_to_workflow` üres / null.
-3. `Number(debit_account.code) === debit_account_code` és ugyanez **credit**re (`account.code` string). Kód-alapú: minden tag `1101`/`1001` példánya matchel.
+3. `accountCodeMatchesPattern(debit_account.code, debit_account_code)` és ugyanez **credit**re (glob vagy heurisztikus regex). Kód/minta alapú: minden tag `1101`/`1001` példánya matchel.
 4. Ha a sablonon van `currency_type` documentId: egyezés kötelező.
 5. Ha a sablonon van `transaction_type` documentId: egyezés kötelező.
 6. Egy forrás-sorra **egy** sablon (ütköző fejléc → seed hiba; Convert 409).

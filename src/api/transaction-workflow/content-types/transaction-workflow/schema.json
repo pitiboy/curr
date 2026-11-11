@@ -16,16 +16,14 @@
       "required": true
     },
     "credit_account_code": {
-      "type": "integer",
+      "type": "string",
       "required": true,
-      "min": 1000,
-      "max": 9999
+      "regex": "^[0-9*?\\[\\]()|\\\\.^${}]+$"
     },
     "debit_account_code": {
-      "type": "integer",
+      "type": "string",
       "required": true,
-      "min": 1000,
-      "max": 9999
+      "regex": "^[0-9*?\\[\\]()|\\\\.^${}]+$"
     },
     "transaction_type": {
       "type": "relation",

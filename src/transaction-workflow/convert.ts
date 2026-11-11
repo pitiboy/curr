@@ -1,9 +1,11 @@
 /**
  * Convert üzleti logika (Strapi nélkül, tesztelhető).
- * Match: published sablon fejléc kódok + opcionális pénznem/típus,
- * converted_to_workflow üres (null) — original/expanded/storno nem matchel.
+ * Match: published sablon fejléc minták (glob * / ? vagy heurisztikus regex) +
+ * opcionális pénznem/típus; converted_to_workflow üres (null) —
+ * original/expanded/storno nem matchel.
  * Expand: step percent → összeg, {original.*}/{1} leírás;
- * organization_from_original (forrás org kötelező) vagy step org (üres marad üres);
+ * organization/debit/credit/currency_from_original (forrás kötelező a flaghez)
+ * vagy step relation (üres marad üres orgnál);
  * tagi oldal forrás trx / testvér számlából.
  * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
  * legfrissebb valid_from ≤ forrás nap vége) × tagsági ratio (csak valódi váltásnál,
@@ -78,7 +80,10 @@ export type WorkflowStep = {
   member_account_code?: string | number | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
+  debit_account_from_original?: boolean | null;
+  credit_account_from_original?: boolean | null;
   currency_type?: CurrencyRef | null;
+  currency_from_original?: boolean | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
   organization_from_original?: boolean | null;
@@ -93,7 +98,10 @@ export type NormalizedWorkflowStep = {
   creditWanted: string;
   debitRelation?: AccountRef | null;
   creditRelation?: AccountRef | null;
-  currency_type?: { documentId: string } | null;
+  debit_from_original?: boolean;
+  credit_from_original?: boolean;
+  currency_from_original?: boolean;
+  currency_type?: { documentId: string; code?: string | null } | null;
   transaction_type?: { documentId: string } | null;
   organization?: { documentId: string } | null;
   organization_from_original?: boolean | null;
@@ -104,8 +112,8 @@ export type NormalizedWorkflowStep = {
 export type WorkflowTemplate = {
   documentId: string;
   name?: string | null;
-  debit_account_code: number;
-  credit_account_code: number;
+  debit_account_code: string | number;
+  credit_account_code: string | number;
   keep_original?: boolean | null;
   steps_published?: boolean | null;
   currency_type?: { documentId: string } | null;
@@ -187,6 +195,83 @@ function requireRelationCode(
   return code;
 }
 
+/**
+ * Characters that force regex mode (not glob). `?` and `*` stay glob-only so
+ * `15?0` / `5*` keep Excel/shell meaning.
+ */
+const ACCOUNT_CODE_REGEX_TRIGGERS = /[[\](){}\\.^$|]/;
+
+/** Exact 4-digit account code (prefill / $eq safe). */
+export function isExactAccountCodePattern(
+  pattern: string | number | null | undefined,
+): boolean {
+  if (pattern === null || pattern === undefined || pattern === '') return false;
+  return /^[0-9]{4}$/.test(String(pattern).trim());
+}
+
+/**
+ * Glob (`*` / `?`) or heuristic regex match against an account code.
+ * Invalid regex → false (no throw). Empty pattern → false.
+ */
+export function accountCodeMatchesPattern(
+  code: string | number | null | undefined,
+  pattern: string | number | null | undefined,
+): boolean {
+  if (code === null || code === undefined || code === '') return false;
+  if (pattern === null || pattern === undefined || pattern === '') return false;
+  const codeStr = String(code).trim();
+  const patternStr = String(pattern).trim();
+  if (!codeStr || !patternStr) return false;
+
+  const useRegex = ACCOUNT_CODE_REGEX_TRIGGERS.test(patternStr);
+  const body = useRegex
+    ? patternStr
+    : patternStr.replace(/\*/g, '[0-9]*').replace(/\?/g, '[0-9]');
+  try {
+    return new RegExp(`^${body}$`).test(codeStr);
+  } catch {
+    return false;
+  }
+}
+
+function resolveCurrencySide(
+  step: WorkflowStep,
+): Pick<NormalizedWorkflowStep, 'currency_type' | 'currency_from_original'> {
+  if (step.currency_from_original === true) {
+    return { currency_from_original: true, currency_type: null };
+  }
+  if (!step.currency_type?.documentId) {
+    throw new TransactionWorkflowError('Step currency_type is missing', 422);
+  }
+  return {
+    currency_from_original: false,
+    currency_type: step.currency_type,
+  };
+}
+
+function resolveAccountSide(
+  step: WorkflowStep,
+  side: 'debit' | 'credit',
+): {
+  wanted: string;
+  relation: AccountRef | null | undefined;
+  fromOriginal: boolean;
+} {
+  const fromOriginal =
+    side === 'debit'
+      ? step.debit_account_from_original === true
+      : step.credit_account_from_original === true;
+  if (fromOriginal) {
+    return { wanted: '', relation: null, fromOriginal: true };
+  }
+  const account = side === 'debit' ? step.debit_account : step.credit_account;
+  return {
+    wanted: requireRelationCode(account, side),
+    relation: account,
+    fromOriginal: false,
+  };
+}
+
 /** Dynamic-zone komponens → egységes debit/credit wanted + relation. */
 export function normalizeWorkflowStep(
   step: WorkflowStep,
@@ -199,10 +284,11 @@ export function normalizeWorkflowStep(
     );
   }
 
+  const currency = resolveCurrencySide(step);
   const shared = {
     description: step.description,
     percent: step.percent,
-    currency_type: step.currency_type,
+    ...currency,
     transaction_type: step.transaction_type,
     organization: step.organization,
     organization_from_original: step.organization_from_original === true,
@@ -211,38 +297,44 @@ export function normalizeWorkflowStep(
   };
 
   if (component === STEP_RELATED) {
-    const debitWanted = requireRelationCode(step.debit_account, 'debit');
-    const creditWanted = requireRelationCode(step.credit_account, 'credit');
+    const debit = resolveAccountSide(step, 'debit');
+    const credit = resolveAccountSide(step, 'credit');
     return {
       ...shared,
-      debitWanted,
-      creditWanted,
-      debitRelation: step.debit_account,
-      creditRelation: step.credit_account,
+      debitWanted: debit.wanted,
+      creditWanted: credit.wanted,
+      debitRelation: debit.relation,
+      creditRelation: credit.relation,
+      debit_from_original: debit.fromOriginal,
+      credit_from_original: credit.fromOriginal,
     };
   }
 
   if (component === STEP_MEMBER_DEBIT) {
     const debitWanted = requireMemberAccountCode(step.member_account_code);
-    const creditWanted = requireRelationCode(step.credit_account, 'credit');
+    const credit = resolveAccountSide(step, 'credit');
     return {
       ...shared,
       debitWanted,
-      creditWanted,
+      creditWanted: credit.wanted,
       debitRelation: null,
-      creditRelation: step.credit_account,
+      creditRelation: credit.relation,
+      debit_from_original: false,
+      credit_from_original: credit.fromOriginal,
     };
   }
 
   if (component === STEP_MEMBER_CREDIT) {
     const creditWanted = requireMemberAccountCode(step.member_account_code);
-    const debitWanted = requireRelationCode(step.debit_account, 'debit');
+    const debit = resolveAccountSide(step, 'debit');
     return {
       ...shared,
-      debitWanted,
+      debitWanted: debit.wanted,
       creditWanted,
-      debitRelation: step.debit_account,
+      debitRelation: debit.relation,
       creditRelation: null,
+      debit_from_original: debit.fromOriginal,
+      credit_from_original: false,
     };
   }
 
@@ -259,10 +351,14 @@ export function workflowMatchesTransaction(
   if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
     return false;
   }
-  const debit = parseAccountCode(transaction.debit_account?.code ?? null);
-  const credit = parseAccountCode(transaction.credit_account?.code ?? null);
-  if (debit !== workflow.debit_account_code) return false;
-  if (credit !== workflow.credit_account_code) return false;
+  const debit = accountCodeString(transaction.debit_account);
+  const credit = accountCodeString(transaction.credit_account);
+  if (!accountCodeMatchesPattern(debit, workflow.debit_account_code)) {
+    return false;
+  }
+  if (!accountCodeMatchesPattern(credit, workflow.credit_account_code)) {
+    return false;
+  }
   if (workflow.currency_type?.documentId) {
     if (
       transaction.currency_type?.documentId !==
@@ -308,7 +404,45 @@ const ORIGINAL_STRING_FIELDS = [
 
 type OriginalStringField = (typeof ORIGINAL_STRING_FIELDS)[number];
 
+function requireSourceAccount(
+  source: SourceTransaction,
+  side: 'debit' | 'credit',
+): AccountRef {
+  const account =
+    side === 'debit' ? source.debit_account : source.credit_account;
+  if (!account?.documentId) {
+    throw new TransactionWorkflowError(
+      `Source transaction ${side}_account is required by this workflow step`,
+      422,
+    );
+  }
+  return account;
+}
+
+function requireSourceCurrency(source: SourceTransaction): CurrencyRef {
+  const documentId = source.currency_type?.documentId;
+  if (!documentId) {
+    throw new TransactionWorkflowError(
+      'Source transaction currency_type is required by this workflow step',
+      422,
+    );
+  }
+  return {
+    documentId,
+    code: source.currency_type?.code ?? null,
+  };
+}
+
 function originalFieldValue(source: SourceTransaction, field: string): string {
+  if (field === 'debit_account_code') {
+    return accountCodeString(source.debit_account) ?? '';
+  }
+  if (field === 'credit_account_code') {
+    return accountCodeString(source.credit_account) ?? '';
+  }
+  if (field === 'currency') {
+    return source.currency_type?.code?.trim() ?? '';
+  }
   if (!(ORIGINAL_STRING_FIELDS as readonly string[]).includes(field)) {
     return '';
   }
@@ -565,6 +699,8 @@ export function stepsNeedingRate(
   const to = new Set<string>();
   for (const step of workflow.step ?? []) {
     if (step?.apply_currency_rate !== true) continue;
+    // currency_from_original → same as source → no lookup.
+    if (step.currency_from_original === true) continue;
     const target = step.currency_type?.documentId;
     if (target && target !== from) to.add(target);
   }
@@ -656,7 +792,10 @@ export function expandWorkflowSteps(
 
   return steps.map((step, index) => {
     const normalized = normalizeWorkflowStep(step);
-    const currency = normalized.currency_type?.documentId;
+    const stepCurrency = normalized.currency_from_original
+      ? requireSourceCurrency(transaction)
+      : normalized.currency_type;
+    const currency = stepCurrency?.documentId;
     if (!currency) {
       throw new TransactionWorkflowError('Step currency_type is missing', 422);
     }
@@ -666,11 +805,7 @@ export function expandWorkflowSteps(
       normalized.percent ?? 100,
     );
     const appliedRate = normalized.apply_currency_rate
-      ? requireStepRate(
-          normalized.currency_type as CurrencyRef,
-          transaction,
-          rates,
-        )
+      ? requireStepRate(stepCurrency as CurrencyRef, transaction, rates)
       : null;
 
     // Ratio only on a real conversion (from ≠ to): a flagged same-currency
@@ -682,6 +817,23 @@ export function expandWorkflowSteps(
         ? memberRatio
         : null;
 
+    const debit_account = normalized.debit_from_original
+      ? requireSourceAccount(transaction, 'debit')
+      : resolveStepAccount(
+          normalized.debitWanted,
+          normalized.debitRelation,
+          transaction,
+          siblingByCode,
+        );
+    const credit_account = normalized.credit_from_original
+      ? requireSourceAccount(transaction, 'credit')
+      : resolveStepAccount(
+          normalized.creditWanted,
+          normalized.creditRelation,
+          transaction,
+          siblingByCode,
+        );
+
     return {
       index,
       description:
@@ -690,18 +842,8 @@ export function expandWorkflowSteps(
       amount: appliedRate
         ? roundAmount(baseAmount * appliedRate.rate * (stepRatio?.ratio ?? 1))
         : baseAmount,
-      debit_account: resolveStepAccount(
-        normalized.debitWanted,
-        normalized.debitRelation,
-        transaction,
-        siblingByCode,
-      ),
-      credit_account: resolveStepAccount(
-        normalized.creditWanted,
-        normalized.creditRelation,
-        transaction,
-        siblingByCode,
-      ),
+      debit_account,
+      credit_account,
       currency_type: { documentId: currency },
       transaction_type: normalized.transaction_type?.documentId
         ? { documentId: normalized.transaction_type.documentId }

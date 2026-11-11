@@ -27,7 +27,12 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::account.account",
-      "required": true
+      "required": false
+    },
+    "debit_account_from_original": {
+      "type": "boolean",
+      "required": false,
+      "default": false
     },
     "transaction_type": {
       "type": "relation",
@@ -38,7 +43,12 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::currency-type.currency-type",
-      "required": true
+      "required": false
+    },
+    "currency_from_original": {
+      "type": "boolean",
+      "required": false,
+      "default": false
     },
     "organization": {
       "type": "relation",
