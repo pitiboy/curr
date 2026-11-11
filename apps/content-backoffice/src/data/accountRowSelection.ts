@@ -1,6 +1,7 @@
 import type { AccountChoice } from './accountCodes';
 import type { AccountProfile } from './accountProfiles';
 import {
+  isExactAccountCodePattern,
   workflowMatchesTransaction,
   pickMatchingWorkflow,
   countMatchingWorkflows,
@@ -209,9 +210,9 @@ export function buildAccountRowOptions(
 
 export function resolveAccountCodeToAccount(
   accounts: AccountChoice[],
-  code: number,
+  code: string | number,
 ): ResolveAccountCodeResult {
-  const codeString = String(code);
+  const codeString = String(code).trim();
   const matches = accounts.filter(
     (account) => String(account.code).trim() === codeString,
   );
@@ -230,14 +231,14 @@ export function resolveWorkflowPrefill(
   accounts: AccountChoice[],
 ): WorkflowPrefillResult {
   const warningKeys: string[] = [];
-  const debit = resolveAccountCodeToAccount(
-    accounts,
-    workflow.debit_account_code,
-  );
-  const credit = resolveAccountCodeToAccount(
-    accounts,
-    workflow.credit_account_code,
-  );
+  const debitExact = isExactAccountCodePattern(workflow.debit_account_code);
+  const creditExact = isExactAccountCodePattern(workflow.credit_account_code);
+  const debit = debitExact
+    ? resolveAccountCodeToAccount(accounts, workflow.debit_account_code)
+    : ({ status: 'missing' } as const);
+  const credit = creditExact
+    ? resolveAccountCodeToAccount(accounts, workflow.credit_account_code)
+    : ({ status: 'missing' } as const);
 
   let debitAccountId: string | null = null;
   let creditAccountId: string | null = null;
@@ -245,18 +246,23 @@ export function resolveWorkflowPrefill(
   let creditAccountCodeFilter: string | null = null;
   let accountsResolved = true;
 
-  if (debit.status === 'ok') {
+  if (debitExact && debit.status === 'ok') {
     debitAccountId = debit.id;
   } else {
     accountsResolved = false;
-    debitAccountCodeFilter = String(workflow.debit_account_code);
+    // Pattern headers must not become Strapi $eq filters.
+    if (debitExact) {
+      debitAccountCodeFilter = String(workflow.debit_account_code);
+    }
     warningKeys.push('app.account_profile_workflow_prefill_incomplete');
   }
-  if (credit.status === 'ok') {
+  if (creditExact && credit.status === 'ok') {
     creditAccountId = credit.id;
   } else {
     accountsResolved = false;
-    creditAccountCodeFilter = String(workflow.credit_account_code);
+    if (creditExact) {
+      creditAccountCodeFilter = String(workflow.credit_account_code);
+    }
     if (
       !warningKeys.includes('app.account_profile_workflow_prefill_incomplete')
     ) {

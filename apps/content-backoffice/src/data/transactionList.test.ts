@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  accountCodeMatchesPattern,
   assembleTransactionList,
   buildTransactionFilters,
   PROJECT_BALANCE_LEG_FILTER_KEY,
@@ -8,6 +9,7 @@ import {
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
+  isExactAccountCodePattern,
   parseTransactionAmount,
   pickMatchingWorkflow,
   sumTransactionAmountsByCurrency,
@@ -528,6 +530,27 @@ describe('workflowMatchesTransaction', () => {
         credit_account: { code: '1101' },
         currency_type: { documentId: 'cur-kor' },
       }),
+    ).toBe(true);
+  });
+
+  it('matches glob and regex header patterns', () => {
+    expect(accountCodeMatchesPattern('1520', '15?0')).toBe(true);
+    expect(accountCodeMatchesPattern('10', '15?0')).toBe(false);
+    expect(accountCodeMatchesPattern('1520', '15[23]0')).toBe(true);
+    expect(accountCodeMatchesPattern('1510', '15[23]0')).toBe(false);
+    expect(isExactAccountCodePattern('1520')).toBe(true);
+    expect(isExactAccountCodePattern('15*')).toBe(false);
+    expect(
+      workflowMatchesTransaction(
+        {
+          ...ugyelet1Template,
+          debit_account_code: '15[23]0',
+        },
+        {
+          debit_account: { code: '1520' },
+          credit_account: { code: '1101' },
+        },
+      ),
     ).toBe(true);
   });
 });

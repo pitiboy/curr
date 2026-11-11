@@ -199,6 +199,25 @@ describe('resolveWorkflowPrefill', () => {
       'app.account_profile_workflow_prefill_incomplete',
     );
   });
+
+  it('does not $eq-filter non-exact pattern headers', () => {
+    const result = resolveWorkflowPrefill(
+      {
+        ...workflowA,
+        debit_account_code: '5*',
+        credit_account_code: '15[23]0',
+      },
+      accounts,
+    );
+    expect(result.debitAccountId).toBeNull();
+    expect(result.creditAccountId).toBeNull();
+    expect(result.debitAccountCodeFilter).toBeNull();
+    expect(result.creditAccountCodeFilter).toBeNull();
+    expect(result.accountsResolved).toBe(false);
+    expect(result.warningKeys).toContain(
+      'app.account_profile_workflow_prefill_incomplete',
+    );
+  });
 });
 
 describe('resolveAccountCodeToAccount', () => {

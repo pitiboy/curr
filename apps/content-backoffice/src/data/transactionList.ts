@@ -218,8 +218,8 @@ export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
 export type WorkflowTemplateHeader = {
   documentId: string;
   name?: string | null;
-  debit_account_code: number;
-  credit_account_code: number;
+  debit_account_code: string | number;
+  credit_account_code: string | number;
   currency_type?: {
     documentId?: string;
     code?: string | null;
@@ -253,6 +253,51 @@ function parseAccountCode(
   return Number.isFinite(value) ? value : null;
 }
 
+function accountCodeString(
+  code: string | number | null | undefined,
+): string | null {
+  const parsed = parseAccountCode(code);
+  return parsed === null ? null : String(parsed);
+}
+
+/**
+ * Characters that force regex mode (not glob). Same rules as server
+ * `accountCodeMatchesPattern` in `src/transaction-workflow/convert.ts`.
+ */
+const ACCOUNT_CODE_REGEX_TRIGGERS = /[[\](){}\\.^$|]/;
+
+/** Exact 4-digit account code (prefill / $eq safe). */
+export function isExactAccountCodePattern(
+  pattern: string | number | null | undefined,
+): boolean {
+  if (pattern === null || pattern === undefined || pattern === '') return false;
+  return /^[0-9]{4}$/.test(String(pattern).trim());
+}
+
+/**
+ * Glob (`*` / `?`) or heuristic regex match. Same rules as server convert.ts.
+ */
+export function accountCodeMatchesPattern(
+  code: string | number | null | undefined,
+  pattern: string | number | null | undefined,
+): boolean {
+  if (code === null || code === undefined || code === '') return false;
+  if (pattern === null || pattern === undefined || pattern === '') return false;
+  const codeStr = String(code).trim();
+  const patternStr = String(pattern).trim();
+  if (!codeStr || !patternStr) return false;
+
+  const useRegex = ACCOUNT_CODE_REGEX_TRIGGERS.test(patternStr);
+  const body = useRegex
+    ? patternStr
+    : patternStr.replace(/\*/g, '[0-9]*').replace(/\?/g, '[0-9]');
+  try {
+    return new RegExp(`^${body}$`).test(codeStr);
+  } catch {
+    return false;
+  }
+}
+
 /** Same rules as server `workflowMatchesTransaction` in `src/transaction-workflow/convert.ts`. */
 export function workflowMatchesTransaction(
   workflow: WorkflowTemplateHeader,
@@ -261,10 +306,14 @@ export function workflowMatchesTransaction(
   if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
     return false;
   }
-  const debit = parseAccountCode(transaction.debit_account?.code ?? null);
-  const credit = parseAccountCode(transaction.credit_account?.code ?? null);
-  if (debit !== workflow.debit_account_code) return false;
-  if (credit !== workflow.credit_account_code) return false;
+  const debit = accountCodeString(transaction.debit_account?.code ?? null);
+  const credit = accountCodeString(transaction.credit_account?.code ?? null);
+  if (!accountCodeMatchesPattern(debit, workflow.debit_account_code)) {
+    return false;
+  }
+  if (!accountCodeMatchesPattern(credit, workflow.credit_account_code)) {
+    return false;
+  }
   if (workflow.currency_type?.documentId) {
     if (
       transaction.currency_type?.documentId !==
