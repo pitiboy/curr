@@ -68,6 +68,7 @@ export function TransactionConvertSection({
     <TransactionConvertButton
       disabled={disabled}
       documentId={record.documentId}
+      toolbarStyle
       workflow={workflow}
     />
   );

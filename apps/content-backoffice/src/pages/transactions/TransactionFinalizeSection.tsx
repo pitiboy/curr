@@ -120,10 +120,9 @@ export function TransactionFinalizeSection({
         title={translate('app.transactions_review')}
       />
       <Stack
-        alignItems="center"
         direction="row"
         spacing={1}
-        sx={{ flexWrap: 'wrap' }}
+        sx={{ alignItems: 'center', flexWrap: 'wrap' }}
       >
         <Button
           disabled={blocked || samePersonBlocked || saving || discarding}
