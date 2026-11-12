@@ -32,6 +32,7 @@ import { Title, useTranslate } from 'react-admin';
 
 import {
   useGlobalReportParams,
+  useGlobalTransactionFilters,
   useOpenDrilldown,
 } from '../../filters/globalTransactionFiltersAtom';
 import {
@@ -78,6 +79,8 @@ export function ProjectBalanceReportPage() {
   const translate = useTranslate();
   // Date range + transaction status come from the global sidebar filters.
   const params = useGlobalReportParams();
+  const [filters] = useGlobalTransactionFilters();
+  const preferredCurrency = filters.currency_type?.trim() || null;
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<OrganizationOption[]>([]);
   const { status, report, reload } = useProjectBalanceReport(
@@ -103,10 +106,13 @@ export function ProjectBalanceReportPage() {
   useEffect(() => {
     if (!report) return;
     setCurrency((prev) => {
+      if (preferredCurrency && report.currencies.includes(preferredCurrency)) {
+        return preferredCurrency;
+      }
       if (prev && report.currencies.includes(prev)) return prev;
       return report.historyCurrency;
     });
-  }, [report]);
+  }, [preferredCurrency, report]);
 
   const selectedOrg = useMemo(
     () =>

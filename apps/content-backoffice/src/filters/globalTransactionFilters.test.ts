@@ -111,12 +111,13 @@ describe('toListFilter', () => {
         amount_gte: 0,
         amount_lte: 500,
         createdAt_gte: '2026-02-01',
+        currency_type: 'HUF',
         organization: 'org-1',
         debit_account: 'acc-d',
         credit_account: 'acc-c',
         description: 'tojás',
         vendor: '  ',
-        drilldown: { currency_type: 'HUF' },
+        drilldown: { [PROJECT_BALANCE_LEG_FILTER_KEY]: 'revenue' },
       },
       NOW,
     );
@@ -127,11 +128,12 @@ describe('toListFilter', () => {
       amount_gte: 0,
       amount_lte: 500,
       createdAt_gte: '2026-02-01',
+      currency_type: 'HUF',
       organization: 'org-1',
       debit_account: 'acc-d',
       credit_account: 'acc-c',
       description: 'tojás',
-      currency_type: 'HUF',
+      [PROJECT_BALANCE_LEG_FILTER_KEY]: 'revenue',
     });
   });
 });
@@ -238,13 +240,14 @@ describe('applyMenuOverride', () => {
     status: 'preview',
     converted_to_workflow: ['none'],
     amount_gte: 10,
+    currency_type: 'HUF',
     organization: 'org-1',
     debit_account: 'acc-d',
     credit_account: 'acc-c',
     description: 'x',
     vendor: 'y',
     createdAt_lte: '2026-04-01',
-    drilldown: { currency_type: 'HUF' },
+    drilldown: { [PROJECT_BALANCE_LEG_FILTER_KEY]: 'cost' },
   };
 
   it('Review sets draft + every deal expansion and keeps the date and other fields', () => {
@@ -256,6 +259,7 @@ describe('applyMenuOverride', () => {
       date_gte: '2026-01-01',
       date_lte: '2026-03-31',
       amount_gte: 10,
+      currency_type: 'HUF',
       organization: 'org-1',
       debit_account: 'acc-d',
       credit_account: 'acc-c',
@@ -307,10 +311,10 @@ describe('mergeDrilldownIntoGlobal', () => {
       date_lte: '2026-11-30',
       status: 'preview',
       converted_to_workflow: [...DEFAULT_CONVERTED_FILTER],
+      currency_type: 'HUF',
       organization: 'org-a',
       vendor: 'kept',
       drilldown: {
-        currency_type: 'HUF',
         [PROJECT_BALANCE_LEG_FILTER_KEY]: 'revenue',
       },
     });
@@ -318,6 +322,20 @@ describe('mergeDrilldownIntoGlobal', () => {
       ...filterFromListSearch(link.search),
       vendor: 'kept',
     });
+  });
+
+  it('clears a previous currency when the drill-down omits it', () => {
+    const next = mergeDrilldownIntoGlobal(
+      { ...resetGlobalFilters(), currency_type: 'EUR', vendor: 'kept' },
+      {
+        date_lte: '2026-11-30',
+        converted_to_workflow: ['none', 'expanded'],
+        credit_account: 'acc-c',
+      },
+    );
+    expect(next.currency_type).toBeUndefined();
+    expect(next.credit_account).toBe('acc-c');
+    expect(next.vendor).toBe('kept');
   });
 
   it('keeps an open start and maps a missing status to all', () => {
