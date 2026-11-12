@@ -9,6 +9,7 @@ import {
   STEP_RELATED,
   TransactionWorkflowError,
   accountCodeMatchesPattern,
+  buildStornoRowShape,
   expandDescription,
   expandTemplate,
   expandWorkflowSteps,
@@ -17,6 +18,7 @@ import {
   pickMatchingWorkflow,
   resolveStepOrganization,
   stepAmount,
+  stripDescriptionComments,
   workflowMatchesTransaction,
   workflowRequiresSourceOrganization,
   type SourceTransaction,
@@ -547,6 +549,38 @@ describe('expandWorkflowSteps', () => {
     );
     assert.equal(expandTemplate('{1} Utalás', tx), 'felújítás Utalás');
     assert.equal(expandTemplate('{original.unknown} x', tx), ' x');
+  });
+
+  it('strips excel HTML comment lines from expanded descriptions', () => {
+    const excel = [
+      '<!-- excel -->',
+      '<!-- Excel: #114 -->',
+      '<!-- Művelet: Kölcsön -->',
+      '<!-- /excel -->',
+    ].join('\n');
+    const tx: SourceTransaction = {
+      documentId: 'tx-excel',
+      date: '2026-01-01',
+      amount: 1,
+      description: `BALÁZS ERIKA (részjegy)\n\n${excel}`,
+      debit_account: account('1510'),
+      credit_account: account('1101'),
+    };
+    assert.equal(
+      stripDescriptionComments(tx.description),
+      'BALÁZS ERIKA (részjegy)',
+    );
+    assert.equal(
+      expandTemplate('{original.description} | Részjegy előírása', tx),
+      'BALÁZS ERIKA (részjegy) | Részjegy előírása',
+    );
+    assert.equal(
+      buildStornoRowShape({
+        ...tx,
+        currency_type: { documentId: 'cur-huf' },
+      }).description,
+      'BALÁZS ERIKA (részjegy)',
+    );
   });
 
   it('expands original debit/credit/currency placeholders', () => {

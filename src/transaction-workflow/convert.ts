@@ -475,6 +475,22 @@ function requireSourceCurrency(source: SourceTransaction): CurrencyRef {
   };
 }
 
+/**
+ * Drop full-line HTML comments (excel import metadata) from a description.
+ * Same rules as backoffice `visibleDescription`.
+ */
+export function stripDescriptionComments(
+  value: string | null | undefined,
+): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .split(/\r?\n/)
+    .filter((line) => !/^\s*<!--.*-->\s*$/.test(line))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function originalFieldValue(source: SourceTransaction, field: string): string {
   if (field === 'debit_account_code') {
     return accountCodeString(source.debit_account) ?? '';
@@ -490,7 +506,8 @@ function originalFieldValue(source: SourceTransaction, field: string): string {
   }
   const value = source[field as OriginalStringField];
   if (value == null) return '';
-  return String(value);
+  const text = String(value);
+  return field === 'description' ? stripDescriptionComments(text) : text;
 }
 
 /**
@@ -964,7 +981,7 @@ export function buildStornoRowShape(
   return {
     date: transaction.date,
     amount: stornoAmountFromSource(transaction.amount),
-    description: transaction.description,
+    description: stripDescriptionComments(transaction.description) || null,
     debit_account: transaction.debit_account,
     credit_account: transaction.credit_account,
     currency_type: { documentId: currencyDocumentId },
