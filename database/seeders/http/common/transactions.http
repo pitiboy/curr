@@ -21,11 +21,16 @@
 #   tagi számlája, saját:<azonosító> = a tag 1001-es saját (homály) számlája,
 #   pl. tag:pál. A tagot az azonosítója alapján keresi meg; ha nincs ilyen
 #   tag vagy számlája, a mező üres marad, és a futás kiírja, hány sort érint.
-#   transaction_type = a sor transaction_type mezője, különben
+#   transaction_type = a sor transaction_type mezője (workflow matchhez fontos:
+#                      Részjegy / Lekötés / Bányászás stb.). Ha üres, a
+#                      transaction-import-keys a
 #                      operationTransactionTypes[operation], különben
-#                      placeTransactionTypes[place]
+#                      placeTransactionTypes[place] táblából pótolja; a már
+#                      kitöltött típust a re-book nem írja felül.
 #   organization    = a sor organization mezője, különben mainOrganization
-#   currency_type   = currencyCode
+#   currency_type   = a sor currency mezője, különben currencyCode
+#   related_transaction = related_transaction_entered_key → entered_key
+#                      (második pass; kor Excel-soroknál általában üres)
 #   description     = Leírás, alatta az eredeti oszlopok markdown HTML-kommentben.
 #                     Minden ilyen sor önálló komment, ezért a markdown
 #                     megjelenítés nem írja ki. A backoffice listája és a

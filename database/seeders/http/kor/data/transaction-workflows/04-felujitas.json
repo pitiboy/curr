@@ -1,13 +1,13 @@
 {
   "name": "Közös eszköz felújítás utalással",
-  "debit_account_code": 1500,
-  "credit_account_code": 2000,
+  "debit_account_code": "1500",
+  "credit_account_code": "2000",
   "steps": [
     {
       "description": "{original.description} | Állagjavítás",
       "percent": 100,
-      "debit_code": "1500",
-      "credit_code": "2000",
+      "debit_code": "{original.debit_account_code}",
+      "credit_code": "{original.credit_account_code}",
       "currency": "HUF",
       "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
@@ -15,7 +15,7 @@
     {
       "description": "{original.description} | Utalás",
       "percent": 100,
-      "debit_code": "2000",
+      "debit_code": "{original.credit_account_code}",
       "credit_code": "1100",
       "currency": "HUF",
       "organization": "{original.organization}",
@@ -25,7 +25,7 @@
       "description": "{original.description} | Lekötés HUF fedezet",
       "percent": 100,
       "debit_code": "1900",
-      "credit_code": "1500",
+      "credit_code": "{original.debit_account_code}",
       "currency": "HUF",
       "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
@@ -33,7 +33,7 @@
     {
       "description": "{original.description} KOR kiadás",
       "percent": 1,
-      "debit_code": "1500",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1900",
       "currency": "KOR",
       "organization": "{original.organization}",

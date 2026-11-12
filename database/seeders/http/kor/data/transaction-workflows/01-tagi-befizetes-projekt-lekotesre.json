@@ -1,7 +1,7 @@
 {
   "name": "Tagi befizetés projekt lekötéssel",
-  "debit_account_code": 5000,
-  "credit_account_code": 1101,
+  "debit_account_code": "5?00",
+  "credit_account_code": "1101",
   "transaction_type": "Részjegy",
   "steps": [
     {
@@ -25,7 +25,7 @@
     {
       "description": "{original.description} | Projekt költség",
       "percent": 100,
-      "debit_code": "5000",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1100",
       "currency": "HUF",
       "organization": "{original.organization}",
@@ -35,7 +35,7 @@
       "description": "{original.description} | Lekötés HUF fedezet",
       "percent": 100,
       "debit_code": "1900",
-      "credit_code": "5000",
+      "credit_code": "{original.debit_account_code}",
       "currency": "HUF",
       "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
@@ -52,7 +52,7 @@
     {
       "description": "{original.description} | Tagi Lekötés Koronaként",
       "percent": 1,
-      "debit_code": "5000",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1101",
       "currency": "KOR",
       "organization": "{original.organization}",

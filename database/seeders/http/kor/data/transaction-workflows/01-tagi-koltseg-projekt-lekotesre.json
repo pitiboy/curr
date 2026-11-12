@@ -1,32 +1,32 @@
 {
   "name": "Tagi privát költség projekt lekötéssel",
-  "credit_account_code": 1001,
-  "debit_account_code": 1100,
+  "debit_account_code": "5(00|10|4[0-9]|50|80)0",
+  "credit_account_code": "1001",
   "steps": [
     {
       "description": "{original.description} | Részjegy előírása",
       "percent": 100,
-      "debit_code": "1001",
+      "debit_code": "{original.credit_account_code}",
       "credit_code": "3000",
-      "currency": "HUF",
+      "currency": "{original.currency}",
       "organization": "I/3. Pénzügyi Igazgatóság",
       "transaction_type": "Részjegy"
     },
     {
       "description": "{original.description} | Bejövő tagi utalás",
       "percent": 100,
-      "debit_code": "1100",
-      "credit_code": "1001",
-      "currency": "HUF",
+      "debit_code": "{original.debit_account_code}",
+      "credit_code": "{original.credit_account_code}",
+      "currency": "{original.currency}",
       "organization": "I/3. Pénzügyi Igazgatóság",
       "transaction_type": "Utalás"
     },
     {
       "description": "{original.description} | Projekt költség",
       "percent": 100,
-      "debit_code": "5000",
-      "credit_code": "1100",
-      "currency": "HUF",
+      "debit_code": "{original.credit_account_code}",
+      "credit_code": "{original.debit_account_code}",
+      "currency": "{original.currency}",
       "organization": "{original.organization}",
       "transaction_type": "Utalás"
     },
@@ -34,15 +34,15 @@
       "description": "{original.description} | Lekötés HUF fedezet",
       "percent": 100,
       "debit_code": "1900",
-      "credit_code": "5000",
-      "currency": "HUF",
+      "credit_code": "{original.debit_account_code}",
+      "currency": "{original.currency}",
       "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     },
     {
       "description": "{original.description} | Korona kiutalás tagnak",
       "percent": 100,
-      "debit_code": "1001",
+      "debit_code": "{original.credit_account_code}",
       "credit_code": "1900",
       "currency": "KOR",
       "organization": "I/3. Pénzügyi Igazgatóság",
@@ -51,8 +51,8 @@
     {
       "description": "{original.description} | Tagi Lekötés Koronaként",
       "percent": 1,
-      "debit_code": "5000",
-      "credit_code": "1001",
+      "debit_code": "{original.debit_account_code}",
+      "credit_code": "{original.credit_account_code}",
       "currency": "KOR",
       "organization": "{original.organization}",
       "transaction_type": "Átvezetés"

@@ -15,7 +15,7 @@
     },
     {
       "description": "Készletcsökkenés",
-      "percent": 62.5,
+      "percent": 100,
       "debit_code": "5600",
       "credit_code": "1300",
       "currency": "FRUIT",

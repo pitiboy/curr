@@ -33,15 +33,17 @@
     );
     // Tömb, ne Set — az exports blokkok között a Set nem marad meg megbízhatóan.
     exports.wfMemberCodes = ["1101", "1001"];
-    // Seed DSL: "{original.<field>}" → Convert copies from source trx (flag on step).
+    // Seed DSL: "{original.<field>}" → Convert copies from source trx.
+    // Account templates may be crossed (debit_code ← original.credit, etc.).
     exports.wfIsOriginalOrgTemplate = (value) =>
       typeof value === "string" && /^\{original\.organization\}$/.test(value.trim());
-    exports.wfIsOriginalDebitTemplate = (value) =>
-      typeof value === "string" &&
-      /^\{original\.debit_account_code\}$/.test(value.trim());
-    exports.wfIsOriginalCreditTemplate = (value) =>
-      typeof value === "string" &&
-      /^\{original\.credit_account_code\}$/.test(value.trim());
+    exports.wfOriginalAccountSide = (value) => {
+      if (typeof value !== "string") return null;
+      const trimmed = value.trim();
+      if (/^\{original\.debit_account_code\}$/.test(trimmed)) return "debit";
+      if (/^\{original\.credit_account_code\}$/.test(trimmed)) return "credit";
+      return null;
+    };
     exports.wfIsOriginalCurrencyTemplate = (value) =>
       typeof value === "string" && /^\{original\.currency\}$/.test(value.trim());
     const accountCodes = new Set();
@@ -56,8 +58,8 @@
       for (const step of item.steps || []) {
         const debit = String(step.debit_code);
         const credit = String(step.credit_code);
-        const debitFromOriginal = exports.wfIsOriginalDebitTemplate(debit);
-        const creditFromOriginal = exports.wfIsOriginalCreditTemplate(credit);
+        const debitFromOriginal = exports.wfOriginalAccountSide(debit) != null;
+        const creditFromOriginal = exports.wfOriginalAccountSide(credit) != null;
         if (
           !debitFromOriginal &&
           !exports.wfMemberCodes.includes(debit)
@@ -259,8 +261,10 @@ Accept: application/json
     for (const step of item.steps || []) {
       const debitCode = String(step.debit_code);
       const creditCode = String(step.credit_code);
-      const debitFromOriginal = wfIsOriginalDebitTemplate(debitCode);
-      const creditFromOriginal = wfIsOriginalCreditTemplate(creditCode);
+      const debitOrigSide = wfOriginalAccountSide(debitCode);
+      const creditOrigSide = wfOriginalAccountSide(creditCode);
+      const debitFromOriginal = debitOrigSide != null;
+      const creditFromOriginal = creditOrigSide != null;
       const currencyFromOriginal = wfIsOriginalCurrencyTemplate(step.currency);
       const debitIsMember =
         !debitFromOriginal && wfMemberCodes.includes(debitCode);
@@ -356,15 +360,15 @@ Accept: application/json
               percent: step.percent,
             };
       if (row.__component === "workflow.step-member-debit") {
-        if (creditFromOriginal) row.credit_account_from_original = true;
+        if (creditOrigSide) row.credit_account_from_original = creditOrigSide;
         else row.credit_account = creditId;
       } else if (row.__component === "workflow.step-member-credit") {
-        if (debitFromOriginal) row.debit_account_from_original = true;
+        if (debitOrigSide) row.debit_account_from_original = debitOrigSide;
         else row.debit_account = debitId;
       } else {
-        if (debitFromOriginal) row.debit_account_from_original = true;
+        if (debitOrigSide) row.debit_account_from_original = debitOrigSide;
         else row.debit_account = debitId;
-        if (creditFromOriginal) row.credit_account_from_original = true;
+        if (creditOrigSide) row.credit_account_from_original = creditOrigSide;
         else row.credit_account = creditId;
       }
       if (currencyFromOriginal) row.currency_from_original = true;

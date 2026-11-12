@@ -1,24 +1,24 @@
 {
-  "name": "Tagi lekötés lakóingatlanba",
-  "debit_account_code": 1530,
-  "credit_account_code": 1101,
+  "name": "Tagi lekötés ingatlanba",
+  "debit_account_code": "1510",
+  "credit_account_code": "1101",
   "transaction_type": "Lekötés",
   "steps": [
     {
       "description": "{original.description} | Telek vételár",
       "percent": 100,
-      "debit_code": "1530",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1100",
-      "currency": "HUF",
+      "currency": "{original.currency}",
       "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás"
     },
     {
-      "description": "{original.description} | Lekötés HUF fedezet",
+      "description": "{original.description} | Lekötés {original.currency} fedezet",
       "percent": 100,
       "debit_code": "1900",
-      "credit_code": "1530",
-      "currency": "HUF",
+      "credit_code": "{original.debit_account_code}",
+      "currency": "{original.currency}",
       "organization": "I/4.11.1.1 Lakóterületek",
       "transaction_type": "Átvezetés"
     },
@@ -34,7 +34,7 @@
     {
       "description": "{original.description} | Tagi Lekötés koronaként",
       "percent": 1,
-      "debit_code": "1530",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1101",
       "currency": "KOR",
       "organization": "I/4.11.1.2 Termőterületek",

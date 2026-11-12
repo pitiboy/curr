@@ -60,7 +60,8 @@
       "credit_account": "tag:pál",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Készpénz"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 3,
@@ -79,7 +80,8 @@
       "credit_account": "tag:erika",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Készpénz"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 4,
@@ -98,7 +100,8 @@
       "credit_account": "tag:ildikó",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Készpénz"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 5,
@@ -117,7 +120,8 @@
       "credit_account": "tag:dani",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Készpénz"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 6,
@@ -136,11 +140,12 @@
       "credit_account": "tag:pál",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Készpénz"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 7,
-      "entered_key": "excel:4806c2423bacda7af24f",
+      "entered_key": "excel:89a85c5110445c13188b",
       "date": "2024-11-21",
       "payer": "Dani",
       "payee": "Pénztár",
@@ -154,12 +159,13 @@
       "debit_label": "Kölcsönök",
       "credit_account": "tag:dani",
       "debit_account": "Kölcsönök",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 8,
-      "entered_key": "excel:16bb3a9a7cbca597325d",
+      "entered_key": "excel:9e7db0fc8cc5409a826b",
       "date": "2024-12-11",
       "payer": "Dani",
       "payee": "Pénztár",
@@ -173,12 +179,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "tag:dani",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 9,
-      "entered_key": "excel:818932adf084a6d494b8",
+      "entered_key": "excel:6a925b49eaccc1cd7df8",
       "date": "2024-12-11",
       "payer": "Pál",
       "payee": "Pál",
@@ -192,12 +199,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "tag:pál",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 10,
-      "entered_key": "excel:3e53b177ffa5bbda7c7e",
+      "entered_key": "excel:40cea6fbbcc203028170",
       "date": "2024-12-11",
       "payer": "Pál",
       "payee": "Pál",
@@ -211,12 +219,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "tag:pál",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 11,
-      "entered_key": "excel:c1159dc2ba2d302736b5",
+      "entered_key": "excel:872d7899abcab144cd6b",
       "date": "2024-12-11",
       "payer": "Pál",
       "payee": "Pál",
@@ -230,12 +239,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "tag:pál",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 12,
-      "entered_key": "excel:d65b8bec0f8f51db8033",
+      "entered_key": "excel:395a0802e53a735fc0b2",
       "date": "2024-12-11",
       "payer": "Pál",
       "payee": "Pál",
@@ -249,12 +259,13 @@
       "debit_label": "Kölcsönök",
       "credit_account": "tag:pál",
       "debit_account": "Kölcsönök",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 13,
-      "entered_key": "excel:94d9e1b5fbf3863b209b",
+      "entered_key": "excel:6d41690b5973577a2a19",
       "date": "2024-12-11",
       "payer": "Pál",
       "payee": "Pénztár",
@@ -268,12 +279,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "tag:pál",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 14,
-      "entered_key": "excel:c61c37ed6ddb2792d80d",
+      "entered_key": "excel:931f82e37a02da877762",
       "date": "2024-12-18",
       "payer": "Péter",
       "payee": "Pénztár",
@@ -287,12 +299,13 @@
       "debit_label": "Pénztár - Saját számla",
       "credit_account": "tag:péter",
       "debit_account": "Készpénz",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 15,
-      "entered_key": "excel:90a4f2f1eb3d5f375b43",
+      "entered_key": "excel:ce5678dcd3673ae49d3a",
       "date": "2024-12-18",
       "payer": "Péter",
       "payee": "Pál",
@@ -306,12 +319,13 @@
       "debit_label": "Kölcsönök",
       "credit_account": "tag:péter",
       "debit_account": "Kölcsönök",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 16,
-      "entered_key": "excel:a782ecafd2c4afa42557",
+      "entered_key": "excel:27ce4d9d144198b27ee8",
       "date": "2024-12-18",
       "payer": "Péter",
       "payee": "Pénztár",
@@ -325,12 +339,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "tag:péter",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 17,
-      "entered_key": "excel:c28e077c6339ede27a52",
+      "entered_key": "excel:77f0e6b4ce6eee695d71",
       "date": "2024-12-18",
       "payer": "Erika",
       "payee": "Pál",
@@ -344,12 +359,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "tag:erika",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 18,
-      "entered_key": "excel:cacf1948a0ae4d981393",
+      "entered_key": "excel:50bc28324379c9829cc1",
       "date": "2024-12-18",
       "payer": "Erika",
       "payee": "Pál",
@@ -363,12 +379,13 @@
       "debit_label": "Kölcsönök",
       "credit_account": "tag:erika",
       "debit_account": "Kölcsönök",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 19,
-      "entered_key": "excel:9cd3fec2c4b621c5d21a",
+      "entered_key": "excel:e7688a48a27c1df81955",
       "date": "2024-12-18",
       "payer": "Erika",
       "payee": "Pénztár",
@@ -382,12 +399,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "tag:erika",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Készpénz"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 20,
-      "entered_key": "excel:e277f270658fe8c56d4b",
+      "entered_key": "excel:0495407b9cae9d3256f0",
       "date": "2024-12-20",
       "payer": "Ildikó",
       "payee": "Pénztár",
@@ -401,12 +419,13 @@
       "debit_label": "Pénztár - Saját számla",
       "credit_account": "tag:ildikó",
       "debit_account": "Készpénz",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 21,
-      "entered_key": "excel:4f17d5f1cb6aa477798e",
+      "entered_key": "excel:c21fb92cc27c4c51887e",
       "date": "2024-12-20",
       "payer": "Ildikó",
       "payee": "Pál",
@@ -420,12 +439,13 @@
       "debit_label": "Kölcsönök",
       "credit_account": "tag:ildikó",
       "debit_account": "Kölcsönök",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 22,
-      "entered_key": "excel:c6e8080b39457b52b00c",
+      "entered_key": "excel:81f7b5b1a03faeb63e97",
       "date": "2024-12-20",
       "payer": "Ildikó",
       "payee": "Pénztár",
@@ -439,12 +459,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "tag:ildikó",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 23,
-      "entered_key": "excel:a914b6626e1475b2d869",
+      "entered_key": "excel:18fd7f4bab5c92f80797",
       "date": "2024-12-20",
       "payer": "Dani",
       "payee": "Pénztár",
@@ -458,12 +479,13 @@
       "debit_label": "Pénztár - Saját számla",
       "credit_account": "tag:dani",
       "debit_account": "Készpénz",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 24,
-      "entered_key": "excel:64db8c554b8d9808244e",
+      "entered_key": "excel:ea6baf2ececce6a0c239",
       "date": "2024-12-20",
       "payer": "Dani",
       "payee": "Pál",
@@ -477,12 +499,13 @@
       "debit_label": "Kölcsönök",
       "credit_account": "tag:dani",
       "debit_account": "Kölcsönök",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 25,
-      "entered_key": "excel:557c50752c43060307d9",
+      "entered_key": "excel:1e5d291e0da89c7c9135",
       "date": "2024-12-20",
       "payer": "Dani",
       "payee": "Pénztár",
@@ -496,12 +519,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "tag:dani",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/0.1 Alapító(k)",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 26,
-      "entered_key": "excel:51af89350c67aec591ff",
+      "entered_key": "excel:49c55b07a44be14ad25b",
       "date": "2024-12-20",
       "payer": "Pénztár",
       "payee": "Laci",
@@ -515,7 +539,9 @@
       "debit_label": "Laci - Saját számla",
       "credit_account": "Kölcsönök",
       "debit_account": "saját:laci",
-      "organization": "Zöld források szövetkezet @Szupatak"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 27,
@@ -530,10 +556,12 @@
       "place": "Budapest",
       "description": "Tulajdoni lapok",
       "credit_label": "Pál - Saját számla",
-      "debit_label": "Utazás és üzemanyag",
+      "debit_label": "Szolgáltatások",
       "credit_account": "saját:pál",
-      "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "debit_account": "Szolgáltatások",
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 28,
@@ -548,10 +576,12 @@
       "place": "Budapest",
       "description": "Földhivatali bejegyzés Illeték",
       "credit_label": "Pál - Saját számla",
-      "debit_label": "Utazás és üzemanyag",
+      "debit_label": "Szolgáltatások",
       "credit_account": "saját:pál",
-      "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "debit_account": "Szolgáltatások",
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 29,
@@ -569,7 +599,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 30,
@@ -587,11 +619,13 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 31,
-      "entered_key": "excel:0089cf8fe3cd6007d8db",
+      "entered_key": "excel:d8fdd0a5f9e6c52a0f40",
       "date": "2025-04-24",
       "payer": "Bank",
       "payee": "Pál",
@@ -605,12 +639,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 32,
-      "entered_key": "excel:3492aeaed16515d62a08",
+      "entered_key": "excel:1d9405707a23852d2ae0",
       "date": "2025-05-08",
       "payer": "Bank",
       "payee": "Pál",
@@ -624,12 +659,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 33,
-      "entered_key": "excel:b1b264131fcb45673119",
+      "entered_key": "excel:f5e67bd448b927e92d63",
       "date": "2025-05-14",
       "payer": "Bank",
       "payee": "Pál",
@@ -643,8 +679,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 34,
@@ -662,7 +699,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 35,
@@ -680,7 +719,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 36,
@@ -698,7 +739,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 37,
@@ -716,11 +759,13 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 38,
-      "entered_key": "excel:5104fbb67d7dbe3ec25c",
+      "entered_key": "excel:9891f0604c85e6b4092c",
       "date": "2025-06-12",
       "payer": "Bank",
       "payee": "Pál",
@@ -734,12 +779,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 39,
-      "entered_key": "excel:05b67a1f741734558b21",
+      "entered_key": "excel:a9b3a6bfee1a2edf026a",
       "date": "2025-06-24",
       "payer": "Bank",
       "payee": "Pál",
@@ -753,12 +799,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 40,
-      "entered_key": "excel:9b7d8dfae443ee69803c",
+      "entered_key": "excel:95e4fec6e1a13fbc5561",
       "date": "2025-07-14",
       "payer": "Bank",
       "payee": "Pál",
@@ -772,8 +819,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 41,
@@ -791,11 +839,13 @@
       "debit_label": "Mezőgazdasági földterületek",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági földterületek",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 42,
-      "entered_key": "excel:751c78183797e81fe64f",
+      "entered_key": "excel:e32bcf5be4f63febf0c7",
       "date": "2025-07-24",
       "payer": "Bank",
       "payee": "Pál",
@@ -809,8 +859,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 43,
@@ -828,11 +879,13 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 44,
-      "entered_key": "excel:696b2b2daea2fa0cf76e",
+      "entered_key": "excel:4bfc32b0c2b3fcbd8b15",
       "date": "2025-08-13",
       "payer": "Bank",
       "payee": "Pál",
@@ -846,12 +899,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 45,
-      "entered_key": "excel:a981b6af21ce042bbfaa",
+      "entered_key": "excel:b2db5e6473592a91b741",
       "date": "2025-09-16",
       "payer": "Bank",
       "payee": "Pál",
@@ -865,8 +919,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 46,
@@ -879,12 +934,14 @@
       "operation": "Költség",
       "amount": 100000,
       "place": "Szúpatak",
-      "description": "Kaszlás Viczián Lacinak munkadíj (Daninak megfizetve a kölcsöne)",
+      "description": "Kaszálás Viczián Lacinak munkadíj (Daninak megfizetve a kölcsöne)",
       "credit_label": "Pál - Saját számla",
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 47,
@@ -902,7 +959,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 48,
@@ -919,7 +978,9 @@
       "debit_label": "Pál - Tagi számla",
       "credit_account": "Egyéb bevételek",
       "debit_account": "tag:pál",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 49,
@@ -937,7 +998,9 @@
       "debit_label": "Dani - Tagi számla",
       "credit_account": "saját:pál",
       "debit_account": "tag:dani",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Átvezetés",
+      "currency": "HUF"
     },
     {
       "row": 50,
@@ -955,7 +1018,9 @@
       "debit_label": "Dani - Tagi számla",
       "credit_account": "saját:pál",
       "debit_account": "tag:dani",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Átvezetés",
+      "currency": "HUF"
     },
     {
       "row": 51,
@@ -972,11 +1037,13 @@
       "debit_label": "Pál - Tagi számla",
       "credit_account": "Egyéb bevételek",
       "debit_account": "tag:pál",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 52,
-      "entered_key": "excel:00794900f9bee67f53b3",
+      "entered_key": "excel:c9d14e18e3fdb5186c0b",
       "date": "2025-10-31",
       "payer": "Bank",
       "payee": "Pál",
@@ -990,8 +1057,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 53,
@@ -1009,11 +1077,13 @@
       "debit_label": "Oktatás és képzés",
       "credit_account": "saját:pál",
       "debit_account": "Oktatás és képzés",
-      "organization": "I/5.14 Munkatárs fejlesztés"
+      "organization": "I/5.14 Munkatárs fejlesztés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 54,
-      "entered_key": "excel:1c5c09e54fbbc4a1dd20",
+      "entered_key": "excel:eb4ba862174797059dc0",
       "date": "2025-11-27",
       "payer": "Bank",
       "payee": "Pál",
@@ -1027,12 +1097,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 55,
-      "entered_key": "excel:b6301ee5b3314934468e",
+      "entered_key": "excel:6dbbf9341e9761d7b055",
       "date": "2025-12-12",
       "payer": "Bank",
       "payee": "Pál",
@@ -1046,8 +1117,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 56,
@@ -1065,7 +1137,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 57,
@@ -1083,7 +1157,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 58,
@@ -1100,7 +1176,9 @@
       "debit_label": "Pál - Tagi számla",
       "credit_account": "Egyéb bevételek",
       "debit_account": "tag:pál",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 59,
@@ -1118,11 +1196,13 @@
       "debit_label": "Oktatás és képzés",
       "credit_account": "saját:pál",
       "debit_account": "Oktatás és képzés",
-      "organization": "I/5.14 Munkatárs fejlesztés"
+      "organization": "I/5.14 Munkatárs fejlesztés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 60,
-      "entered_key": "excel:d2244b8570c5423edc7d",
+      "entered_key": "excel:2959840ef63ab060165b",
       "date": "2026-01-26",
       "payer": "Bank",
       "payee": "Pál",
@@ -1136,12 +1216,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 61,
-      "entered_key": "excel:8bbd90a704a41c13e1ff",
+      "entered_key": "excel:10294f91309419f54650",
       "date": "2026-01-20",
       "payer": "Bank",
       "payee": "Pál",
@@ -1155,8 +1236,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 62,
@@ -1174,11 +1256,13 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 63,
-      "entered_key": "excel:a1e96bfef668628dba96",
+      "entered_key": "excel:a60e41f0bd0050b9b559",
       "date": "2026-02-05",
       "payer": "Bank",
       "payee": "Pál",
@@ -1192,12 +1276,13 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 64,
-      "entered_key": "excel:a0f635f2349059ab05ca",
+      "entered_key": "excel:bf8af6c5dd9ef90de91e",
       "date": "2026-02-06",
       "payer": "Bank",
       "payee": "Pál",
@@ -1211,8 +1296,9 @@
       "debit_label": "Pál - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:pál",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 65,
@@ -1229,7 +1315,9 @@
       "debit_label": "Pál - Tagi számla",
       "credit_account": "Egyéb bevételek",
       "debit_account": "tag:pál",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 66,
@@ -1247,7 +1335,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 67,
@@ -1265,7 +1355,9 @@
       "debit_label": "Lakó földterületek",
       "credit_account": "saját:pál",
       "debit_account": "Belterületi földterületek",
-      "organization": "I/4.11.1.1 Lakóterületek"
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 68,
@@ -1283,7 +1375,9 @@
       "debit_label": "Lakó földterületek",
       "credit_account": "saját:pál",
       "debit_account": "Belterületi földterületek",
-      "organization": "I/4.11.1.1 Lakóterületek"
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 69,
@@ -1301,7 +1395,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 70,
@@ -1319,7 +1415,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 71,
@@ -1338,7 +1436,8 @@
       "credit_account": "tag:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 72,
@@ -1356,7 +1455,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.11.1.1 Lakóterületek"
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 73,
@@ -1374,7 +1475,9 @@
       "debit_label": "Gazdasági földterületek",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági földterületek",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 74,
@@ -1392,7 +1495,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 75,
@@ -1410,7 +1515,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.11.1.2 Termőterületek"
+      "organization": "I/4.11.1.2 Termőterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 76,
@@ -1428,7 +1535,9 @@
       "debit_label": "Lakó földterületek",
       "credit_account": "saját:pál",
       "debit_account": "Belterületi földterületek",
-      "organization": "I/4.11.1.1 Lakóterületek"
+      "organization": "I/4.11.1.1 Lakóterületek",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 77,
@@ -1446,7 +1555,9 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Szolgáltatások",
-      "organization": "I/3.8 Kifizetési központ"
+      "organization": "I/3.8 Kifizetési központ",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 78,
@@ -1464,7 +1575,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 79,
@@ -1482,7 +1595,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 80,
@@ -1501,7 +1616,8 @@
       "credit_account": "tag:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 81,
@@ -1519,7 +1635,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 82,
@@ -1537,7 +1655,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:péter",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 83,
@@ -1555,7 +1675,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:péter",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 84,
@@ -1573,7 +1695,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 85,
@@ -1591,7 +1715,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 86,
@@ -1609,7 +1735,9 @@
       "debit_label": "Javítás és karbantartás",
       "credit_account": "saját:péter",
       "debit_account": "Javítás és karbantartás",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 87,
@@ -1627,7 +1755,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 88,
@@ -1645,7 +1775,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 89,
@@ -1663,7 +1795,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 90,
@@ -1681,7 +1815,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:péter",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 91,
@@ -1699,7 +1835,9 @@
       "debit_label": "Reprezentáció",
       "credit_account": "saját:péter",
       "debit_account": "Reprezentáció",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 92,
@@ -1717,7 +1855,9 @@
       "debit_label": "Utazás és üzemanyag",
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 93,
@@ -1735,7 +1875,9 @@
       "debit_label": "Pál - Tagi számla",
       "credit_account": "Egyéb bevételek",
       "debit_account": "tag:pál",
-      "organization": "I/4.11.1 Birtokkezelés"
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 94,
@@ -1753,7 +1895,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 95,
@@ -1771,7 +1915,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 96,
@@ -1789,7 +1935,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 97,
@@ -1807,7 +1955,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 98,
@@ -1825,7 +1975,9 @@
       "debit_label": "Anyagköltség",
       "credit_account": "tag:pál",
       "debit_account": "Anyagköltség",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 99,
@@ -1843,7 +1995,9 @@
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
-      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget"
+      "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
+      "transaction_type": "Készpénz",
+      "currency": "HUF"
     },
     {
       "row": 100,
@@ -1862,11 +2016,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 101,
-      "entered_key": "excel:9eecfe369ceb9b24ecea",
+      "entered_key": "excel:fbee02ebcd2db85f3685",
       "date": "2024-12-23",
       "payer": "Pál",
       "payee": "Bank",
@@ -1880,12 +2035,13 @@
       "debit_label": "Bankszámlák",
       "credit_account": "saját:pál",
       "debit_account": "Bankszámlák",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 102,
-      "entered_key": "excel:19ce3ce37a72f16f8260",
+      "entered_key": "excel:9109cbbc0df7e8d5c163",
       "date": "2024-12-23",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -1899,8 +2055,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 103,
@@ -1919,7 +2076,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 104,
@@ -1938,11 +2096,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 105,
-      "entered_key": "excel:085320ad464203c0bda6",
+      "entered_key": "excel:38a193b1bad274349a6b",
       "date": "2024-12-31",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -1956,8 +2115,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 106,
@@ -1976,7 +2136,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 107,
@@ -1995,7 +2156,8 @@
       "credit_account": "tag:ildikó",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Lekötés",
+      "currency": "HUF"
     },
     {
       "row": 108,
@@ -2014,7 +2176,8 @@
       "credit_account": "tag:ildikó",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Lekötés",
+      "currency": "HUF"
     },
     {
       "row": 109,
@@ -2033,7 +2196,8 @@
       "credit_account": "tag:dani",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Lekötés",
+      "currency": "HUF"
     },
     {
       "row": 110,
@@ -2052,7 +2216,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 111,
@@ -2071,7 +2236,8 @@
       "credit_account": "tag:pál",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Lekötés",
+      "currency": "HUF"
     },
     {
       "row": 112,
@@ -2090,7 +2256,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 113,
@@ -2109,11 +2276,12 @@
       "credit_account": "tag:erika",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Lekötés",
+      "currency": "HUF"
     },
     {
       "row": 114,
-      "entered_key": "excel:ef1ab4d4827642af84a6",
+      "entered_key": "excel:fa3a6d13695ae26cfbe5",
       "date": "2025-02-25",
       "payer": "Erika",
       "payee": "Bank",
@@ -2126,8 +2294,9 @@
       "debit_label": "Mezőgazdasági földterületek",
       "credit_account": "tag:erika",
       "debit_account": "Mezőgazdasági földterületek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Lekötés",
+      "currency": "HUF"
     },
     {
       "row": 115,
@@ -2146,7 +2315,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 116,
@@ -2165,7 +2335,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 117,
@@ -2184,7 +2355,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 118,
@@ -2203,11 +2375,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 119,
-      "entered_key": "excel:b1207ec16d3fd11c3c89",
+      "entered_key": "excel:4dc7de9392fd9ad30df6",
       "date": "2025-03-31",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2221,8 +2394,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 120,
@@ -2241,7 +2415,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 121,
@@ -2260,7 +2435,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 122,
@@ -2279,7 +2455,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 123,
@@ -2298,7 +2475,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 124,
@@ -2317,11 +2495,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 125,
-      "entered_key": "excel:a282ca72c61cbf803876",
+      "entered_key": "excel:171da4692d9fae0f6d5c",
       "date": "2025-06-30",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2335,8 +2514,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 126,
@@ -2355,7 +2535,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 127,
@@ -2374,7 +2555,8 @@
       "credit_account": "Készpénz",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 128,
@@ -2393,7 +2575,8 @@
       "credit_account": "Készpénz",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 129,
@@ -2412,7 +2595,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 130,
@@ -2431,7 +2615,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 131,
@@ -2450,7 +2635,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 132,
@@ -2469,7 +2655,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 133,
@@ -2488,7 +2675,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 134,
@@ -2507,7 +2695,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 135,
@@ -2526,11 +2715,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 136,
-      "entered_key": "excel:1d0285d7c4880ec2fee3",
+      "entered_key": "excel:dd5f1e7cadb5ec234d31",
       "date": "2025-09-30",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2544,8 +2734,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 137,
@@ -2564,7 +2755,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 138,
@@ -2583,11 +2775,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 139,
-      "entered_key": "excel:51840762df23ca66e8ee",
+      "entered_key": "excel:61d0943fa54ebc039b90",
       "date": "2025-10-31",
       "payer": "Bank",
       "payee": "Pénzügyi költségek",
@@ -2600,12 +2793,13 @@
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 140,
-      "entered_key": "excel:8bb769ff484d0e8ca6b2",
+      "entered_key": "excel:33ec7fce381a7a5b5b84",
       "date": "2025-10-31",
       "payer": "Bank",
       "payee": "Pénzügyi költségek",
@@ -2618,12 +2812,13 @@
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 141,
-      "entered_key": "excel:315051fd6bd9c4d13e28",
+      "entered_key": "excel:270314798dbb5d205fd5",
       "date": "2025-11-13",
       "payer": "Bank",
       "payee": "Bank",
@@ -2637,12 +2832,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 142,
-      "entered_key": "excel:6434eea7dc3dde3b44c9",
+      "entered_key": "excel:3a639436e23e5fa28ff0",
       "date": "2025-11-28",
       "payer": "Bank",
       "payee": "Pénzügyi költségek",
@@ -2655,12 +2851,13 @@
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 143,
-      "entered_key": "excel:769ffb09c7d2cf044aa7",
+      "entered_key": "excel:4e86caae52b7ae9d1f35",
       "date": "2025-12-01",
       "payer": "Bank",
       "payee": "Pénzügyi költségek",
@@ -2673,12 +2870,13 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 144,
-      "entered_key": "excel:a970a5a896f6b09e54be",
+      "entered_key": "excel:40f0b45b2f2ab933ec5d",
       "date": "2025-12-18",
       "payer": "Erika",
       "payee": "Erika",
@@ -2691,12 +2889,13 @@
       "debit_label": "Erika - Saját számla",
       "credit_account": "Kölcsönök",
       "debit_account": "saját:erika",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 145,
-      "entered_key": "excel:e82d6cf0791d659bab3f",
+      "entered_key": "excel:c31c9f8f95761607bcbf",
       "date": "2025-12-29",
       "payer": "Bank",
       "payee": "Péter",
@@ -2710,12 +2909,13 @@
       "debit_label": "Péter - Saját számla",
       "credit_account": "Bankszámlák",
       "debit_account": "saját:péter",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Bányászás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Bányászás",
+      "currency": "HUF"
     },
     {
       "row": 146,
-      "entered_key": "excel:1de2f665df9e38ef37fa",
+      "entered_key": "excel:345018bfd32599771d69",
       "date": "2025-12-31",
       "payer": "Bank",
       "payee": "Pénzügyi költségek",
@@ -2728,12 +2928,13 @@
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 147,
-      "entered_key": "excel:e77e53bbf8acde8b90b7",
+      "entered_key": "excel:719519a4bf5ee66453c0",
       "date": "2025-12-31",
       "payer": "Bank",
       "payee": "Pénzügyi költségek",
@@ -2746,12 +2947,13 @@
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 148,
-      "entered_key": "excel:2b8823c10fd30683a6ce",
+      "entered_key": "excel:4721c822fbdcc0742ebe",
       "date": "2025-12-31",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2765,12 +2967,13 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 149,
-      "entered_key": "excel:f815ae61e1edcba60678",
+      "entered_key": "excel:5b8fb52a92e0106bd2b2",
       "date": "2025-12-31",
       "payer": "Bank",
       "payee": "Szolgáltatások",
@@ -2783,8 +2986,9 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 150,
@@ -2803,11 +3007,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 151,
-      "entered_key": "excel:4968ec83352c261afb32",
+      "entered_key": "excel:dfefcf3972a68a0eee4d",
       "date": "2026-01-28",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2820,12 +3025,13 @@
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 152,
-      "entered_key": "excel:4968ec83352c261afb32#2",
+      "entered_key": "excel:dfefcf3972a68a0eee4d#2",
       "date": "2026-01-28",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2838,8 +3044,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 153,
@@ -2858,7 +3065,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 154,
@@ -2877,7 +3085,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 155,
@@ -2896,7 +3105,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 156,
@@ -2915,7 +3125,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 157,
@@ -2934,7 +3145,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 158,
@@ -2953,7 +3165,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 159,
@@ -2972,11 +3185,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 160,
-      "entered_key": "excel:08bf214b63d59a1dd457",
+      "entered_key": "excel:b133428bac6b1b5b98d2",
       "date": "2026-03-31",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -2990,8 +3204,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 161,
@@ -3010,7 +3225,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 162,
@@ -3029,7 +3245,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 163,
@@ -3048,7 +3265,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 164,
@@ -3067,7 +3285,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 165,
@@ -3086,7 +3305,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 166,
@@ -3105,11 +3325,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 167,
-      "entered_key": "excel:deb5e2b5d273e918ca01",
+      "entered_key": "excel:6bfd1b658ec04c7d2a20",
       "date": "2026-06-30",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -3123,8 +3344,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 168,
@@ -3143,7 +3365,8 @@
       "credit_account": "tag:péter",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 169,
@@ -3162,7 +3385,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 170,
@@ -3181,7 +3405,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 171,
@@ -3200,7 +3425,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 172,
@@ -3219,7 +3445,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 173,
@@ -3238,7 +3465,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 174,
@@ -3257,7 +3485,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 175,
@@ -3276,7 +3505,8 @@
       "credit_account": "tag:péter",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Részjegy",
+      "currency": "HUF"
     },
     {
       "row": 176,
@@ -3295,7 +3525,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 177,
@@ -3314,7 +3545,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 178,
@@ -3333,7 +3565,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 179,
@@ -3352,7 +3585,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 180,
@@ -3371,7 +3605,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 181,
@@ -3390,7 +3625,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 182,
@@ -3409,7 +3645,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 183,
@@ -3428,11 +3665,12 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi költségek",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 184,
-      "entered_key": "excel:019f202f46e68e90318e",
+      "entered_key": "excel:a649b38925352d78ee0f",
       "date": "2026-09-30",
       "payer": "Bank",
       "payee": "Pénzügyi bevételek",
@@ -3446,8 +3684,9 @@
       "debit_label": "Pénzügyi bevételek",
       "credit_account": "Bankszámlák",
       "debit_account": "Pénzügyi bevételek",
-      "organization": "Zöld források szövetkezet @Szupatak",
-      "transaction_type": "Utalás"
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 185,
@@ -3466,7 +3705,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     },
     {
       "row": 186,
@@ -3485,7 +3725,8 @@
       "credit_account": "Bankszámlák",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "currency": "HUF"
     }
   ]
 }
