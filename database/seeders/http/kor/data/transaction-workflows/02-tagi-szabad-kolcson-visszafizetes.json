@@ -1,5 +1,5 @@
 {
-  "name": "Tagi lekötés ingatlanba",
+  "name": "Tagi szabad kölcsön visszafizetés",
   "debit_account_code": "1001",
   "credit_account_code": "1720",
   "steps": [
