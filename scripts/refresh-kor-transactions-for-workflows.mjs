@@ -169,9 +169,10 @@ function heuristicType(row, debit, credit) {
   const fromWf = workflowType(debit, credit, row);
   if (fromWf) return fromWf;
 
-  // Internal 1101↔1001 / 1101←4200 support transfers.
+  // Internal 1101↔1001 / stróman támogatás 1001←4200.
   if (debit === '1101' && credit === '1001') return 'Átvezetés';
   if (credit === '1101' && debit === '1001') return 'Átvezetés';
+  if (debit === '1001' && credit === '4200') return 'Utalás';
   if (debit === '1101' && credit === '4200') return 'Utalás';
 
   const fromOp =

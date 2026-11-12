@@ -1,0 +1,34 @@
+{
+  "name": "Tagi lekötés ingatlanba",
+  "debit_account_code": "1001",
+  "credit_account_code": "1720",
+  "steps": [
+    {
+      "description": "{original.description} | Részjegy törlése",
+      "percent": 100,
+      "debit_code": "3000",
+      "credit_code": "1101",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy"
+    },
+    {
+      "description": "{original.description} | Kölcsön",
+      "percent": 100,
+      "debit_code": "1100",
+      "credit_code": "{original.credit_account_code}",
+      "currency": "{original.currency}",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "{original.description} | Kölcsön visszautalás tagnak",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    }
+  ]
+}

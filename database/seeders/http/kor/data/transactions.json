@@ -960,7 +960,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Utazás és üzemanyag",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -975,9 +975,9 @@
       "amount": 554458,
       "description": "Terület alapú támogatás (214 030 + 340 428)",
       "credit_label": "Egyéb bevételek",
-      "debit_label": "Pál - Tagi számla",
+      "debit_label": "Pál - Saját számla",
       "credit_account": "Egyéb bevételek",
-      "debit_account": "tag:pál",
+      "debit_account": "saját:pál",
       "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -1034,9 +1034,9 @@
       "amount": 149736,
       "description": "Terület alapú támogatás",
       "credit_label": "Egyéb bevételek",
-      "debit_label": "Pál - Tagi számla",
+      "debit_label": "Pál - Saját számla",
       "credit_account": "Egyéb bevételek",
-      "debit_account": "tag:pál",
+      "debit_account": "saját:pál",
       "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -1173,9 +1173,9 @@
       "amount": 237625,
       "description": "Terület alapú támogatás (91 727 + 145898)",
       "credit_label": "Egyéb bevételek",
-      "debit_label": "Pál - Tagi számla",
+      "debit_label": "Pál - Saját számla",
       "credit_account": "Egyéb bevételek",
-      "debit_account": "tag:pál",
+      "debit_account": "saját:pál",
       "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -1312,9 +1312,9 @@
       "amount": 66335,
       "description": "Terület alapú támogatás",
       "credit_label": "Egyéb bevételek",
-      "debit_label": "Pál - Tagi számla",
+      "debit_label": "Pál - Saját számla",
       "credit_account": "Egyéb bevételek",
-      "debit_account": "tag:pál",
+      "debit_account": "saját:pál",
       "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -1336,7 +1336,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1356,7 +1356,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1.1 Lakóterületek",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1376,7 +1376,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1.1 Lakóterületek",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1396,7 +1396,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1416,7 +1416,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1454,7 +1454,7 @@
       "credit_label": "Pál - Saját számla",
       "debit_label": "Anyagköltség",
       "credit_account": "saját:pál",
-      "debit_account": "Anyagköltség",
+      "debit_account": "Utazás és üzemanyag",
       "organization": "I/4.11.1.1 Lakóterületek",
       "transaction_type": "Készpénz",
       "currency": "HUF"
@@ -1476,7 +1476,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1496,7 +1496,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1536,7 +1536,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1.1 Lakóterületek",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1596,7 +1596,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1636,7 +1636,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1656,7 +1656,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1676,7 +1676,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1696,7 +1696,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1716,7 +1716,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1736,7 +1736,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Javítás és karbantartás",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1756,7 +1756,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1776,7 +1776,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1790,13 +1790,13 @@
       "operation": "Költség",
       "amount": 200000,
       "place": "Szúpatak",
-      "description": "talajfúrógép napidíja",
+      "description": "talajfúró eszkavátor napidíja",
       "credit_label": "Péter - Saját számla",
       "debit_label": "Mezőgazdasági szolgáltatások",
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1864,7 +1864,7 @@
       "entered_key": "excel:b9203a411ad7abc14eba",
       "date": "2026-09-24",
       "payer": "Államkincstár",
-      "payee": "Pál - Tagi számla",
+      "payee": "Pál - Saját számla",
       "ledger": "Homály",
       "purpose": "Kiegyenlítés",
       "operation": "Támogatás",
@@ -1872,9 +1872,9 @@
       "place": "Államkincstár",
       "description": "Terület alapú támogatás (336 923 + 217 427)",
       "credit_label": "Egyéb bevételek",
-      "debit_label": "Pál - Tagi számla",
+      "debit_label": "Pál - Saját számla",
       "credit_account": "Egyéb bevételek",
-      "debit_account": "tag:pál",
+      "debit_account": "saját:pál",
       "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -1896,7 +1896,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1916,7 +1916,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1936,7 +1936,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1956,7 +1956,7 @@
       "credit_account": "saját:pál",
       "debit_account": "Anyagköltség",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -1996,7 +1996,7 @@
       "credit_account": "saját:péter",
       "debit_account": "Mezőgazdasági szolgáltatások",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
-      "transaction_type": "Készpénz",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2030,7 +2030,7 @@
       "operation": "Befizetés",
       "amount": 3000000,
       "place": "K&H",
-      "description": "Szövetkezeti tagi hozzájárulások. (készpénzbefizetés bankba) (500.000 Ft x 6 alapító tag)",
+      "description": "Szövetkezeti tagi hozzájárulások. (készpénzbefizetés bankba) (500.000 Ft x 6 alapító tag)TODO!",
       "credit_label": "Pál - Saját számla",
       "debit_label": "Bankszámlák",
       "credit_account": "saját:pál",
@@ -2156,7 +2156,7 @@
       "credit_account": "tag:ildikó",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Lekötés",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2176,7 +2176,7 @@
       "credit_account": "tag:ildikó",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Lekötés",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2196,7 +2196,7 @@
       "credit_account": "tag:dani",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Lekötés",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2236,7 +2236,7 @@
       "credit_account": "tag:pál",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Lekötés",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2250,11 +2250,11 @@
       "operation": "Költség",
       "amount": 43000000,
       "place": "K&H",
-      "description": "Nagy Györgyné",
-      "credit_label": "Bankszámlák",
-      "debit_label": "Földterületek",
+      "description": "Nagy Györgyné földvásárlás kifizetése",
+      "credit_label": "Földterületek",
+      "debit_label": "Bankszámlák",
       "credit_account": "Bankszámlák",
-      "debit_account": "Mezőgazdasági földterületek",
+      "debit_account": "Szállítói tartozások",
       "organization": "I/4.11.1.2 Termőterületek",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -2276,7 +2276,7 @@
       "credit_account": "tag:erika",
       "debit_account": "Mezőgazdasági földterületek",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Lekötés",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2294,8 +2294,8 @@
       "debit_label": "Mezőgazdasági földterületek",
       "credit_account": "tag:erika",
       "debit_account": "Mezőgazdasági földterületek",
-      "organization": "I/3. Pénzügyi Igazgatóság",
-      "transaction_type": "Lekötés",
+      "organization": "I/4.11.1 Birtokkezelés",
+      "transaction_type": "Részjegy",
       "currency": "HUF"
     },
     {
@@ -2333,7 +2333,7 @@
       "credit_label": "Bankszámlák",
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
-      "debit_account": "Pénzügyi költségek",
+      "debit_account": "Szolgáltatások",
       "organization": "I/3.8 Kifizetési központ",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -2353,8 +2353,8 @@
       "credit_label": "Bankszámlák",
       "debit_label": "Pénzügyi költségek",
       "credit_account": "Bankszámlák",
-      "debit_account": "Pénzügyi költségek",
-      "organization": "I/3.8 Kifizetési központ",
+      "debit_account": "Szolgáltatások",
+      "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
     },
@@ -2474,7 +2474,7 @@
       "debit_label": "Szolgáltatások",
       "credit_account": "Bankszámlák",
       "debit_account": "Szolgáltatások",
-      "organization": "I/3.8 Kifizetési központ",
+      "organization": "I/4.11.1 Birtokkezelés",
       "transaction_type": "Utalás",
       "currency": "HUF"
     },
@@ -2593,7 +2593,7 @@
       "credit_label": "Bankszámlák",
       "debit_label": "Földterületek",
       "credit_account": "Bankszámlák",
-      "debit_account": "Mezőgazdasági földterületek",
+      "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1.2 Termőterületek",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -2613,7 +2613,7 @@
       "credit_label": "Bankszámlák",
       "debit_label": "Földterületek",
       "credit_account": "Bankszámlák",
-      "debit_account": "Mezőgazdasági földterületek",
+      "debit_account": "Belterületi földterületek",
       "organization": "I/4.11.1.2 Termőterületek",
       "transaction_type": "Utalás",
       "currency": "HUF"
@@ -2884,7 +2884,7 @@
       "operation": "Kölcsön",
       "amount": 5000000,
       "place": "K&H",
-      "description": "BALÁZS ERIKA (Kölcsön részlet visszafizetés.)",
+      "description": "BALÁZS ERIKA (Kölcsön részlet visszafizetés.) TODO: le volt kötve?",
       "credit_label": "Kölcsönök",
       "debit_label": "Erika - Saját számla",
       "credit_account": "Kölcsönök",
@@ -2904,7 +2904,7 @@
       "operation": "Bányászás",
       "amount": 25370,
       "place": "K&H",
-      "description": "Online Mentor Szolgalt (ez mi?)  (Vásárlás bankkártyával)",
+      "description": "Online Mentor Szolgalt, könyv vásárlás  (Vásárlás bankkártyával)",
       "credit_label": "Bankszámlák",
       "debit_label": "Péter - Saját számla",
       "credit_account": "Bankszámlák",
@@ -3379,7 +3379,7 @@
       "operation": "Költség",
       "amount": 672494,
       "place": "K&H",
-      "description": "SZE CSE NY ERDE SZET (Vásárlás bankkártyával)",
+      "description": "SZECSENYI ERDESZET akác oszlopok (Vásárlás bankkártyával)",
       "credit_label": "Bankszámlák",
       "debit_label": "Anyagköltség",
       "credit_account": "Bankszámlák",
@@ -3519,7 +3519,7 @@
       "operation": "Költség",
       "amount": 304800,
       "place": "K&H",
-      "description": "Delap Kft.",
+      "description": "Delap Kft gyökéritató",
       "credit_label": "Bankszámlák",
       "debit_label": "Anyagköltség",
       "credit_account": "Bankszámlák",
@@ -3539,7 +3539,7 @@
       "operation": "Költség",
       "amount": 102880,
       "place": "K&H",
-      "description": "GLSHungaryKft  (Vásárlás bankkártyával)",
+      "description": "láncfűrész hántoló adapter  (Vásárlás bankkártyával)",
       "credit_label": "Bankszámlák",
       "debit_label": "Anyagköltség",
       "credit_account": "Bankszámlák",
@@ -3616,14 +3616,14 @@
       "payee": "Anyagköltség",
       "ledger": "Szövetkezet",
       "purpose": "Eszköz",
-      "operation": "Költség",
+      "operation": "Bevétel",
       "amount": 66991,
       "place": "K&H",
-      "description": "PÉTER LÁNCFŰRÉSZ KFT.  (Vásárlás bankkártyával)",
+      "description": "PÉTER LÁNCFŰRÉSZ KFT vissatérítés (Vásárlás bankkártyával)",
       "credit_label": "Bankszámlák",
       "debit_label": "Anyagköltség",
-      "credit_account": "Bankszámlák",
-      "debit_account": "Anyagköltség",
+      "credit_account": "Anyagköltség",
+      "debit_account": "Bankszámlák",
       "organization": "I/4.12.1.1.1 Szávai Márton gyümölcsfaliget",
       "transaction_type": "Utalás",
       "currency": "HUF"

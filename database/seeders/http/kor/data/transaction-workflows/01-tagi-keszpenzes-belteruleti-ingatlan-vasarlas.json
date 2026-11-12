@@ -1,7 +1,7 @@
 {
   "name": "Közös készpénzes belterületi ingatlan vásárlás",
-  "debit_account_code": 1520,
-  "credit_account_code": 1000,
+  "debit_account_code": "15?0",
+  "credit_account_code": "1001",
   "steps": [
     {
       "description": "{original.description} | Bejövő tagi befizetés",
@@ -15,7 +15,7 @@
     {
       "description": "{original.description} | Telek vételár",
       "percent": 100,
-      "debit_code": "1520",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1000",
       "currency": "HUF",
       "organization": "I/4.11.1.1 Lakóterületek",
@@ -25,7 +25,7 @@
       "description": "{original.description} | HUF fedezet",
       "percent": 100,
       "debit_code": "1900",
-      "credit_code": "1520",
+      "credit_code": "{original.debit_account_code}",
       "currency": "HUF",
       "organization": "I/4.11.1.1 Lakóterületek",
       "transaction_type": "Átvezetés"
@@ -33,7 +33,7 @@
     {
       "description": "{original.description} | Korona kiutalás tagnak",
       "percent": 100,
-      "debit_code": "1101",
+      "debit_code": "1001",
       "credit_code": "1900",
       "currency": "KOR",
       "organization": "I/3. Pénzügyi Igazgatóság",
@@ -42,8 +42,8 @@
     {
       "description": "{original.description} | KOR adás",
       "percent": 1,
-      "debit_code": "1520",
-      "credit_code": "1900",
+      "debit_code": "{original.debit_account_code}",
+      "credit_code": "1001",
       "currency": "KOR",
       "organization": "I/4.11.1.1 Lakóterületek",
       "transaction_type": "Átvezetés"

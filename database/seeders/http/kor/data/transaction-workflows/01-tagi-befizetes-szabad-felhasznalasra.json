@@ -1,7 +1,7 @@
 {
   "name": "Tagi befizetés szabad felhasználásra",
-  "credit_account_code": 1101,
-  "debit_account_code": 1100,
+  "credit_account_code": "1101",
+  "debit_account_code": "1100",
   "transaction_type": "Részjegy",
   "steps": [
     {

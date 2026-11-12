@@ -1,6 +1,6 @@
 {
   "name": "Tagi lekötés ingatlanba",
-  "debit_account_code": "1510",
+  "debit_account_code": "1530",
   "credit_account_code": "1101",
   "transaction_type": "Lekötés",
   "steps": [
