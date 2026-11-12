@@ -1,7 +1,7 @@
 {
   "name": "Tagi befizetés szabad felhasználásra",
   "credit_account_code": "1101",
-  "debit_account_code": "1100",
+  "debit_account_code": "1[01]00",
   "transaction_type": "Részjegy",
   "steps": [
     {
@@ -16,7 +16,7 @@
     {
       "description": "{original.description} | Bejövő tagi utalás",
       "percent": 100,
-      "debit_code": "1100",
+      "debit_code": "{original.debit_account_code}",
       "credit_code": "1101",
       "currency": "HUF",
       "organization": "I/3. Pénzügyi Igazgatóság",
