@@ -18,12 +18,12 @@
     "credit_account_code": {
       "type": "string",
       "required": true,
-      "regex": "^[0-9*?\\[\\]()|\\\\.^${}]+$"
+      "regex": "^[0-9*?\\[\\]()|\\\\.^${}-]+$"
     },
     "debit_account_code": {
       "type": "string",
       "required": true,
-      "regex": "^[0-9*?\\[\\]()|\\\\.^${}]+$"
+      "regex": "^[0-9*?\\[\\]()|\\\\.^${}-]+$"
     },
     "transaction_type": {
       "type": "relation",

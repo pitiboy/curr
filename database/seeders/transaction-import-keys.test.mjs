@@ -28,7 +28,13 @@ const orgs = new Set([
   'Zöld források szövetkezet @Szupatak',
   'I/4.11.1 Birtokkezelés',
 ]);
-const types = new Set(['Készpénz', 'Utalás', 'Bányászás']);
+const types = new Set([
+  'Készpénz',
+  'Utalás',
+  'Bányászás',
+  'Részjegy',
+  'Lekötés',
+]);
 
 const source = {
   currencyCode: 'HUF',
@@ -131,6 +137,22 @@ describe('resolveTransactionType', () => {
         types,
       ),
       null,
+    );
+  });
+
+  it('keeps an already-set type instead of the place table', () => {
+    assert.equal(
+      resolveTransactionType(
+        {
+          row: 1,
+          operation: 'Költség',
+          place: 'kp',
+          transaction_type: 'Részjegy',
+        },
+        source,
+        types,
+      ),
+      'Részjegy',
     );
   });
 });

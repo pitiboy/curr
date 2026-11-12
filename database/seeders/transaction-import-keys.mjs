@@ -7,7 +7,9 @@
 // writes, for every row:
 //   credit_account, debit_account  — chart account name, or tag:<id> / saját:<id>
 //   organization                    — an organizations.json name
-//   transaction_type                — when operation or place maps to one
+//   transaction_type                — kept when already set; otherwise when
+//                                      operation or place maps to one
+//   currency                         — optional per-row code (else currencyCode)
 //   entered_key                      — excel:<20 hex of sha256(entered_key_fields)>
 //
 // Account labels come from the sheet columns credit_Account and Debit_account.
@@ -84,6 +86,7 @@ const ROW_FIELDS = [
   'debit_account',
   'organization',
   'transaction_type',
+  'currency',
 ];
 
 /** Same rules as src/member-identifier.ts memberIdentifierBase. */
@@ -276,6 +279,19 @@ export function absAmountRow(row) {
 }
 
 export function resolveTransactionType(row, source, typeNames) {
+  // Prefer an already-set type (workflow-oriented seed edits). Lookup tables
+  // only fill empty rows; they must not wipe Részjegy / Lekötés back to place.
+  if (row.transaction_type) {
+    const existing = [...typeNames].find(
+      (type) => fold(type) === fold(row.transaction_type),
+    );
+    if (!existing) {
+      throw new Error(
+        `row ${row.row}: transaction type "${row.transaction_type}" is not in transaction-types.json`,
+      );
+    }
+    return existing;
+  }
   const name =
     (source.operationTransactionTypes &&
       source.operationTransactionTypes[row.operation]) ||

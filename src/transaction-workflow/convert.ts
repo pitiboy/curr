@@ -73,6 +73,9 @@ export type AccountRef = {
   code?: string | number | null;
 };
 
+/** Which source trx side to copy onto a step debit/credit. */
+export type OriginalAccountSide = 'debit' | 'credit';
+
 export type WorkflowStep = {
   __component?: string | null;
   description?: string | null;
@@ -80,8 +83,16 @@ export type WorkflowStep = {
   member_account_code?: string | number | null;
   debit_account?: AccountRef | null;
   credit_account?: AccountRef | null;
-  debit_account_from_original?: boolean | null;
-  credit_account_from_original?: boolean | null;
+  /**
+   * Copy source debit or credit onto this step's debit.
+   * Legacy boolean `true` = same-side (`debit`).
+   */
+  debit_account_from_original?: OriginalAccountSide | boolean | null;
+  /**
+   * Copy source debit or credit onto this step's credit.
+   * Legacy boolean `true` = same-side (`credit`).
+   */
+  credit_account_from_original?: OriginalAccountSide | boolean | null;
   currency_type?: CurrencyRef | null;
   currency_from_original?: boolean | null;
   transaction_type?: { documentId: string } | null;
@@ -98,8 +109,10 @@ export type NormalizedWorkflowStep = {
   creditWanted: string;
   debitRelation?: AccountRef | null;
   creditRelation?: AccountRef | null;
-  debit_from_original?: boolean;
-  credit_from_original?: boolean;
+  /** When set, expand copies that source side onto step debit. */
+  debit_from_original?: OriginalAccountSide | null;
+  /** When set, expand copies that source side onto step credit. */
+  credit_from_original?: OriginalAccountSide | null;
   currency_from_original?: boolean;
   currency_type?: { documentId: string; code?: string | null } | null;
   transaction_type?: { documentId: string } | null;
@@ -249,26 +262,40 @@ function resolveCurrencySide(
   };
 }
 
+/**
+ * Parse from_original enum (or legacy boolean true → same-side default).
+ */
+export function parseOriginalAccountSide(
+  value: OriginalAccountSide | boolean | null | undefined,
+  sameSideDefault: OriginalAccountSide,
+): OriginalAccountSide | null {
+  if (value === true) return sameSideDefault;
+  if (value === 'debit' || value === 'credit') return value;
+  return null;
+}
+
 function resolveAccountSide(
   step: WorkflowStep,
-  side: 'debit' | 'credit',
+  side: OriginalAccountSide,
 ): {
   wanted: string;
   relation: AccountRef | null | undefined;
-  fromOriginal: boolean;
+  fromOriginal: OriginalAccountSide | null;
 } {
-  const fromOriginal =
+  const fromOriginal = parseOriginalAccountSide(
     side === 'debit'
-      ? step.debit_account_from_original === true
-      : step.credit_account_from_original === true;
+      ? step.debit_account_from_original
+      : step.credit_account_from_original,
+    side,
+  );
   if (fromOriginal) {
-    return { wanted: '', relation: null, fromOriginal: true };
+    return { wanted: '', relation: null, fromOriginal };
   }
   const account = side === 'debit' ? step.debit_account : step.credit_account;
   return {
     wanted: requireRelationCode(account, side),
     relation: account,
-    fromOriginal: false,
+    fromOriginal: null,
   };
 }
 
@@ -319,7 +346,7 @@ export function normalizeWorkflowStep(
       creditWanted: credit.wanted,
       debitRelation: null,
       creditRelation: credit.relation,
-      debit_from_original: false,
+      debit_from_original: null,
       credit_from_original: credit.fromOriginal,
     };
   }
@@ -334,7 +361,7 @@ export function normalizeWorkflowStep(
       debitRelation: debit.relation,
       creditRelation: null,
       debit_from_original: debit.fromOriginal,
-      credit_from_original: false,
+      credit_from_original: null,
     };
   }
 
@@ -818,7 +845,7 @@ export function expandWorkflowSteps(
         : null;
 
     const debit_account = normalized.debit_from_original
-      ? requireSourceAccount(transaction, 'debit')
+      ? requireSourceAccount(transaction, normalized.debit_from_original)
       : resolveStepAccount(
           normalized.debitWanted,
           normalized.debitRelation,
@@ -826,7 +853,7 @@ export function expandWorkflowSteps(
           siblingByCode,
         );
     const credit_account = normalized.credit_from_original
-      ? requireSourceAccount(transaction, 'credit')
+      ? requireSourceAccount(transaction, normalized.credit_from_original)
       : resolveStepAccount(
           normalized.creditWanted,
           normalized.creditRelation,

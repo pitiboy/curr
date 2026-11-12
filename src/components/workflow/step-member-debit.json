@@ -30,9 +30,9 @@
       "required": false
     },
     "credit_account_from_original": {
-      "type": "boolean",
-      "required": false,
-      "default": false
+      "type": "enumeration",
+      "enum": ["debit", "credit"],
+      "required": false
     },
     "transaction_type": {
       "type": "relation",

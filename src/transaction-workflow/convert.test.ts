@@ -355,15 +355,35 @@ describe('normalizeWorkflowStep', () => {
   it('accepts from_original flags without account/currency relations', () => {
     const related = normalizeWorkflowStep({
       __component: STEP_RELATED,
-      debit_account_from_original: true,
-      credit_account_from_original: true,
+      debit_account_from_original: 'debit',
+      credit_account_from_original: 'credit',
       currency_from_original: true,
     });
-    assert.equal(related.debit_from_original, true);
-    assert.equal(related.credit_from_original, true);
+    assert.equal(related.debit_from_original, 'debit');
+    assert.equal(related.credit_from_original, 'credit');
     assert.equal(related.currency_from_original, true);
     assert.equal(related.debitWanted, '');
     assert.equal(related.creditWanted, '');
+  });
+
+  it('accepts crossed from_original sides and legacy boolean true', () => {
+    const crossed = normalizeWorkflowStep({
+      __component: STEP_RELATED,
+      debit_account_from_original: 'credit',
+      credit_account_from_original: 'debit',
+      currency_type: huf,
+    });
+    assert.equal(crossed.debit_from_original, 'credit');
+    assert.equal(crossed.credit_from_original, 'debit');
+
+    const legacy = normalizeWorkflowStep({
+      __component: STEP_RELATED,
+      debit_account_from_original: true,
+      credit_account_from_original: true,
+      currency_type: huf,
+    });
+    assert.equal(legacy.debit_from_original, 'debit');
+    assert.equal(legacy.credit_from_original, 'credit');
   });
 
   it('rejects missing or unknown __component', () => {
@@ -520,8 +540,8 @@ describe('expandWorkflowSteps', () => {
           __component: STEP_RELATED,
           description: '{original.debit_account_code} {original.currency}',
           percent: 100,
-          debit_account_from_original: true,
-          credit_account_from_original: true,
+          debit_account_from_original: 'debit',
+          credit_account_from_original: 'credit',
           currency_from_original: true,
         },
       ],
@@ -542,6 +562,40 @@ describe('expandWorkflowSteps', () => {
     assert.equal(rows[0]?.description, '5400 HUF');
   });
 
+  it('copies crossed original sides (credit ← original debit)', () => {
+    const sourceDebit = account('5400', 'acc-src-debit');
+    const sourceCredit = account('1101', 'acc-src-credit');
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-crossed',
+      debit_account_code: '5*',
+      credit_account_code: '1101',
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: 'fedezet',
+          percent: 100,
+          debit_account: account('1900'),
+          credit_account_from_original: 'debit',
+          currency_type: huf,
+        },
+      ],
+    };
+    const rows = expandWorkflowSteps(
+      wf,
+      {
+        documentId: 'tx-crossed',
+        date: '2026-10-14',
+        amount: 1000,
+        debit_account: sourceDebit,
+        credit_account: sourceCredit,
+        currency_type: huf,
+      },
+      new Map(),
+    );
+    assert.equal(rows[0]?.debit_account.documentId, 'acc-1900');
+    assert.equal(rows[0]?.credit_account.documentId, 'acc-src-debit');
+  });
+
   it('rejects from_original when source account or currency is missing', () => {
     const wf: WorkflowTemplate = {
       documentId: 'wf-missing',
@@ -552,7 +606,7 @@ describe('expandWorkflowSteps', () => {
           __component: STEP_RELATED,
           description: 'x',
           percent: 100,
-          debit_account_from_original: true,
+          debit_account_from_original: 'debit',
           credit_account: account('3000'),
           currency_from_original: true,
         },
