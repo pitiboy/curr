@@ -378,25 +378,29 @@ export function resolveAccountRowSelection(params: {
     };
   }
 
-  // Prefill runs after selection; until it finishes (or when codes are
-  // ambiguous), keep the template selected so stale form accounts cannot drop
-  // it and clear the incomplete-prefill warning.
-  if (!prefillOk) {
-    return {
-      effectiveSelection: storedSelection,
-      filterProfile: '',
-      workflowDropped: false,
-      activeWorkflow: null,
-    };
-  }
-
   const debitCode = parseLedgerAccountCode(
     matchInput.debit_account?.code ?? null,
   );
   const creditCode = parseLedgerAccountCode(
     matchInput.credit_account?.code ?? null,
   );
-  if (debitCode === null || creditCode === null) {
+  const formCodesReady = debitCode !== null && creditCode !== null;
+  const formMatches =
+    formCodesReady && workflowMatchesTransaction(workflow, matchInput);
+
+  // Prefill incomplete (regex / ambiguous 1101): keep the template selected.
+  // Once the form codes already match the template, promote activeWorkflow so
+  // Convert uses the selected documentId instead of re-matching.
+  if (!prefillOk) {
+    return {
+      effectiveSelection: storedSelection,
+      filterProfile: '',
+      workflowDropped: false,
+      activeWorkflow: formMatches ? workflow : null,
+    };
+  }
+
+  if (!formCodesReady) {
     return {
       effectiveSelection: storedSelection,
       filterProfile: '',
@@ -405,7 +409,7 @@ export function resolveAccountRowSelection(params: {
     };
   }
 
-  if (!workflowMatchesTransaction(workflow, matchInput)) {
+  if (!formMatches) {
     return {
       effectiveSelection: { kind: 'profile', profile: lastProfile },
       filterProfile: lastProfile,
@@ -419,6 +423,44 @@ export function resolveAccountRowSelection(params: {
     filterProfile: '',
     workflowDropped: false,
     activeWorkflow: workflow,
+  };
+}
+
+/**
+ * Prefer live form account/type documentIds when both sides resolve to ledger
+ * codes; otherwise fall back to the loaded show record (Convert on review).
+ */
+export function matchInputForConvert(
+  record: TransactionWorkflowMatchInput & {
+    converted_to_workflow?: TransactionWorkflowMatchInput['converted_to_workflow'];
+  },
+  accounts: AccountChoice[],
+  form: {
+    debitAccountDocumentId: unknown;
+    creditAccountDocumentId: unknown;
+    currencyTypeDocumentId: unknown;
+    transactionTypeDocumentId: unknown;
+  },
+): TransactionWorkflowMatchInput {
+  const fromForm = buildTransactionWorkflowMatchInput({
+    accounts,
+    debitAccountDocumentId: form.debitAccountDocumentId,
+    creditAccountDocumentId: form.creditAccountDocumentId,
+    currencyTypeDocumentId: form.currencyTypeDocumentId,
+    transactionTypeDocumentId: form.transactionTypeDocumentId,
+  });
+  if (fromForm.debit_account?.code && fromForm.credit_account?.code) {
+    return {
+      ...fromForm,
+      converted_to_workflow: record.converted_to_workflow ?? null,
+    };
+  }
+  return {
+    converted_to_workflow: record.converted_to_workflow ?? null,
+    debit_account: record.debit_account,
+    credit_account: record.credit_account,
+    currency_type: record.currency_type,
+    transaction_type: record.transaction_type,
   };
 }
 

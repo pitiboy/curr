@@ -174,6 +174,25 @@ export function accountCodeString(
   return parsed === null ? null : String(parsed);
 }
 
+/**
+ * Relation may be a populated `{ documentId }` or a bare documentId string.
+ */
+export function relationDocumentId(
+  value: { documentId?: string } | string | null | undefined,
+): string | null {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+  if (value && typeof value === 'object') {
+    const documentId = value.documentId;
+    if (typeof documentId === 'string' && documentId.trim()) {
+      return documentId.trim();
+    }
+  }
+  return null;
+}
+
 export function isMemberAccountCode(
   code: string | number | null | undefined,
 ): boolean {
@@ -386,19 +405,15 @@ export function workflowMatchesTransaction(
   if (!accountCodeMatchesPattern(credit, workflow.credit_account_code)) {
     return false;
   }
-  if (workflow.currency_type?.documentId) {
-    if (
-      transaction.currency_type?.documentId !==
-      workflow.currency_type.documentId
-    ) {
+  const workflowCurrencyId = relationDocumentId(workflow.currency_type);
+  if (workflowCurrencyId) {
+    if (relationDocumentId(transaction.currency_type) !== workflowCurrencyId) {
       return false;
     }
   }
-  if (workflow.transaction_type?.documentId) {
-    if (
-      transaction.transaction_type?.documentId !==
-      workflow.transaction_type.documentId
-    ) {
+  const workflowTypeId = relationDocumentId(workflow.transaction_type);
+  if (workflowTypeId) {
+    if (relationDocumentId(transaction.transaction_type) !== workflowTypeId) {
       return false;
     }
   }

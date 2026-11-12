@@ -247,6 +247,46 @@ describe('workflowMatchesTransaction (pattern headers)', () => {
       false,
     );
   });
+
+  it('matches kor részjegy project pattern; type disambiguates 15xx/1101', () => {
+    const pattern = '(5(00|10|4[0-9]|50|80)0|15[0-9]0)';
+    const resz: WorkflowTemplate = {
+      documentId: 'wf-resz',
+      debit_account_code: pattern,
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-resz' },
+      step: [],
+    };
+    const lekot: WorkflowTemplate = {
+      documentId: 'wf-lekot',
+      debit_account_code: '15[12]0',
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-lekot' },
+      step: [],
+    };
+    const tx: SourceTransaction = {
+      documentId: 'tx-1510',
+      date: '2026-01-01',
+      amount: 2_500_000,
+      debit_account: account('1510'),
+      credit_account: account('1101'),
+      transaction_type: { documentId: 'type-resz' },
+    };
+    assert.equal(accountCodeMatchesPattern('1510', pattern), true);
+    assert.equal(workflowMatchesTransaction(resz, tx), true);
+    assert.equal(workflowMatchesTransaction(lekot, tx), false);
+    assert.equal(
+      pickMatchingWorkflow([resz, lekot], tx)?.documentId,
+      'wf-resz',
+    );
+    assert.equal(
+      workflowMatchesTransaction(resz, {
+        ...tx,
+        transaction_type: null,
+      }),
+      false,
+    );
+  });
 });
 
 describe('accountCodeMatchesPattern', () => {

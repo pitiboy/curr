@@ -18,22 +18,27 @@ import {
   isSamePersonPublishError,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
+import type { TransactionRow } from '../../data/transactionList';
 import { bandedSpanClass } from '../../theme';
 import { FormIssueAccordion } from './FormIssueAccordion';
 import { collectFinalizeIssues } from './formIssues';
 import { transactionPublishFormErrors } from './transactionForm';
+import { TransactionConvertSection } from './TransactionConvertSection';
 
 export function TransactionFinalizeSection({
   allowLeaveRef,
   blocked,
   documentId,
   missingReceipt,
+  record,
   samePersonBlocked,
 }: {
   allowLeaveRef: { current: boolean };
   blocked: boolean;
   documentId: string;
   missingReceipt: boolean;
+  /** When set, Convert CTAs sit in the same row as Véglegesít (Create-like). */
+  record?: TransactionRow;
   samePersonBlocked: boolean;
 }) {
   const translate = useTranslate();
@@ -114,7 +119,12 @@ export function TransactionFinalizeSection({
         issues={issues}
         title={translate('app.transactions_review')}
       />
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+      <Stack
+        alignItems="center"
+        direction="row"
+        spacing={1}
+        sx={{ flexWrap: 'wrap' }}
+      >
         <Button
           disabled={blocked || samePersonBlocked || saving || discarding}
           type="button"
@@ -123,6 +133,12 @@ export function TransactionFinalizeSection({
         >
           {translate('app.transactions_finalize')}
         </Button>
+        {record ? (
+          <TransactionConvertSection
+            disabled={saving || discarding}
+            record={record}
+          />
+        ) : null}
         <Button
           color="error"
           disabled={saving || discarding}

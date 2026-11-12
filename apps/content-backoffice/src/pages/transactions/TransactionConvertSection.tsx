@@ -1,31 +1,54 @@
-import { Alert, Box } from '@mui/material';
+import { Alert } from '@mui/material';
+import { useMemo } from 'react';
+import { useWatch } from 'react-hook-form';
 import { useTranslate } from 'react-admin';
 
+import { matchInputForConvert } from '../../data/accountRowSelection';
 import {
   countMatchingWorkflows,
   isExpandableConvertedValue,
-  transactionLikeFromRecord,
   type TransactionRow,
 } from '../../data/transactionList';
 import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { TransactionConvertButton } from './TransactionConvertButton';
-import { bandedSpanClass } from '../../theme';
+import { useAccountCatalog } from './useAccountCatalog';
 
+/**
+ * Convert CTA(s) for the review action row (next to Véglegesít), matching
+ * Create toolbar placement. Renders nothing when no unique template matches.
+ */
 export function TransactionConvertSection({
   record,
+  disabled = false,
 }: {
   record: TransactionRow;
+  disabled?: boolean;
 }) {
   const translate = useTranslate();
+  const { accounts } = useAccountCatalog();
   const {
     matchFor,
     loading: catalogLoading,
     workflows,
   } = useTransactionWorkflowCatalog();
+  const debitId = useWatch({ name: 'debit_account' });
+  const creditId = useWatch({ name: 'credit_account' });
+  const currencyId = useWatch({ name: 'currency_type' });
+  const transactionTypeId = useWatch({ name: 'transaction_type' });
+
+  const transactionLike = useMemo(
+    () =>
+      matchInputForConvert(record, accounts, {
+        debitAccountDocumentId: debitId,
+        creditAccountDocumentId: creditId,
+        currencyTypeDocumentId: currencyId,
+        transactionTypeDocumentId: transactionTypeId,
+      }),
+    [accounts, creditId, currencyId, debitId, record, transactionTypeId],
+  );
 
   if (!isExpandableConvertedValue(record.converted_to_workflow)) return null;
 
-  const transactionLike = transactionLikeFromRecord(record);
   const matchCount = catalogLoading
     ? 0
     : countMatchingWorkflows(workflows, transactionLike);
@@ -33,22 +56,19 @@ export function TransactionConvertSection({
 
   if (matchCount > 1) {
     return (
-      <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
-        <Alert severity="warning" variant="outlined">
-          {translate('app.transactions_convert_ambiguous')}
-        </Alert>
-      </Box>
+      <Alert severity="warning" sx={{ py: 0 }} variant="outlined">
+        {translate('app.transactions_convert_ambiguous')}
+      </Alert>
     );
   }
 
   if (!workflow) return null;
 
   return (
-    <Box className={bandedSpanClass} sx={{ px: 1, pb: 1, pt: 0.5 }}>
-      <TransactionConvertButton
-        documentId={record.documentId}
-        workflow={workflow}
-      />
-    </Box>
+    <TransactionConvertButton
+      disabled={disabled}
+      documentId={record.documentId}
+      workflow={workflow}
+    />
   );
 }

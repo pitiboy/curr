@@ -236,14 +236,15 @@ export type WorkflowTemplateHeader = {
   requires_source_organization: boolean;
 };
 
-export type TransactionWorkflowMatchInput = Pick<
-  StrapiTransaction,
-  | 'converted_to_workflow'
-  | 'debit_account'
-  | 'credit_account'
-  | 'currency_type'
-  | 'transaction_type'
->;
+export type TransactionWorkflowMatchInput = {
+  converted_to_workflow?: StrapiTransaction['converted_to_workflow'];
+  debit_account?: StrapiTransaction['debit_account'];
+  credit_account?: StrapiTransaction['credit_account'];
+  /** Populated object or bare documentId from a form ReferenceInput. */
+  currency_type?: StrapiTransaction['currency_type'] | string | null;
+  /** Populated object or bare documentId from a form ReferenceInput. */
+  transaction_type?: StrapiTransaction['transaction_type'] | string | null;
+};
 
 function parseAccountCode(
   code: string | number | null | undefined,
@@ -258,6 +259,26 @@ function accountCodeString(
 ): string | null {
   const parsed = parseAccountCode(code);
   return parsed === null ? null : String(parsed);
+}
+
+/**
+ * Relation may be a populated object or a bare documentId string (form
+ * ReferenceInput / flattened review record).
+ */
+export function relationDocumentId(
+  value: { documentId?: string } | string | null | undefined,
+): string | null {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+  if (value && typeof value === 'object') {
+    const documentId = value.documentId;
+    if (typeof documentId === 'string' && documentId.trim()) {
+      return documentId.trim();
+    }
+  }
+  return null;
 }
 
 /**
@@ -314,19 +335,15 @@ export function workflowMatchesTransaction(
   if (!accountCodeMatchesPattern(credit, workflow.credit_account_code)) {
     return false;
   }
-  if (workflow.currency_type?.documentId) {
-    if (
-      transaction.currency_type?.documentId !==
-      workflow.currency_type.documentId
-    ) {
+  const workflowCurrencyId = relationDocumentId(workflow.currency_type);
+  if (workflowCurrencyId) {
+    if (relationDocumentId(transaction.currency_type) !== workflowCurrencyId) {
       return false;
     }
   }
-  if (workflow.transaction_type?.documentId) {
-    if (
-      transaction.transaction_type?.documentId !==
-      workflow.transaction_type.documentId
-    ) {
+  const workflowTypeId = relationDocumentId(workflow.transaction_type);
+  if (workflowTypeId) {
+    if (relationDocumentId(transaction.transaction_type) !== workflowTypeId) {
       return false;
     }
   }

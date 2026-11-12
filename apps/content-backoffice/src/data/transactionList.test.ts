@@ -553,6 +553,52 @@ describe('workflowMatchesTransaction', () => {
       ),
     ).toBe(true);
   });
+
+  it('matches kor részjegy project pattern and requires type', () => {
+    const pattern = '(5(00|10|4[0-9]|50|80)0|15[0-9]0)';
+    expect(accountCodeMatchesPattern('1510', pattern)).toBe(true);
+    expect(accountCodeMatchesPattern('1520', pattern)).toBe(true);
+    expect(accountCodeMatchesPattern('5410', pattern)).toBe(true);
+    expect(accountCodeMatchesPattern('5200', pattern)).toBe(false);
+    const template: WorkflowTemplateHeader = {
+      documentId: 'wf-resz',
+      name: 'Tagi befizetés projekt vagy ingatlanba lekötéssel',
+      debit_account_code: pattern,
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-resz', name: 'Részjegy' },
+      requires_source_organization: true,
+    };
+    const lekot: WorkflowTemplateHeader = {
+      documentId: 'wf-lekot',
+      name: 'Tagi lekötés gazdasági ingatlanba',
+      debit_account_code: '15[12]0',
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-lekot', name: 'Lekötés' },
+      requires_source_organization: false,
+    };
+    const tx = {
+      debit_account: { code: '1510' },
+      credit_account: { code: '1101' },
+      transaction_type: { documentId: 'type-resz', name: 'Részjegy' },
+    };
+    expect(workflowMatchesTransaction(template, tx)).toBe(true);
+    expect(workflowMatchesTransaction(lekot, tx)).toBe(false);
+    expect(pickMatchingWorkflow([template, lekot], tx)?.documentId).toBe(
+      'wf-resz',
+    );
+    expect(
+      workflowMatchesTransaction(template, {
+        ...tx,
+        transaction_type: 'type-resz',
+      }),
+    ).toBe(true);
+    expect(
+      workflowMatchesTransaction(template, {
+        ...tx,
+        transaction_type: null,
+      }),
+    ).toBe(false);
+  });
 });
 
 describe('pickMatchingWorkflow', () => {
