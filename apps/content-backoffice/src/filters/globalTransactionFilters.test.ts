@@ -339,6 +339,17 @@ describe('mergeDrilldownIntoGlobal', () => {
     });
   });
 
+  it('accepts status kept as a one-element array (stale RA URL / store)', () => {
+    const next = mergeDrilldownIntoGlobal(resetGlobalFilters(), {
+      status: ['draft'],
+      date_gte: '2022-11-01',
+      date_lte: '2025-03-31',
+    });
+    expect(next.status).toBe('draft');
+    expect(next.datePreset).toBe('custom');
+    expect(toListFilter(next).status).toBe('draft');
+  });
+
   it('round-trips through toListFilter', () => {
     const state: GlobalTransactionFilters = {
       datePreset: 'custom',

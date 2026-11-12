@@ -317,6 +317,13 @@ describe('buildTransactionFilters', () => {
     });
   });
 
+  it('accepts status as a one-element array from a stale list URL', () => {
+    expect(buildTransactionFilters({ status: ['draft'] }).status).toBe('draft');
+    expect(buildTransactionFilters({ status: ['published'] }).status).toBe(
+      'published',
+    );
+  });
+
   it('omits blank filters but keeps the default converted filter', () => {
     expect(
       buildTransactionFilters({

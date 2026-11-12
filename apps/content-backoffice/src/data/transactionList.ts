@@ -427,10 +427,11 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   status?: PublicationStatus;
   strapiFilters: Record<string, unknown>;
 } {
+  const statusRaw = Array.isArray(filter.status)
+    ? filter.status[0]
+    : filter.status;
   const status =
-    filter.status === 'draft' || filter.status === 'published'
-      ? filter.status
-      : undefined;
+    statusRaw === 'draft' || statusRaw === 'published' ? statusRaw : undefined;
   const strapiFilters: Record<string, unknown> = {};
 
   const date: Record<string, string> = {};

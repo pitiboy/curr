@@ -355,6 +355,14 @@ function asConvertedList(value: unknown): ConvertedFilterValue[] | undefined {
   );
 }
 
+/** URL / RA store may keep `status` as a one-element array. */
+function asListStatus(value: unknown): 'preview' | 'draft' | 'all' {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === 'published') return 'preview';
+  if (raw === 'draft') return 'draft';
+  return 'all';
+}
+
 /**
  * Merge a drill-down list filter (as built by the report drilldown helpers)
  * into the global state:
@@ -386,12 +394,7 @@ export function mergeDrilldownIntoGlobal(
     delete next.date_lte;
   }
 
-  next.status =
-    filter.status === 'published'
-      ? 'preview'
-      : filter.status === 'draft'
-        ? 'draft'
-        : 'all';
+  next.status = asListStatus(filter.status);
 
   const converted = asConvertedList(filter.converted_to_workflow);
   if (converted) next.converted_to_workflow = converted;

@@ -389,6 +389,10 @@ export function TransactionList() {
       empty={false}
       exporter={false}
       perPage={25}
+      // Atom (sidebar) owns filters. RA's default `transactions.listParams`
+      // store otherwise restores stale filters when the URL has no `?filter=`
+      // (menu navigate) — sidebar and list desync (reset / ügylet bontás).
+      storeKey={false}
       sort={{ field: 'entryId', order: 'DESC' }}
     >
       {/* Filters come from the global sidebar panel (Jotai atom). */}
