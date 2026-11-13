@@ -4,6 +4,7 @@ import {
   aggregateMembershipShareReport,
   isMembershipShareDeduction,
   isMembershipSharePayment,
+  isTreasuryKorMovement,
   memberCurrencyTotalsMatchHistory,
   type MembershipShareMemberRef,
   type MembershipShareTx,
@@ -135,6 +136,58 @@ describe('isMembershipShareDeduction', () => {
       ),
     ).toBe(false);
   });
+
+  it('rejects kincstári KOR kiutalás (1101 debit / 1900 credit)', () => {
+    const tx: MembershipShareTx = {
+      date: '2025-02-21',
+      amount: 19_166.67,
+      currencyCode: 'KOR',
+      debitAccountId: 'acc-peti-1101',
+      creditAccountId: 'acc-treasury-1900',
+      creditCode: '1900',
+      debitCode: '1101',
+    };
+    expect(isTreasuryKorMovement(tx)).toBe(true);
+    expect(isMembershipShareDeduction(tx, memberIds)).toBe(false);
+  });
+});
+
+describe('isTreasuryKorMovement', () => {
+  it('is true only for KOR legs touching 1900', () => {
+    expect(
+      isTreasuryKorMovement({
+        date: '2025-02-21',
+        amount: 1,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-a',
+        creditAccountId: 'acc-b',
+        creditCode: '1900',
+        debitCode: '1101',
+      }),
+    ).toBe(true);
+    expect(
+      isTreasuryKorMovement({
+        date: '2025-02-21',
+        amount: 1,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-a',
+        creditAccountId: 'acc-b',
+        creditCode: '1900',
+        debitCode: '1520',
+      }),
+    ).toBe(false);
+    expect(
+      isTreasuryKorMovement({
+        date: '2025-02-21',
+        amount: 1,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-land',
+        creditAccountId: 'acc-peti-1101',
+        creditCode: '1101',
+        debitCode: '1510',
+      }),
+    ).toBe(false);
+  });
 });
 
 describe('aggregateMembershipShareReport', () => {
@@ -250,7 +303,7 @@ describe('aggregateMembershipShareReport', () => {
     expect(report.kpis.paymentCount).toBe(2);
   });
 
-  it('keeps members with negative net (e.g. KOR kiutalás > HUF befizetés)', () => {
+  it('keeps members with negative net (non-treasury KOR outflow)', () => {
     const txs: MembershipShareTx[] = [
       {
         date: '2026-11-05',
@@ -266,8 +319,8 @@ describe('aggregateMembershipShareReport', () => {
         amount: 500_000,
         currencyCode: 'KOR',
         debitAccountId: 'acc-erika-1101',
-        creditAccountId: 'acc-lock',
-        creditCode: '1900',
+        creditAccountId: 'acc-cost',
+        creditCode: '5510',
         debitCode: '1101',
       },
     ];
@@ -299,8 +352,8 @@ describe('aggregateMembershipShareReport', () => {
         amount: 500_000,
         currencyCode: 'KOR',
         debitAccountId: 'acc-erika-1101',
-        creditAccountId: 'acc-lock',
-        creditCode: '1900',
+        creditAccountId: 'acc-cost',
+        creditCode: '5510',
         debitCode: '1101',
       },
     ];
@@ -312,6 +365,37 @@ describe('aggregateMembershipShareReport', () => {
     expect(report.byMember[0]?.shareByCurrency).toEqual([
       { currency: 'HUF', amount: 500_000 },
       { currency: 'KOR', amount: -500_000 },
+    ]);
+  });
+
+  it('keeps Tagi Lekötés KOR when kincstári kiutalás is ignored', () => {
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2025-02-21',
+        amount: 19_166.67,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-erika-1101',
+        creditAccountId: 'acc-treasury-1900',
+        creditCode: '1900',
+        debitCode: '1101',
+      },
+      {
+        date: '2025-02-21',
+        amount: 19_166.67,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-land',
+        creditAccountId: 'acc-erika-1101',
+        creditCode: '1101',
+        debitCode: '1510',
+      },
+    ];
+    const report = aggregateMembershipShareReport(txs, members, 'all');
+    expect(report).not.toBeNull();
+    if (!report) return;
+    expect(report.kpis.sharePaymentCount).toBe(1);
+    expect(report.byMember[0]?.memberName).toBe('Erika');
+    expect(report.byMember[0]?.shareByCurrency).toEqual([
+      { currency: 'KOR', amount: 19_166.67 },
     ]);
   });
 
@@ -423,6 +507,7 @@ describe('aggregateMembershipShareReport', () => {
     expect(report.byMember[0]?.memberName).toBe('Dani');
     expect(report.byMember[0]?.shareByCurrency).toEqual([
       { currency: 'HUF', amount: 11_500_000 },
+      { currency: 'KOR', amount: 19_166.67 },
     ]);
     expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
   });

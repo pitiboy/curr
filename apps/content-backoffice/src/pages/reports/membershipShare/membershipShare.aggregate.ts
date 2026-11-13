@@ -12,9 +12,11 @@ import type {
   MembershipShareReport,
 } from './types';
 import {
+  KOR_CURRENCY_CODE,
   MEMBER_POCKET_ACCOUNT_CODE,
   MEMBER_SHARE_ACCOUNT_CODE,
   SHARE_CAPITAL_ACCOUNT_CODE,
+  TREASURY_CLEARING_ACCOUNT_CODE,
 } from './types';
 
 export type MembershipShareTx = {
@@ -57,16 +59,30 @@ function currencyMapToList(map: Map<string, number>): CurrencyAmount[] {
 }
 
 /**
+ * Kincstári FX clearing in KOR (1900 ↔ tagi/eszköz). Ignored on the membership
+ * share report so Korona kiutalás does not cancel Tagi Lekötés Koronaként.
+ */
+export function isTreasuryKorMovement(tx: MembershipShareTx): boolean {
+  if (tx.currencyCode !== KOR_CURRENCY_CODE) return false;
+  return (
+    tx.creditCode === TREASURY_CLEARING_ACCOUNT_CODE ||
+    tx.debitCode === TREASURY_CLEARING_ACCOUNT_CODE
+  );
+}
+
+/**
  * External inflow into a member ledger: credit lands on 1101/1001, debit does
  * not (excludes 1101↔1001 internals). Részjegytőke törlés (3000 debit /
  * 1101 credit) is not a payment — it only reverses capital so the later
- * kimenő utalás can reduce the reported befizetés.
+ * kimenő utalás can reduce the reported befizetés. KOR from/to 1900 is not
+ * a payment either.
  */
 export function isMembershipSharePayment(
   tx: MembershipShareTx,
   memberAccountIds: ReadonlySet<string>,
 ): boolean {
   if (tx.amount === 0) return false;
+  if (isTreasuryKorMovement(tx)) return false;
   if (!memberAccountIds.has(tx.creditAccountId)) return false;
   if (memberAccountIds.has(tx.debitAccountId)) return false;
   if (tx.debitCode === SHARE_CAPITAL_ACCOUNT_CODE) return false;
@@ -81,13 +97,15 @@ export function isMembershipSharePayment(
  * another member account (excludes 1101↔1001 internals). Netted off credits in
  * the report (e.g. ügylet-kifejtés zseb költségek). Részjegytőke előírás
  * (1101 debit / 3000 credit) is not a deduction — it books the payment into
- * capital and must not cancel the bejövő tagi utalás credit.
+ * capital and must not cancel the bejövő tagi utalás credit. KOR against 1900
+ * (kincstári kiadás) is also not a deduction.
  */
 export function isMembershipShareDeduction(
   tx: MembershipShareTx,
   memberAccountIds: ReadonlySet<string>,
 ): boolean {
   if (tx.amount === 0) return false;
+  if (isTreasuryKorMovement(tx)) return false;
   if (!memberAccountIds.has(tx.debitAccountId)) return false;
   if (memberAccountIds.has(tx.creditAccountId)) return false;
   if (tx.creditCode === SHARE_CAPITAL_ACCOUNT_CODE) return false;

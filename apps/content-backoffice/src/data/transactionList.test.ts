@@ -195,6 +195,43 @@ describe('assembleTransactionList', () => {
     expect(data.map((row) => row.id)).toEqual(['ext']);
   });
 
+  it('excludes kincstári KOR clearing from membership-share external filter', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'lock',
+        date: '2026-01-01',
+        currency_type: { code: 'KOR' },
+        debit_account: { code: '1510' },
+        credit_account: { code: '1101', documentId: 'acc-a' },
+      },
+      {
+        documentId: 'treasury-out',
+        date: '2026-01-02',
+        currency_type: { code: 'KOR' },
+        debit_account: { code: '1900' },
+        credit_account: { code: '1101', documentId: 'acc-a' },
+      },
+      {
+        documentId: 'treasury-in',
+        date: '2026-01-03',
+        currency_type: { code: 'KOR' },
+        debit_account: { code: '1101', documentId: 'acc-a' },
+        credit_account: { code: '1900' },
+      },
+      {
+        documentId: 'huf-fedezet',
+        date: '2026-01-04',
+        currency_type: { code: 'HUF' },
+        debit_account: { code: '1900' },
+        credit_account: { code: '1520' },
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      filter: { [MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY]: true },
+    });
+    expect(data.map((row) => row.id)).toEqual(['lock', 'huf-fedezet']);
+  });
+
   it('filters by project balance leg using account classification', () => {
     const rows: StrapiTransaction[] = [
       {

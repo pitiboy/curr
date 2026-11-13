@@ -6,10 +6,11 @@
  * accounts (excludes 1101↔1001 internals). Credits add, debits subtract so
  * ügylet-kifejtés zseb költségek nem duplikálnak. Legs against 3000
  * (részjegytőke) are ignored both ways: előírás must not cancel a bejövő
- * utalás, and törlés must not cancel a kimenő kölcsön/visszautalás. Members
- * stay in the table when any currency has a non-zero net (including
- * negative); only all-zero nets are dropped. Visibility never sums amounts
- * across FX.
+ * utalás, and törlés must not cancel a kimenő kölcsön/visszautalás. KOR legs
+ * against 1900 (kincstári FX) are ignored so the 1101↔1900 átmosás does not
+ * cancel Tagi Lekötés Koronaként on the report. Members stay in the table
+ * when any currency has a non-zero net (including negative); only all-zero
+ * nets are dropped. Visibility never sums amounts across FX.
  */
 
 import type { DateRangePreset } from '../shared/reportDateRange';
@@ -25,6 +26,9 @@ export const MEMBER_SHARE_ACCOUNT_CODE = '1101';
 export const MEMBER_POCKET_ACCOUNT_CODE = '1001';
 /** Részjegytőke / alaptőke — 1101↔3000 előírás/törlés nem számít a befizetés-riportban. */
 export const SHARE_CAPITAL_ACCOUNT_CODE = '3000';
+/** Átvezető / kincstári FX clearing — KOR kiadás erről a lábáról nem tagi nettó. */
+export const TREASURY_CLEARING_ACCOUNT_CODE = '1900';
+export const KOR_CURRENCY_CODE = 'KOR';
 
 export type CurrencyAmount = {
   currency: string;

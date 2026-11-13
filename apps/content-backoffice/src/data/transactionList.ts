@@ -689,13 +689,28 @@ function toNumber(value: string | number | null | undefined): number {
 }
 
 const MEMBER_LEDGER_DEBIT_CODES = new Set(['1101', '1001']);
+/** Same cohort as membershipShare `isTreasuryKorMovement` (1900 FX clearing). */
+const TREASURY_CLEARING_ACCOUNT_CODE = '1900';
+const KOR_CURRENCY_CODE = 'KOR';
 
 function matchesMembershipShareExternal(
-  row: Pick<StrapiTransaction, 'debit_account'>,
+  row: Pick<
+    StrapiTransaction,
+    'debit_account' | 'credit_account' | 'currency_type'
+  >,
   enabled: unknown,
 ): boolean {
   if (enabled !== true) return true;
   const debitCode = String(row.debit_account?.code ?? '').trim();
+  const creditCode = String(row.credit_account?.code ?? '').trim();
+  const currencyCode = String(row.currency_type?.code ?? '').trim();
+  if (
+    currencyCode === KOR_CURRENCY_CODE &&
+    (debitCode === TREASURY_CLEARING_ACCOUNT_CODE ||
+      creditCode === TREASURY_CLEARING_ACCOUNT_CODE)
+  ) {
+    return false;
+  }
   return !MEMBER_LEDGER_DEBIT_CODES.has(debitCode);
 }
 
