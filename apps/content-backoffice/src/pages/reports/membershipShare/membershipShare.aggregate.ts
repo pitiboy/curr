@@ -11,7 +11,11 @@ import type {
   MembershipMemberRow,
   MembershipShareReport,
 } from './types';
-import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
+import {
+  MEMBER_POCKET_ACCOUNT_CODE,
+  MEMBER_SHARE_ACCOUNT_CODE,
+  SHARE_CAPITAL_ACCOUNT_CODE,
+} from './types';
 
 export type MembershipShareTx = {
   date: string;
@@ -72,7 +76,9 @@ export function isMembershipSharePayment(
 /**
  * External outflow from a member ledger: debit leaves 1101/1001, credit is not
  * another member account (excludes 1101↔1001 internals). Netted off credits in
- * the report (e.g. ügylet-kifejtés lépések a zseben / részjegyen).
+ * the report (e.g. ügylet-kifejtés zseb költségek). Részjegytőke előírás
+ * (1101 debit / 3000 credit) is not a deduction — it books the payment into
+ * capital and must not cancel the bejövő tagi utalás credit.
  */
 export function isMembershipShareDeduction(
   tx: MembershipShareTx,
@@ -81,6 +87,7 @@ export function isMembershipShareDeduction(
   if (tx.amount === 0) return false;
   if (!memberAccountIds.has(tx.debitAccountId)) return false;
   if (memberAccountIds.has(tx.creditAccountId)) return false;
+  if (tx.creditCode === SHARE_CAPITAL_ACCOUNT_CODE) return false;
   return (
     tx.debitCode === MEMBER_SHARE_ACCOUNT_CODE ||
     tx.debitCode === MEMBER_POCKET_ACCOUNT_CODE

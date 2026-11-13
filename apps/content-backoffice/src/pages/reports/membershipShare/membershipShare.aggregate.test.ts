@@ -101,6 +101,23 @@ describe('isMembershipShareDeduction', () => {
       ),
     ).toBe(false);
   });
+
+  it('rejects részjegytőke előírás (1101 debit / 3000 credit)', () => {
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2025-02-21',
+          amount: 11_500_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1101',
+          creditAccountId: 'acc-capital-3000',
+          creditCode: '3000',
+          debitCode: '1101',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+  });
 });
 
 describe('aggregateMembershipShareReport', () => {
@@ -330,6 +347,66 @@ describe('aggregateMembershipShareReport', () => {
       { currency: 'HUF', amount: 2_000_000 },
     ]);
     expect(report.byMember[0]?.pocketByCurrency).toEqual([]);
+    expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
+  });
+
+  it('keeps HUF befizetés when ügylet books részjegytőke előírás + bejövő utalás', () => {
+    const member: MembershipShareMemberRef[] = [
+      {
+        memberId: 'm-dani',
+        memberName: 'Dani',
+        shareAccountId: 'acc-dani-1101',
+        pocketAccountId: 'acc-dani-1001',
+      },
+    ];
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2025-02-21',
+        amount: 11_500_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-dani-1101',
+        creditAccountId: 'acc-capital-3000',
+        creditCode: '3000',
+        debitCode: '1101',
+      },
+      {
+        date: '2025-02-21',
+        amount: 11_500_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-bank',
+        creditAccountId: 'acc-dani-1101',
+        creditCode: '1101',
+        debitCode: '1100',
+      },
+      {
+        date: '2025-02-21',
+        amount: 19_166.67,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-dani-1101',
+        creditAccountId: 'acc-treasury-1900',
+        creditCode: '1900',
+        debitCode: '1101',
+      },
+      {
+        date: '2025-02-21',
+        amount: 19_166.67,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-land',
+        creditAccountId: 'acc-dani-1101',
+        creditCode: '1101',
+        debitCode: '1510',
+      },
+    ];
+
+    const report = aggregateMembershipShareReport(txs, member, 'all');
+    expect(report).not.toBeNull();
+    if (!report) return;
+
+    expect(report.kpis.sharePaymentCount).toBe(2);
+    expect(report.byMember[0]?.memberName).toBe('Dani');
+    expect(report.byMember[0]?.shareByCurrency).toEqual([
+      { currency: 'HUF', amount: 11_500_000 },
+    ]);
     expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
   });
 });

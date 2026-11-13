@@ -4,9 +4,11 @@
  * Source: published transactions on a member's 1101 (részjegy / `account`) or
  * 1001 (zseb / `private_account`) ledger with the other leg outside member
  * accounts (excludes 1101↔1001 internals). Credits add, debits subtract so
- * ügylet-kifejtés zseb költségek nem duplikálnak. Members stay in the table
- * when any currency has a non-zero net (including negative); only all-zero
- * nets are dropped. Visibility never sums amounts across FX.
+ * ügylet-kifejtés zseb költségek nem duplikálnak. Debits whose credit leg is
+ * 3000 (részjegytőke előírás) are not deducted — that step recognizes the
+ * payment as share capital, it does not undo the befizetés. Members stay in
+ * the table when any currency has a non-zero net (including negative); only
+ * all-zero nets are dropped. Visibility never sums amounts across FX.
  */
 
 import type { DateRangePreset } from '../shared/reportDateRange';
@@ -20,6 +22,8 @@ export const MEMBERSHIP_SHARE_FEATURE_ID = 'membership-share';
 
 export const MEMBER_SHARE_ACCOUNT_CODE = '1101';
 export const MEMBER_POCKET_ACCOUNT_CODE = '1001';
+/** Részjegytőke / alaptőke — előírás (1101←3000) nem csökkentheti a befizetés-riportot. */
+export const SHARE_CAPITAL_ACCOUNT_CODE = '3000';
 
 export type CurrencyAmount = {
   currency: string;
