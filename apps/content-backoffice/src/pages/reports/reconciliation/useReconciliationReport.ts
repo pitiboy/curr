@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { strapiHttpClient } from 'ra-strapi';
 
-import { STRAPI_URL } from '../../../config';
-
 import { fetchReconciliationReport } from './reconciliation.fetch';
 import type { ReconciliationReport } from './types';
 

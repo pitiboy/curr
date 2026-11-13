@@ -85,11 +85,13 @@ export function ReconciliationReportPage() {
       />
 
       <Stack
-        alignItems={{ xs: 'stretch', sm: 'center' }}
         direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="flex-end"
         spacing={1}
-        sx={{ mb: 2 }}
+        sx={{
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'flex-end',
+          mb: 2,
+        }}
       >
         <Button
           onClick={() => void refresh()}
@@ -132,11 +134,13 @@ export function ReconciliationReportPage() {
               variant="outlined"
             >
               <Stack
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
                 direction={{ xs: 'column', sm: 'row' }}
-                justifyContent="space-between"
                 spacing={1}
-                sx={{ mb: 1.5 }}
+                sx={{
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  justifyContent: 'space-between',
+                  mb: 1.5,
+                }}
               >
                 <Box>
                   <Typography component="h2" variant="subtitle1">
