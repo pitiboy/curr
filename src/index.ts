@@ -10,6 +10,7 @@ import { registerOrgScopeMiddleware } from './org-scope-middleware';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { registerMembershipValidFromFormDefault } from './membership-valid-from-default';
+import { restoreReceiptTransactionLinksFromStash } from './receipt-transaction-migration';
 import { ensureReceiptTypes } from './receipt-types';
 import { ensureTransactionImportKeyIndex } from './transaction-import-key';
 import { registerWakeRoutes } from './wake/register-wake';
@@ -417,6 +418,7 @@ export default {
     });
   },
   async bootstrap({ strapi }) {
+    await restoreReceiptTransactionLinksFromStash(strapi);
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
     await ensureTransactionImportKeyIndex(strapi);

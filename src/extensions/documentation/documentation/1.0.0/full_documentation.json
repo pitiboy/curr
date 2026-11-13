@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-11-10T06:36:13.892Z"
+    "x-generation-date": "2026-11-13T15:09:11.148Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -12614,6 +12614,20 @@
                   "example": "string or id"
                 }
               },
+              "content_users": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "example": "string or id"
+                }
+              },
               "locale": {
                 "type": "string"
               },
@@ -12723,6 +12737,27 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Transaction"
+            }
+          },
+          "content_users": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "documentId": {
+                  "type": "string"
+                }
+              }
             }
           },
           "createdAt": {
@@ -12839,16 +12874,19 @@
                 ],
                 "example": "string or id"
               },
-              "transaction": {
-                "oneOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ],
-                "example": "string or id"
+              "transactions": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "example": "string or id"
+                }
               },
               "receipt_type": {
                 "oneOf": [
@@ -13135,8 +13173,11 @@
               }
             }
           },
-          "transaction": {
-            "$ref": "#/components/schemas/Transaction"
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            }
           },
           "receipt_type": {
             "$ref": "#/components/schemas/ReceiptType"
@@ -14340,10 +14381,10 @@
                 "type": "string"
               },
               "credit_account_code": {
-                "type": "integer"
+                "type": "string"
               },
               "debit_account_code": {
-                "type": "integer"
+                "type": "string"
               },
               "transaction_type": {
                 "oneOf": [
@@ -14481,10 +14522,10 @@
             "type": "string"
           },
           "credit_account_code": {
-            "type": "integer"
+            "type": "string"
           },
           "debit_account_code": {
-            "type": "integer"
+            "type": "string"
           },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType"
@@ -14625,11 +14666,28 @@
           "debit_account": {
             "$ref": "#/components/schemas/Account"
           },
+          "debit_account_from_original": {
+            "type": "string",
+            "enum": [
+              "debit",
+              "credit"
+            ]
+          },
+          "credit_account_from_original": {
+            "type": "string",
+            "enum": [
+              "debit",
+              "credit"
+            ]
+          },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "currency_type": {
             "$ref": "#/components/schemas/CurrencyType"
+          },
+          "currency_from_original": {
+            "type": "boolean"
           },
           "organization": {
             "$ref": "#/components/schemas/Organization"
@@ -14677,11 +14735,21 @@
           "credit_account": {
             "$ref": "#/components/schemas/Account"
           },
+          "credit_account_from_original": {
+            "type": "string",
+            "enum": [
+              "debit",
+              "credit"
+            ]
+          },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "currency_type": {
             "$ref": "#/components/schemas/CurrencyType"
+          },
+          "currency_from_original": {
+            "type": "boolean"
           },
           "organization": {
             "$ref": "#/components/schemas/Organization"
@@ -14729,11 +14797,21 @@
           "debit_account": {
             "$ref": "#/components/schemas/Account"
           },
+          "debit_account_from_original": {
+            "type": "string",
+            "enum": [
+              "debit",
+              "credit"
+            ]
+          },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "currency_type": {
             "$ref": "#/components/schemas/CurrencyType"
+          },
+          "currency_from_original": {
+            "type": "boolean"
           },
           "organization": {
             "$ref": "#/components/schemas/Organization"

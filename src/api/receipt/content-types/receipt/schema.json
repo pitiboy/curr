@@ -60,11 +60,15 @@
         "description": "A nyugta dokumentuma (kép, PDF, stb.)"
       }
     },
-    "transaction": {
+    "transactions": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::transaction.transaction",
-      "inversedBy": "receipts"
+      "mappedBy": "receipts",
+      "metadatas": {
+        "label": "Tranzakciók",
+        "description": "A bizonylathoz kapcsolt tranzakciók (több is lehet)"
+      }
     },
     "receipt_type": {
       "type": "relation",
