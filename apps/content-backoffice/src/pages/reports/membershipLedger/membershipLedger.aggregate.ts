@@ -233,9 +233,18 @@ export function aggregateMembershipLedgerReport(
     return null;
   }
 
+  const hasActivity = [...amountsByMembershipMember.values()].some(
+    (acc) =>
+      acc.sharePayment !== 0 ||
+      acc.shareDeduction !== 0 ||
+      acc.pocketPayment !== 0 ||
+      acc.pocketDeduction !== 0,
+  );
+
   return {
     currencies: sortedCurrencyList,
     defaultCurrency,
+    hasActivity,
     sections,
   };
 }

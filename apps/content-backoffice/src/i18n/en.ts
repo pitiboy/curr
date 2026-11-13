@@ -263,8 +263,8 @@ export const enMessages = mergeTranslations(englishMessages, {
       menu: 'Membership ledger',
       title: 'Membership ledger',
       subtitle:
-        'Per membership: member payments, deductions, and balances on 1101 share and 1001 pocket ledgers. Pick one currency — FX amounts are never summed.',
-      currency: 'Currency',
+        'Per membership: member payments, deductions, and balances on 1101 share and 1001 pocket ledgers. Date range and currency come from the sidebar filters; currency defaults to HUF when unset. FX amounts are never summed.',
+      active_currency: 'Active currency: %{currency}',
       member: 'Member',
       col: {
         payment: '%{code} payment',
@@ -272,6 +272,8 @@ export const enMessages = mergeTranslations(englishMessages, {
         balance: '%{code} balance',
       },
       empty: 'No memberships to show (or memberships have no linked members).',
+      empty_activity:
+        'No member-ledger activity in the selected period for %{currency}. Try Date range → All, or switch currency (e.g. EGG, KOR).',
       error: 'Could not load the report.',
       retry: 'Retry',
     },

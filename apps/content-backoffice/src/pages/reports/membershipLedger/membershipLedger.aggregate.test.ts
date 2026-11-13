@@ -59,7 +59,7 @@ describe('shouldIgnoreMembershipLedgerTx', () => {
         currencyCode: 'KOR',
         debitAccountId: 'acc-treasury',
         creditAccountId: 'acc-peti-1101',
-        debitCode: '1100',
+        debitCode: '1900',
         creditCode: '1101',
       }),
     ).toBe(true);
@@ -111,6 +111,7 @@ describe('aggregateMembershipLedgerReport', () => {
     expect(report).not.toBeNull();
     if (!report) return;
 
+    expect(report.hasActivity).toBe(true);
     const row = report.sections[0]?.members.find(
       (m) => m.memberId === 'm-peti',
     );
@@ -122,6 +123,23 @@ describe('aggregateMembershipLedgerReport', () => {
       pocketDeduction: 2_000,
       pocketBalance: 10_000,
     });
+  });
+
+  it('sets hasActivity false when currency has no matching txs', () => {
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2026-11-02',
+        amount: 5_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-cash',
+        creditAccountId: 'acc-peti-1101',
+        creditCode: '1101',
+        debitCode: '1000',
+      },
+    ];
+    const report = aggregateMembershipLedgerReport(txs, [groupA], 'EGG');
+    expect(report?.hasActivity).toBe(false);
+    expect(report?.sections[0]?.members[0]?.sharePayment).toBe(0);
   });
 
   it('ignores 1001 debit to 5xx (homály / projekt wash)', () => {
@@ -235,5 +253,45 @@ describe('aggregateMembershipLedgerReport', () => {
     );
     expect(row?.sharePayment).toBe(15_000);
     expect(row?.shareDeduction).toBe(0);
+  });
+
+  it('aggregates EGG pocket deduction when currency is EGG', () => {
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2026-11-03',
+        amount: 30,
+        currencyCode: 'EGG',
+        debitAccountId: 'acc-peti-1001',
+        creditAccountId: 'acc-egg-out',
+        creditCode: '1720',
+        debitCode: '1001',
+      },
+      {
+        date: '2026-11-03',
+        amount: 100_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-cash',
+        creditAccountId: 'acc-peti-1101',
+        creditCode: '1101',
+        debitCode: '1000',
+      },
+    ];
+
+    const egg = aggregateMembershipLedgerReport(txs, [groupA], 'EGG');
+    const eggRow = egg?.sections[0]?.members.find(
+      (m) => m.memberId === 'm-peti',
+    );
+    expect(eggRow).toMatchObject({
+      sharePayment: 0,
+      pocketDeduction: 30,
+      pocketBalance: -30,
+    });
+
+    const huf = aggregateMembershipLedgerReport(txs, [groupA], 'HUF');
+    const hufRow = huf?.sections[0]?.members.find(
+      (m) => m.memberId === 'm-peti',
+    );
+    expect(hufRow?.sharePayment).toBe(100_000);
+    expect(hufRow?.pocketDeduction).toBe(0);
   });
 });

@@ -2,11 +2,7 @@ import {
   Alert,
   Box,
   Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Skeleton,
   Stack,
   Table,
@@ -17,10 +13,12 @@ import {
   Typography,
 } from '@mui/material';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
-import { useEffect, useMemo, useState } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
-import { useGlobalReportParams } from '../../filters/globalTransactionFiltersAtom';
+import {
+  useGlobalReportParams,
+  useGlobalTransactionFilters,
+} from '../../filters/globalTransactionFiltersAtom';
 import {
   MEMBER_POCKET_ACCOUNT_CODE,
   MEMBER_SHARE_ACCOUNT_CODE,
@@ -68,31 +66,14 @@ function AmountCell({
 export function MembershipLedgerReportPage() {
   const translate = useTranslate();
   const params = useGlobalReportParams();
-  const [currency, setCurrency] = useState('HUF');
+  const [filters] = useGlobalTransactionFilters();
+  const currency = filters.currency_type?.trim() || 'HUF';
   const chartMetrics = useReportChartMetrics();
 
-  const { status, report, loaded, reload } = useMembershipLedgerReport(
+  const { status, report, reload } = useMembershipLedgerReport(
     params,
     currency,
   );
-
-  const currencyOptions = useMemo(() => {
-    if (report?.currencies.length) return report.currencies;
-    const fromTxs = loaded?.txs
-      ? [...new Set(loaded.txs.map((tx) => tx.currencyCode))].sort()
-      : [];
-    if (fromTxs.length > 0) return fromTxs;
-    return ['HUF'];
-  }, [loaded, report]);
-
-  useEffect(() => {
-    if (!currencyOptions.includes(currency)) {
-      const preferred = currencyOptions.includes('HUF')
-        ? 'HUF'
-        : (currencyOptions[0] ?? 'HUF');
-      setCurrency(preferred);
-    }
-  }, [currency, currencyOptions]);
 
   return (
     <ReportPageShell>
@@ -102,24 +83,9 @@ export function MembershipLedgerReportPage() {
         title={translate('app.membership_ledger.title')}
       />
 
-      <FormControl size="small" sx={{ minWidth: 140, mb: 2 }}>
-        <InputLabel id="membership-ledger-currency-label">
-          {translate('app.membership_ledger.currency')}
-        </InputLabel>
-        <Select
-          id="membership-ledger-currency"
-          label={translate('app.membership_ledger.currency')}
-          labelId="membership-ledger-currency-label"
-          onChange={(event) => setCurrency(String(event.target.value))}
-          value={currency}
-        >
-          {currencyOptions.map((code) => (
-            <MenuItem key={code} value={code}>
-              {code}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Typography color="text.secondary" sx={{ mb: 2 }} variant="body2">
+        {translate('app.membership_ledger.active_currency', { currency })}
+      </Typography>
 
       {status === 'loading' ? <ReportSkeleton /> : null}
       {status === 'error' ? (
@@ -142,6 +108,11 @@ export function MembershipLedgerReportPage() {
       ) : null}
       {status === 'success' && report ? (
         <Stack spacing={3}>
+          {!report.hasActivity ? (
+            <Alert severity="info" variant="outlined">
+              {translate('app.membership_ledger.empty_activity', { currency })}
+            </Alert>
+          ) : null}
           {report.sections.map((section) => (
             <MembershipSection
               chartMetricsNarrow={chartMetrics.narrow}

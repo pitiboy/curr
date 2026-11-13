@@ -8,8 +8,8 @@ export const MEMBER_POCKET_ACCOUNT_CODE = '1001';
 /** Részjegytőke átvezetések — nem befizetés / befektetés. */
 export const MEMBERSHIP_LEDGER_EQUITY_ACCOUNT_CODE = '3000';
 
-/** Kincstár KOR tételek — kimutatásból kihagyva. */
-export const MEMBERSHIP_LEDGER_TREASURY_ACCOUNT_CODE = '1100';
+/** Kincstár / FX clearing KOR tételek — kimutatásból kihagyva (ugyanaz mint membership-share). */
+export const MEMBERSHIP_LEDGER_TREASURY_ACCOUNT_CODE = '1900';
 
 export type MembershipLedgerMemberRow = {
   memberId: string;
@@ -30,10 +30,12 @@ export type MembershipLedgerSection = {
 };
 
 export type MembershipLedgerReport = {
-  /** Pénznemek, amelyekhez volt mozgás a szűrt időszakban. */
+  /** Pénznemek, amelyekhez volt mozgás a szűrt időszakban (bármely FX). */
   currencies: string[];
   /** Alapértelmezett választás (HUF ha létezik). */
   defaultCurrency: string;
+  /** True if the selected currency has any payment/deduction in range. */
+  hasActivity: boolean;
   sections: MembershipLedgerSection[];
 };
 
