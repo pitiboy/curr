@@ -44,6 +44,7 @@ import { TransactionConvertField } from './TransactionConvertField';
 import {
   TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS,
   transactionListFooterMinWidth,
+  transactionListScrollMaxHeight,
 } from './transactionListLayout';
 
 const statusChoices = [
@@ -184,15 +185,18 @@ function TransactionListAmountFooter({
         bgcolor: 'action.hover',
         borderTop: 1,
         borderColor: 'divider',
+        bottom: 0,
         columnGap: 0,
         display: 'grid',
         gridTemplateColumns: transactionListFooterGridColumns(showBulkCheckbox),
         alignItems: 'center',
         minHeight: 40,
         minWidth: transactionListFooterMinWidth(false, showBulkCheckbox),
+        position: 'sticky',
         py: 0.75,
         typography: 'body2',
         width: 'max-content',
+        zIndex: 2,
       }}
     >
       {showBulkCheckbox ? <Box aria-hidden /> : null}
@@ -402,8 +406,11 @@ export function TransactionList() {
       <TransactionListFilterBridge />
       <Box
         sx={{
+          // Same scrollport for X+Y so sticky thead/footer can stick (overflow-x
+          // alone would create a scroll container that never scrolls vertically).
+          maxHeight: transactionListScrollMaxHeight(mobile),
           maxWidth: '100%',
-          overflowX: 'auto',
+          overflow: 'auto',
           WebkitOverflowScrolling: 'touch',
         }}
       >
@@ -423,13 +430,28 @@ export function TransactionList() {
           isRowSelectable={editorBulkApprove ? isRowSelectable : undefined}
           rowClick={false}
           rowSx={bandedRow}
+          stickyHeader
           sx={{
             '& .RaDatagrid-table, & table': {
+              borderCollapse: 'separate',
               mb: 0,
               minWidth: transactionListFooterMinWidth(
                 mobile,
                 editorBulkApprove,
               ),
+            },
+            '& .RaDatagrid-headerCell': {
+              bgcolor: 'background.paper',
+              position: 'sticky',
+              top: 0,
+              zIndex: 3,
+              ...(mobile
+                ? {
+                    fontSize: '0.75rem',
+                    px: 0.5,
+                    py: 0.5,
+                  }
+                : {}),
             },
             '& .column-open, & .column-convert': {
               px: mobile ? 0.25 : undefined,
@@ -442,11 +464,6 @@ export function TransactionList() {
                     fontSize: '0.8125rem',
                     px: 0.5,
                     py: 0.75,
-                  },
-                  '& .RaDatagrid-headerCell': {
-                    fontSize: '0.75rem',
-                    px: 0.5,
-                    py: 0.5,
                   },
                   '& .column-description': {
                     maxWidth: '10rem',

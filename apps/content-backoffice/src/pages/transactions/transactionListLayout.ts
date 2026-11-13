@@ -11,3 +11,11 @@ export function transactionListFooterMinWidth(
 ): number | string {
   return showBulkCheckbox ? '55rem' : '52rem';
 }
+
+/**
+ * Scrollport height for the datagrid wrapper so `position: sticky` headers work.
+ * Reserves app bar, list padding, pagination, and the legal footer strip.
+ */
+export function transactionListScrollMaxHeight(mobile: boolean): string {
+  return mobile ? 'calc(100dvh - 10.5rem)' : 'calc(100dvh - 12rem)';
+}
