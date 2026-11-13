@@ -96,8 +96,8 @@ describe('fetchPublishedWorkflows', () => {
       {
         documentId: 'wf-1',
         name: 'Ügylet 1',
-        debit_account_code: 1520,
-        credit_account_code: 1101,
+        debit_account_code: '1520',
+        credit_account_code: '1101',
         currency_type: {
           documentId: 'cur-kor',
           code: 'KOR',
@@ -112,8 +112,8 @@ describe('fetchPublishedWorkflows', () => {
       {
         documentId: 'wf-2',
         name: 'Fix org',
-        debit_account_code: 1000,
-        credit_account_code: 1900,
+        debit_account_code: '1000',
+        credit_account_code: '1900',
         currency_type: null,
         transaction_type: null,
         requires_source_organization: false,

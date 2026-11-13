@@ -93,6 +93,7 @@ function rate(
     rate: value,
     validFrom,
     currencyRateDocumentId: 'rate-egg-huf',
+    inverted: false,
   };
 }
 
@@ -153,7 +154,7 @@ describe('pickLatestRate', () => {
     );
   });
 
-  it('returns null without a direct pair (no inverse fallback)', () => {
+  it('returns null without a direct pair for non-KOR currencies', () => {
     assert.equal(
       pickLatestRate(history, 'cur-egg', 'cur-kor', '2026-11-07'),
       null,
@@ -164,6 +165,54 @@ describe('pickLatestRate', () => {
         'cur-egg',
         'cur-huf',
         '2026-11-07',
+        { fromCode: 'EGG', toCode: 'HUF' },
+      ),
+      null,
+    );
+  });
+
+  it('inverts KOR → HUF when HUF → KOR is missing', () => {
+    const picked = pickLatestRate(
+      rows(['cur-kor', 'cur-huf', 600, '2020-01-01T00:00:00.000Z', 'kor-huf']),
+      huf.documentId,
+      kor.documentId,
+      '2026-11-07',
+      { fromCode: 'HUF', toCode: 'KOR' },
+    );
+    assert.deepEqual(picked, {
+      fromCurrencyDocumentId: huf.documentId,
+      toCurrencyDocumentId: kor.documentId,
+      rate: 1 / 600,
+      validFrom: '2020-01-01T00:00:00.000Z',
+      currencyRateDocumentId: 'kor-huf',
+      inverted: true,
+    });
+  });
+
+  it('prefers a direct HUF → KOR row over the inverse', () => {
+    const picked = pickLatestRate(
+      rows(
+        ['cur-kor', 'cur-huf', 600, '2020-01-01T00:00:00.000Z', 'kor-huf'],
+        ['cur-huf', 'cur-kor', 0.002, '2020-01-01T00:00:00.000Z', 'huf-kor'],
+      ),
+      huf.documentId,
+      kor.documentId,
+      '2026-11-07',
+      { fromCode: 'HUF', toCode: 'KOR' },
+    );
+    assert.equal(picked?.rate, 0.002);
+    assert.equal(picked?.inverted, false);
+    assert.equal(picked?.currencyRateDocumentId, 'huf-kor');
+  });
+
+  it('does not invert a non-KOR pair even when codes are set', () => {
+    assert.equal(
+      pickLatestRate(
+        rows(['cur-huf', 'cur-egg', 0.01, '2020-01-01T00:00:00.000Z']),
+        egg.documentId,
+        huf.documentId,
+        '2026-11-07',
+        { fromCode: 'EGG', toCode: 'HUF' },
       ),
       null,
     );
@@ -183,6 +232,7 @@ describe('pickLatestRate', () => {
       rate: 1,
       validFrom: null,
       currencyRateDocumentId: null,
+      inverted: false,
     });
   });
 });
@@ -347,6 +397,7 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
             rate: 1 / 600,
             validFrom: '2020-01-01T00:00:00.000Z',
             currencyRateDocumentId: 'x',
+            inverted: true,
           },
         ],
       ]),
@@ -358,6 +409,62 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
         [8000, null],
       ],
     );
+  });
+
+  it('2 000 000 HUF / 600 → 3 333.33 KOR with apply_currency_rate', () => {
+    const lekotes: WorkflowTemplate = {
+      documentId: 'wf-lekotes-rate',
+      debit_account_code: 1520,
+      credit_account_code: 1000,
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: 'Lekötés HUF fedezet',
+          percent: 100,
+          debit_account: account('1900'),
+          credit_account: account('1520'),
+          currency_type: huf,
+        },
+        {
+          __component: STEP_RELATED,
+          description: 'Lekötés KOR',
+          percent: 100,
+          debit_account: account('1520'),
+          credit_account: account('1900'),
+          currency_type: kor,
+          apply_currency_rate: true,
+        },
+      ],
+    };
+    const expanded = expandWorkflowSteps(
+      lekotes,
+      {
+        documentId: 'tx-lekotes',
+        date: '2026-11-07',
+        amount: 2_000_000,
+        debit_account: account('1520'),
+        credit_account: account('1000'),
+        currency_type: huf,
+      },
+      new Map(),
+      new Map([
+        [
+          kor.documentId,
+          {
+            fromCurrencyDocumentId: huf.documentId,
+            toCurrencyDocumentId: kor.documentId,
+            rate: 1 / 600,
+            validFrom: '2020-01-01T00:00:00.000Z',
+            currencyRateDocumentId: 'kor-huf',
+            inverted: true,
+          },
+        ],
+      ]),
+    );
+    assert.equal(expanded[0]?.amount, 2_000_000);
+    assert.equal(expanded[0]?.appliedRate, null);
+    assert.equal(expanded[1]?.amount, 3333.33);
+    assert.equal(expanded[1]?.appliedRate?.inverted, true);
   });
 });
 

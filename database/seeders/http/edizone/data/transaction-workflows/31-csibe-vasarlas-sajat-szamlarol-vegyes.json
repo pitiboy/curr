@@ -1,5 +1,5 @@
 {
-  "name": "Csibe vásárlás tagi saját számláról (tojó)",
+  "name": "Csibe vásárlás tagi saját számláról (tojó, vegyes)",
   "debit_account_code": 1300,
   "credit_account_code": 1001,
   "currency": "CHICK",

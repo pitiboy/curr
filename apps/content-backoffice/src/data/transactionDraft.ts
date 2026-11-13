@@ -46,6 +46,15 @@ export function transactionDraftBody(
     if (value) body[key] = value;
   }
 
+  // Optional relation the form can clear: an explicit empty value disconnects.
+  // `undefined` (field never touched) stays off the payload.
+  if (
+    !body.transaction_type &&
+    (input.transaction_type === null || input.transaction_type === '')
+  ) {
+    body.transaction_type = null;
+  }
+
   return body;
 }
 

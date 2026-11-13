@@ -21,19 +21,64 @@ export function mergeCurrencyAmounts(
     .sort((a, b) => a.currency.localeCompare(b.currency));
 }
 
+/**
+ * X/Y domain for a stacked bar chart. Must include per-category stack totals,
+ * otherwise a short series (e.g. 1001 zseb) is clipped when a long series
+ * (1101) alone sets the axis max.
+ */
+export function stackedBarAxisDomain(series: readonly (readonly number[])[]): {
+  min: number;
+  max: number;
+} {
+  const nonempty = series.filter((s) => s.length > 0);
+  if (nonempty.length === 0) return { min: 0, max: 0 };
+
+  const len = Math.max(...nonempty.map((s) => s.length));
+  const stacked: number[] = [];
+  for (let i = 0; i < len; i += 1) {
+    let sum = 0;
+    for (const s of nonempty) sum += s[i] ?? 0;
+    stacked.push(sum);
+  }
+  const values = [...nonempty.flatMap((s) => [...s]), ...stacked];
+  return {
+    min: Math.min(0, ...values),
+    max: Math.max(0, ...values),
+  };
+}
+
+function focusCurrencyAmounts(
+  row: MembershipMemberRow,
+  focus: LedgerFocus,
+): CurrencyAmount[] {
+  const parts: CurrencyAmount[][] = [];
+  if (focus === 'share' || focus === 'both') parts.push(row.shareByCurrency);
+  if (focus === 'pocket' || focus === 'both') parts.push(row.pocketByCurrency);
+  return mergeCurrencyAmounts(...parts);
+}
+
+/**
+ * Amount for one ledger focus. Pass `currency` for display/sort — without it
+ * amounts are summed across FX (legacy; do not use for visibility thresholds).
+ */
 export function memberFocusTotal(
   row: MembershipMemberRow,
   focus: LedgerFocus,
   currency?: string,
 ): number {
-  const parts: CurrencyAmount[][] = [];
-  if (focus === 'share' || focus === 'both') parts.push(row.shareByCurrency);
-  if (focus === 'pocket' || focus === 'both') parts.push(row.pocketByCurrency);
-  const merged = mergeCurrencyAmounts(...parts);
+  const merged = focusCurrencyAmounts(row, focus);
   if (currency) {
     return merged.find((entry) => entry.currency === currency)?.amount ?? 0;
   }
   return merged.reduce((sum, entry) => sum + entry.amount, 0);
+}
+
+/** True when any single currency has a non-zero net (never sums across FX). */
+export function memberHasFocusActivity(
+  row: MembershipMemberRow,
+  focus: LedgerFocus,
+): boolean {
+  return focusCurrencyAmounts(row, focus).some((entry) => entry.amount !== 0);
 }
 
 export function historyAmountForFocus(
@@ -49,9 +94,13 @@ export function sortMembersByFocus(
   rows: MembershipMemberRow[],
   focus: LedgerFocus,
 ): MembershipMemberRow[] {
-  return [...rows]
-    .filter((row) => memberFocusTotal(row, focus) > 0)
-    .sort((a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus));
+  const active = rows.filter((row) => memberHasFocusActivity(row, focus));
+  const sortCurrency = pickHistoryCurrency(active);
+  return [...active].sort(
+    (a, b) =>
+      memberFocusTotal(b, focus, sortCurrency) -
+      memberFocusTotal(a, focus, sortCurrency),
+  );
 }
 
 export function buildKpis(
@@ -73,7 +122,7 @@ export function buildKpis(
     pocketByCurrency: mergeCurrencyAmounts(
       ...byMember.map((row) => row.pocketByCurrency),
     ),
-    memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') > 0)
+    memberCount: byMember.filter((row) => memberHasFocusActivity(row, 'both'))
       .length,
     sharePaymentCount,
     pocketPaymentCount,
@@ -104,7 +153,7 @@ function filterHistory(
           share: focus === 'share' ? amounts.share : 0,
           pocket: focus === 'pocket' ? amounts.pocket : 0,
         };
-        if (next.share > 0 || next.pocket > 0) {
+        if (next.share !== 0 || next.pocket !== 0) {
           byMember[memberId] = next;
         }
       }
@@ -155,6 +204,42 @@ export function filterReportByFocus(
     historyCurrency: report.historyCurrency,
     history: filterHistory(report.history, focus),
   };
+}
+
+/** One ledger/currency candidate before abs sizing for the pie. */
+export type MembershipSharePieSliceInput = {
+  id: string;
+  label: string;
+  /** Signed net; zero rows are dropped. */
+  amount: number;
+  color: string;
+};
+
+/** Pie arc uses `value` (abs); tooltip should use `signedValue`. */
+export type MembershipSharePieSlice = {
+  id: string;
+  label: string;
+  value: number;
+  signedValue: number;
+  color: string;
+};
+
+/**
+ * Build pie slices from signed nets. Pie charts cannot size negative arcs, so
+ * `value` is abs(amount); keep `signedValue` for tooltips / labels.
+ */
+export function buildMembershipSharePieData(
+  slices: readonly MembershipSharePieSliceInput[],
+): MembershipSharePieSlice[] {
+  return slices
+    .filter((row) => row.amount !== 0)
+    .map((row) => ({
+      id: row.id,
+      label: row.label,
+      value: Math.abs(row.amount),
+      signedValue: row.amount,
+      color: row.color,
+    }));
 }
 
 /** Prefer HUF when present; otherwise the currency with the largest total. */

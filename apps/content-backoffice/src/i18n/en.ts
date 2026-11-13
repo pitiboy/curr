@@ -259,6 +259,27 @@ export const enMessages = mergeTranslations(englishMessages, {
       error: 'Could not load the report.',
       retry: 'Retry',
     },
+    membership_ledger: {
+      menu: 'Membership ledger',
+      title: 'Membership ledger',
+      subtitle:
+        'Per membership: member payments, deductions, and balances on 1101 share and 1001 pocket ledgers. Date range and currency come from the sidebar filters; currency defaults to HUF when unset. FX amounts are never summed.',
+      active_currency: 'Active currency: %{currency}',
+      member: 'Member',
+      col: {
+        payment: '%{code} payment',
+        deduction: '%{code} deduction',
+        balance: '%{code} balance',
+      },
+      empty: 'No memberships to show (or memberships have no linked members).',
+      empty_activity:
+        'No member-ledger activity in the selected period for %{currency}. Try Date range → All, or switch currency (e.g. EGG, KOR).',
+      drilldown: {
+        hint: 'Click to open the related transactions list',
+      },
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
     membership_share: {
       menu: 'Share capital report',
       title: 'Member share and pocket',
@@ -374,6 +395,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       'egg-production': 'Daily egg entry',
       'member-fee': 'Member fee',
       'membership-share': 'Share capital report',
+      'membership-ledger': 'Membership ledger',
     },
     bulk_quantity: {
       save: 'Save',
@@ -511,6 +533,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         debit_account: 'Debit',
         credit_account: 'Credit',
         currency_type: 'Currency',
+        transaction_type: 'Transaction type',
         vendor: 'Vendor',
         status: 'Status',
         converted_to_workflow: 'Deal expansion',

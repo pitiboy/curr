@@ -18,6 +18,8 @@ export function TransactionConvertButton({
   iconOnly = false,
   labelKey = 'app.transactions_convert',
   showPreview = true,
+  /** Create/review toolbar: contained convert, default size, no icon. */
+  toolbarStyle = false,
 }: {
   documentId: string;
   workflow: WorkflowTemplateHeader;
@@ -25,6 +27,7 @@ export function TransactionConvertButton({
   iconOnly?: boolean;
   labelKey?: string;
   showPreview?: boolean;
+  toolbarStyle?: boolean;
 }) {
   const translate = useTranslate();
   const notify = useNotify();
@@ -63,9 +66,14 @@ export function TransactionConvertButton({
 
   return (
     <>
-      <Stack direction="row" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={toolbarStyle ? { ml: 1 } : undefined}
+      >
         {showPreview ? (
           <TransactionConvertPreviewButton
+            disabled={disabled || busy}
             previewInput={previewInput}
             workflow={workflow}
           />
@@ -86,9 +94,9 @@ export function TransactionConvertButton({
         ) : (
           <Button
             disabled={disabled || busy}
-            size="small"
-            startIcon={<AccountTreeIcon />}
-            variant="outlined"
+            size={toolbarStyle ? 'medium' : 'small'}
+            startIcon={toolbarStyle ? undefined : <AccountTreeIcon />}
+            variant={toolbarStyle ? 'contained' : 'outlined'}
             onClick={(event) => {
               event.stopPropagation();
               setOpen(true);

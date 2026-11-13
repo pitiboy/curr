@@ -7,7 +7,9 @@
 // writes, for every row:
 //   credit_account, debit_account  — chart account name, or tag:<id> / saját:<id>
 //   organization                    — an organizations.json name
-//   transaction_type                — when operation or place maps to one
+//   transaction_type                — kept when already set; otherwise when
+//                                      operation or place maps to one
+//   currency                         — optional per-row code (else currencyCode)
 //   entered_key                      — excel:<20 hex of sha256(entered_key_fields)>
 //
 // Account labels come from the sheet columns credit_Account and Debit_account.
@@ -17,8 +19,10 @@
 // not chart names. Anything else is an error, so a new label cannot import
 // onto the wrong account.
 //
-// Organization/Projekt is used as-is when it is an organization. Otherwise
-// projectOrganizations applies (Zöld Élet Program → the main organization).
+// Organization/Projekt from the sheet becomes the row's organization when it
+// is an organization name. Otherwise projectOrganizations applies (Zöld Élet
+// Program → the main organization). The sheet label is not stored as a
+// separate project field; only organization is kept on the row.
 // operationTransactionTypes wins over placeTransactionTypes (Bányászás).
 //
 // entered_key_fields is a top-level array in the JSON. `currency` means the
@@ -71,7 +75,6 @@ const ROW_FIELDS = [
   'payer',
   'payee',
   'ledger',
-  'project',
   'purpose',
   'operation',
   'amount',
@@ -83,6 +86,7 @@ const ROW_FIELDS = [
   'debit_account',
   'organization',
   'transaction_type',
+  'currency',
 ];
 
 /** Same rules as src/member-identifier.ts memberIdentifierBase. */
@@ -233,15 +237,19 @@ export function resolveAccountLabel(
   throw new Error(`no chart account for "${label}"`);
 }
 
-export function resolveOrganization(project, source, orgNames) {
-  const name = fold(project);
+/**
+ * Resolves a sheet Organization/Projekt label (or an already-set organization
+ * name) onto organizations.json. Empty → mainOrganization.
+ */
+export function resolveOrganization(label, source, orgNames) {
+  const name = fold(label);
   const canonical = (value) =>
     [...orgNames].find((org) => fold(org) === fold(value));
   if (!name) {
     const main = canonical(source.mainOrganization);
     if (!main)
       throw new Error(
-        'row has no project and mainOrganization is not an organization',
+        'row has no organization and mainOrganization is not an organization',
       );
     return main;
   }
@@ -249,11 +257,11 @@ export function resolveOrganization(project, source, orgNames) {
   if (direct) return direct;
   const table = source.projectOrganizations || {};
   const mapped = Object.entries(table).find(([key]) => fold(key) === name)?.[1];
-  if (!mapped) throw new Error(`no organization for project "${project}"`);
+  if (!mapped) throw new Error(`no organization for "${label}"`);
   const org = canonical(mapped);
   if (!org)
     throw new Error(
-      `project "${project}" maps to "${mapped}", which is not an organization`,
+      `"${label}" maps to "${mapped}", which is not an organization`,
     );
   return org;
 }
@@ -271,6 +279,19 @@ export function absAmountRow(row) {
 }
 
 export function resolveTransactionType(row, source, typeNames) {
+  // Prefer an already-set type (workflow-oriented seed edits). Lookup tables
+  // only fill empty rows; they must not wipe Részjegy / Lekötés back to place.
+  if (row.transaction_type) {
+    const existing = [...typeNames].find(
+      (type) => fold(type) === fold(row.transaction_type),
+    );
+    if (!existing) {
+      throw new Error(
+        `row ${row.row}: transaction type "${row.transaction_type}" is not in transaction-types.json`,
+      );
+    }
+    return existing;
+  }
   const name =
     (source.operationTransactionTypes &&
       source.operationTransactionTypes[row.operation]) ||
@@ -361,13 +382,12 @@ export function bookRow(row, source, ctx) {
   } catch (error) {
     throw new Error(`row ${row.row}: ${error.message}`);
   }
+  // Prefer an already-resolved organization (JSON re-book). Sheet import still
+  // passes Organization/Projekt as `project`; that label is not stored.
+  const orgLabel = withAmount.organization || withAmount.project;
   let organization;
   try {
-    organization = resolveOrganization(
-      withAmount.project,
-      source,
-      ctx.orgNames,
-    );
+    organization = resolveOrganization(orgLabel, source, ctx.orgNames);
   } catch (error) {
     throw new Error(`row ${withAmount.row}: ${error.message}`);
   }
@@ -382,6 +402,7 @@ export function bookRow(row, source, ctx) {
     debit_account: debit,
     organization,
   };
+  delete booked.project;
   if (transactionType) booked.transaction_type = transactionType;
   else delete booked.transaction_type;
   return booked;
@@ -391,13 +412,7 @@ function ordered(row) {
   const out = {};
   for (const field of ROW_FIELDS) {
     if (row[field] === undefined || row[field] === null) continue;
-    if (
-      row[field] === '' &&
-      field !== 'payer' &&
-      field !== 'payee' &&
-      field !== 'project'
-    )
-      continue;
+    if (row[field] === '' && field !== 'payer' && field !== 'payee') continue;
     out[field] = row[field];
   }
   return out;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  CONVERTED_ORIGINAL,
   CREDIT_ACCOUNT_IN_FILTER_KEY,
   DEFAULT_CONVERTED_FILTER,
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
@@ -12,11 +11,14 @@ import { MEMBER_SHARE_ACCOUNT_CODE } from './types';
 import { drilldownForMemberCell, drilldownForPieSlice } from './drilldown';
 
 describe('MEMBERSHIP_SHARE_DRILLDOWN_CONVERTED_FILTER', () => {
-  it('includes original rows excluded by the default list filter', () => {
+  it('matches the report cohort (none + expanded, no original / storno)', () => {
     expect(MEMBERSHIP_SHARE_DRILLDOWN_CONVERTED_FILTER).toEqual([
       ...DEFAULT_CONVERTED_FILTER,
-      CONVERTED_ORIGINAL,
     ]);
+    expect(MEMBERSHIP_SHARE_DRILLDOWN_CONVERTED_FILTER).not.toContain(
+      'original',
+    );
+    expect(MEMBERSHIP_SHARE_DRILLDOWN_CONVERTED_FILTER).not.toContain('storno');
   });
 });
 

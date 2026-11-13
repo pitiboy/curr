@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  accountCodeMatchesPattern,
   assembleTransactionList,
   buildTransactionFilters,
   PROJECT_BALANCE_LEG_FILTER_KEY,
   CREDIT_ACCOUNT_IN_FILTER_KEY,
+  MEMBERSHIP_LEDGER_MODE_FILTER_KEY,
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
+  MEMBER_LEDGER_ACCOUNT_IN_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
+  isExactAccountCodePattern,
   parseTransactionAmount,
   pickMatchingWorkflow,
   sumTransactionAmountsByCurrency,
@@ -193,6 +197,84 @@ describe('assembleTransactionList', () => {
     expect(data.map((row) => row.id)).toEqual(['ext']);
   });
 
+  it('filters membership-ledger deduction mode (ignores 3000 and 5xx wash)', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'real-out',
+        date: '2026-01-01',
+        debit_account: { code: '1001', documentId: 'acc-p' },
+        credit_account: { code: '1720' },
+      },
+      {
+        documentId: 'wash',
+        date: '2026-01-02',
+        debit_account: { code: '1001', documentId: 'acc-p' },
+        credit_account: { code: '5510' },
+      },
+      {
+        documentId: 'equity',
+        date: '2026-01-03',
+        debit_account: { code: '1101', documentId: 'acc-s' },
+        credit_account: { code: '3000' },
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      filter: { [MEMBERSHIP_LEDGER_MODE_FILTER_KEY]: 'deduction' },
+    });
+    expect(data.map((row) => row.id)).toEqual(['real-out']);
+  });
+
+  it('builds Strapi $or for member_ledger_account_in', () => {
+    const { strapiFilters } = buildTransactionFilters({
+      [MEMBER_LEDGER_ACCOUNT_IN_FILTER_KEY]: ['acc-a'],
+      converted_to_workflow: ['none'],
+    });
+    expect(strapiFilters).toMatchObject({
+      converted_to_workflow: { $null: true },
+      $or: [
+        { credit_account: { documentId: { $eq: 'acc-a' } } },
+        { debit_account: { documentId: { $eq: 'acc-a' } } },
+      ],
+    });
+  });
+
+  it('excludes kincstári KOR clearing from membership-share external filter', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'lock',
+        date: '2026-01-01',
+        currency_type: { code: 'KOR' },
+        debit_account: { code: '1510' },
+        credit_account: { code: '1101', documentId: 'acc-a' },
+      },
+      {
+        documentId: 'treasury-out',
+        date: '2026-01-02',
+        currency_type: { code: 'KOR' },
+        debit_account: { code: '1900' },
+        credit_account: { code: '1101', documentId: 'acc-a' },
+      },
+      {
+        documentId: 'treasury-in',
+        date: '2026-01-03',
+        currency_type: { code: 'KOR' },
+        debit_account: { code: '1101', documentId: 'acc-a' },
+        credit_account: { code: '1900' },
+      },
+      {
+        documentId: 'huf-fedezet',
+        date: '2026-01-04',
+        currency_type: { code: 'HUF' },
+        debit_account: { code: '1900' },
+        credit_account: { code: '1520' },
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      filter: { [MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY]: true },
+    });
+    expect(data.map((row) => row.id)).toEqual(['lock', 'huf-fedezet']);
+  });
+
   it('filters by project balance leg using account classification', () => {
     const rows: StrapiTransaction[] = [
       {
@@ -313,6 +395,13 @@ describe('buildTransactionFilters', () => {
         ],
       },
     });
+  });
+
+  it('accepts status as a one-element array from a stale list URL', () => {
+    expect(buildTransactionFilters({ status: ['draft'] }).status).toBe('draft');
+    expect(buildTransactionFilters({ status: ['published'] }).status).toBe(
+      'published',
+    );
   });
 
   it('omits blank filters but keeps the default converted filter', () => {
@@ -529,6 +618,73 @@ describe('workflowMatchesTransaction', () => {
         currency_type: { documentId: 'cur-kor' },
       }),
     ).toBe(true);
+  });
+
+  it('matches glob and regex header patterns', () => {
+    expect(accountCodeMatchesPattern('1520', '15?0')).toBe(true);
+    expect(accountCodeMatchesPattern('10', '15?0')).toBe(false);
+    expect(accountCodeMatchesPattern('1520', '15[23]0')).toBe(true);
+    expect(accountCodeMatchesPattern('1510', '15[23]0')).toBe(false);
+    expect(isExactAccountCodePattern('1520')).toBe(true);
+    expect(isExactAccountCodePattern('15*')).toBe(false);
+    expect(
+      workflowMatchesTransaction(
+        {
+          ...ugyelet1Template,
+          debit_account_code: '15[23]0',
+        },
+        {
+          debit_account: { code: '1520' },
+          credit_account: { code: '1101' },
+        },
+      ),
+    ).toBe(true);
+  });
+
+  it('matches kor részjegy project pattern and requires type', () => {
+    const pattern = '(5(00|10|4[0-9]|50|80)0|15[0-9]0)';
+    expect(accountCodeMatchesPattern('1510', pattern)).toBe(true);
+    expect(accountCodeMatchesPattern('1520', pattern)).toBe(true);
+    expect(accountCodeMatchesPattern('5410', pattern)).toBe(true);
+    expect(accountCodeMatchesPattern('5200', pattern)).toBe(false);
+    const template: WorkflowTemplateHeader = {
+      documentId: 'wf-resz',
+      name: 'Tagi befizetés projekt vagy ingatlanba lekötéssel',
+      debit_account_code: pattern,
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-resz', name: 'Részjegy' },
+      requires_source_organization: true,
+    };
+    const lekot: WorkflowTemplateHeader = {
+      documentId: 'wf-lekot',
+      name: 'Tagi lekötés gazdasági ingatlanba',
+      debit_account_code: '15[12]0',
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-lekot', name: 'Lekötés' },
+      requires_source_organization: false,
+    };
+    const tx = {
+      debit_account: { code: '1510' },
+      credit_account: { code: '1101' },
+      transaction_type: { documentId: 'type-resz', name: 'Részjegy' },
+    };
+    expect(workflowMatchesTransaction(template, tx)).toBe(true);
+    expect(workflowMatchesTransaction(lekot, tx)).toBe(false);
+    expect(pickMatchingWorkflow([template, lekot], tx)?.documentId).toBe(
+      'wf-resz',
+    );
+    expect(
+      workflowMatchesTransaction(template, {
+        ...tx,
+        transaction_type: 'type-resz',
+      }),
+    ).toBe(true);
+    expect(
+      workflowMatchesTransaction(template, {
+        ...tx,
+        transaction_type: null,
+      }),
+    ).toBe(false);
   });
 });
 

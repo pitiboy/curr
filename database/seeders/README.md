@@ -136,7 +136,7 @@ npm run seed:http:kor:transaction-workflows:local
 npm run seed:http:kor:transaction-workflows -- prod
 ```
 
-Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A seed a `debit_code`/`credit_code` alapján választ komponenst: fix T/K → `workflow.step`; tagi debit → `step-member-debit`; tagi credit → `step-member-credit`. A `description` mezőben `{original.<mező>}` / `{1}` sablonok a Convertben oldódnak; `"organization": "{original.organization}"` → `organization_from_original` (üres forrás → üres). A Content API dynamic zone itemjeiben a `__component` mezőnek az objektum első kulcsának kell lennie (különben Strapi 5: `Invalid key __component at step`). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
+Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900`, `4500`, `EGG`, `FRUIT`, Tojóól org a kor seedben. A fejléc `debit_account_code` / `credit_account_code` string minta (egzakt, glob `*`/`?`, vagy heurisztikus regex). A seed a `debit_code`/`credit_code` alapján választ komponenst: fix T/K → `workflow.step`; tagi debit → `step-member-debit`; tagi credit → `step-member-credit`. A `description` mezőben `{original.<mező>}` / `{1}` sablonok a Convertben oldódnak; `"organization": "{original.organization}"` → `organization_from_original`; `"currency": "{original.currency}"` → `currency_from_original`; `"debit_code"` / `"credit_code"`: `"{original.debit_account_code}"` vagy `"{original.credit_account_code}"` (crossed is OK) → `*_from_original: "debit"|"credit"` (üres forrás → 422). A Content API dynamic zone itemjeiben a `__component` mezőnek az objektum első kulcsának kell lennie (különben Strapi 5: `Invalid key __component at step`). A Convert API: `POST /api/transaction-workflows/convert` (editor jog).
 
 ## Tojás napló import (edizone)
 
@@ -273,43 +273,50 @@ Every row in the JSON carries an `entered_key`, computed from the fields listed
 in the top-level `entered_key_fields` array of `transactions.json`:
 
 ```json
-"entered_key_fields": ["currency", "date", "amount", "payer", "payee", "project"]
+"entered_key_fields": ["currency", "date", "amount", "payer", "payee", "organization"]
 ```
 
 ```
 excel:<first 20 hex of sha256(the values of entered_key_fields, in that order)>
 ```
 
-`payee` is the sheet column Kinek fizettük, `project` is Organization/Projekt.
-Rebuilding the file from the current workbook therefore changed the key of every
-row whose payee or project text changed (155 of 185). If those old keys are
-already in a database, run `npm run seed:http:kor:transactions:reset:local`
-(or `-- prod`) before seeding again, otherwise they are inserted a second time.
+`payee` is the sheet column Kinek fizettük, `organization` is the resolved
+organization name (the sheet's Organization/Projekt label is mapped via
+`projectOrganizations` when needed, then discarded — rows no longer store
+`project`). If those old keys are already in a database, run
+`npm run seed:http:kor:transactions:reset:local` (or `-- prod`) before seeding
+again, otherwise they are inserted a second time.
 
-`currency` is the file's `currencyCode` (or a row's own `currency`); every other
-name must be a column that every row has, otherwise the key script stops with an
-error. Strings are trimmed and whitespace-collapsed, the amount is formatted
-with two decimals. The Excel row number is never part of the key. Rows with the
-same key get `#2`, `#3`... in file order, so both still import (three pairs: rows 81/84, 127/128, 151/152). The seeder looks up each row by
-`entered_key`. When that draft exists, it PUTs the current JSON onto it: date,
-amount, description, currency, accounts, transaction type, organization,
-`entered_by`, and `entered_key`. A relation the JSON no longer resolves is
-cleared. Receipts and related transactions are not sent. A second run therefore
-updates every matching draft and creates only keys that are not in the database
-yet. The published copy stays as it was; publish the draft again after the
-update.
+`currency` is the row's own `currency` when set, otherwise the file's
+`currencyCode`; every other name must be a column that every row has, otherwise
+the key script stops with an error. Strings are trimmed and
+whitespace-collapsed, the amount is formatted with two decimals. The Excel row
+number is never part of the key. Rows with the same key get `#2`, `#3`... in
+file order, so both still import (three pairs: rows 81/84, 127/128, 151/152).
+The seeder looks up each row by `entered_key`. When that draft exists, it PUTs
+the current JSON onto it: date, amount, description, currency, accounts,
+transaction type, organization, `entered_by`, and `entered_key`. A relation the
+JSON no longer resolves is cleared. Receipts are not sent; `related_transaction`
+is linked in a second pass when `related_transaction_entered_key` is set. A
+second run therefore updates every matching draft and creates only keys that are
+not in the database yet. The published copy stays as it was; publish the draft
+again after the update.
 
 - **Reordering is safe.** Inserting, deleting or sorting rows updates the same
   drafts. The `entered_by` marker follows the new Excel row number.
 - **Only the six key fields identify the row.** Editing `description`,
   `purpose`, `ledger`, `operation`, `place`, or the resolved `credit_account` /
-  `debit_account` / `organization` keeps the key, so the next
-  `transactions.http` run writes those changes onto the existing draft.
-  Backoffice edits of those fields are replaced by the JSON on the next run.
+  `debit_account` keeps the key, so the next `transactions.http` run writes
+  those changes onto the existing draft. Changing `organization` (a key field)
+  regenerates the key. Backoffice edits of non-key fields are replaced by the
+  JSON on the next run.
 - **Changing a key field creates a new key.** If you change currency, date,
-  amount, payer, payee or project and regenerate the keys, the row imports as a
-  _new_ transaction and the old one stays in Strapi. Reset the imported drafts
-  before re-running when that old row should go.
+  amount, payer, payee or organization and regenerate the keys, the row imports
+  as a _new_ transaction and the old one stays in Strapi. Reset the imported
+  drafts before re-running when that old row should go.
+- **`transaction_type` is sticky.** Once set on a row (e.g. `Részjegy` /
+  `Lekötés` for workflow match), re-booking keeps it; the place/operation tables
+  only fill empty types.
 - **Do not change `entered_key_fields` once rows are imported** on an
   environment. It changes every key, so the next run would import all rows
   again. If it must change, the existing `entered_key` values in that database

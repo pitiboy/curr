@@ -55,6 +55,17 @@ describe('transactionDraftBody', () => {
       credit_account: 'credit-1',
     });
   });
+
+  it('sends null for a cleared transaction_type, omits an untouched one', () => {
+    expect(transactionDraftBody({ transaction_type: '' })).toEqual({
+      transaction_type: null,
+    });
+    expect(transactionDraftBody({ transaction_type: null })).toEqual({
+      transaction_type: null,
+    });
+    expect(transactionDraftBody({ transaction_type: undefined })).toEqual({});
+    expect(transactionDraftBody({})).toEqual({});
+  });
 });
 
 describe('createTransactionDraft', () => {

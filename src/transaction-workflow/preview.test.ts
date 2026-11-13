@@ -331,6 +331,50 @@ describe('buildConvertPreview', () => {
     assert.equal(preview.movements[1]?.description, 'tagi befizetés');
   });
 
+  it('strips excel HTML comments from original and expanded step descriptions', () => {
+    const excel = [
+      '<!-- excel -->',
+      '<!-- Excel: #114 -->',
+      '<!-- /excel -->',
+    ].join('\n');
+    const wf: WorkflowTemplate = {
+      documentId: 'wf-excel',
+      debit_account_code: 1510,
+      credit_account_code: 1101,
+      keep_original: true,
+      step: [
+        {
+          __component: STEP_RELATED,
+          description: '{original.description} | Részjegy',
+          percent: 100,
+          debit_account: account('1510'),
+          credit_account: account('1101'),
+          currency_type: huf,
+          organization: treasury,
+        },
+      ],
+    };
+    const tx: SourceTransaction = {
+      documentId: 'tx-excel',
+      date: '2026-01-01',
+      amount: 100,
+      description: `BALÁZS ERIKA\n\n${excel}`,
+      debit_account: account('1510'),
+      credit_account: account('1101'),
+      currency_type: huf,
+    };
+    const preview = buildConvertPreview(
+      wf,
+      tx,
+      new Map(),
+      accountLookup(account('1510'), account('1101')),
+      currencyLookup(huf),
+    );
+    assert.equal(preview.original.description, 'BALÁZS ERIKA');
+    assert.equal(preview.movements[0]?.description, 'BALÁZS ERIKA');
+    assert.equal(preview.movements[1]?.description, 'BALÁZS ERIKA | Részjegy');
+  });
+
   it('throws 422 when workflow has no steps', () => {
     const wf: WorkflowTemplate = {
       documentId: 'wf-empty',

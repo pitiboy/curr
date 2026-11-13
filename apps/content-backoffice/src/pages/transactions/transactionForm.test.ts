@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isTransactionCreateFormReady,
+  reviewFormRecord,
   transactionFormErrors,
   transactionPublishFormErrors,
 } from './transactionForm';
@@ -115,5 +116,20 @@ describe('transactionPublishFormErrors', () => {
       credit_account: 'ra.validation.required',
     });
     expect(transactionPublishFormErrors(publishFilled, translate)).toEqual({});
+  });
+});
+
+describe('reviewFormRecord', () => {
+  it('flattens transaction_type to its documentId', () => {
+    expect(
+      reviewFormRecord({
+        documentId: 'tx-1',
+        transaction_type: { documentId: 'type-1' },
+      }).transaction_type,
+    ).toBe('type-1');
+    expect(
+      reviewFormRecord({ documentId: 'tx-1', transaction_type: null })
+        .transaction_type,
+    ).toBeUndefined();
   });
 });
