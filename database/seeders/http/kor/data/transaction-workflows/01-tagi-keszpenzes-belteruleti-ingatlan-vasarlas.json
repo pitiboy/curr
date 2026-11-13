@@ -41,7 +41,7 @@
     },
     {
       "description": "{original.description} | KOR adás",
-      "percent": 1,
+      "percent": 100,
       "debit_code": "{original.debit_account_code}",
       "credit_code": "1001",
       "currency": "KOR",

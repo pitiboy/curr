@@ -32,7 +32,7 @@
     },
     {
       "description": "{original.description} KOR kiadás",
-      "percent": 1,
+      "percent": 100,
       "debit_code": "{original.debit_account_code}",
       "credit_code": "1900",
       "currency": "KOR",

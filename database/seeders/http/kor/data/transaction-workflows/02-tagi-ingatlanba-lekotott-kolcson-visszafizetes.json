@@ -15,7 +15,7 @@
     },
     {
       "description": "{original.description} | Tagi korona visszautalás",
-      "percent": 1,
+      "percent": 100,
       "debit_code": "1101",
       "credit_code": "{original.debit_account_code}",
       "currency": "KOR",

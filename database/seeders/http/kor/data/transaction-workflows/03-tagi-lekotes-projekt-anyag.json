@@ -33,7 +33,7 @@
     },
     {
       "description": "{original.description} | Tagi Lekötés Koronaként",
-      "percent": 1,
+      "percent": 100,
       "debit_code": "{original.debit_account_code}",
       "credit_code": "1101",
       "currency": "KOR",
