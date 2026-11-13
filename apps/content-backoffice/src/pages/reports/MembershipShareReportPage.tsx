@@ -31,6 +31,7 @@ import {
 import type {
   CurrencyAmount,
   LedgerFocus,
+  MembershipMemberRow,
   MembershipShareReport,
 } from './membershipShare/types';
 import {
@@ -179,14 +180,12 @@ function ReportBody({
       ),
     ),
   ].sort();
-  const primaryCurrency = currencies[0] ?? 'HUF';
-
-  const memberLabels = byMember.map((row) => row.memberName);
-  const shareBarData = byMember.map((row) =>
-    memberFocusTotal(row, 'share', primaryCurrency),
-  );
-  const pocketBarData = byMember.map((row) =>
-    memberFocusTotal(row, 'pocket', primaryCurrency),
+  /** Prefer HUF for the lead chart; never pick an FX by locale sort alone. */
+  const primaryCurrency = currencies.includes('HUF')
+    ? 'HUF'
+    : (currencies[0] ?? 'HUF');
+  const extraBarCurrencies = currencies.filter(
+    (currency) => currency !== primaryCurrency,
   );
 
   /** Share vs pocket pie uses one currency only — never sum across FX. */
@@ -223,24 +222,6 @@ function ReportBody({
                   : theme.palette.info.main,
           }),
         );
-
-  const onMemberBarClick = useCallback(
-    (_event: unknown, item: BarItemIdentifier) => {
-      const seriesId = String(item.seriesId);
-      if (seriesId !== 'share' && seriesId !== 'pocket') return;
-      const member = byMember[item.dataIndex];
-      if (!member) return;
-      openDrilldown(
-        drilldownForMemberBar(
-          drilldownContext,
-          member,
-          seriesId as MembershipShareLedgerLeg,
-          primaryCurrency,
-        ),
-      );
-    },
-    [byMember, drilldownContext, openDrilldown, primaryCurrency],
-  );
 
   const onHistoryBarClick = useCallback(
     (_event: unknown, item: BarItemIdentifier) => {
@@ -327,74 +308,21 @@ function ReportBody({
           gridTemplateColumns: { xs: '1fr', md: '1.4fr 1fr' },
         }}
       >
-        <Section
+        <MemberCurrencyBarSection
+          byMember={byMember}
+          chartMetrics={chartMetrics}
+          currency={primaryCurrency}
+          drilldownContext={drilldownContext}
+          emptyLabel={translate('app.membership_share.empty')}
+          openDrilldown={openDrilldown}
+          showPocket={showPocket}
+          showShare={showShare}
+          theme={theme}
           title={translate('app.membership_share.bar_title', {
             currency: primaryCurrency,
           })}
-        >
-          {byMember.length === 0 ? (
-            <Typography color="text.secondary" variant="body2">
-              {translate('app.membership_share.empty')}
-            </Typography>
-          ) : (
-            <ReportScrollX
-              minWidth={reportBarAreaMinWidth(
-                byMember.length,
-                chartMetrics.narrow,
-              )}
-            >
-              <BarChart
-                height={Math.max(
-                  chartMetrics.narrow ? 200 : 220,
-                  byMember.length * (chartMetrics.narrow ? 30 : 36),
-                )}
-                layout="horizontal"
-                margin={{
-                  left: chartMetrics.bandYAxisWidth,
-                  right: chartMetrics.narrow ? 8 : 16,
-                  top: 16,
-                  bottom: 24,
-                }}
-                onItemClick={onMemberBarClick}
-                series={[
-                  ...(showShare
-                    ? [
-                        {
-                          data: shareBarData,
-                          label: translate('app.membership_share.ledger.share'),
-                          color: theme.palette.primary.main,
-                          id: 'share',
-                          stack: 'total',
-                        },
-                      ]
-                    : []),
-                  ...(showPocket
-                    ? [
-                        {
-                          data: pocketBarData,
-                          label: translate(
-                            'app.membership_share.ledger.pocket',
-                          ),
-                          color: theme.palette.warning.main,
-                          id: 'pocket',
-                          stack: 'total',
-                        },
-                      ]
-                    : []),
-                ]}
-                slotProps={{ legend: { direction: 'horizontal' } }}
-                xAxis={[{ min: 0 }]}
-                yAxis={[
-                  {
-                    data: memberLabels,
-                    scaleType: 'band',
-                    width: chartMetrics.bandYAxisWidth,
-                  },
-                ]}
-              />
-            </ReportScrollX>
-          )}
-        </Section>
+          translate={translate}
+        />
 
         <Section
           title={
@@ -429,6 +357,24 @@ function ReportBody({
           )}
         </Section>
       </Box>
+
+      {extraBarCurrencies.map((currency) => (
+        <MemberCurrencyBarSection
+          byMember={byMember}
+          chartMetrics={chartMetrics}
+          currency={currency}
+          drilldownContext={drilldownContext}
+          emptyLabel={translate('app.membership_share.empty')}
+          filterInactive
+          key={`bar-${currency}`}
+          openDrilldown={openDrilldown}
+          showPocket={showPocket}
+          showShare={showShare}
+          theme={theme}
+          title={translate('app.membership_share.bar_title', { currency })}
+          translate={translate}
+        />
+      ))}
 
       <Section title={translate('app.membership_share.members_title')}>
         <Typography color="text.secondary" sx={{ mb: 1.5 }} variant="body2">
@@ -658,6 +604,132 @@ function DrilldownCell({
   );
 }
 
+function MemberCurrencyBarSection({
+  byMember,
+  chartMetrics,
+  currency,
+  drilldownContext,
+  emptyLabel,
+  filterInactive = false,
+  openDrilldown,
+  showPocket,
+  showShare,
+  theme,
+  title,
+  translate,
+}: {
+  byMember: MembershipMemberRow[];
+  chartMetrics: ReturnType<typeof useReportChartMetrics>;
+  currency: string;
+  drilldownContext: MembershipShareDrilldownContext;
+  emptyLabel: string;
+  filterInactive?: boolean;
+  openDrilldown: ReturnType<typeof useOpenDrilldown>;
+  showPocket: boolean;
+  showShare: boolean;
+  theme: Theme;
+  title: string;
+  translate: ReturnType<typeof useTranslate>;
+}) {
+  const rows = filterInactive
+    ? byMember.filter((row) => {
+        const share = showShare ? memberFocusTotal(row, 'share', currency) : 0;
+        const pocket = showPocket
+          ? memberFocusTotal(row, 'pocket', currency)
+          : 0;
+        return share !== 0 || pocket !== 0;
+      })
+    : byMember;
+
+  const shareBarData = rows.map((row) =>
+    memberFocusTotal(row, 'share', currency),
+  );
+  const pocketBarData = rows.map((row) =>
+    memberFocusTotal(row, 'pocket', currency),
+  );
+  const axisValues = [
+    ...(showShare ? shareBarData : []),
+    ...(showPocket ? pocketBarData : []),
+  ];
+  const xMin = axisValues.length === 0 ? 0 : Math.min(0, ...axisValues);
+  const xMax = axisValues.length === 0 ? 0 : Math.max(0, ...axisValues);
+
+  return (
+    <Section title={title}>
+      {rows.length === 0 ? (
+        <Typography color="text.secondary" variant="body2">
+          {emptyLabel}
+        </Typography>
+      ) : (
+        <ReportScrollX
+          minWidth={reportBarAreaMinWidth(rows.length, chartMetrics.narrow)}
+        >
+          <BarChart
+            height={Math.max(
+              chartMetrics.narrow ? 200 : 220,
+              rows.length * (chartMetrics.narrow ? 30 : 36),
+            )}
+            layout="horizontal"
+            margin={{
+              left: chartMetrics.bandYAxisWidth,
+              right: chartMetrics.narrow ? 8 : 16,
+              top: 16,
+              bottom: 24,
+            }}
+            onItemClick={(_event, item) => {
+              const seriesId = String(item.seriesId);
+              if (seriesId !== 'share' && seriesId !== 'pocket') return;
+              const member = rows[item.dataIndex];
+              if (!member) return;
+              openDrilldown(
+                drilldownForMemberBar(
+                  drilldownContext,
+                  member,
+                  seriesId as MembershipShareLedgerLeg,
+                  currency,
+                ),
+              );
+            }}
+            series={[
+              ...(showShare
+                ? [
+                    {
+                      data: shareBarData,
+                      label: translate('app.membership_share.ledger.share'),
+                      color: theme.palette.primary.main,
+                      id: 'share',
+                      stack: 'total',
+                    },
+                  ]
+                : []),
+              ...(showPocket
+                ? [
+                    {
+                      data: pocketBarData,
+                      label: translate('app.membership_share.ledger.pocket'),
+                      color: theme.palette.warning.main,
+                      id: 'pocket',
+                      stack: 'total',
+                    },
+                  ]
+                : []),
+            ]}
+            slotProps={{ legend: { direction: 'horizontal' } }}
+            xAxis={[{ min: xMin, max: xMax === xMin ? undefined : xMax }]}
+            yAxis={[
+              {
+                data: rows.map((row) => row.memberName),
+                scaleType: 'band',
+                width: chartMetrics.bandYAxisWidth,
+              },
+            ]}
+          />
+        </ReportScrollX>
+      )}
+    </Section>
+  );
+}
+
 function KpiTile({ label, valueLabel }: { label: string; valueLabel: string }) {
   return (
     <Paper
@@ -733,6 +805,7 @@ function ReportSkeleton() {
         <Skeleton height={280} variant="rounded" />
         <Skeleton height={280} variant="rounded" />
       </Box>
+      <Skeleton height={220} variant="rounded" />
       <Skeleton height={220} variant="rounded" />
       <Skeleton height={320} variant="rounded" />
     </Stack>
