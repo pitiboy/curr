@@ -202,7 +202,6 @@ async function loadTransactions(
 }
 
 export type MembershipLedgerLoaded = {
-  report: MembershipLedgerReport | null;
   txs: MembershipShareTx[];
   memberships: MembershipLedgerMembershipRef[];
 };

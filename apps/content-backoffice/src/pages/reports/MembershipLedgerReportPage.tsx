@@ -17,7 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import { useGlobalReportParams } from '../../filters/globalTransactionFiltersAtom';
@@ -68,8 +68,13 @@ function AmountCell({
 export function MembershipLedgerReportPage() {
   const translate = useTranslate();
   const params = useGlobalReportParams();
-  const [currencyChoice, setCurrencyChoice] = useState<string | null>(null);
+  const [currency, setCurrency] = useState('HUF');
   const chartMetrics = useReportChartMetrics();
+
+  const { status, report, loaded, reload } = useMembershipLedgerReport(
+    params,
+    currency,
+  );
 
   const currencyOptions = useMemo(() => {
     if (report?.currencies.length) return report.currencies;
@@ -80,18 +85,14 @@ export function MembershipLedgerReportPage() {
     return ['HUF'];
   }, [loaded, report]);
 
-  const currency = useMemo(() => {
-    if (currencyChoice && currencyOptions.includes(currencyChoice)) {
-      return currencyChoice;
+  useEffect(() => {
+    if (!currencyOptions.includes(currency)) {
+      const preferred = currencyOptions.includes('HUF')
+        ? 'HUF'
+        : (currencyOptions[0] ?? 'HUF');
+      setCurrency(preferred);
     }
-    if (currencyOptions.includes('HUF')) return 'HUF';
-    return currencyOptions[0] ?? 'HUF';
-  }, [currencyChoice, currencyOptions]);
-
-  const { status, report, reload } = useMembershipLedgerReport(
-    params,
-    currency,
-  );
+  }, [currency, currencyOptions]);
 
   return (
     <ReportPageShell>
@@ -109,7 +110,7 @@ export function MembershipLedgerReportPage() {
           id="membership-ledger-currency"
           label={translate('app.membership_ledger.currency')}
           labelId="membership-ledger-currency-label"
-          onChange={(event) => setCurrencyChoice(String(event.target.value))}
+          onChange={(event) => setCurrency(String(event.target.value))}
           value={currency}
         >
           {currencyOptions.map((code) => (
@@ -186,7 +187,7 @@ function MembershipSection({
 
   return (
     <Box>
-      <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
         <GroupsOutlinedIcon color="action" fontSize="small" />
         <Typography component="h2" variant="subtitle1">
           {section.membershipName}
