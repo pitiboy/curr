@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import type { AccountChoice } from '../../data/accountCodes';
@@ -10,7 +10,7 @@ import type { WorkflowTemplateHeader } from '../../data/transactionList';
 
 import { useTransactionCreateAccountRow } from './TransactionCreateAccountRowContext';
 
-const HIDDEN_TRANSACTION_TYPE_FIELD = 'transaction_type';
+const TRANSACTION_TYPE_FIELD = 'transaction_type';
 
 export type WorkflowAccountCodeFilters = {
   debit: string | null;
@@ -29,23 +29,33 @@ export function useWorkflowPrefillOnSelect(
   prefillWarningKeys: string[];
   accountCodeFilters: WorkflowAccountCodeFilters;
 } {
-  const { setValue } = useFormContext();
+  const { getValues, setValue } = useFormContext();
   const { storedSelection, setPrefillAccountsResolved, resolved } =
     useTransactionCreateAccountRow();
   const appliedWorkflowRef = useRef<string | null>(null);
+  // The type value the last template wrote. The field is visible and editable,
+  // so only this value is cleared again; a manual pick stays.
+  const appliedTypeRef = useRef<string | null>(null);
   const [prefillWarningKeys, setPrefillWarningKeys] = useState<string[]>([]);
   const [accountCodeFilters, setAccountCodeFilters] =
     useState<WorkflowAccountCodeFilters>(EMPTY_CODE_FILTERS);
+
+  const clearAppliedType = useCallback(() => {
+    const applied = appliedTypeRef.current;
+    appliedTypeRef.current = null;
+    if (!applied || getValues(TRANSACTION_TYPE_FIELD) !== applied) return;
+    setValue(TRANSACTION_TYPE_FIELD, undefined, {
+      shouldDirty: true,
+      shouldValidate: false,
+    });
+  }, [getValues, setValue]);
 
   useEffect(() => {
     if (storedSelection.kind !== 'workflow') {
       appliedWorkflowRef.current = null;
       setPrefillWarningKeys([]);
       setAccountCodeFilters(EMPTY_CODE_FILTERS);
-      setValue(HIDDEN_TRANSACTION_TYPE_FIELD, undefined, {
-        shouldDirty: true,
-        shouldValidate: false,
-      });
+      clearAppliedType();
       setPrefillAccountsResolved(true);
       return;
     }
@@ -92,19 +102,20 @@ export function useWorkflowPrefillOnSelect(
       shouldDirty: true,
       shouldValidate: true,
     });
+    // Template type fills; a template without one keeps a manual pick but
+    // drops the type a previous template wrote.
     if (prefill.transactionTypeId) {
-      setValue(HIDDEN_TRANSACTION_TYPE_FIELD, prefill.transactionTypeId, {
+      setValue(TRANSACTION_TYPE_FIELD, prefill.transactionTypeId, {
         shouldDirty: true,
         shouldValidate: false,
       });
+      appliedTypeRef.current = prefill.transactionTypeId;
     } else {
-      setValue(HIDDEN_TRANSACTION_TYPE_FIELD, undefined, {
-        shouldDirty: true,
-        shouldValidate: false,
-      });
+      clearAppliedType();
     }
   }, [
     accounts,
+    clearAppliedType,
     setPrefillAccountsResolved,
     setValue,
     storedSelection,
@@ -113,15 +124,12 @@ export function useWorkflowPrefillOnSelect(
 
   useEffect(() => {
     if (!resolved.workflowDropped) return;
-    setValue(HIDDEN_TRANSACTION_TYPE_FIELD, undefined, {
-      shouldDirty: true,
-      shouldValidate: false,
-    });
+    clearAppliedType();
     setPrefillAccountsResolved(true);
     appliedWorkflowRef.current = null;
     setPrefillWarningKeys([]);
     setAccountCodeFilters(EMPTY_CODE_FILTERS);
-  }, [resolved.workflowDropped, setPrefillAccountsResolved, setValue]);
+  }, [clearAppliedType, resolved.workflowDropped, setPrefillAccountsResolved]);
 
   return { prefillWarningKeys, accountCodeFilters };
 }

@@ -31,6 +31,7 @@ import { convertPreview, type PreviewStrapi } from './preview-service.ts';
 
 const egg = { documentId: 'cur-egg', code: 'EGG' };
 const huf = { documentId: 'cur-huf', code: 'HUF' };
+const kor = { documentId: 'cur-kor', code: 'KOR' };
 const henhouse = { documentId: 'org-tyuktartas' };
 
 function account(code: string, documentId = `acc-${code}`) {
@@ -109,6 +110,14 @@ const eggHufRate: RateRow = {
   to_currency_type: { documentId: huf.documentId },
 };
 
+const korHufRate: RateRow = {
+  documentId: 'rate-kor-huf',
+  rate: 600,
+  valid_from: '2020-01-01T00:00:00.000Z',
+  from_currency_type: { documentId: kor.documentId },
+  to_currency_type: { documentId: huf.documentId },
+};
+
 type Fixture = {
   transactions: SourceTransaction[];
   rates?: RateRow[];
@@ -157,7 +166,17 @@ function buildStrapi(fixture: Fixture) {
   const rateApi = {
     findMany: async (params: Record<string, unknown>) => {
       rateQueries.push(params);
-      return fixture.rates ?? [];
+      const filters = params.filters as {
+        from_currency_type?: { documentId?: { $eq?: string } };
+        to_currency_type?: { documentId?: { $eq?: string } };
+      };
+      const from = filters?.from_currency_type?.documentId?.$eq;
+      const to = filters?.to_currency_type?.documentId?.$eq;
+      return (fixture.rates ?? []).filter(
+        (row) =>
+          (!from || row.from_currency_type.documentId === from) &&
+          (!to || row.to_currency_type.documentId === to),
+      );
     },
   };
 
@@ -250,6 +269,48 @@ describe('findLatestCurrencyRate / createRateResolver', () => {
     await resolve('cur-egg', 'cur-huf', '2026-11-07T10:00:00.000Z');
     await resolve('cur-egg', 'cur-huf', '2026-11-08');
     assert.equal(rateQueries.length, 2);
+  });
+
+  it('inverts KOR → HUF when HUF → KOR is missing', async () => {
+    const { strapi, rateQueries } = buildStrapi({
+      transactions: [],
+      rates: [korHufRate],
+    });
+    const found = await findLatestCurrencyRate(strapi, {
+      fromCurrencyDocumentId: huf.documentId,
+      toCurrencyDocumentId: kor.documentId,
+      date: '2026-11-07',
+      fromCode: 'HUF',
+      toCode: 'KOR',
+    });
+    assert.equal(found?.rate, 1 / 600);
+    assert.equal(found?.inverted, true);
+    assert.equal(found?.currencyRateDocumentId, 'rate-kor-huf');
+    assert.equal(rateQueries.length, 2);
+  });
+
+  it('does not invert non-KOR pairs when the direct row is missing', async () => {
+    const { strapi, rateQueries } = buildStrapi({
+      transactions: [],
+      rates: [
+        {
+          documentId: 'rate-huf-egg',
+          rate: 0.01,
+          valid_from: '2020-01-01T00:00:00.000Z',
+          from_currency_type: { documentId: huf.documentId },
+          to_currency_type: { documentId: egg.documentId },
+        },
+      ],
+    });
+    const found = await findLatestCurrencyRate(strapi, {
+      fromCurrencyDocumentId: egg.documentId,
+      toCurrencyDocumentId: huf.documentId,
+      date: '2026-11-07',
+      fromCode: 'EGG',
+      toCode: 'HUF',
+    });
+    assert.equal(found, null);
+    assert.equal(rateQueries.length, 1);
   });
 });
 

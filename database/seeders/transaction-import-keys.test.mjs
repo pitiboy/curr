@@ -28,7 +28,13 @@ const orgs = new Set([
   'Zöld források szövetkezet @Szupatak',
   'I/4.11.1 Birtokkezelés',
 ]);
-const types = new Set(['Készpénz', 'Utalás', 'Bányászás']);
+const types = new Set([
+  'Készpénz',
+  'Utalás',
+  'Bányászás',
+  'Részjegy',
+  'Lekötés',
+]);
 
 const source = {
   currencyCode: 'HUF',
@@ -50,7 +56,7 @@ const source = {
     'amount',
     'payer',
     'payee',
-    'project',
+    'organization',
   ],
 };
 
@@ -94,7 +100,7 @@ describe('resolveAccountLabel', () => {
 });
 
 describe('resolveOrganization', () => {
-  it('uses the organization name, and the project table otherwise', () => {
+  it('uses the organization name, and the sheet-label table otherwise', () => {
     assert.equal(
       resolveOrganization('I/4.11.1 Birtokkezelés', source, orgs),
       'I/4.11.1 Birtokkezelés',
@@ -131,6 +137,22 @@ describe('resolveTransactionType', () => {
         types,
       ),
       null,
+    );
+  });
+
+  it('keeps an already-set type instead of the place table', () => {
+    assert.equal(
+      resolveTransactionType(
+        {
+          row: 1,
+          operation: 'Költség',
+          place: 'kp',
+          transaction_type: 'Részjegy',
+        },
+        source,
+        types,
+      ),
+      'Részjegy',
     );
   });
 });
@@ -177,6 +199,7 @@ describe('buildTransactions', () => {
     assert.equal(built.transactions[0].debit_account, 'Szolgáltatások');
     assert.equal(built.transactions[0].organization, 'I/4.11.1 Birtokkezelés');
     assert.equal(built.transactions[0].transaction_type, 'Készpénz');
+    assert.equal('project' in built.transactions[0], false);
     assert.match(built.transactions[0].entered_key, /^excel:[0-9a-f]{20}$/);
     const again = buildTransactions(
       { ...source, transactions: built.transactions },
@@ -207,9 +230,14 @@ describe('buildTransactions', () => {
     assert.equal(built.transactions[0].amount, 25370);
     assert.equal(built.transactions[0].credit_account, 'Bankszámlák');
     assert.equal(built.transactions[0].debit_account, 'saját:péter');
+    assert.equal(
+      built.transactions[0].organization,
+      'Zöld források szövetkezet @Szupatak',
+    );
+    assert.equal('project' in built.transactions[0], false);
     assert.match(
       built.transactions[0].entered_key,
-      /^excel:e3f5095a5a0c95f8f0cf$/,
+      /^excel:e82d6cf0791d659bab3f$/,
     );
   });
 
@@ -229,5 +257,6 @@ describe('buildTransactions', () => {
     assert.equal(booked.credit_account, 'tag:péter');
     assert.equal(booked.debit_account, 'Készpénz');
     assert.equal(booked.organization, 'Zöld források szövetkezet @Szupatak');
+    assert.equal('project' in booked, false);
   });
 });

@@ -559,6 +559,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         debit_account: 'Költség számla', // Tartozik
         credit_account: 'Kifizető számla', // Követel
         currency_type: 'Pénznem',
+        transaction_type: 'Tranzakció típus',
         vendor: 'Eladó',
         status: 'Státusz',
         converted_to_workflow: 'Ügylet bontás',

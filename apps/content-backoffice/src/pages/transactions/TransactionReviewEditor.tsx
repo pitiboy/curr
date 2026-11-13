@@ -48,9 +48,9 @@ import {
   type TransactionRow,
 } from '../../data/transactionList';
 import { bandedForm, bandedShow, bandedSpanClass } from '../../theme';
-import { TransactionConvertSection } from './TransactionConvertSection';
 import { TransactionFinalizeSection } from './TransactionFinalizeSection';
 import { TransactionAccountProfileRow } from './TransactionAccountProfileRow';
+import { TransactionTypeInput } from './TransactionTypeInput';
 import { dateFieldProps } from './dateField';
 import { useAccountCatalog } from './useAccountCatalog';
 import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
@@ -190,6 +190,7 @@ function ReviewEditableFields({
           validate={requiredMark}
         />
       </ReferenceInput>
+      <TransactionTypeInput />
       <DescriptionInput />
       <TransactionAccountProfileRow
         accounts={catalog.accounts}
@@ -409,12 +410,12 @@ export function TransactionReviewEditor({
           record={record}
           onCardsChange={onCardsChange}
         />
-        <TransactionConvertSection record={record} />
         <TransactionFinalizeSection
           allowLeaveRef={allowLeaveRef}
           blocked={blocked}
           documentId={record.documentId}
           missingReceipt={missingReceipt}
+          record={record}
           samePersonBlocked={samePersonBlocked}
         />
       </SimpleForm>

@@ -59,6 +59,7 @@ const OPTIONAL_FILTER_LABEL: Record<
 > = {
   createdAt: 'resources.transactions.fields.createdAt',
   amount: 'resources.transactions.fields.amount',
+  currency_type: 'resources.transactions.fields.currency_type',
   organization: 'resources.transactions.fields.organization',
   debit_account: 'resources.transactions.fields.debit_account',
   credit_account: 'resources.transactions.fields.credit_account',
@@ -409,6 +410,14 @@ function OptionalFilterInput({
           type="number"
         />
       );
+    case 'currency_type':
+      return (
+        <CurrencyCodeAutocomplete
+          label={translate('resources.transactions.fields.currency_type')}
+          onChange={(code) => setField('currency_type', code)}
+          value={state.currency_type}
+        />
+      );
     case 'organization':
       return (
         <ReferenceAutocomplete
@@ -570,6 +579,88 @@ function nameOptionText(record: RaRecord): string {
 function accountOptionText(record: RaRecord): string {
   const account = record as { code?: string | null; name?: string | null };
   return [account.code, account.name].filter(Boolean).join(' ');
+}
+
+function currencyOptionText(record: RaRecord): string {
+  const currency = record as { code?: string | null; name?: string | null };
+  return [currency.code, currency.name].filter(Boolean).join(' ');
+}
+
+function currencyCodeOf(record: RaRecord): string | undefined {
+  const code = (record as { code?: string | null }).code?.trim();
+  return code || undefined;
+}
+
+/**
+ * List filter stores currency-type `code` (drills / Strapi `$eq` on code),
+ * not the relation documentId used on create forms.
+ */
+function CurrencyCodeAutocomplete({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string | undefined;
+  onChange: (code: string | undefined) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebouncedSearch(search),
+      TEXT_COMMIT_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const { data: options = [], isPending } = useGetList('currency-types', {
+    filter: codeOrNameSearchToFilter(debouncedSearch),
+    pagination: { page: 1, perPage: 100 },
+    sort: { field: 'code', order: 'ASC' },
+  });
+
+  const allOptions = useMemo(() => {
+    if (!value) return options;
+    if (options.some((row) => currencyCodeOf(row) === value)) return options;
+    return [{ id: value, code: value } as RaRecord, ...options];
+  }, [options, value]);
+
+  const current = value
+    ? (allOptions.find((row) => currencyCodeOf(row) === value) ?? null)
+    : null;
+
+  return (
+    <Autocomplete<RaRecord>
+      filterOptions={(items) => items}
+      getOptionLabel={currencyOptionText}
+      isOptionEqualToValue={(left, right) =>
+        currencyCodeOf(left) === currencyCodeOf(right)
+      }
+      loading={isPending}
+      onChange={(_e, record) =>
+        onChange(record ? currencyCodeOf(record) : undefined)
+      }
+      onInputChange={(_e, text, reason) => {
+        if (reason === 'input') setSearch(text);
+        if (reason === 'clear' || reason === 'reset') setSearch('');
+      }}
+      options={allOptions}
+      renderInput={(params) => (
+        <TextField {...params} label={label} size="small" />
+      )}
+      size="small"
+      value={current}
+    />
+  );
+}
+
+function codeOrNameSearchToFilter(searchText: string): Record<string, unknown> {
+  const query = searchText.trim();
+  if (!query) return {};
+  return {
+    $or: [{ code: { $containsi: query } }, { name: { $containsi: query } }],
+  };
 }
 
 function accountSearchToFilter(searchText: string): Record<string, unknown> {

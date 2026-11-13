@@ -56,6 +56,8 @@ export type PreviewAppliedRate = {
   /** null when source and step currency match (implicit rate 1). */
   validFrom: string | null;
   currencyRateDocumentId: string | null;
+  /** True when the rate came from `1 / rate(to → from)` (KOR pairs only). */
+  inverted?: boolean;
 };
 
 /** `{ rate, validFrom }` for the preview table, or null without a rate. */

@@ -14,6 +14,10 @@ import { useGlobalTransactionFilters } from './globalTransactionFiltersAtom';
  * Child of the transaction `List`: pushes the global filters into the React
  * Admin list (`setFilters`). A `?filter=` URL present on mount (bookmark,
  * browser history) is merged into the atom first.
+ *
+ * The atom is the source of truth. Without this bridge (or if RA's
+ * `transactions.listParams` store wins), the sidebar UI and the list query
+ * desync — looks like a cache bug (reset / ügylet bontás "do nothing").
  */
 export function TransactionListFilterBridge() {
   const [state, setState] = useGlobalTransactionFilters();
@@ -23,9 +27,11 @@ export function TransactionListFilterBridge() {
 
   const target = useMemo(() => toListFilter(state), [state]);
   const targetKey = stableFilterKey(target);
+  const listKey = stableFilterKey(filterValues ?? {});
 
   useEffect(() => {
     let next = target;
+    let nextKey = targetKey;
     if (!seeded.current) {
       seeded.current = true;
       const fromUrl = filterFromListSearch(location.search);
@@ -36,14 +42,15 @@ export function TransactionListFilterBridge() {
         const merged = mergeDrilldownIntoGlobal(state, fromUrl);
         setState(merged);
         next = toListFilter(merged);
+        nextKey = stableFilterKey(next);
       }
     }
-    if (stableFilterKey(filterValues ?? {}) === stableFilterKey(next)) return;
+    // Re-push whenever the list drifts from the atom (stale URL / RA store).
+    if (listKey === nextKey) return;
     setFilters(next, {}, false);
-    // The atom drives the list: only its (stable) key re-runs the sync. The
-    // URL is read once on mount; later changes are our own setFilters echoes.
+    // Atom + live list keys; location is read once for bookmark seed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetKey]);
+  }, [targetKey, listKey]);
 
   return null;
 }

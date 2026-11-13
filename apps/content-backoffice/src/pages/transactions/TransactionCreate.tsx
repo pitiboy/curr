@@ -35,6 +35,7 @@ import { ReceiptRail, type ReceiptCardValue } from './ReceiptFields';
 import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
 import { TransactionCreateToolbarGate } from './TransactionCreateToolbar';
+import { TransactionTypeInput } from './TransactionTypeInput';
 
 function todayLocalIsoDate(now = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -316,6 +317,7 @@ function TransactionCreateForm({
           validate={required()}
         />
       </ReferenceInput>
+      <TransactionTypeInput />
 
       <TextInput
         className={bandedSpanClass}

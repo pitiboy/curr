@@ -1,5 +1,4 @@
 import {
-  CONVERTED_ORIGINAL,
   CREDIT_ACCOUNT_IN_FILTER_KEY,
   DEFAULT_CONVERTED_FILTER,
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
@@ -17,9 +16,12 @@ import { MEMBER_POCKET_ACCOUNT_CODE, MEMBER_SHARE_ACCOUNT_CODE } from './types';
 
 export type MembershipShareLedgerLeg = 'share' | 'pocket';
 
-/** Matches report fetch: hide ügylet `original` and `storno` rows in drill-down. */
+/**
+ * Same cohort as `membershipShare.fetch` / `keepMembershipShareRow`:
+ * `none` + `expanded` only (no `original`, no `storno`).
+ */
 export const MEMBERSHIP_SHARE_DRILLDOWN_CONVERTED_FILTER: ConvertedFilterValue[] =
-  [...DEFAULT_CONVERTED_FILTER, CONVERTED_ORIGINAL];
+  [...DEFAULT_CONVERTED_FILTER];
 
 export type TransactionListLink = {
   pathname: '/transactions';

@@ -3,9 +3,13 @@
  *
  * Source: published transactions on a member's 1101 (részjegy / `account`) or
  * 1001 (zseb / `private_account`) ledger with the other leg outside member
- * accounts (excludes 1101↔1001 internals). Credits add, debits subtract so
- * ügylet-kifejtés zseb költségek nem duplikálnak. Amounts stay split by
- * currency; never summed across FX.
+ * accounts (excludes 1101↔1001 internals). Sign matches the transaction-list
+ * drill-down (kifizető = credit): credit = befizetés. Debit on 1101 is kivét.
+ * Debit on 1001 is zseb-kivét only for non-wash credits (e.g. 1720); ignored
+ * are 3000, 5xxx projekt-wash, 1000/1100, terület-támogatás/stróman 4200/1200,
+ * and 1900. KOR on 1001 is ignored; KOR 1101↔1900 is ignored so átmosás does
+ * not cancel Tagi Lekötés on the share. Members stay when any currency has a
+ * non-zero net (including negative). Visibility never sums amounts across FX.
  */
 
 import type { DateRangePreset } from '../shared/reportDateRange';
@@ -19,6 +23,11 @@ export const MEMBERSHIP_SHARE_FEATURE_ID = 'membership-share';
 
 export const MEMBER_SHARE_ACCOUNT_CODE = '1101';
 export const MEMBER_POCKET_ACCOUNT_CODE = '1001';
+/** Részjegytőke / alaptőke — 1101↔3000 előírás/törlés nem számít a befizetés-riportban. */
+export const SHARE_CAPITAL_ACCOUNT_CODE = '3000';
+/** Átvezető / kincstári FX clearing — KOR kiadás erről a lábáról nem tagi nettó. */
+export const TREASURY_CLEARING_ACCOUNT_CODE = '1900';
+export const KOR_CURRENCY_CODE = 'KOR';
 
 export type CurrencyAmount = {
   currency: string;
@@ -30,7 +39,10 @@ export type MembershipShareKpis = {
   shareByCurrency: CurrencyAmount[];
   /** Totals for 1001, by currency. */
   pocketByCurrency: CurrencyAmount[];
-  /** Member count with any credit in range for the active focus. */
+  /**
+   * Members with any non-zero net currency for the active focus (positive or
+   * negative). Currencies are never summed for this threshold.
+   */
   memberCount: number;
   /** Credits to 1101 (részjegy) in the selected publication scope. */
   sharePaymentCount: number;
@@ -52,7 +64,7 @@ export type MembershipMemberRow = {
   pocketAccountId?: string | null;
   /** Amounts credited to this member's 1101, by currency. */
   shareByCurrency: CurrencyAmount[];
-  /** Amounts credited to this member's 1001, by currency. */
+  /** Net Homály (1001) amounts by currency: inflows − kiadások. */
   pocketByCurrency: CurrencyAmount[];
 };
 

@@ -28,6 +28,8 @@ export type GlobalTransactionFilters = {
   createdAt_lte?: string;
   amount_gte?: number;
   amount_lte?: number;
+  /** Currency-type `code` (e.g. `HUF`), same as list / drill-down filters. */
+  currency_type?: string;
   organization?: string;
   debit_account?: string;
   credit_account?: string;
@@ -35,7 +37,7 @@ export type GlobalTransactionFilters = {
   vendor?: string;
   /**
    * Report drill-down keys without their own sidebar control
-   * (`currency_type`, `project_balance_leg`, `credit_account_in`, …).
+   * (`project_balance_leg`, `credit_account_in`, …).
    * Passed through to the list filter verbatim; cleared by reset / menu.
    */
   drilldown?: Record<string, unknown>;
@@ -45,6 +47,7 @@ export type GlobalOptionalFilterKey =
   | 'date'
   | 'createdAt'
   | 'amount'
+  | 'currency_type'
   | 'organization'
   | 'debit_account'
   | 'credit_account'
@@ -56,6 +59,7 @@ export const GLOBAL_OPTIONAL_FILTER_KEYS: readonly GlobalOptionalFilterKey[] = [
   'date',
   'createdAt',
   'amount',
+  'currency_type',
   'organization',
   'debit_account',
   'credit_account',
@@ -269,6 +273,7 @@ export function toListFilter(
   if (isFiniteNumber(state.amount_gte)) filter.amount_gte = state.amount_gte;
   if (isFiniteNumber(state.amount_lte)) filter.amount_lte = state.amount_lte;
   for (const key of [
+    'currency_type',
     'organization',
     'debit_account',
     'credit_account',
@@ -287,8 +292,8 @@ export function toListFilter(
 }
 
 /**
- * Menu override (2A): only status + converted change. Date, amount, org,
- * accounts, description and vendor stay. Drill-down-only keys are dropped.
+ * Menu override (2A): only status + converted change. Date, amount, currency,
+ * org, accounts, description and vendor stay. Drill-down-only keys are dropped.
  */
 export function applyMenuOverride(
   state: GlobalTransactionFilters,
@@ -322,6 +327,7 @@ const KNOWN_LIST_KEYS = new Set([
   'createdAt_lte',
   'amount_gte',
   'amount_lte',
+  'currency_type',
   'organization',
   'debit_account',
   'credit_account',
@@ -329,8 +335,9 @@ const KNOWN_LIST_KEYS = new Set([
   'vendor',
 ]);
 
-/** Relation keys a drill-down owns: set from the link or cleared. */
+/** Keys a drill-down owns: set from the link or cleared. */
 const DRILLDOWN_OWNED_KEYS = [
+  'currency_type',
   'organization',
   'debit_account',
   'credit_account',
@@ -355,6 +362,14 @@ function asConvertedList(value: unknown): ConvertedFilterValue[] | undefined {
   );
 }
 
+/** URL / RA store may keep `status` as a one-element array. */
+function asListStatus(value: unknown): 'preview' | 'draft' | 'all' {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === 'published') return 'preview';
+  if (raw === 'draft') return 'draft';
+  return 'all';
+}
+
 /**
  * Merge a drill-down list filter (as built by the report drilldown helpers)
  * into the global state:
@@ -362,10 +377,10 @@ function asConvertedList(value: unknown): ConvertedFilterValue[] | undefined {
  * - `date_*` → `datePreset: 'custom'` (absent bound stays open),
  * - `status` → `preview` / `draft` / `all`,
  * - `converted_to_workflow` replaced when present,
- * - organization / accounts set from the link or cleared (the link owns them),
+ * - currency / organization / accounts set from the link or cleared (owned),
  * - other sidebar fields (amount, createdAt, description, vendor) kept unless
  *   the link sets them,
- * - unknown keys (`currency_type`, leg markers, …) become `drilldown`.
+ * - unknown keys (leg markers, `credit_account_in`, …) become `drilldown`.
  */
 export function mergeDrilldownIntoGlobal(
   state: GlobalTransactionFilters,
@@ -386,12 +401,7 @@ export function mergeDrilldownIntoGlobal(
     delete next.date_lte;
   }
 
-  next.status =
-    filter.status === 'published'
-      ? 'preview'
-      : filter.status === 'draft'
-        ? 'draft'
-        : 'all';
+  next.status = asListStatus(filter.status);
 
   const converted = asConvertedList(filter.converted_to_workflow);
   if (converted) next.converted_to_workflow = converted;
