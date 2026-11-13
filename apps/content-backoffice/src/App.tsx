@@ -13,8 +13,10 @@ import { LoginPage } from './login/LoginPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
 import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
+import { MembershipLedgerReportPage } from './pages/reports/MembershipLedgerReportPage';
 import { MembershipShareReportPage } from './pages/reports/MembershipShareReportPage';
 import { ProjectBalanceReportPage } from './pages/reports/ProjectBalanceReportPage';
+import { MEMBERSHIP_LEDGER_FEATURE_ID } from './pages/reports/membershipLedger/types';
 import { ReconciliationReportPage } from './pages/reports/ReconciliationReportPage';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from './pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from './pages/reports/projectBalance/types';
@@ -90,6 +92,17 @@ export function App() {
                 </WorkflowFormGate>
               }
               path="/reports/membership-share"
+            />
+            <Route
+              element={
+                <WorkflowFormGate
+                  roles={CONTENT_ROLES}
+                  workflowId={MEMBERSHIP_LEDGER_FEATURE_ID}
+                >
+                  <MembershipLedgerReportPage />
+                </WorkflowFormGate>
+              }
+              path="/reports/membership-ledger"
             />
             <Route
               element={

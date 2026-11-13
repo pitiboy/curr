@@ -48,6 +48,11 @@
     "config": {}
   },
   {
+    "key": "membership-ledger",
+    "enabled": true,
+    "config": {}
+  },
+  {
     "key": "project-balance",
     "enabled": true,
     "config": {}

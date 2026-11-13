@@ -1,6 +1,6 @@
 import GradingIcon from '@mui/icons-material/Grading';
 import QuizIcon from '@mui/icons-material/Quiz';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import { useCallback } from 'react';
@@ -41,6 +41,11 @@ import { TransactionBulkConvertButton } from './TransactionBulkConvertButton';
 import { isBulkActionSelectable } from '../../data/transactionBulkConvert';
 import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { TransactionConvertField } from './TransactionConvertField';
+import {
+  TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS,
+  transactionListFooterMinWidth,
+  transactionListScrollMaxHeight,
+} from './transactionListLayout';
 
 const statusChoices = [
   { id: 'draft', name: 'app.status.draft' },
@@ -59,37 +64,69 @@ function relationName(value: unknown): string {
   return name || '—';
 }
 
-function TransactionOpenField(_props: {
-  label?: false;
-  sortable?: false;
-  source?: string;
-}) {
+function TransactionOpenField(
+  _props: {
+    label?: false;
+    sortable?: false;
+    source?: string;
+    compact?: boolean;
+  } = {},
+) {
+  const { compact = false } = _props;
   const record = useRecordContext<RaRecord & { status?: string }>();
   const { permissions, isPending } = usePermissions();
   const translate = useTranslate();
   if (!record || isPending) return null;
   const review = isEditorLikeRole(permissions) && record.status === 'draft';
+  const labelKey = review ? 'app.transactions_review' : 'app.transactions_show';
+  const label = translate(labelKey);
+  const to = `/transactions/${encodeURIComponent(String(record.id))}/show`;
+  const reviewSx = review
+    ? {
+        bgcolor: '#FFF4C2',
+        '&:hover': { bgcolor: '#FFE99A' },
+      }
+    : undefined;
+
+  if (compact) {
+    return (
+      <Tooltip title={label}>
+        <IconButton
+          aria-label={label}
+          color={review ? 'warning' : 'default'}
+          component={Link}
+          size="small"
+          state={{ _scrollToTop: true }}
+          sx={reviewSx}
+          to={to}
+          onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+            event.stopPropagation()
+          }
+        >
+          {review ? (
+            <QuizIcon color="warning" fontSize="small" />
+          ) : (
+            <GradingIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Tooltip>
+    );
+  }
+
   return (
     <Button
       component={Link}
       size="small"
       startIcon={review ? <QuizIcon color="warning" /> : <GradingIcon />}
-      sx={
-        review
-          ? {
-              bgcolor: '#FFF4C2',
-              '&:hover': { bgcolor: '#FFE99A' },
-            }
-          : undefined
-      }
+      sx={reviewSx}
       state={{ _scrollToTop: true }}
-      to={`/transactions/${encodeURIComponent(String(record.id))}/show`}
+      to={to}
       variant="outlined"
       onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
         event.stopPropagation()
       }
     >
-      {translate(review ? 'app.transactions_review' : 'app.transactions_show')}
+      {label}
     </Button>
   );
 }
@@ -117,34 +154,17 @@ function formatPageAmountTotal(
 }
 
 /** Grid tracks aligned with Datagrid columns up to `amount` (then a flexible tail). */
-function transactionListFooterGridColumns(
-  mobile: boolean,
-  showBulkCheckbox: boolean,
-): string {
-  if (mobile) {
-    return showBulkCheckbox
-      ? '3rem 6.25rem 6.25rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)'
-      : '6.25rem 6.25rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)';
-  }
+function transactionListFooterGridColumns(showBulkCheckbox: boolean): string {
   return showBulkCheckbox
     ? '3rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)'
     : '4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)';
 }
 
-function transactionListFooterMinWidth(
-  mobile: boolean,
-  showBulkCheckbox: boolean,
-): number | string {
-  return mobile ? (showBulkCheckbox ? '44rem' : '41rem') : '52rem';
-}
-
 function TransactionListAmountFooter({
   locale,
-  mobile,
   showBulkCheckbox,
 }: {
   locale: string;
-  mobile: boolean;
   showBulkCheckbox: boolean;
 }) {
   const translate = useTranslate();
@@ -159,39 +179,31 @@ function TransactionListAmountFooter({
     .map((row) => formatPageAmountTotal(row.amount, row.currency, locale))
     .join('  |  ');
 
-  const gridColumns = transactionListFooterGridColumns(
-    mobile,
-    showBulkCheckbox,
-  );
-
   return (
     <Box
       sx={{
         bgcolor: 'action.hover',
         borderTop: 1,
         borderColor: 'divider',
+        bottom: 0,
         columnGap: 0,
         display: 'grid',
-        gridTemplateColumns: gridColumns,
+        gridTemplateColumns: transactionListFooterGridColumns(showBulkCheckbox),
         alignItems: 'center',
         minHeight: 40,
-        minWidth: transactionListFooterMinWidth(mobile, showBulkCheckbox),
+        minWidth: transactionListFooterMinWidth(false, showBulkCheckbox),
+        position: 'sticky',
         py: 0.75,
         typography: 'body2',
         width: 'max-content',
+        zIndex: 2,
       }}
     >
       {showBulkCheckbox ? <Box aria-hidden /> : null}
-      {mobile ? (
-        <>
-          <Box aria-hidden />
-          <Box aria-hidden />
-        </>
-      ) : null}
       <Box
         sx={{
           fontWeight: 600,
-          gridColumn: mobile ? 'span 3' : 'span 3',
+          gridColumn: 'span 3',
           minWidth: 0,
           overflow: 'hidden',
           pl: showBulkCheckbox ? 0.5 : 1,
@@ -241,23 +253,6 @@ function TransactionListEmpty() {
 }
 
 function transactionDatagridColumns(locale: string, mobile: boolean) {
-  const openColumn = (
-    <TransactionOpenField
-      key="open"
-      label={false}
-      sortable={false}
-      source="open"
-    />
-  );
-  const convertColumn = (
-    <TransactionConvertField
-      key="convert"
-      label={false}
-      sortable={false}
-      source="convert"
-    />
-  );
-
   const columns = [
     <NumberField key="entryId" source="entryId" />,
     <FunctionField
@@ -304,8 +299,20 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       source="converted_to_workflow"
       translateChoice
     />,
-    openColumn,
-    convertColumn,
+    <TransactionOpenField
+      key="open"
+      compact={mobile}
+      label={false}
+      sortable={false}
+      source="open"
+    />,
+    <TransactionConvertField
+      key="convert"
+      compact={mobile}
+      label={false}
+      sortable={false}
+      source="convert"
+    />,
     <FunctionField
       key="organization"
       render={(record: RaRecord) => relationName(record.organization)}
@@ -361,14 +368,14 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
     />,
   ];
 
-  if (mobile) {
-    const withoutRowActions = columns.filter(
-      (column) => column.key !== 'open' && column.key !== 'convert',
-    );
-    return [openColumn, convertColumn, ...withoutRowActions];
-  }
+  if (!mobile) return columns;
 
-  return columns;
+  const hiddenOnMobile = new Set(TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS);
+  if (hiddenOnMobile.size === 0) return columns;
+
+  return columns.filter(
+    (column) => column.key == null || !hiddenOnMobile.has(String(column.key)),
+  );
 }
 
 export function TransactionList() {
@@ -399,8 +406,11 @@ export function TransactionList() {
       <TransactionListFilterBridge />
       <Box
         sx={{
+          // Same scrollport for X+Y so sticky thead/footer can stick (overflow-x
+          // alone would create a scroll container that never scrolls vertically).
+          maxHeight: transactionListScrollMaxHeight(mobile),
           maxWidth: '100%',
-          overflowX: 'auto',
+          overflow: 'auto',
           WebkitOverflowScrolling: 'touch',
         }}
       >
@@ -420,24 +430,52 @@ export function TransactionList() {
           isRowSelectable={editorBulkApprove ? isRowSelectable : undefined}
           rowClick={false}
           rowSx={bandedRow}
+          stickyHeader
           sx={{
             '& .RaDatagrid-table, & table': {
+              borderCollapse: 'separate',
               mb: 0,
               minWidth: transactionListFooterMinWidth(
                 mobile,
                 editorBulkApprove,
               ),
             },
-            '& .column-open, & .column-convert': {
-              whiteSpace: 'nowrap',
+            '& .RaDatagrid-headerCell': {
+              bgcolor: 'background.paper',
+              position: 'sticky',
+              top: 0,
+              zIndex: 3,
+              ...(mobile
+                ? {
+                    fontSize: '0.75rem',
+                    px: 0.5,
+                    py: 0.5,
+                  }
+                : {}),
             },
+            '& .column-open, & .column-convert': {
+              px: mobile ? 0.25 : undefined,
+              whiteSpace: 'nowrap',
+              width: mobile ? '1%' : undefined,
+            },
+            ...(mobile
+              ? {
+                  '& .RaDatagrid-rowCell': {
+                    fontSize: '0.8125rem',
+                    px: 0.5,
+                    py: 0.75,
+                  },
+                  '& .column-description': {
+                    maxWidth: '10rem',
+                  },
+                }
+              : {}),
           }}
         >
           {transactionDatagridColumns(locale, mobile)}
         </Datagrid>
         <TransactionListAmountFooter
           locale={locale}
-          mobile={mobile}
           showBulkCheckbox={editorBulkApprove}
         />
       </Box>

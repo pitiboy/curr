@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import ListIcon from '@mui/icons-material/List';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
@@ -18,6 +19,7 @@ import {
   useGlobalTransactionFilters,
   useApplyMenuOverride,
 } from '../filters/globalTransactionFiltersAtom';
+import { MEMBERSHIP_LEDGER_FEATURE_ID } from '../pages/reports/membershipLedger/types';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
 import { RECONCILIATION_FEATURE_ID } from '../pages/reports/reconciliation/types';
@@ -46,6 +48,8 @@ export function BackofficeMenu() {
     canWrite && enabled.includes(EGG_PRODUCTION_WORKFLOW_ID);
   const canReadMembershipShare =
     canWrite && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
+  const canReadMembershipLedger =
+    canWrite && enabled.includes(MEMBERSHIP_LEDGER_FEATURE_ID);
   const canReadProjectBalance =
     canWrite && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
   const reconciliationRolesFromConfig = featureRolesFromConfig(
@@ -101,6 +105,13 @@ export function BackofficeMenu() {
           leftIcon={<SavingsOutlinedIcon />}
           primaryText={translate('app.membership_share.menu')}
           to="/reports/membership-share"
+        />
+      ) : null}
+      {canReadMembershipLedger ? (
+        <Menu.Item
+          leftIcon={<GroupsOutlinedIcon />}
+          primaryText={translate('app.membership_ledger.menu')}
+          to="/reports/membership-ledger"
         />
       ) : null}
       {canReadProjectBalance ? (

@@ -304,6 +304,28 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
     },
+    membership_ledger: {
+      menu: 'Tagi egyenleg',
+      title: 'Tagi egyenleg kimutatás',
+      subtitle:
+        'Tagonként tagi befizetés, befektetés és egyenleg a 1101 részjegy- és 1001 zsebszámlákon. Időszak és pénznem a bal oldali szűrőkből; üres pénznemnél HUF. A devizák nem adódnak össze.',
+      active_currency: 'Aktív pénznem: %{currency}',
+      member: 'Tag',
+      col: {
+        payment: '%{code} befizetés',
+        deduction: '%{code} befektetés',
+        balance: '%{code} egyenleg',
+      },
+      empty:
+        'Nincs megjeleníthető tagság (vagy nincs tag a tagság rekordokban).',
+      empty_activity:
+        'Nincs tagi mozgás a választott időszakban %{currency} pénznemben. Próbáld az Időszak → Összes szűrőt, vagy válts pénznemet (pl. EGG, KOR).',
+      drilldown: {
+        hint: 'Kattints a kapcsolódó tranzakciók listájához',
+      },
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+    },
     membership_share: {
       menu: 'Részjegy kimutatás',
       title: 'Tagi részjegy és zseb',
@@ -469,6 +491,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'egg-production': 'Napi tojás rögzítés',
       'member-fee': 'Tagdíj',
       'membership-share': 'Részjegy kimutatás',
+      'membership-ledger': 'Tagság kimutatás',
     },
     bulk_quantity: {
       save: 'Mentés',
