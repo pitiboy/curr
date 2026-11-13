@@ -40,8 +40,11 @@ export function buildPublishedWithoutReceiptsDrilldown(
   };
   if (accountFilter && accountFilterIsActive(accountFilter)) {
     filter[RECEIPT_LIKELY_REQUIRED_FILTER_KEY] = {
-      creditCodes: [...accountFilter.creditCodes],
-      debitCodes: [...accountFilter.debitCodes],
+      rules: accountFilter.rules.map((rule) => ({
+        creditCodes: [...rule.creditCodes],
+        debitCodes: [...rule.debitCodes],
+      })),
+      excludeCurrencyCodes: [...accountFilter.excludeCurrencyCodes],
     };
   }
   const params = new URLSearchParams();

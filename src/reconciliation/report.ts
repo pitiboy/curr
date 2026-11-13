@@ -136,6 +136,7 @@ async function loadPublishedWithoutReceipts(
       populate: {
         debit_account: { select: ['code'] },
         credit_account: { select: ['code'] },
+        currency_type: { select: ['code'] },
       },
       orderBy: { publishedAt: 'desc' },
     }),

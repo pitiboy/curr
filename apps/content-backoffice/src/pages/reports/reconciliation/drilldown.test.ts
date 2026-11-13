@@ -37,14 +37,24 @@ describe('reconciliation drilldown', () => {
 
   it('passes account heuristic when configured', () => {
     const link = buildPublishedWithoutReceiptsDrilldown({
-      creditCodes: ['1100'],
-      debitCodes: ['5000', '54*'],
+      rules: [
+        {
+          debitCodes: ['5000', '54*'],
+          creditCodes: ['1100', '1000', '1001'],
+        },
+      ],
+      excludeCurrencyCodes: ['KOR'],
     });
     expect(parseFilter(link.search)).toMatchObject({
       [RECEIPT_PRESENCE_FILTER_KEY]: 'none',
       [RECEIPT_LIKELY_REQUIRED_FILTER_KEY]: {
-        creditCodes: ['1100'],
-        debitCodes: ['5000', '54*'],
+        rules: [
+          {
+            debitCodes: ['5000', '54*'],
+            creditCodes: ['1100', '1000', '1001'],
+          },
+        ],
+        excludeCurrencyCodes: ['KOR'],
       },
     });
   });

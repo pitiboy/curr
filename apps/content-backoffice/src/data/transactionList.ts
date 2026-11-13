@@ -719,32 +719,68 @@ function matchesReceiptPresence(
   return count > 0;
 }
 
+function stringPatternList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
 function matchesReceiptLikelyRequired(
-  row: Pick<StrapiTransaction, 'debit_account' | 'credit_account'>,
+  row: Pick<
+    StrapiTransaction,
+    'debit_account' | 'credit_account' | 'currency_type'
+  >,
   raw: unknown,
 ): boolean {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return true;
-  const creditCodes = Array.isArray(
-    (raw as { creditCodes?: unknown }).creditCodes,
-  )
-    ? ((raw as { creditCodes: unknown[] }).creditCodes.filter(
-        (item): item is string => typeof item === 'string',
-      ) as string[])
-    : [];
-  const debitCodes = Array.isArray((raw as { debitCodes?: unknown }).debitCodes)
-    ? ((raw as { debitCodes: unknown[] }).debitCodes.filter(
-        (item): item is string => typeof item === 'string',
-      ) as string[])
-    : [];
-  if (creditCodes.length === 0 && debitCodes.length === 0) return true;
+  const record = raw as Record<string, unknown>;
+  const excludeCurrencyCodes = stringPatternList(record.excludeCurrencyCodes);
+  const rulesRaw = Array.isArray(record.rules) ? record.rules : [record];
+  const rules = rulesRaw
+    .map((rule) => {
+      if (!rule || typeof rule !== 'object' || Array.isArray(rule)) return null;
+      const debitCodes = stringPatternList(
+        (rule as { debitCodes?: unknown }).debitCodes,
+      );
+      const creditCodes = stringPatternList(
+        (rule as { creditCodes?: unknown }).creditCodes,
+      );
+      if (debitCodes.length === 0 && creditCodes.length === 0) return null;
+      return { debitCodes, creditCodes };
+    })
+    .filter(
+      (rule): rule is { debitCodes: string[]; creditCodes: string[] } =>
+        rule != null,
+    );
+  if (rules.length === 0) return true;
+
+  const currency = String(row.currency_type?.code ?? '').trim();
+  if (
+    currency &&
+    excludeCurrencyCodes.some((pattern) =>
+      accountCodeMatchesPattern(currency, pattern),
+    )
+  ) {
+    return false;
+  }
+
   const debit = row.debit_account?.code;
   const credit = row.credit_account?.code;
-  if (debitCodes.some((pattern) => accountCodeMatchesPattern(debit, pattern))) {
-    return true;
-  }
-  return creditCodes.some((pattern) =>
-    accountCodeMatchesPattern(credit, pattern),
-  );
+  return rules.some((rule) => {
+    const debitOk =
+      rule.debitCodes.length === 0 ||
+      rule.debitCodes.some((pattern) =>
+        accountCodeMatchesPattern(debit, pattern),
+      );
+    const creditOk =
+      rule.creditCodes.length === 0 ||
+      rule.creditCodes.some((pattern) =>
+        accountCodeMatchesPattern(credit, pattern),
+      );
+    return debitOk && creditOk;
+  });
 }
 
 function matchesMembershipShareExternal(

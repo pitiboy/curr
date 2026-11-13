@@ -58,8 +58,9 @@
     "config": {
       "roles": ["controller"],
       "publishedWithoutReceipts": {
-        "creditCodes": ["1100"],
-        "debitCodes": ["5000", "54*"]
+        "debitCodes": ["5000", "54*"],
+        "creditCodes": ["1100", "1000", "1001"],
+        "excludeCurrencyCodes": ["KOR"]
       }
     }
   }
