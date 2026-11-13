@@ -21,19 +21,38 @@ export function mergeCurrencyAmounts(
     .sort((a, b) => a.currency.localeCompare(b.currency));
 }
 
+function focusCurrencyAmounts(
+  row: MembershipMemberRow,
+  focus: LedgerFocus,
+): CurrencyAmount[] {
+  const parts: CurrencyAmount[][] = [];
+  if (focus === 'share' || focus === 'both') parts.push(row.shareByCurrency);
+  if (focus === 'pocket' || focus === 'both') parts.push(row.pocketByCurrency);
+  return mergeCurrencyAmounts(...parts);
+}
+
+/**
+ * Amount for one ledger focus. Pass `currency` for display/sort — without it
+ * amounts are summed across FX (legacy; do not use for visibility thresholds).
+ */
 export function memberFocusTotal(
   row: MembershipMemberRow,
   focus: LedgerFocus,
   currency?: string,
 ): number {
-  const parts: CurrencyAmount[][] = [];
-  if (focus === 'share' || focus === 'both') parts.push(row.shareByCurrency);
-  if (focus === 'pocket' || focus === 'both') parts.push(row.pocketByCurrency);
-  const merged = mergeCurrencyAmounts(...parts);
+  const merged = focusCurrencyAmounts(row, focus);
   if (currency) {
     return merged.find((entry) => entry.currency === currency)?.amount ?? 0;
   }
   return merged.reduce((sum, entry) => sum + entry.amount, 0);
+}
+
+/** True when any single currency has a non-zero net (never sums across FX). */
+export function memberHasFocusActivity(
+  row: MembershipMemberRow,
+  focus: LedgerFocus,
+): boolean {
+  return focusCurrencyAmounts(row, focus).some((entry) => entry.amount !== 0);
 }
 
 export function historyAmountForFocus(
@@ -49,9 +68,13 @@ export function sortMembersByFocus(
   rows: MembershipMemberRow[],
   focus: LedgerFocus,
 ): MembershipMemberRow[] {
-  return [...rows]
-    .filter((row) => memberFocusTotal(row, focus) !== 0)
-    .sort((a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus));
+  const active = rows.filter((row) => memberHasFocusActivity(row, focus));
+  const sortCurrency = pickHistoryCurrency(active);
+  return [...active].sort(
+    (a, b) =>
+      memberFocusTotal(b, focus, sortCurrency) -
+      memberFocusTotal(a, focus, sortCurrency),
+  );
 }
 
 export function buildKpis(
@@ -73,7 +96,7 @@ export function buildKpis(
     pocketByCurrency: mergeCurrencyAmounts(
       ...byMember.map((row) => row.pocketByCurrency),
     ),
-    memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') !== 0)
+    memberCount: byMember.filter((row) => memberHasFocusActivity(row, 'both'))
       .length,
     sharePaymentCount,
     pocketPaymentCount,

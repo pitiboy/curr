@@ -78,11 +78,13 @@ describe('membership-share mock consistency', () => {
     }
   });
 
-  it('members are sorted by focus total descending', () => {
+  it('members are sorted by focus total descending in historyCurrency', () => {
     const report = getMembershipShareReport('all');
     expect(report).not.toBeNull();
     if (!report) return;
-    const totals = report.byMember.map((row) => memberFocusTotal(row, 'both'));
+    const totals = report.byMember.map((row) =>
+      memberFocusTotal(row, 'both', report.historyCurrency),
+    );
     for (let i = 1; i < totals.length; i += 1) {
       expect(totals[i - 1]!).toBeGreaterThanOrEqual(totals[i]!);
     }

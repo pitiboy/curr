@@ -249,6 +249,38 @@ describe('aggregateMembershipShareReport', () => {
     ]);
   });
 
+  it('does not drop a member when HUF and KOR nets cancel if summed across FX', () => {
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2026-11-05',
+        amount: 500_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-bank',
+        creditAccountId: 'acc-erika-1101',
+        creditCode: '1101',
+        debitCode: '1100',
+      },
+      {
+        date: '2026-11-05',
+        amount: 500_000,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-erika-1101',
+        creditAccountId: 'acc-lock',
+        creditCode: '1900',
+        debitCode: '1101',
+      },
+    ];
+    const report = aggregateMembershipShareReport(txs, members, 'thisMonth');
+    expect(report).not.toBeNull();
+    if (!report) return;
+    expect(report.kpis.memberCount).toBe(1);
+    expect(report.byMember[0]?.memberName).toBe('Erika');
+    expect(report.byMember[0]?.shareByCurrency).toEqual([
+      { currency: 'HUF', amount: 500_000 },
+      { currency: 'KOR', amount: -500_000 },
+    ]);
+  });
+
   it('nets ügylet pocket inflow and cost (tagi befizetés ingatlanra)', () => {
     const member: MembershipShareMemberRef[] = [
       {

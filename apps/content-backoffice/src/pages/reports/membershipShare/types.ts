@@ -4,9 +4,9 @@
  * Source: published transactions on a member's 1101 (részjegy / `account`) or
  * 1001 (zseb / `private_account`) ledger with the other leg outside member
  * accounts (excludes 1101↔1001 internals). Credits add, debits subtract so
- * ügylet-kifejtés zseb költségek nem duplikálnak. Members with non-zero net
- * (including negative) stay in the table; only exact-zero nets are dropped.
- * Amounts stay split by currency; never summed across FX for display columns.
+ * ügylet-kifejtés zseb költségek nem duplikálnak. Members stay in the table
+ * when any currency has a non-zero net (including negative); only all-zero
+ * nets are dropped. Visibility never sums amounts across FX.
  */
 
 import type { DateRangePreset } from '../shared/reportDateRange';
@@ -31,7 +31,10 @@ export type MembershipShareKpis = {
   shareByCurrency: CurrencyAmount[];
   /** Totals for 1001, by currency. */
   pocketByCurrency: CurrencyAmount[];
-  /** Member count with non-zero net (positive or negative) for the active focus. */
+  /**
+   * Members with any non-zero net currency for the active focus (positive or
+   * negative). Currencies are never summed for this threshold.
+   */
   memberCount: number;
   /** Credits to 1101 (részjegy) in the selected publication scope. */
   sharePaymentCount: number;
