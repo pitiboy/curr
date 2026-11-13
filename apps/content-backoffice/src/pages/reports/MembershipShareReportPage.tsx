@@ -28,6 +28,7 @@ import {
   historyAmountForFocus,
   memberFocusTotal,
   mergeCurrencyAmounts,
+  stackedBarAxisDomain,
 } from './membershipShare/membershipShare.helpers';
 import type {
   CurrencyAmount,
@@ -658,12 +659,10 @@ function MemberCurrencyBarSection({
   const pocketBarData = rows.map((row) =>
     memberFocusTotal(row, 'pocket', currency),
   );
-  const axisValues = [
-    ...(showShare ? shareBarData : []),
-    ...(showPocket ? pocketBarData : []),
-  ];
-  const xMin = axisValues.length === 0 ? 0 : Math.min(0, ...axisValues);
-  const xMax = axisValues.length === 0 ? 0 : Math.max(0, ...axisValues);
+  const { min: xMin, max: xMax } = stackedBarAxisDomain([
+    ...(showShare ? [shareBarData] : []),
+    ...(showPocket ? [pocketBarData] : []),
+  ]);
 
   return (
     <Section title={title}>

@@ -1,6 +1,30 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMembershipSharePieData } from './membershipShare.helpers';
+import {
+  buildMembershipSharePieData,
+  stackedBarAxisDomain,
+} from './membershipShare.helpers';
+
+describe('stackedBarAxisDomain', () => {
+  it('extends max to stacked totals so a short series is not clipped', () => {
+    expect(
+      stackedBarAxisDomain([
+        [13_516_280, 12_000_000],
+        [1_567_204.68, 400_000],
+      ]),
+    ).toEqual({
+      min: 0,
+      max: 13_516_280 + 1_567_204.68,
+    });
+  });
+
+  it('keeps room for negative segments', () => {
+    expect(stackedBarAxisDomain([[1_000_000], [-200_000]])).toEqual({
+      min: -200_000,
+      max: 1_000_000,
+    });
+  });
+});
 
 describe('buildMembershipSharePieData', () => {
   it('keeps negative pocket with abs slice size', () => {

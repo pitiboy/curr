@@ -21,6 +21,32 @@ export function mergeCurrencyAmounts(
     .sort((a, b) => a.currency.localeCompare(b.currency));
 }
 
+/**
+ * X/Y domain for a stacked bar chart. Must include per-category stack totals,
+ * otherwise a short series (e.g. 1001 zseb) is clipped when a long series
+ * (1101) alone sets the axis max.
+ */
+export function stackedBarAxisDomain(series: readonly (readonly number[])[]): {
+  min: number;
+  max: number;
+} {
+  const nonempty = series.filter((s) => s.length > 0);
+  if (nonempty.length === 0) return { min: 0, max: 0 };
+
+  const len = Math.max(...nonempty.map((s) => s.length));
+  const stacked: number[] = [];
+  for (let i = 0; i < len; i += 1) {
+    let sum = 0;
+    for (const s of nonempty) sum += s[i] ?? 0;
+    stacked.push(sum);
+  }
+  const values = [...nonempty.flatMap((s) => [...s]), ...stacked];
+  return {
+    min: Math.min(0, ...values),
+    max: Math.max(0, ...values),
+  };
+}
+
 function focusCurrencyAmounts(
   row: MembershipMemberRow,
   focus: LedgerFocus,

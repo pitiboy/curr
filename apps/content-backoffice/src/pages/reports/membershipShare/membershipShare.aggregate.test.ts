@@ -50,6 +50,57 @@ describe('isMembershipSharePayment', () => {
     ).toBe(true);
   });
 
+  it('accepts Homály credit into 1001 (same drill-down kifizető rule)', () => {
+    expect(
+      isMembershipSharePayment(
+        {
+          date: '2026-11-01',
+          amount: 12_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-cost',
+          creditAccountId: 'acc-peti-1001',
+          creditCode: '1001',
+          debitCode: '5510',
+        },
+        memberIds,
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects bányászás-style 1001 debit as payment', () => {
+    expect(
+      isMembershipSharePayment(
+        {
+          date: '2026-11-01',
+          amount: 50_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1001',
+          creditAccountId: 'acc-bank',
+          creditCode: '1100',
+          debitCode: '1001',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+  });
+
+  it('rejects ügylet Projekt költség wash (1001 debit / 5xxx credit) as payment', () => {
+    expect(
+      isMembershipSharePayment(
+        {
+          date: '2026-11-01',
+          amount: 200_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1001',
+          creditAccountId: 'acc-cost',
+          creditCode: '5430',
+          debitCode: '1001',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+  });
+
   it('rejects 1101→1001 internal transfer', () => {
     expect(
       isMembershipSharePayment(
@@ -86,7 +137,21 @@ describe('isMembershipSharePayment', () => {
 });
 
 describe('isMembershipShareDeduction', () => {
-  it('accepts external debit from 1001 (Homály kiadás)', () => {
+  it('accepts real pocket kivét (1001 debit / loan credit) and ignores wash legs', () => {
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2024-11-21',
+          amount: 500_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1001',
+          creditAccountId: 'acc-loan',
+          creditCode: '1720',
+          debitCode: '1001',
+        },
+        memberIds,
+      ),
+    ).toBe(true);
     expect(
       isMembershipShareDeduction(
         {
@@ -94,13 +159,58 @@ describe('isMembershipShareDeduction', () => {
           amount: 12_000,
           currencyCode: 'HUF',
           debitAccountId: 'acc-peti-1001',
-          creditAccountId: 'acc-cost',
-          creditCode: '5510',
+          creditAccountId: 'acc-bank',
+          creditCode: '1100',
           debitCode: '1001',
         },
         memberIds,
       ),
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2026-11-01',
+          amount: 554_458,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1001',
+          creditAccountId: 'acc-receivable',
+          creditCode: '1200',
+          debitCode: '1001',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2026-11-01',
+          amount: 66_335,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-peti-1001',
+          creditAccountId: 'acc-grant',
+          creditCode: '4200',
+          debitCode: '1001',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+  });
+
+  it('rejects Homály credit as deduction', () => {
+    expect(
+      isMembershipShareDeduction(
+        {
+          date: '2026-11-01',
+          amount: 12_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-cost',
+          creditAccountId: 'acc-peti-1001',
+          creditCode: '1001',
+          debitCode: '5510',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
   });
 
   it('rejects 1001→1101 internal transfer', () => {
@@ -153,7 +263,7 @@ describe('isMembershipShareDeduction', () => {
 });
 
 describe('isTreasuryKorMovement', () => {
-  it('is true only for KOR legs touching 1900', () => {
+  it('is true only for KOR legs between 1900 and 1101', () => {
     expect(
       isTreasuryKorMovement({
         date: '2025-02-21',
@@ -165,6 +275,17 @@ describe('isTreasuryKorMovement', () => {
         debitCode: '1101',
       }),
     ).toBe(true);
+    expect(
+      isTreasuryKorMovement({
+        date: '2025-02-21',
+        amount: 1,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-peti-1001',
+        creditAccountId: 'acc-treasury-1900',
+        creditCode: '1900',
+        debitCode: '1001',
+      }),
+    ).toBe(false);
     expect(
       isTreasuryKorMovement({
         date: '2025-02-21',
@@ -206,10 +327,10 @@ describe('aggregateMembershipShareReport', () => {
         date: '2026-11-10',
         amount: 12_000,
         currencyCode: 'HUF',
-        debitAccountId: 'acc-cash',
+        debitAccountId: 'acc-cost',
         creditAccountId: 'acc-peti-1001',
         creditCode: '1001',
-        debitCode: '1000',
+        debitCode: '5510',
       },
       {
         date: '2026-11-10',
@@ -274,7 +395,7 @@ describe('aggregateMembershipShareReport', () => {
     ).toBeNull();
   });
 
-  it('counts 1101 and 1001 credits separately', () => {
+  it('counts 1101 and 1001 credit inflows separately', () => {
     const txs: MembershipShareTx[] = [
       {
         date: '2026-11-05',
@@ -289,10 +410,10 @@ describe('aggregateMembershipShareReport', () => {
         date: '2026-11-06',
         amount: 5_000,
         currencyCode: 'HUF',
-        debitAccountId: 'acc-bank',
+        debitAccountId: 'acc-cost',
         creditAccountId: 'acc-erika-1001',
         creditCode: '1001',
-        debitCode: '1100',
+        debitCode: '5510',
       },
     ];
     const report = aggregateMembershipShareReport(txs, members, 'thisMonth');
@@ -399,7 +520,115 @@ describe('aggregateMembershipShareReport', () => {
     ]);
   });
 
-  it('nets ügylet pocket inflow and cost (tagi befizetés ingatlanra)', () => {
+  it('ignores Homály KOR on 1001 (no pocket KOR series)', () => {
+    const member: MembershipShareMemberRef[] = [
+      {
+        memberId: 'm-peti',
+        memberName: 'Peti',
+        shareAccountId: 'acc-peti-1101',
+        pocketAccountId: 'acc-peti-1001',
+      },
+    ];
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2024-12-18',
+        amount: 333.33,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-peti-1001',
+        creditAccountId: 'acc-treasury-1900',
+        creditCode: '1900',
+        debitCode: '1001',
+      },
+      {
+        date: '2024-12-18',
+        amount: 333.33,
+        currencyCode: 'KOR',
+        debitAccountId: 'acc-cost',
+        creditAccountId: 'acc-peti-1001',
+        creditCode: '1001',
+        debitCode: '5430',
+      },
+    ];
+    expect(aggregateMembershipShareReport(txs, member, 'all')).toBeNull();
+  });
+
+  it('keeps Homály HUF credit and ignores stróman / projekt debit on 1001', () => {
+    const member: MembershipShareMemberRef[] = [
+      {
+        memberId: 'm-peti',
+        memberName: 'Peti',
+        shareAccountId: 'acc-peti-1101',
+        pocketAccountId: 'acc-peti-1001',
+      },
+    ];
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2024-12-18',
+        amount: 200_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-cost',
+        creditAccountId: 'acc-peti-1001',
+        creditCode: '1001',
+        debitCode: '5430',
+      },
+      {
+        date: '2024-12-18',
+        amount: 200_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-peti-1001',
+        creditAccountId: 'acc-cost',
+        creditCode: '5430',
+        debitCode: '1001',
+      },
+      {
+        date: '2024-12-18',
+        amount: 554_458,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-peti-1001',
+        creditAccountId: 'acc-receivable',
+        creditCode: '1200',
+        debitCode: '1001',
+      },
+    ];
+    const report = aggregateMembershipShareReport(txs, member, 'all');
+    expect(report).not.toBeNull();
+    if (!report) return;
+    expect(report.byMember[0]?.pocketByCurrency).toEqual([
+      { currency: 'HUF', amount: 200_000 },
+    ]);
+  });
+
+  it('shows pocket-only negative for loan-style 1001 debit (Laci)', () => {
+    const member: MembershipShareMemberRef[] = [
+      {
+        memberId: 'm-laci',
+        memberName: 'Laci',
+        shareAccountId: 'acc-laci-1101',
+        pocketAccountId: 'acc-laci-1001',
+      },
+    ];
+    const memberIdsLaci = new Set(['acc-laci-1101', 'acc-laci-1001']);
+    const tx: MembershipShareTx = {
+      date: '2024-11-21',
+      amount: 500_000,
+      currencyCode: 'HUF',
+      debitAccountId: 'acc-laci-1001',
+      creditAccountId: 'acc-loan',
+      creditCode: '1720',
+      debitCode: '1001',
+    };
+    expect(isMembershipShareDeduction(tx, memberIdsLaci)).toBe(true);
+    const report = aggregateMembershipShareReport([tx], member, 'all');
+    expect(report).not.toBeNull();
+    if (!report) return;
+    expect(report.byMember[0]?.memberName).toBe('Laci');
+    expect(report.byMember[0]?.shareByCurrency).toEqual([]);
+    expect(report.byMember[0]?.pocketByCurrency).toEqual([
+      { currency: 'HUF', amount: -500_000 },
+    ]);
+  });
+
+  it('counts Homály land credit on 1001 without netting stróman debit', () => {
     const member: MembershipShareMemberRef[] = [
       {
         memberId: 'm-erika',
@@ -447,7 +676,9 @@ describe('aggregateMembershipShareReport', () => {
     expect(report.byMember[0]?.shareByCurrency).toEqual([
       { currency: 'HUF', amount: 2_000_000 },
     ]);
-    expect(report.byMember[0]?.pocketByCurrency).toEqual([]);
+    expect(report.byMember[0]?.pocketByCurrency).toEqual([
+      { currency: 'HUF', amount: 2_000_000 },
+    ]);
     expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
   });
 

@@ -59,23 +59,31 @@ function currencyMapToList(map: Map<string, number>): CurrencyAmount[] {
 }
 
 /**
- * Kincstári FX clearing in KOR (1900 ↔ tagi/eszköz). Ignored on the membership
- * share report so Korona kiutalás does not cancel Tagi Lekötés Koronaként.
+ * Kincstári FX clearing in KOR on the share ledger (1900 ↔ 1101). Ignored so
+ * Korona kiutalás does not cancel Tagi Lekötés Koronaként on 1101.
  */
 export function isTreasuryKorMovement(tx: MembershipShareTx): boolean {
   if (tx.currencyCode !== KOR_CURRENCY_CODE) return false;
-  return (
+  const touchesTreasury =
     tx.creditCode === TREASURY_CLEARING_ACCOUNT_CODE ||
-    tx.debitCode === TREASURY_CLEARING_ACCOUNT_CODE
+    tx.debitCode === TREASURY_CLEARING_ACCOUNT_CODE;
+  if (!touchesTreasury) return false;
+  return (
+    tx.creditCode === MEMBER_SHARE_ACCOUNT_CODE ||
+    tx.debitCode === MEMBER_SHARE_ACCOUNT_CODE
+  );
+}
+
+function isMemberLedgerCode(code: string): boolean {
+  return (
+    code === MEMBER_SHARE_ACCOUNT_CODE || code === MEMBER_POCKET_ACCOUNT_CODE
   );
 }
 
 /**
- * External inflow into a member ledger: credit lands on 1101/1001, debit does
- * not (excludes 1101↔1001 internals). Részjegytőke törlés (3000 debit /
- * 1101 credit) is not a payment — it only reverses capital so the later
- * kimenő utalás can reduce the reported befizetés. KOR from/to 1900 is not
- * a payment either.
+ * External inflow into a member ledger (matches list drill-down: kifizető /
+ * credit on 1101 or 1001). Pocket KOR (lekötés) is skipped — Homály has no
+ * durable KOR on this report; only HUF credit-side zseb rows count.
  */
 export function isMembershipSharePayment(
   tx: MembershipShareTx,
@@ -83,22 +91,49 @@ export function isMembershipSharePayment(
 ): boolean {
   if (tx.amount === 0) return false;
   if (isTreasuryKorMovement(tx)) return false;
-  if (!memberAccountIds.has(tx.creditAccountId)) return false;
-  if (memberAccountIds.has(tx.debitAccountId)) return false;
-  if (tx.debitCode === SHARE_CAPITAL_ACCOUNT_CODE) return false;
+  if (
+    memberAccountIds.has(tx.creditAccountId) &&
+    memberAccountIds.has(tx.debitAccountId)
+  ) {
+    return false;
+  }
+  if (
+    tx.creditCode === MEMBER_POCKET_ACCOUNT_CODE &&
+    tx.currencyCode === KOR_CURRENCY_CODE
+  ) {
+    return false;
+  }
   return (
-    tx.creditCode === MEMBER_SHARE_ACCOUNT_CODE ||
-    tx.creditCode === MEMBER_POCKET_ACCOUNT_CODE
+    memberAccountIds.has(tx.creditAccountId) &&
+    !memberAccountIds.has(tx.debitAccountId) &&
+    isMemberLedgerCode(tx.creditCode) &&
+    tx.debitCode !== SHARE_CAPITAL_ACCOUNT_CODE
   );
 }
 
 /**
- * External outflow from a member ledger: debit leaves 1101/1001, credit is not
- * another member account (excludes 1101↔1001 internals). Netted off credits in
- * the report (e.g. ügylet-kifejtés zseb költségek). Részjegytőke előírás
- * (1101 debit / 3000 credit) is not a deduction — it books the payment into
- * capital and must not cancel the bejövő tagi utalás credit. KOR against 1900
- * (kincstári kiadás) is also not a deduction.
+ * Pocket debit legs that are not zseb-kivét on this report:
+ * részjegytőke, Homály projekt-wash (5xxx), bank/kp (bányászás / félrekönyvelt
+ * üzemanyag), terület-támogatás / stróman (4200, 1200), kincstár (1900).
+ */
+function isIgnoredPocketDeductionCredit(creditCode: string): boolean {
+  if (
+    creditCode === SHARE_CAPITAL_ACCOUNT_CODE ||
+    creditCode === TREASURY_CLEARING_ACCOUNT_CODE ||
+    creditCode === '1000' ||
+    creditCode === '1100' ||
+    creditCode === '1200' ||
+    creditCode === '4200'
+  ) {
+    return true;
+  }
+  return /^5/.test(creditCode);
+}
+
+/**
+ * External outflow: debit leaves 1101 (részjegy kivét), or debit leaves 1001
+ * for a real zseb-kivét (e.g. 1001 ← 1720). Ignored pocket credits keep
+ * Pál’s stróman / terület-támogatás / üzemanyag from flipping the orange bar.
  */
 export function isMembershipShareDeduction(
   tx: MembershipShareTx,
@@ -106,13 +141,25 @@ export function isMembershipShareDeduction(
 ): boolean {
   if (tx.amount === 0) return false;
   if (isTreasuryKorMovement(tx)) return false;
-  if (!memberAccountIds.has(tx.debitAccountId)) return false;
-  if (memberAccountIds.has(tx.creditAccountId)) return false;
-  if (tx.creditCode === SHARE_CAPITAL_ACCOUNT_CODE) return false;
-  return (
-    tx.debitCode === MEMBER_SHARE_ACCOUNT_CODE ||
-    tx.debitCode === MEMBER_POCKET_ACCOUNT_CODE
-  );
+  if (
+    memberAccountIds.has(tx.creditAccountId) &&
+    memberAccountIds.has(tx.debitAccountId)
+  ) {
+    return false;
+  }
+  if (
+    !memberAccountIds.has(tx.debitAccountId) ||
+    memberAccountIds.has(tx.creditAccountId)
+  ) {
+    return false;
+  }
+  if (tx.debitCode === MEMBER_SHARE_ACCOUNT_CODE) {
+    return tx.creditCode !== SHARE_CAPITAL_ACCOUNT_CODE;
+  }
+  if (tx.debitCode === MEMBER_POCKET_ACCOUNT_CODE) {
+    return !isIgnoredPocketDeductionCredit(tx.creditCode);
+  }
+  return false;
 }
 
 /**
@@ -205,6 +252,7 @@ export function aggregateMembershipShareReport(
 
   for (const tx of txs) {
     if (isMembershipSharePayment(tx, memberAccountIds)) {
+      // Credit on 1101 or 1001 (same as drill-down kifizető filter).
       const shareRef = byShareId.get(tx.creditAccountId);
       const pocketRef = byPocketId.get(tx.creditAccountId);
       const ref = shareRef ?? pocketRef;
@@ -216,6 +264,7 @@ export function aggregateMembershipShareReport(
 
     if (!isMembershipShareDeduction(tx, memberAccountIds)) continue;
 
+    // Debit leaves 1101 or 1001.
     const shareRef = byShareId.get(tx.debitAccountId);
     const pocketRef = byPocketId.get(tx.debitAccountId);
     const ref = shareRef ?? pocketRef;

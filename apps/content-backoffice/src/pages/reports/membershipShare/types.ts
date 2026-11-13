@@ -3,14 +3,13 @@
  *
  * Source: published transactions on a member's 1101 (részjegy / `account`) or
  * 1001 (zseb / `private_account`) ledger with the other leg outside member
- * accounts (excludes 1101↔1001 internals). Credits add, debits subtract so
- * ügylet-kifejtés zseb költségek nem duplikálnak. Legs against 3000
- * (részjegytőke) are ignored both ways: előírás must not cancel a bejövő
- * utalás, and törlés must not cancel a kimenő kölcsön/visszautalás. KOR legs
- * against 1900 (kincstári FX) are ignored so the 1101↔1900 átmosás does not
- * cancel Tagi Lekötés Koronaként on the report. Members stay in the table
- * when any currency has a non-zero net (including negative); only all-zero
- * nets are dropped. Visibility never sums amounts across FX.
+ * accounts (excludes 1101↔1001 internals). Sign matches the transaction-list
+ * drill-down (kifizető = credit): credit = befizetés. Debit on 1101 is kivét.
+ * Debit on 1001 is zseb-kivét only for non-wash credits (e.g. 1720); ignored
+ * are 3000, 5xxx projekt-wash, 1000/1100, terület-támogatás/stróman 4200/1200,
+ * and 1900. KOR on 1001 is ignored; KOR 1101↔1900 is ignored so átmosás does
+ * not cancel Tagi Lekötés on the share. Members stay when any currency has a
+ * non-zero net (including negative). Visibility never sums amounts across FX.
  */
 
 import type { DateRangePreset } from '../shared/reportDateRange';
@@ -65,7 +64,7 @@ export type MembershipMemberRow = {
   pocketAccountId?: string | null;
   /** Amounts credited to this member's 1101, by currency. */
   shareByCurrency: CurrencyAmount[];
-  /** Amounts credited to this member's 1001, by currency. */
+  /** Net Homály (1001) amounts by currency: inflows − kiadások. */
   pocketByCurrency: CurrencyAmount[];
 };
 
