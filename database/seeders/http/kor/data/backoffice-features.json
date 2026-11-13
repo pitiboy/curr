@@ -56,5 +56,17 @@
     "key": "project-balance",
     "enabled": true,
     "config": {}
+  },
+  {
+    "key": "reconciliation",
+    "enabled": true,
+    "config": {
+      "roles": ["controller"],
+      "publishedWithoutReceipts": {
+        "debitCodes": ["5000", "54*"],
+        "creditCodes": ["1100", "1000", "1001"],
+        "excludeCurrencyCodes": ["KOR"]
+      }
+    }
   }
 ]

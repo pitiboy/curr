@@ -95,7 +95,7 @@ const usersPermissionsRolePermissions = {
   },
   'api::backoffice': {
     controllers: {
-      backoffice: allow(['config']),
+      backoffice: allow(['config', 'reconciliation']),
     },
   },
   'api::transaction-workflow': {
