@@ -101,8 +101,8 @@ describe('aggregateMembershipLedgerReport', () => {
         amount: 2_000,
         currencyCode: 'HUF',
         debitAccountId: 'acc-peti-1001',
-        creditAccountId: 'acc-cost',
-        creditCode: '5510',
+        creditAccountId: 'acc-loan',
+        creditCode: '1720',
         debitCode: '1001',
       },
     ];
@@ -122,6 +122,26 @@ describe('aggregateMembershipLedgerReport', () => {
       pocketDeduction: 2_000,
       pocketBalance: 10_000,
     });
+  });
+
+  it('ignores 1001 debit to 5xx (homály / projekt wash)', () => {
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2026-11-06',
+        amount: 2_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-peti-1001',
+        creditAccountId: 'acc-cost',
+        creditCode: '5510',
+        debitCode: '1001',
+      },
+    ];
+
+    const report = aggregateMembershipLedgerReport(txs, [groupA], 'HUF');
+    const row = report?.sections[0]?.members.find(
+      (m) => m.memberId === 'm-peti',
+    );
+    expect(row?.pocketDeduction).toBe(0);
   });
 
   it('ignores 1101↔1001 internal transfer', () => {
