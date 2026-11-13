@@ -63,6 +63,8 @@ export type AppliedRateResult = {
   rate: number;
   validFrom: string | null;
   currencyRateDocumentId: string | null;
+  /** True when the rate came from `1 / rate(to → from)` (KOR pairs only). */
+  inverted: boolean;
   /** Member ratio multiplier (1 when none applied). */
   ratio: number;
   membershipDocumentId: string | null;

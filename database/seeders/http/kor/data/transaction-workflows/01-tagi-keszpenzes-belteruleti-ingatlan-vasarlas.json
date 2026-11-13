@@ -37,7 +37,8 @@
       "credit_code": "1900",
       "currency": "KOR",
       "organization": "I/3. Pénzügyi Igazgatóság",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "apply_currency_rate": true
     },
     {
       "description": "{original.description} | KOR adás",
@@ -46,7 +47,8 @@
       "credit_code": "1001",
       "currency": "KOR",
       "organization": "I/4.11.1.1 Lakóterületek",
-      "transaction_type": "Átvezetés"
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
     }
   ]
 }

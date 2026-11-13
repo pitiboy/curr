@@ -10,6 +10,7 @@
  * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
  * legfrissebb valid_from ≤ forrás nap vége) × tagsági ratio (csak valódi váltásnál,
  * `rules[forrás pénznem kód]`), 2 tizedes; rate-et és ratio-t a hívó oldja fel.
+ * KOR-t érintő párnál direkt sor hiányában inverz: `1 / rate(to → from)`.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat),
  * opcionális gépi `code` (pl. CURRENCY_RATE_MISSING) és `details`.
  */
@@ -639,7 +640,49 @@ export type AppliedRate = {
   /** null when from === to (implicit rate 1, no lookup). */
   validFrom: string | null;
   currencyRateDocumentId: string | null;
+  /** True when the rate came from `1 / rate(to → from)` (KOR pairs only). */
+  inverted: boolean;
 };
+
+/** Optional currency codes so KOR inverse fallback can run in `pickLatestRate`. */
+export type PickLatestRateOptions = {
+  fromCode?: string | null;
+  toCode?: string | null;
+};
+
+export function normalizeCurrencyCode(
+  code: string | null | undefined,
+): string | null {
+  const trimmed = code?.trim();
+  return trimmed ? trimmed.toUpperCase() : null;
+}
+
+/** Inverse fallback only when the pair touches KOR (0002 plan §5.1 / §9.1). */
+export function currencyPairInvolvesKor(
+  fromCode: string | null | undefined,
+  toCode: string | null | undefined,
+): boolean {
+  const from = normalizeCurrencyCode(fromCode);
+  const to = normalizeCurrencyCode(toCode);
+  return from === 'KOR' || to === 'KOR';
+}
+
+/** Build an inverted AppliedRate from a direct `to → from` row. */
+export function invertAppliedRate(
+  inverse: AppliedRate,
+  fromCurrencyDocumentId: string,
+  toCurrencyDocumentId: string,
+): AppliedRate | null {
+  if (!Number.isFinite(inverse.rate) || inverse.rate <= 0) return null;
+  return {
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
+    rate: 1 / inverse.rate,
+    validFrom: inverse.validFrom,
+    currencyRateDocumentId: inverse.currencyRateDocumentId,
+    inverted: true,
+  };
+}
 
 /** Member ratio for the source currency (membership-ratio.ts resolves it). */
 export type MemberRatio = {
@@ -690,9 +733,9 @@ export function roundAmount(value: number): number {
 
 /**
  * Latest direct `from → to` row with valid_from ≤ end of `date` (UTC).
- * No inverse fallback. Same currency → rate 1 without a row.
+ * No inverse. Same currency → rate 1 without a row.
  */
-export function pickLatestRate(
+export function pickDirectLatestRate(
   rows: readonly CurrencyRateRow[],
   fromCurrencyDocumentId: string,
   toCurrencyDocumentId: string,
@@ -705,6 +748,7 @@ export function pickLatestRate(
       rate: 1,
       validFrom: null,
       currencyRateDocumentId: null,
+      inverted: false,
     };
   }
   const cutoff = Date.parse(rateCutoff(date));
@@ -727,7 +771,43 @@ export function pickLatestRate(
     rate: Number(best.rate),
     validFrom: best.valid_from,
     currencyRateDocumentId: best.documentId ?? null,
+    inverted: false,
   };
+}
+
+/**
+ * Latest `from → to` rate with valid_from ≤ end of `date` (UTC).
+ * Same currency → rate 1. Direct row wins. When codes show a KOR pair and no
+ * direct row exists, falls back to `1 / rate(to → from)` (`inverted: true`).
+ * Non-KOR pairs never invert.
+ */
+export function pickLatestRate(
+  rows: readonly CurrencyRateRow[],
+  fromCurrencyDocumentId: string,
+  toCurrencyDocumentId: string,
+  date: string,
+  options?: PickLatestRateOptions,
+): AppliedRate | null {
+  const direct = pickDirectLatestRate(
+    rows,
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
+    date,
+  );
+  if (direct) return direct;
+  if (!currencyPairInvolvesKor(options?.fromCode, options?.toCode)) return null;
+  const inverse = pickDirectLatestRate(
+    rows,
+    toCurrencyDocumentId,
+    fromCurrencyDocumentId,
+    date,
+  );
+  if (!inverse) return null;
+  return invertAppliedRate(
+    inverse,
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
+  );
 }
 
 /** True when any step of the template asks for a currency-rate conversion. */

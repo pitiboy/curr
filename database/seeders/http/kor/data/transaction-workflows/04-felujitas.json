@@ -37,7 +37,8 @@
       "credit_code": "1900",
       "currency": "KOR",
       "organization": "{original.organization}",
-      "transaction_type": "Átvezetés"
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
     }
   ]
 }

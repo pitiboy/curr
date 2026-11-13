@@ -1,21 +1,25 @@
 /**
  * Strapi-side lookups shared by Convert and Convert preview (no writes):
- * - currency-rate: latest direct `from → to` row with valid_from ≤ source day end,
- *   cached per request (`{from}:{to}:{day}`);
+ * - currency-rate: latest `from → to` row with valid_from ≤ source day end,
+ *   cached per request (`{from}:{to}:{day}`); KOR pairs may invert `to → from`;
  * - member ratio for the source currency (`rules[code]`, 0002 plan §5.2).
  * Everything resolves before Convert writes anything, so a missing rate or an
  * ambiguous ratio leaves no rows behind.
  */
 import {
   MEMBER_UID,
+  currencyPairInvolvesKor,
+  invertAppliedRate,
   isoDay,
   memberAccountFromTransaction,
+  pickDirectLatestRate,
   pickLatestRate,
   rateCutoff,
   stepsNeedingRate,
   type AppliedRate,
   type CurrencyRateRow,
   type MemberRatio,
+  type PickLatestRateOptions,
   type RateByCurrency,
   type SourceTransaction,
   type WorkflowTemplate,
@@ -58,27 +62,12 @@ function toRateRow(row: CurrencyRateApiRow): CurrencyRateRow | null {
   };
 }
 
-/**
- * Latest direct currency-rate on or before `date` (inclusive UTC day).
- * Returns null when no row exists; same currency → rate 1.
- */
-export async function findLatestCurrencyRate(
+async function queryLatestRateRows(
   strapi: Pick<ConvertContextStrapi, 'documents'>,
-  params: {
-    fromCurrencyDocumentId: string;
-    toCurrencyDocumentId: string;
-    date: string;
-  },
-): Promise<AppliedRate | null> {
-  const { fromCurrencyDocumentId, toCurrencyDocumentId, date } = params;
-  if (fromCurrencyDocumentId === toCurrencyDocumentId) {
-    return pickLatestRate(
-      [],
-      fromCurrencyDocumentId,
-      toCurrencyDocumentId,
-      date,
-    );
-  }
+  fromCurrencyDocumentId: string,
+  toCurrencyDocumentId: string,
+  date: string,
+): Promise<CurrencyRateRow[]> {
   const api = strapi.documents(CURRENCY_RATE_UID) as FindManyApi;
   const rows = await api.findMany({
     filters: {
@@ -93,15 +82,72 @@ export async function findLatestCurrencyRate(
       to_currency_type: { fields: ['documentId'] },
     },
   });
-  const parsed = (rows ?? [])
+  return (rows ?? [])
     .map((row) => toRateRow(row as CurrencyRateApiRow))
     .filter((row): row is CurrencyRateRow => row !== null);
-  // Re-apply the pure rule so the result never depends on DB sort/filter quirks.
-  return pickLatestRate(
-    parsed,
+}
+
+/**
+ * Latest currency-rate on or before `date` (inclusive UTC day).
+ * Direct `from → to` wins. When codes show a KOR pair and the direct row is
+ * missing, uses `1 / rate(to → from)`. Same currency → rate 1.
+ */
+export async function findLatestCurrencyRate(
+  strapi: Pick<ConvertContextStrapi, 'documents'>,
+  params: {
+    fromCurrencyDocumentId: string;
+    toCurrencyDocumentId: string;
+    date: string;
+    fromCode?: string | null;
+    toCode?: string | null;
+  },
+): Promise<AppliedRate | null> {
+  const {
     fromCurrencyDocumentId,
     toCurrencyDocumentId,
     date,
+    fromCode,
+    toCode,
+  } = params;
+  if (fromCurrencyDocumentId === toCurrencyDocumentId) {
+    return pickLatestRate(
+      [],
+      fromCurrencyDocumentId,
+      toCurrencyDocumentId,
+      date,
+    );
+  }
+  const directRows = await queryLatestRateRows(
+    strapi,
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
+    date,
+  );
+  const direct = pickDirectLatestRate(
+    directRows,
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
+    date,
+  );
+  if (direct) return direct;
+  if (!currencyPairInvolvesKor(fromCode, toCode)) return null;
+  const inverseRows = await queryLatestRateRows(
+    strapi,
+    toCurrencyDocumentId,
+    fromCurrencyDocumentId,
+    date,
+  );
+  const inverse = pickDirectLatestRate(
+    inverseRows,
+    toCurrencyDocumentId,
+    fromCurrencyDocumentId,
+    date,
+  );
+  if (!inverse) return null;
+  return invertAppliedRate(
+    inverse,
+    fromCurrencyDocumentId,
+    toCurrencyDocumentId,
   );
 }
 
@@ -109,6 +155,7 @@ export type RateResolver = (
   fromCurrencyDocumentId: string,
   toCurrencyDocumentId: string,
   date: string,
+  codes?: PickLatestRateOptions,
 ) => Promise<AppliedRate | null>;
 
 /** Request-scoped cache: one DB lookup per currency pair and day. */
@@ -116,7 +163,7 @@ export function createRateResolver(
   strapi: Pick<ConvertContextStrapi, 'documents'>,
 ): RateResolver {
   const cache = new Map<string, Promise<AppliedRate | null>>();
-  return (from, to, date) => {
+  return (from, to, date, codes) => {
     const key = `${from}:${to}:${isoDay(date)}`;
     let pending = cache.get(key);
     if (!pending) {
@@ -124,6 +171,8 @@ export function createRateResolver(
         fromCurrencyDocumentId: from,
         toCurrencyDocumentId: to,
         date,
+        fromCode: codes?.fromCode,
+        toCode: codes?.toCode,
       });
       cache.set(key, pending);
     }
@@ -143,8 +192,17 @@ export async function resolveWorkflowRates(
   const map = new Map<string, AppliedRate>();
   const needed = stepsNeedingRate(workflow, transaction);
   if (!needed) return map;
+  const fromCode = transaction.currency_type?.code ?? null;
   for (const to of needed.to) {
-    const rate = await resolve(needed.from, to, transaction.date);
+    const step = (workflow.step ?? []).find(
+      (candidate) =>
+        candidate?.apply_currency_rate === true &&
+        candidate.currency_type?.documentId === to,
+    );
+    const rate = await resolve(needed.from, to, transaction.date, {
+      fromCode,
+      toCode: step?.currency_type?.code ?? null,
+    });
     if (rate) map.set(to, rate);
   }
   return map;

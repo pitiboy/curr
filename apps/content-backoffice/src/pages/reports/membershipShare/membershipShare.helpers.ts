@@ -50,7 +50,7 @@ export function sortMembersByFocus(
   focus: LedgerFocus,
 ): MembershipMemberRow[] {
   return [...rows]
-    .filter((row) => memberFocusTotal(row, focus) > 0)
+    .filter((row) => memberFocusTotal(row, focus) !== 0)
     .sort((a, b) => memberFocusTotal(b, focus) - memberFocusTotal(a, focus));
 }
 
@@ -73,7 +73,7 @@ export function buildKpis(
     pocketByCurrency: mergeCurrencyAmounts(
       ...byMember.map((row) => row.pocketByCurrency),
     ),
-    memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') > 0)
+    memberCount: byMember.filter((row) => memberFocusTotal(row, 'both') !== 0)
       .length,
     sharePaymentCount,
     pocketPaymentCount,
@@ -104,7 +104,7 @@ function filterHistory(
           share: focus === 'share' ? amounts.share : 0,
           pocket: focus === 'pocket' ? amounts.pocket : 0,
         };
-        if (next.share > 0 || next.pocket > 0) {
+        if (next.share !== 0 || next.pocket !== 0) {
           byMember[memberId] = next;
         }
       }
