@@ -58,7 +58,9 @@ function currencyMapToList(map: Map<string, number>): CurrencyAmount[] {
 
 /**
  * External inflow into a member ledger: credit lands on 1101/1001, debit does
- * not (excludes 1101↔1001 internal transfers).
+ * not (excludes 1101↔1001 internals). Részjegytőke törlés (3000 debit /
+ * 1101 credit) is not a payment — it only reverses capital so the later
+ * kimenő utalás can reduce the reported befizetés.
  */
 export function isMembershipSharePayment(
   tx: MembershipShareTx,
@@ -67,6 +69,7 @@ export function isMembershipSharePayment(
   if (tx.amount === 0) return false;
   if (!memberAccountIds.has(tx.creditAccountId)) return false;
   if (memberAccountIds.has(tx.debitAccountId)) return false;
+  if (tx.debitCode === SHARE_CAPITAL_ACCOUNT_CODE) return false;
   return (
     tx.creditCode === MEMBER_SHARE_ACCOUNT_CODE ||
     tx.creditCode === MEMBER_POCKET_ACCOUNT_CODE

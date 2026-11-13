@@ -65,6 +65,23 @@ describe('isMembershipSharePayment', () => {
       ),
     ).toBe(false);
   });
+
+  it('rejects részjegytőke törlés (3000 debit / 1101 credit)', () => {
+    expect(
+      isMembershipSharePayment(
+        {
+          date: '2025-12-18',
+          amount: 5_000_000,
+          currencyCode: 'HUF',
+          debitAccountId: 'acc-capital-3000',
+          creditAccountId: 'acc-peti-1101',
+          creditCode: '1101',
+          debitCode: '3000',
+        },
+        memberIds,
+      ),
+    ).toBe(false);
+  });
 });
 
 describe('isMembershipShareDeduction', () => {
@@ -406,6 +423,57 @@ describe('aggregateMembershipShareReport', () => {
     expect(report.byMember[0]?.memberName).toBe('Dani');
     expect(report.byMember[0]?.shareByCurrency).toEqual([
       { currency: 'HUF', amount: 11_500_000 },
+    ]);
+    expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
+  });
+
+  it('deducts szabad kölcsön when ügylet books részjegytőke törlés + kimenő utalás', () => {
+    const member: MembershipShareMemberRef[] = [
+      {
+        memberId: 'm-erika',
+        memberName: 'Erika',
+        shareAccountId: 'acc-erika-1101',
+        pocketAccountId: 'acc-erika-1001',
+      },
+    ];
+    const txs: MembershipShareTx[] = [
+      {
+        date: '2025-01-10',
+        amount: 13_202_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-bank',
+        creditAccountId: 'acc-erika-1101',
+        creditCode: '1101',
+        debitCode: '1100',
+      },
+      {
+        date: '2025-12-18',
+        amount: 5_000_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-capital-3000',
+        creditAccountId: 'acc-erika-1101',
+        creditCode: '1101',
+        debitCode: '3000',
+      },
+      {
+        date: '2025-12-18',
+        amount: 5_000_000,
+        currencyCode: 'HUF',
+        debitAccountId: 'acc-erika-1101',
+        creditAccountId: 'acc-bank',
+        creditCode: '1100',
+        debitCode: '1101',
+      },
+    ];
+
+    const report = aggregateMembershipShareReport(txs, member, 'all');
+    expect(report).not.toBeNull();
+    if (!report) return;
+
+    expect(report.kpis.sharePaymentCount).toBe(1);
+    expect(report.byMember[0]?.memberName).toBe('Erika');
+    expect(report.byMember[0]?.shareByCurrency).toEqual([
+      { currency: 'HUF', amount: 8_202_000 },
     ]);
     expect(memberCurrencyTotalsMatchHistory(report)).toBe(true);
   });
