@@ -6,7 +6,9 @@ import {
   buildTransactionFilters,
   PROJECT_BALANCE_LEG_FILTER_KEY,
   CREDIT_ACCOUNT_IN_FILTER_KEY,
+  MEMBERSHIP_LEDGER_MODE_FILTER_KEY,
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
+  MEMBER_LEDGER_ACCOUNT_IN_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
   isExactAccountCodePattern,
@@ -193,6 +195,47 @@ describe('assembleTransactionList', () => {
       filter: { [MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY]: true },
     });
     expect(data.map((row) => row.id)).toEqual(['ext']);
+  });
+
+  it('filters membership-ledger deduction mode (ignores 3000 and 5xx wash)', () => {
+    const rows: StrapiTransaction[] = [
+      {
+        documentId: 'real-out',
+        date: '2026-01-01',
+        debit_account: { code: '1001', documentId: 'acc-p' },
+        credit_account: { code: '1720' },
+      },
+      {
+        documentId: 'wash',
+        date: '2026-01-02',
+        debit_account: { code: '1001', documentId: 'acc-p' },
+        credit_account: { code: '5510' },
+      },
+      {
+        documentId: 'equity',
+        date: '2026-01-03',
+        debit_account: { code: '1101', documentId: 'acc-s' },
+        credit_account: { code: '3000' },
+      },
+    ];
+    const { data } = assembleTransactionList([], rows, {
+      filter: { [MEMBERSHIP_LEDGER_MODE_FILTER_KEY]: 'deduction' },
+    });
+    expect(data.map((row) => row.id)).toEqual(['real-out']);
+  });
+
+  it('builds Strapi $or for member_ledger_account_in', () => {
+    const { strapiFilters } = buildTransactionFilters({
+      [MEMBER_LEDGER_ACCOUNT_IN_FILTER_KEY]: ['acc-a'],
+      converted_to_workflow: ['none'],
+    });
+    expect(strapiFilters).toMatchObject({
+      converted_to_workflow: { $null: true },
+      $or: [
+        { credit_account: { documentId: { $eq: 'acc-a' } } },
+        { debit_account: { documentId: { $eq: 'acc-a' } } },
+      ],
+    });
   });
 
   it('excludes kincstári KOR clearing from membership-share external filter', () => {

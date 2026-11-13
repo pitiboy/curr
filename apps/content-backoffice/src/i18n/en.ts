@@ -274,6 +274,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       empty: 'No memberships to show (or memberships have no linked members).',
       empty_activity:
         'No member-ledger activity in the selected period for %{currency}. Try Date range → All, or switch currency (e.g. EGG, KOR).',
+      drilldown: {
+        hint: 'Click to open the related transactions list',
+      },
       error: 'Could not load the report.',
       retry: 'Retry',
     },

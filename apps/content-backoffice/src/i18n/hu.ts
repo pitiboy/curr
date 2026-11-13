@@ -305,10 +305,10 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       retry: 'Újra',
     },
     membership_ledger: {
-      menu: 'Tagság kimutatás',
-      title: 'Tagság kimutatás',
+      menu: 'Tagi egyenleg',
+      title: 'Tagi egyenleg kimutatás',
       subtitle:
-        'Tagságonként tagi befizetés, befektetés és egyenleg a 1101 részjegy- és 1001 zsebszámlákon. Időszak és pénznem a bal oldali szűrőkből; üres pénznemnél HUF. A devizák nem adódnak össze.',
+        'Tagonként tagi befizetés, befektetés és egyenleg a 1101 részjegy- és 1001 zsebszámlákon. Időszak és pénznem a bal oldali szűrőkből; üres pénznemnél HUF. A devizák nem adódnak össze.',
       active_currency: 'Aktív pénznem: %{currency}',
       member: 'Tag',
       col: {
@@ -320,6 +320,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         'Nincs megjeleníthető tagság (vagy nincs tag a tagság rekordokban).',
       empty_activity:
         'Nincs tagi mozgás a választott időszakban %{currency} pénznemben. Próbáld az Időszak → Összes szűrőt, vagy válts pénznemet (pl. EGG, KOR).',
+      drilldown: {
+        hint: 'Kattints a kapcsolódó tranzakciók listájához',
+      },
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
     },

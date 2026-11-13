@@ -50,6 +50,8 @@ function toRow(
   return {
     memberId: ref.memberId,
     memberName: ref.memberName,
+    shareAccountId: ref.shareAccountId,
+    pocketAccountId: ref.pocketAccountId,
     sharePayment: acc.sharePayment,
     shareDeduction: acc.shareDeduction,
     shareBalance: acc.sharePayment - acc.shareDeduction,

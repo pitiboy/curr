@@ -13,12 +13,22 @@ import {
   Typography,
 } from '@mui/material';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import type { ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import {
   useGlobalReportParams,
   useGlobalTransactionFilters,
+  useOpenDrilldown,
 } from '../../filters/globalTransactionFiltersAtom';
+import {
+  drilldownForMemberCell,
+  drilldownForMemberRow,
+  type MembershipLedgerColumn,
+  type MembershipLedgerDrilldownContext,
+  type MembershipLedgerLeg,
+} from './membershipLedger/drilldown';
+import type { MembershipLedgerMemberRow } from './membershipLedger/types';
 import {
   MEMBER_POCKET_ACCOUNT_CODE,
   MEMBER_SHARE_ACCOUNT_CODE,
@@ -43,15 +53,53 @@ function formatMoney(amount: number, currency: string): string {
   }
 }
 
-function AmountCell({
+function DrilldownCell({
+  align,
+  children,
+  onOpen,
+  title,
+}: {
+  align: 'left' | 'right';
+  children: ReactNode;
+  onOpen: () => void;
+  title: string;
+}) {
+  return (
+    <TableCell
+      align={align}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+      role="button"
+      sx={{
+        cursor: 'pointer',
+        '&:hover': { textDecoration: 'underline' },
+      }}
+      tabIndex={0}
+      title={title}
+    >
+      {children}
+    </TableCell>
+  );
+}
+
+function AmountDrilldownCell({
   amount,
   currency,
+  onOpen,
+  title,
 }: {
   amount: number;
   currency: string;
+  onOpen: () => void;
+  title: string;
 }) {
   return (
-    <TableCell align="right">
+    <DrilldownCell align="right" onOpen={onOpen} title={title}>
       <Typography
         color={amount === 0 ? 'text.secondary' : 'text.primary'}
         sx={{ fontVariantNumeric: 'tabular-nums' }}
@@ -59,7 +107,7 @@ function AmountCell({
       >
         {amount === 0 ? '0' : formatMoney(amount, currency)}
       </Typography>
-    </TableCell>
+    </DrilldownCell>
   );
 }
 
@@ -69,11 +117,19 @@ export function MembershipLedgerReportPage() {
   const [filters] = useGlobalTransactionFilters();
   const currency = filters.currency_type?.trim() || 'HUF';
   const chartMetrics = useReportChartMetrics();
+  const openDrilldown = useOpenDrilldown();
 
   const { status, report, reload } = useMembershipLedgerReport(
     params,
     currency,
   );
+
+  const drilldownContext: MembershipLedgerDrilldownContext = {
+    range: params.preset,
+    bounds: params.bounds,
+    transactionStatus: params.transactionStatus,
+    currencyCode: currency,
+  };
 
   return (
     <ReportPageShell>
@@ -117,7 +173,9 @@ export function MembershipLedgerReportPage() {
             <MembershipSection
               chartMetricsNarrow={chartMetrics.narrow}
               currency={currency}
+              drilldownContext={drilldownContext}
               key={section.membershipId}
+              onOpenDrilldown={openDrilldown}
               section={section}
               translate={translate}
             />
@@ -132,29 +190,33 @@ function MembershipSection({
   section,
   currency,
   chartMetricsNarrow,
+  drilldownContext,
+  onOpenDrilldown,
   translate,
 }: {
   section: {
     membershipId: string;
     membershipName: string;
     membershipTypeName: string | null;
-    members: {
-      memberId: string;
-      memberName: string;
-      sharePayment: number;
-      shareDeduction: number;
-      shareBalance: number;
-      pocketPayment: number;
-      pocketDeduction: number;
-      pocketBalance: number;
-    }[];
+    members: MembershipLedgerMemberRow[];
   };
   currency: string;
   chartMetricsNarrow: boolean;
+  drilldownContext: MembershipLedgerDrilldownContext;
+  onOpenDrilldown: ReturnType<typeof useOpenDrilldown>;
   translate: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const shareCode = MEMBER_SHARE_ACCOUNT_CODE;
   const pocketCode = MEMBER_POCKET_ACCOUNT_CODE;
+  const drillTip = translate('app.membership_ledger.drilldown.hint');
+
+  const openCell = (
+    row: MembershipLedgerMemberRow,
+    leg: MembershipLedgerLeg,
+    column: MembershipLedgerColumn,
+  ) => {
+    onOpenDrilldown(drilldownForMemberCell(drilldownContext, row, leg, column));
+  };
 
   return (
     <Box>
@@ -226,16 +288,53 @@ function MembershipSection({
             <TableBody>
               {section.members.map((row) => (
                 <TableRow key={row.memberId}>
-                  <TableCell>{row.memberName}</TableCell>
-                  <AmountCell amount={row.sharePayment} currency={currency} />
-                  <AmountCell amount={row.shareDeduction} currency={currency} />
-                  <AmountCell amount={row.shareBalance} currency={currency} />
-                  <AmountCell amount={row.pocketPayment} currency={currency} />
-                  <AmountCell
+                  <DrilldownCell
+                    align="left"
+                    onOpen={() =>
+                      onOpenDrilldown(
+                        drilldownForMemberRow(drilldownContext, row),
+                      )
+                    }
+                    title={drillTip}
+                  >
+                    {row.memberName}
+                  </DrilldownCell>
+                  <AmountDrilldownCell
+                    amount={row.sharePayment}
+                    currency={currency}
+                    onOpen={() => openCell(row, 'share', 'payment')}
+                    title={drillTip}
+                  />
+                  <AmountDrilldownCell
+                    amount={row.shareDeduction}
+                    currency={currency}
+                    onOpen={() => openCell(row, 'share', 'deduction')}
+                    title={drillTip}
+                  />
+                  <AmountDrilldownCell
+                    amount={row.shareBalance}
+                    currency={currency}
+                    onOpen={() => openCell(row, 'share', 'balance')}
+                    title={drillTip}
+                  />
+                  <AmountDrilldownCell
+                    amount={row.pocketPayment}
+                    currency={currency}
+                    onOpen={() => openCell(row, 'pocket', 'payment')}
+                    title={drillTip}
+                  />
+                  <AmountDrilldownCell
                     amount={row.pocketDeduction}
                     currency={currency}
+                    onOpen={() => openCell(row, 'pocket', 'deduction')}
+                    title={drillTip}
                   />
-                  <AmountCell amount={row.pocketBalance} currency={currency} />
+                  <AmountDrilldownCell
+                    amount={row.pocketBalance}
+                    currency={currency}
+                    onOpen={() => openCell(row, 'pocket', 'balance')}
+                    title={drillTip}
+                  />
                 </TableRow>
               ))}
             </TableBody>

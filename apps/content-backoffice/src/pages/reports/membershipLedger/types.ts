@@ -14,6 +14,10 @@ export const MEMBERSHIP_LEDGER_TREASURY_ACCOUNT_CODE = '1900';
 export type MembershipLedgerMemberRow = {
   memberId: string;
   memberName: string;
+  /** 1101 tagi számla documentId — drill-down. */
+  shareAccountId: string | null;
+  /** 1001 zseb documentId — drill-down. */
+  pocketAccountId: string | null;
   sharePayment: number;
   shareDeduction: number;
   shareBalance: number;
