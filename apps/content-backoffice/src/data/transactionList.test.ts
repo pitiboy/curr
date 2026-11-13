@@ -7,6 +7,7 @@ import {
   PROJECT_BALANCE_LEG_FILTER_KEY,
   CREDIT_ACCOUNT_IN_FILTER_KEY,
   MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY,
+  RECEIPT_PRESENCE_FILTER_KEY,
   encodeStrapiQuery,
   firstReceiptVendor,
   isExactAccountCodePattern,
@@ -85,6 +86,29 @@ describe('assembleTransactionList', () => {
     expect(total).toBe(1);
     expect(data[0]?.id).toBe('draft-only');
     expect(data[0]?.status).toBe('draft');
+  });
+
+  it('filters published rows without receipts for reconciliation drill-down', () => {
+    const noReceipt: StrapiTransaction = {
+      id: 4,
+      documentId: 'pub-empty',
+      date: '2026-01-20',
+      amount: '1',
+      description: 'none',
+      receipts: [],
+    };
+    const { data, total } = assembleTransactionList(
+      [],
+      [publishedTwin, noReceipt],
+      {
+        filter: {
+          status: 'published',
+          [RECEIPT_PRESENCE_FILTER_KEY]: 'none',
+        },
+      },
+    );
+    expect(total).toBe(1);
+    expect(data[0]?.documentId).toBe('pub-empty');
   });
 
   it('returns only published rows when the status filter is published', () => {

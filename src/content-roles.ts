@@ -57,6 +57,7 @@ export const CONTROLLER_ONLY_CONTENT_ACTIONS = [
   'api::transaction.transaction.delete',
   'api::transaction.transaction.purgeExpansion',
   'api::receipt.receipt.delete',
+  'api::backoffice.backoffice.reconciliation',
 ] as const;
 
 /** Content API actions granted to a role type by the bootstrap. */

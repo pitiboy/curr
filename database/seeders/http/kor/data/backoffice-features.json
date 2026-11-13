@@ -51,5 +51,10 @@
     "key": "project-balance",
     "enabled": true,
     "config": {}
+  },
+  {
+    "key": "reconciliation",
+    "enabled": true,
+    "config": {}
   }
 ]

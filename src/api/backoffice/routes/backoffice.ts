@@ -8,5 +8,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/backoffice/reconciliation',
+      handler: 'backoffice.reconciliation',
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

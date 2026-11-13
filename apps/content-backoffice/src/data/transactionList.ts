@@ -1,4 +1,5 @@
 import { classifyLedgerMovement } from '../pages/reports/projectBalance/projectBalance.classify';
+import { receiptCount } from './receiptDraft';
 
 export type PublicationStatus = 'draft' | 'published';
 
@@ -205,6 +206,9 @@ export const MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY =
 /** Strapi `credit_account.documentId.$in` a membership-share drill-downból. */
 export const CREDIT_ACCOUNT_IN_FILTER_KEY = 'credit_account_in' as const;
 
+/** Client-only: published rows with zero linked receipts (reconciliation drill-down). */
+export const RECEIPT_PRESENCE_FILTER_KEY = 'receipt_presence' as const;
+
 export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
   /** React-admin id: Strapi documentId (not the numeric PK). */
   id: string;
@@ -406,11 +410,13 @@ export function assembleTransactionList(
   const filter = params.filter ?? {};
   const leg = filter[PROJECT_BALANCE_LEG_FILTER_KEY];
   const membershipExternal = filter[MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY];
+  const receiptPresence = filter[RECEIPT_PRESENCE_FILTER_KEY];
   const merged = mergeByStatus(drafts, published, status).filter(
     (row) =>
       matchesFirstReceiptVendor(row.receipts, filter.vendor) &&
       matchesProjectBalanceLeg(row, leg) &&
-      matchesMembershipShareExternal(row, membershipExternal),
+      matchesMembershipShareExternal(row, membershipExternal) &&
+      matchesReceiptPresence(row, receiptPresence),
   );
   const sorted = sortTransactionRows(
     merged,
@@ -693,6 +699,16 @@ const MEMBER_LEDGER_DEBIT_CODES = new Set(['1101', '1001']);
 const TREASURY_CLEARING_ACCOUNT_CODE = '1900';
 const MEMBER_SHARE_ACCOUNT_CODE = '1101';
 const KOR_CURRENCY_CODE = 'KOR';
+
+function matchesReceiptPresence(
+  row: Pick<StrapiTransaction, 'receipts'>,
+  mode: unknown,
+): boolean {
+  if (mode !== 'none' && mode !== 'any') return true;
+  const count = receiptCount(row.receipts);
+  if (mode === 'none') return count === 0;
+  return count > 0;
+}
 
 function matchesMembershipShareExternal(
   row: Pick<

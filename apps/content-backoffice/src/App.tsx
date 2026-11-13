@@ -15,8 +15,10 @@ import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
 import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
 import { MembershipShareReportPage } from './pages/reports/MembershipShareReportPage';
 import { ProjectBalanceReportPage } from './pages/reports/ProjectBalanceReportPage';
+import { ReconciliationReportPage } from './pages/reports/ReconciliationReportPage';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from './pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from './pages/reports/projectBalance/types';
+import { RECONCILIATION_FEATURE_ID } from './pages/reports/reconciliation/types';
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionShow } from './pages/transactions/TransactionShow';
@@ -99,6 +101,17 @@ export function App() {
                 </WorkflowFormGate>
               }
               path="/reports/project-balance"
+            />
+            <Route
+              element={
+                <WorkflowFormGate
+                  roles={['controller']}
+                  workflowId={RECONCILIATION_FEATURE_ID}
+                >
+                  <ReconciliationReportPage />
+                </WorkflowFormGate>
+              }
+              path="/reports/reconciliation"
             />
             {workflowForms.map((form) => (
               <Route

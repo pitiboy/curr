@@ -8,7 +8,11 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { Menu, usePermissions, useTranslate } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 
-import { isContentRole, isEditorLikeRole } from '../auth/roles';
+import {
+  canPurgeExpansion,
+  isContentRole,
+  isEditorLikeRole,
+} from '../auth/roles';
 import {
   TRANSACTIONS_LIST_PATH,
   transactionListMode,
@@ -20,6 +24,7 @@ import {
 } from '../filters/globalTransactionFiltersAtom';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
+import { RECONCILIATION_FEATURE_ID } from '../pages/reports/reconciliation/types';
 import { EGG_PRODUCTION_WORKFLOW_ID } from '../workflows/bulk-quantity/eggDailyEntry.constants';
 import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
@@ -44,6 +49,9 @@ export function BackofficeMenu() {
     canWrite && enabled.includes(MEMBERSHIP_SHARE_FEATURE_ID);
   const canReadProjectBalance =
     canWrite && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
+  const canReadReconciliation =
+    canPurgeExpansion(permissions) &&
+    enabled.includes(RECONCILIATION_FEATURE_ID);
 
   return (
     <Menu>
@@ -93,6 +101,13 @@ export function BackofficeMenu() {
           leftIcon={<AssessmentOutlinedIcon />}
           primaryText={translate('app.project_balance.menu')}
           to="/reports/project-balance"
+        />
+      ) : null}
+      {canReadReconciliation ? (
+        <Menu.Item
+          leftIcon={<FactCheckIcon />}
+          primaryText={translate('app.reconciliation.menu')}
+          to="/reports/reconciliation"
         />
       ) : null}
       {canReview ? (
