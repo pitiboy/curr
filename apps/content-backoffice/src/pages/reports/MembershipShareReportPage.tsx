@@ -24,6 +24,7 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import {
+  buildMembershipSharePieData,
   historyAmountForFocus,
   memberFocusTotal,
   mergeCurrencyAmounts,
@@ -191,11 +192,11 @@ function ReportBody({
   /** Share vs pocket pie uses one currency only — never sum across FX. */
   const pieData =
     focus === 'both'
-      ? [
+      ? buildMembershipSharePieData([
           {
             id: 'share',
             label: translate('app.membership_share.ledger.share'),
-            value:
+            amount:
               kpis.shareByCurrency.find((r) => r.currency === primaryCurrency)
                 ?.amount ?? 0,
             color: theme.palette.primary.main,
@@ -203,24 +204,27 @@ function ReportBody({
           {
             id: 'pocket',
             label: translate('app.membership_share.ledger.pocket'),
-            value:
+            amount:
               kpis.pocketByCurrency.find((r) => r.currency === primaryCurrency)
                 ?.amount ?? 0,
             color: theme.palette.warning.main,
           },
-        ].filter((row) => row.value > 0)
-      : (focus === 'share' ? kpis.shareByCurrency : kpis.pocketByCurrency).map(
-          (row, index) => ({
+        ])
+      : buildMembershipSharePieData(
+          (focus === 'share'
+            ? kpis.shareByCurrency
+            : kpis.pocketByCurrency
+          ).map((row, index) => ({
             id: row.currency,
             label: row.currency,
-            value: row.amount,
+            amount: row.amount,
             color:
               index === 0
                 ? theme.palette.primary.main
                 : index === 1
                   ? theme.palette.secondary.main
                   : theme.palette.info.main,
-          }),
+          })),
         );
 
   const onHistoryBarClick = useCallback(
@@ -350,6 +354,13 @@ function ReportBody({
                   paddingAngle: 2,
                   cornerRadius: 2,
                   highlightScope: { fade: 'global', highlight: 'item' },
+                  valueFormatter: (item) => {
+                    const slice = pieData.find((row) => row.id === item.id);
+                    const amount = slice?.signedValue ?? item.value;
+                    const currency =
+                      focus === 'both' ? primaryCurrency : String(item.id);
+                    return formatMoney(amount, currency);
+                  },
                 },
               ]}
               slotProps={{ legend: { direction: 'horizontal' } }}

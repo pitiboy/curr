@@ -180,6 +180,42 @@ export function filterReportByFocus(
   };
 }
 
+/** One ledger/currency candidate before abs sizing for the pie. */
+export type MembershipSharePieSliceInput = {
+  id: string;
+  label: string;
+  /** Signed net; zero rows are dropped. */
+  amount: number;
+  color: string;
+};
+
+/** Pie arc uses `value` (abs); tooltip should use `signedValue`. */
+export type MembershipSharePieSlice = {
+  id: string;
+  label: string;
+  value: number;
+  signedValue: number;
+  color: string;
+};
+
+/**
+ * Build pie slices from signed nets. Pie charts cannot size negative arcs, so
+ * `value` is abs(amount); keep `signedValue` for tooltips / labels.
+ */
+export function buildMembershipSharePieData(
+  slices: readonly MembershipSharePieSliceInput[],
+): MembershipSharePieSlice[] {
+  return slices
+    .filter((row) => row.amount !== 0)
+    .map((row) => ({
+      id: row.id,
+      label: row.label,
+      value: Math.abs(row.amount),
+      signedValue: row.amount,
+      color: row.color,
+    }));
+}
+
 /** Prefer HUF when present; otherwise the currency with the largest total. */
 export function pickHistoryCurrency(
   byMember: readonly MembershipMemberRow[],

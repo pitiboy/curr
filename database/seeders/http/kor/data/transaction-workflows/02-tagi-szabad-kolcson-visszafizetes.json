@@ -1,6 +1,6 @@
 {
-  "name": "Tagi szabad kölcsön visszafizetés",
-  "debit_account_code": "1001",
+  "name": "Tagi szabad részjegy kölcsön visszafizetés",
+  "debit_account_code": "1101",
   "credit_account_code": "1720",
   "steps": [
     {
