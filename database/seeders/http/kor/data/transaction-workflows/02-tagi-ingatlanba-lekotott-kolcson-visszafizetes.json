@@ -1,0 +1,63 @@
+{
+  "name": "Tagi kölcsön visszafizetése lekötött projektből vagy ingatlanból",
+  "debit_account_code": "1101",
+  "credit_account_code": "(5(00|10|4[0-9]|50|80)0|15[0-9]0)",
+  "steps": [
+    {
+      "description": "{original.description} | Részjegy törlése",
+      "percent": 100,
+      "debit_code": "3000",
+      "credit_code": "1101",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Részjegy"
+    },
+    {
+      "description": "{original.description} | Tagi korona visszautalás",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "{original.debit_account_code}",
+      "currency": "KOR",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
+    },
+    {
+      "description": "{original.description} | Korona visszautalás kincstárba",
+      "percent": 100,
+      "debit_code": "1900",
+      "credit_code": "1101",
+      "currency": "KOR",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
+    },
+    {
+      "description": "{original.description} | Lekötés HUF fedezet feloldása",
+      "percent": 100,
+      "debit_code": "{original.debit_account_code}",
+      "credit_code": "1900",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "{original.description} | Projekt költség feloldása",
+      "percent": 100,
+      "debit_code": "1100",
+      "credit_code": "{original.debit_account_code}",
+      "currency": "HUF",
+      "organization": "{original.organization}",
+      "transaction_type": "Utalás"
+    },
+    {
+      "description": "{original.description} | Kimenő visszautalás tagnak",
+      "percent": 100,
+      "debit_code": "1101",
+      "credit_code": "1100",
+      "currency": "HUF",
+      "organization": "I/3. Pénzügyi Igazgatóság",
+      "transaction_type": "Utalás"
+    }
+  ]
+}

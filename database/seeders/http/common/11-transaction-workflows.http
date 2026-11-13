@@ -33,28 +33,58 @@
     );
     // Tömb, ne Set — az exports blokkok között a Set nem marad meg megbízhatóan.
     exports.wfMemberCodes = ["1101", "1001"];
-    // Seed DSL: "{original.organization}" → Convert copies from source trx.
+    // Seed DSL: "{original.<field>}" → Convert copies from source trx.
+    // Account templates may be crossed (debit_code ← original.credit, etc.).
     exports.wfIsOriginalOrgTemplate = (value) =>
       typeof value === "string" && /^\{original\.organization\}$/.test(value.trim());
+    exports.wfOriginalAccountSide = (value) => {
+      if (typeof value !== "string") return null;
+      const trimmed = value.trim();
+      if (/^\{original\.debit_account_code\}$/.test(trimmed)) return "debit";
+      if (/^\{original\.credit_account_code\}$/.test(trimmed)) return "credit";
+      return null;
+    };
+    exports.wfIsOriginalCurrencyTemplate = (value) =>
+      typeof value === "string" && /^\{original\.currency\}$/.test(value.trim());
     const accountCodes = new Set();
     const organizationNames = new Set();
     const currencyCodes = new Set();
     const typeNames = new Set();
     for (const item of exports.wfItems) {
-      if (item.currency) currencyCodes.add(String(item.currency));
+      if (item.currency && !exports.wfIsOriginalCurrencyTemplate(item.currency)) {
+        currencyCodes.add(String(item.currency));
+      }
       if (item.transaction_type) typeNames.add(item.transaction_type);
       for (const step of item.steps || []) {
         const debit = String(step.debit_code);
         const credit = String(step.credit_code);
-        if (!exports.wfMemberCodes.includes(debit)) accountCodes.add(debit);
-        if (!exports.wfMemberCodes.includes(credit)) accountCodes.add(credit);
+        const debitFromOriginal = exports.wfOriginalAccountSide(debit) != null;
+        const creditFromOriginal = exports.wfOriginalAccountSide(credit) != null;
+        if (
+          !debitFromOriginal &&
+          !exports.wfMemberCodes.includes(debit)
+        ) {
+          accountCodes.add(debit);
+        }
+        if (
+          !creditFromOriginal &&
+          !exports.wfMemberCodes.includes(credit)
+        ) {
+          accountCodes.add(credit);
+        }
         if (
           step.organization &&
           !exports.wfIsOriginalOrgTemplate(step.organization)
         ) {
           organizationNames.add(step.organization);
         }
-        currencyCodes.add(String(step.currency));
+        if (
+          step.currency != null &&
+          step.currency !== "" &&
+          !exports.wfIsOriginalCurrencyTemplate(step.currency)
+        ) {
+          currencyCodes.add(String(step.currency));
+        }
         if (step.transaction_type) typeNames.add(step.transaction_type);
       }
     }
@@ -189,8 +219,8 @@ Accept: application/json
 {{
   // Kulcs mindig az item-ből (ne exports.wfKey — a loop válaszban elcsúszhat).
   exports.encodedName = encodeURIComponent(item.name);
-  exports.debitCode = item.debit_account_code;
-  exports.creditCode = item.credit_account_code;
+  exports.debitCode = encodeURIComponent(String(item.debit_account_code));
+  exports.creditCode = encodeURIComponent(String(item.credit_account_code));
 }}
 GET {{baseUrl}}/api/transaction-workflows?filters[name][$eq]={{encodedName}}&filters[debit_account_code][$eq]={{debitCode}}&filters[credit_account_code][$eq]={{creditCode}}&status=published&pagination[pageSize]=1
 Authorization: Bearer {{token}}
@@ -231,10 +261,21 @@ Accept: application/json
     for (const step of item.steps || []) {
       const debitCode = String(step.debit_code);
       const creditCode = String(step.credit_code);
-      const debitIsMember = wfMemberCodes.includes(debitCode);
-      const creditIsMember = wfMemberCodes.includes(creditCode);
-      const debitId = debitIsMember ? null : wfAccountIds[debitCode];
-      const creditId = creditIsMember ? null : wfAccountIds[creditCode];
+      const debitOrigSide = wfOriginalAccountSide(debitCode);
+      const creditOrigSide = wfOriginalAccountSide(creditCode);
+      const debitFromOriginal = debitOrigSide != null;
+      const creditFromOriginal = creditOrigSide != null;
+      const currencyFromOriginal = wfIsOriginalCurrencyTemplate(step.currency);
+      const debitIsMember =
+        !debitFromOriginal && wfMemberCodes.includes(debitCode);
+      const creditIsMember =
+        !creditFromOriginal && wfMemberCodes.includes(creditCode);
+      const debitId =
+        debitIsMember || debitFromOriginal ? null : wfAccountIds[debitCode];
+      const creditId =
+        creditIsMember || creditFromOriginal
+          ? null
+          : wfAccountIds[creditCode];
       const orgFromOriginal = wfIsOriginalOrgTemplate(step.organization);
       const orgEmpty =
         step.organization == null ||
@@ -243,28 +284,31 @@ Accept: application/json
       const orgId = orgEmpty
         ? null
         : wfOrganizationIds[step.organization];
-      const currencyId = wfCurrencyIds[String(step.currency)];
+      const currencyId = currencyFromOriginal
+        ? null
+        : wfCurrencyIds[String(step.currency)];
       const typeId = step.transaction_type
         ? wfTypeIds[step.transaction_type]
         : undefined;
-      if (
-        (!debitIsMember && !debitId) ||
-        (!creditIsMember && !creditId) ||
-        (!orgEmpty && !orgId) ||
-        !currencyId
-      ) {
+      // Name only what is missing; the description is just the step label.
+      const missing = [];
+      if (!debitIsMember && !debitFromOriginal && !debitId) {
+        missing.push("debit account " + debitCode);
+      }
+      if (!creditIsMember && !creditFromOriginal && !creditId) {
+        missing.push("credit account " + creditCode);
+      }
+      if (!orgEmpty && !orgId) missing.push("organization \"" + step.organization + "\"");
+      if (!currencyFromOriginal && !currencyId) {
+        missing.push("currency \"" + step.currency + "\"");
+      }
+      if (missing.length) {
         skipReason =
-          "missing lookup for step \"" +
+          "not found: " +
+          missing.join(", ") +
+          " (step \"" +
           step.description +
-          "\" (debit " +
-          debitCode +
-          ", credit " +
-          creditCode +
-          ", org " +
-          step.organization +
-          ", currency " +
-          step.currency +
-          ")";
+          "\")";
         break;
       }
       if (step.transaction_type && !typeId) {
@@ -283,34 +327,52 @@ Accept: application/json
           "\" (unsupported)";
         break;
       }
+      if (
+        (debitIsMember && debitFromOriginal) ||
+        (creditIsMember && creditFromOriginal)
+      ) {
+        skipReason =
+          "member code cannot also be from_original on step \"" +
+          step.description +
+          "\"";
+        break;
+      }
       // __component must be the first JSON key — Strapi 5 Content API
       // rejects "Invalid key __component at step" otherwise.
+      // Member + from_original on the other side stays a member component.
       const row = debitIsMember
         ? {
             __component: "workflow.step-member-debit",
             description: step.description,
             percent: step.percent,
-            currency_type: currencyId,
             member_account_code: debitCode,
-            credit_account: creditId,
           }
         : creditIsMember
           ? {
               __component: "workflow.step-member-credit",
               description: step.description,
               percent: step.percent,
-              currency_type: currencyId,
               member_account_code: creditCode,
-              debit_account: debitId,
             }
           : {
               __component: "workflow.step",
               description: step.description,
               percent: step.percent,
-              currency_type: currencyId,
-              debit_account: debitId,
-              credit_account: creditId,
             };
+      if (row.__component === "workflow.step-member-debit") {
+        if (creditOrigSide) row.credit_account_from_original = creditOrigSide;
+        else row.credit_account = creditId;
+      } else if (row.__component === "workflow.step-member-credit") {
+        if (debitOrigSide) row.debit_account_from_original = debitOrigSide;
+        else row.debit_account = debitId;
+      } else {
+        if (debitOrigSide) row.debit_account_from_original = debitOrigSide;
+        else row.debit_account = debitId;
+        if (creditOrigSide) row.credit_account_from_original = creditOrigSide;
+        else row.credit_account = creditId;
+      }
+      if (currencyFromOriginal) row.currency_from_original = true;
+      else row.currency_type = currencyId;
       if (orgFromOriginal) row.organization_from_original = true;
       else if (orgId) row.organization = orgId;
       if (typeId) row.transaction_type = typeId;
@@ -340,8 +402,9 @@ Accept: application/json
     } else {
       const data = {
         name: item.name,
-        debit_account_code: item.debit_account_code,
-        credit_account_code: item.credit_account_code,
+        // Schema is string (glob/regex patterns); coerce JSON numbers from seeds.
+        debit_account_code: String(item.debit_account_code),
+        credit_account_code: String(item.credit_account_code),
         keep_original: item.keep_original !== false,
         steps_published: item.steps_published !== false,
         configuration: null,

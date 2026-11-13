@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -26,6 +26,15 @@ const workflowAmbiguous: WorkflowTemplateHeader = {
   requires_source_organization: false,
 };
 
+const workflowWithType: WorkflowTemplateHeader = {
+  documentId: 'wf-typed',
+  name: 'Typed',
+  debit_account_code: 5200,
+  credit_account_code: 1300,
+  transaction_type: { documentId: 'type-tpl', name: 'Sablon típus' },
+  requires_source_organization: false,
+};
+
 const workflowWithCurrency: WorkflowTemplateHeader = {
   documentId: 'wf-egg',
   name: 'Egg pair',
@@ -49,6 +58,7 @@ function PrefillProbe({ workflows }: { workflows: WorkflowTemplateHeader[] }) {
       <div data-testid="debit">{String(watch('debit_account') ?? '')}</div>
       <div data-testid="credit">{String(watch('credit_account') ?? '')}</div>
       <div data-testid="currency">{String(watch('currency_type') ?? '')}</div>
+      <div data-testid="type">{String(watch('transaction_type') ?? '')}</div>
       <div data-testid="credit-filter">{accountCodeFilters.credit ?? ''}</div>
       <div data-testid="warnings">{prefillWarningKeys.join(',')}</div>
     </div>
@@ -143,5 +153,56 @@ describe('useWorkflowPrefillOnSelect', () => {
     });
     expect(screen.getByTestId('debit').textContent).toBe('debit-5200');
     expect(screen.getByTestId('credit').textContent).toBe('credit-1300');
+  });
+
+  it('prefills the template type, and a manual type change survives the drop', async () => {
+    let form: ReturnType<typeof useForm> | null = null;
+    const Wrapper = ({ children }: { children: React.ReactNode }) => {
+      const methods = useForm({
+        defaultValues: {
+          debit_account: '',
+          credit_account: '',
+          currency_type: '',
+          transaction_type: undefined as string | undefined,
+        },
+      });
+      form = methods as unknown as ReturnType<typeof useForm>;
+      return (
+        <TransactionCreateAccountRowProvider
+          accounts={accounts}
+          defaultProfile="cost"
+          initialStoredSelection={{
+            kind: 'workflow',
+            workflowDocumentId: 'wf-typed',
+          }}
+          transactionWorkflows={[workflowWithType]}
+        >
+          <FormProvider {...methods}>
+            <TransactionCreateAccountRowFormSync />
+            {children}
+          </FormProvider>
+        </TransactionCreateAccountRowProvider>
+      );
+    };
+
+    render(
+      <Wrapper>
+        <PrefillProbe workflows={[workflowWithType]} />
+      </Wrapper>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type').textContent).toBe('type-tpl');
+    });
+    expect(screen.getByTestId('selection-kind').textContent).toBe('workflow');
+
+    act(() => {
+      form?.setValue('transaction_type', 'type-manual');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('selection-kind').textContent).toBe('profile');
+    });
+    expect(screen.getByTestId('type').textContent).toBe('type-manual');
   });
 });

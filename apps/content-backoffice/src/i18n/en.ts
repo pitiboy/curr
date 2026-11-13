@@ -528,6 +528,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         debit_account: 'Debit',
         credit_account: 'Credit',
         currency_type: 'Currency',
+        transaction_type: 'Transaction type',
         vendor: 'Vendor',
         status: 'Status',
         converted_to_workflow: 'Deal expansion',

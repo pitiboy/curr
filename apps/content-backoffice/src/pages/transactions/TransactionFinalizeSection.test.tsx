@@ -8,6 +8,10 @@ vi.mock('../../theme', () => ({
   bandedSpanClass: 'banded-span',
 }));
 
+vi.mock('./TransactionConvertSection', () => ({
+  TransactionConvertSection: () => null,
+}));
+
 import { discardTransaction } from '../../data/dataProvider';
 import { TransactionFinalizeSection } from './TransactionFinalizeSection';
 

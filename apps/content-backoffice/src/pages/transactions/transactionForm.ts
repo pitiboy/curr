@@ -125,6 +125,7 @@ export function reviewFormRecord(record: {
   documentId?: string;
   id?: string;
   organization?: { documentId?: string } | null;
+  transaction_type?: { documentId?: string } | null;
 }): Record<string, unknown> {
   return {
     id: record.id ?? record.documentId,
@@ -141,6 +142,7 @@ export function reviewFormDefaults(record: {
   debit_account?: { documentId?: string } | null;
   description?: string | null;
   organization?: { documentId?: string } | null;
+  transaction_type?: { documentId?: string } | null;
 }): Record<string, unknown> {
   return {
     date: record.date ?? undefined,
@@ -151,5 +153,6 @@ export function reviewFormDefaults(record: {
     organization: relationDefault(record.organization),
     debit_account: relationDefault(record.debit_account),
     credit_account: relationDefault(record.credit_account),
+    transaction_type: relationDefault(record.transaction_type),
   };
 }

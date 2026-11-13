@@ -1,7 +1,7 @@
 # Tranzakciók az Excel pénzmozgás-táblából (Pénzmozgások munkalap)
 # A rekordok a dataDir/transactions.json fájlban vannak, soronként az Excel oszlopaival:
 #   row = Excel sorszám, date = Dátum, payer = Forrás (fizet), payee = Kinek fizettük,
-#   ledger = Cél hely, project = Organization/Projekt, purpose = Rendeltetés,
+#   ledger = Cél hely, purpose = Rendeltetés,
 #   operation = Művelet, amount = Összeg (Excelben előjelesen; importnál |amount|,
 #   a követel/tartozik címkék változatlanok),
 #   place = Hely, description = Leírás,
@@ -21,12 +21,16 @@
 #   tagi számlája, saját:<azonosító> = a tag 1001-es saját (homály) számlája,
 #   pl. tag:pál. A tagot az azonosítója alapján keresi meg; ha nincs ilyen
 #   tag vagy számlája, a mező üres marad, és a futás kiírja, hány sort érint.
-#   transaction_type = a sor transaction_type mezője, különben
+#   transaction_type = a sor transaction_type mezője (workflow matchhez fontos:
+#                      Részjegy / Lekötés / Bányászás stb.). Ha üres, a
+#                      transaction-import-keys a
 #                      operationTransactionTypes[operation], különben
-#                      placeTransactionTypes[place]
-#   organization    = a sor organization mezője, különben
-#                     projectOrganizations[project], ha nincs: mainOrganization
-#   currency_type   = currencyCode
+#                      placeTransactionTypes[place] táblából pótolja; a már
+#                      kitöltött típust a re-book nem írja felül.
+#   organization    = a sor organization mezője, különben mainOrganization
+#   currency_type   = a sor currency mezője, különben currencyCode
+#   related_transaction = related_transaction_entered_key → entered_key
+#                      (második pass; kor Excel-soroknál általában üres)
 #   description     = Leírás, alatta az eredeti oszlopok markdown HTML-kommentben.
 #                     Minden ilyen sor önálló komment, ezért a markdown
 #                     megjelenítés nem írja ki. A backoffice listája és a
@@ -40,7 +44,7 @@
 #                       <!-- Követel: … -->
 #                       <!-- Tartozik: … -->
 #                       <!-- Cél hely: … -->
-#                       <!-- Projekt: … -->
+#                       <!-- Szervezet: … -->
 #                       <!-- Rendeltetés: … -->
 #                       <!-- Művelet: … -->
 #                       <!-- Hely: … -->
@@ -49,7 +53,7 @@
 #   entered_by      = keyPrefix + row, csak olvasható jelölés
 #
 # entered_key: excel:<sha256 20 hex> a JSON entered_key_fields listájában lévő
-# mezőkből (most: pénznem, dátum, összeg, forrás, jogosult, projekt), azonos
+# mezőkből (most: pénznem, dátum, összeg, forrás, jogosult, szervezet), azonos
 # kulcsnál #2, #3. A sorszám nincs benne, így az Excel sorrendje szabadon
 # változhat; ha a hat mező valamelyike változik, új kulcsot kap, és új
 # tranzakcióként jön be, a régi kulcsú sor bent marad.
@@ -112,7 +116,7 @@
         "Követel: " + commentValue(item.credit_label || item.credit_account),
         "Tartozik: " + commentValue(item.debit_label || item.debit_account),
         "Cél hely: " + commentValue(item.ledger),
-        "Projekt: " + commentValue(item.project),
+        "Szervezet: " + commentValue(item.organization),
         "Rendeltetés: " + commentValue(item.purpose),
         "Művelet: " + commentValue(item.operation),
         "Hely: " + commentValue(item.place),
@@ -171,11 +175,7 @@
           item.transaction_type ||
           pick(source.operationTransactionTypes, item.operation) ||
           pick(source.placeTransactionTypes, item.place),
-        organization:
-          item.organization ||
-          pick(source.projectOrganizations, item.project) ||
-          source.mainOrganization ||
-          null,
+        organization: item.organization || source.mainOrganization || null,
         relatedAnchorKey:
           typeof item.related_transaction_entered_key === "string"
             ? item.related_transaction_entered_key

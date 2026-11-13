@@ -12,8 +12,8 @@ type StrapiWorkflowStepRow = {
 type StrapiWorkflowRow = {
   documentId?: string;
   name?: string | null;
-  debit_account_code?: number;
-  credit_account_code?: number;
+  debit_account_code?: string | number;
+  credit_account_code?: string | number;
   currency_type?: {
     documentId?: string;
     code?: string | null;
@@ -25,6 +25,14 @@ type StrapiWorkflowRow = {
   } | null;
   step?: StrapiWorkflowStepRow[] | null;
 };
+
+function normalizeAccountCodePattern(
+  value: string | number | null | undefined,
+): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  const pattern = String(value).trim();
+  return pattern || null;
+}
 
 type WorkflowListResponse = {
   data?: StrapiWorkflowRow[];
@@ -63,13 +71,18 @@ function toWorkflowHeader(
   row: StrapiWorkflowRow,
 ): WorkflowTemplateHeader | null {
   if (!row.documentId) return null;
-  if (typeof row.debit_account_code !== 'number') return null;
-  if (typeof row.credit_account_code !== 'number') return null;
+  const debit_account_code = normalizeAccountCodePattern(
+    row.debit_account_code,
+  );
+  const credit_account_code = normalizeAccountCodePattern(
+    row.credit_account_code,
+  );
+  if (!debit_account_code || !credit_account_code) return null;
   return {
     documentId: row.documentId,
     name: row.name,
-    debit_account_code: row.debit_account_code,
-    credit_account_code: row.credit_account_code,
+    debit_account_code,
+    credit_account_code,
     currency_type: row.currency_type?.documentId
       ? {
           documentId: row.currency_type.documentId,

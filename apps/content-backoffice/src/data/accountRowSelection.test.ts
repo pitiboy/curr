@@ -8,6 +8,7 @@ import {
   PROFILE_OPTION_PREFIX,
   resolveAccountCodeToAccount,
   resolveAccountRowSelection,
+  matchInputForConvert,
   resolveCreateWorkflow,
   resolveWorkflowPrefill,
   workflowCurrencyChipLabel,
@@ -199,6 +200,25 @@ describe('resolveWorkflowPrefill', () => {
       'app.account_profile_workflow_prefill_incomplete',
     );
   });
+
+  it('does not $eq-filter non-exact pattern headers', () => {
+    const result = resolveWorkflowPrefill(
+      {
+        ...workflowA,
+        debit_account_code: '5*',
+        credit_account_code: '15[23]0',
+      },
+      accounts,
+    );
+    expect(result.debitAccountId).toBeNull();
+    expect(result.creditAccountId).toBeNull();
+    expect(result.debitAccountCodeFilter).toBeNull();
+    expect(result.creditAccountCodeFilter).toBeNull();
+    expect(result.accountsResolved).toBe(false);
+    expect(result.warningKeys).toContain(
+      'app.account_profile_workflow_prefill_incomplete',
+    );
+  });
 });
 
 describe('resolveAccountCodeToAccount', () => {
@@ -271,6 +291,78 @@ describe('resolveAccountRowSelection', () => {
     });
     expect(resolved.workflowDropped).toBe(false);
     expect(resolved.activeWorkflow).toBeNull();
+  });
+
+  it('promotes activeWorkflow for pattern templates once form codes match', () => {
+    const patternWorkflow = {
+      ...workflowA,
+      documentId: 'wf-pattern',
+      debit_account_code: '(5(00|10|4[0-9]|50|80)0|15[0-9]0)',
+      credit_account_code: '1101',
+      transaction_type: { documentId: 'type-resz', name: 'Részjegy' },
+    };
+    const resolved = resolveAccountRowSelection({
+      storedSelection: {
+        kind: 'workflow',
+        workflowDocumentId: 'wf-pattern',
+      },
+      lastProfile: 'cost',
+      workflows: [patternWorkflow],
+      matchInput: {
+        converted_to_workflow: null,
+        debit_account: { code: '1510' },
+        credit_account: { code: '1101' },
+        currency_type: null,
+        transaction_type: { documentId: 'type-resz' },
+      },
+      prefillAccountsResolved: false,
+    });
+    expect(resolved.effectiveSelection).toEqual({
+      kind: 'workflow',
+      workflowDocumentId: 'wf-pattern',
+    });
+    expect(resolved.activeWorkflow?.documentId).toBe('wf-pattern');
+    expect(resolved.workflowDropped).toBe(false);
+  });
+});
+
+describe('matchInputForConvert', () => {
+  it('prefers form documentIds when both accounts resolve', () => {
+    const record = {
+      converted_to_workflow: null,
+      debit_account: { code: '9999', documentId: 'old-d' },
+      credit_account: { code: '8888', documentId: 'old-c' },
+      currency_type: { documentId: 'old-cur' },
+      transaction_type: { documentId: 'old-type' },
+    };
+    const matched = matchInputForConvert(record, accounts, {
+      debitAccountDocumentId: 'd1',
+      creditAccountDocumentId: 'a1',
+      currencyTypeDocumentId: 'cur-1',
+      transactionTypeDocumentId: 'type-resz',
+    });
+    expect(matched.debit_account?.code).toBe('5200');
+    expect(matched.credit_account?.code).toBe('1101');
+    expect(matched.currency_type).toEqual({ documentId: 'cur-1' });
+    expect(matched.transaction_type).toEqual({ documentId: 'type-resz' });
+  });
+
+  it('falls back to the show record when form accounts are incomplete', () => {
+    const record = {
+      converted_to_workflow: null,
+      debit_account: { code: '1510', documentId: 'd-1510' },
+      credit_account: { code: '1101', documentId: 'c-1101' },
+      transaction_type: { documentId: 'type-resz' },
+    };
+    const matched = matchInputForConvert(record, accounts, {
+      debitAccountDocumentId: '',
+      creditAccountDocumentId: 'a1',
+      currencyTypeDocumentId: undefined,
+      transactionTypeDocumentId: 'type-resz',
+    });
+    expect(matched.debit_account?.code).toBe('1510');
+    expect(matched.credit_account?.code).toBe('1101');
+    expect(matched.transaction_type).toEqual({ documentId: 'type-resz' });
   });
 });
 

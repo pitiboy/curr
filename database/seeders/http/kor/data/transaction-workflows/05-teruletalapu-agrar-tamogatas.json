@@ -1,7 +1,7 @@
 {
   "name": "Területalapú agrár támogatás",
-  "debit_account_code": 1200,
-  "credit_account_code": 4200,
+  "debit_account_code": "1001",
+  "credit_account_code": "4200",
   "steps": [
     {
       "description": "{original.description} | Megítélés",
@@ -9,26 +9,17 @@
       "debit_code": "1200",
       "credit_code": "4200",
       "currency": "HUF",
-      "organization": "I/4.11.1.2 Termőterületek",
+      "organization": "{original.organization}",
       "transaction_type": "Átvezetés"
     },
     {
-      "description": "{original.description} | Kincstári jóváírás",
+      "description": "{original.description} | Hományba tartalék",
       "percent": 100,
-      "debit_code": "1100",
-      "credit_code": "1900",
-      "currency": "HUF",
-      "organization": "I/3. Pénzügyi Igazgatóság",
-      "transaction_type": "Utalás"
-    },
-    {
-      "description": "{original.description} | Követelés zárása",
-      "percent": 100,
-      "debit_code": "1900",
+      "debit_code": "1001",
       "credit_code": "1200",
       "currency": "HUF",
-      "organization": "I/4.11.1.2 Termőterületek",
-      "transaction_type": "Átvezetés"
+      "organization": "{original.organization}",
+      "transaction_type": "Bányászás"
     }
   ]
 }
