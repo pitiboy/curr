@@ -55,6 +55,8 @@
   {
     "key": "reconciliation",
     "enabled": true,
-    "config": {}
+    "config": {
+      "roles": ["controller"]
+    }
   }
 ]

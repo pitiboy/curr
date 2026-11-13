@@ -4,10 +4,12 @@ import { usePermissions } from 'react-admin';
 
 import type { ContentRole } from '../auth/roles';
 import { roleAllowed } from '../auth/roles';
+import { featureRolesFromConfig } from './featureRoles';
 import { useBackofficeConfig } from './useBackofficeConfig';
 
 type WorkflowFormGateProps = {
   workflowId: string;
+  /** Fallback when the feature row has no `config.roles`. */
   roles: readonly ContentRole[];
   children: ReactNode;
 };
@@ -17,8 +19,10 @@ export function WorkflowFormGate({
   roles,
   children,
 }: WorkflowFormGateProps) {
-  const { enabled, ready } = useBackofficeConfig();
+  const { enabled, features, ready } = useBackofficeConfig();
   const { permissions, isPending } = usePermissions();
+  const fromConfig = featureRolesFromConfig(features[workflowId]?.config);
+  const effectiveRoles = fromConfig.length > 0 ? fromConfig : roles;
 
   if (!ready || isPending) {
     return null;
@@ -27,7 +31,7 @@ export function WorkflowFormGate({
   if (
     !enabled.includes(workflowId) ||
     typeof permissions !== 'string' ||
-    !roleAllowed(roles, permissions)
+    !roleAllowed(effectiveRoles, permissions)
   ) {
     return <Navigate to="/transactions" replace />;
   }

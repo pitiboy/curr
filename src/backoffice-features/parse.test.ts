@@ -6,7 +6,19 @@ import {
   emptyBackofficeConfig,
   isBackofficeSettingKey,
   publishPolicyFromFeatures,
+  rolesFromFeatureConfig,
 } from './parse.ts';
+
+describe('rolesFromFeatureConfig', () => {
+  it('reads trimmed string roles and ignores junk', () => {
+    assert.deepEqual(
+      rolesFromFeatureConfig({ roles: ['controller', '  editor ', 1, ''] }),
+      ['controller', 'editor'],
+    );
+    assert.deepEqual(rolesFromFeatureConfig({}), []);
+    assert.deepEqual(rolesFromFeatureConfig(null), []);
+  });
+});
 
 describe('isBackofficeSettingKey', () => {
   it('treats dotted content and accounts keys as settings', () => {

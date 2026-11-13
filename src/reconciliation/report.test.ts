@@ -10,6 +10,7 @@ type Row = Record<string, unknown>;
 function makeStrapi(options: {
   rows: Record<string, Row[]>;
   auth?: boolean;
+  settings?: Row[];
 }): ReconciliationStrapi {
   const queryFor = (uid: string) => {
     const list = options.rows[uid] ?? [];
@@ -40,6 +41,10 @@ function makeStrapi(options: {
     db: {
       query: (uid: string) => queryFor(uid),
     },
+    documents: (uid: string) => ({
+      findMany: async () =>
+        uid === 'api::setting.setting' ? (options.settings ?? []) : [],
+    }),
   } as unknown as ReconciliationStrapi;
 }
 
@@ -229,5 +234,47 @@ describe('reconciliation report', () => {
     const ctx: { status?: number; body?: unknown } = {};
     await handleReconciliation(strapi, ctx);
     assert.equal(ctx.status, 403);
+  });
+
+  it('allows editor when reconciliation config.roles includes editor', async () => {
+    const rows = {
+      ...baseRows,
+      'plugin::users-permissions.user': contentUsers.map((user) =>
+        user.id === 1
+          ? { ...user, role: { type: 'editor', name: 'editor' } }
+          : user,
+      ),
+    };
+    const strapi = makeStrapi({
+      rows,
+      settings: [
+        {
+          key: 'reconciliation',
+          enabled: true,
+          config: { roles: ['editor'] },
+        },
+      ],
+    });
+    await assert.doesNotReject(() => assertReconciliationController(strapi));
+  });
+
+  it('rejects controller when config.roles omits controller', async () => {
+    const strapi = makeStrapi({
+      rows: baseRows,
+      settings: [
+        {
+          key: 'reconciliation',
+          enabled: true,
+          config: { roles: ['dataentry'] },
+        },
+      ],
+    });
+    await assert.rejects(
+      () => assertReconciliationController(strapi),
+      (error: unknown) => {
+        assert.equal((error as { status?: number }).status, 403);
+        return true;
+      },
+    );
   });
 });
