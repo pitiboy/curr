@@ -259,6 +259,22 @@ export const enMessages = mergeTranslations(englishMessages, {
       error: 'Could not load the report.',
       retry: 'Retry',
     },
+    membership_ledger: {
+      menu: 'Membership ledger',
+      title: 'Membership ledger',
+      subtitle:
+        'Per membership: member payments, deductions, and balances on 1101 share and 1001 pocket ledgers. Pick one currency — FX amounts are never summed.',
+      currency: 'Currency',
+      member: 'Member',
+      col: {
+        payment: '%{code} payment',
+        deduction: '%{code} deduction',
+        balance: '%{code} balance',
+      },
+      empty: 'No memberships to show (or memberships have no linked members).',
+      error: 'Could not load the report.',
+      retry: 'Retry',
+    },
     membership_share: {
       menu: 'Share capital report',
       title: 'Member share and pocket',
@@ -374,6 +390,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       'egg-production': 'Daily egg entry',
       'member-fee': 'Member fee',
       'membership-share': 'Share capital report',
+      'membership-ledger': 'Membership ledger',
     },
     bulk_quantity: {
       save: 'Save',

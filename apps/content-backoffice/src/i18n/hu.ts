@@ -304,6 +304,23 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       error: 'A kimutatás betöltése nem sikerült.',
       retry: 'Újra',
     },
+    membership_ledger: {
+      menu: 'Tagság kimutatás',
+      title: 'Tagság kimutatás',
+      subtitle:
+        'Tagságonként tagi befizetés, befektetés és egyenleg a 1101 részjegy- és 1001 zsebszámlákon. Egy pénznemet válassz — a devizák nem adódnak össze.',
+      currency: 'Pénznem',
+      member: 'Tag',
+      col: {
+        payment: '%{code} befizetés',
+        deduction: '%{code} befektetés',
+        balance: '%{code} egyenleg',
+      },
+      empty:
+        'Nincs megjeleníthető tagság (vagy nincs tag a tagság rekordokban).',
+      error: 'A kimutatás betöltése nem sikerült.',
+      retry: 'Újra',
+    },
     membership_share: {
       menu: 'Részjegy kimutatás',
       title: 'Tagi részjegy és zseb',
@@ -420,6 +437,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'egg-production': 'Napi tojás rögzítés',
       'member-fee': 'Tagdíj',
       'membership-share': 'Részjegy kimutatás',
+      'membership-ledger': 'Tagság kimutatás',
     },
     bulk_quantity: {
       save: 'Mentés',
