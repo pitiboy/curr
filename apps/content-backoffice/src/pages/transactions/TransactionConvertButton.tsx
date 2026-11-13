@@ -15,12 +15,14 @@ export function TransactionConvertButton({
   documentId,
   workflow,
   disabled,
+  iconOnly = false,
   labelKey = 'app.transactions_convert',
   showPreview = true,
 }: {
   documentId: string;
   workflow: WorkflowTemplateHeader;
   disabled?: boolean;
+  iconOnly?: boolean;
   labelKey?: string;
   showPreview?: boolean;
 }) {
@@ -68,18 +70,33 @@ export function TransactionConvertButton({
             workflow={workflow}
           />
         ) : null}
-        <Button
-          disabled={disabled || busy}
-          size="small"
-          startIcon={<AccountTreeIcon />}
-          variant="outlined"
-          onClick={(event) => {
-            event.stopPropagation();
-            setOpen(true);
-          }}
-        >
-          {translate(labelKey)}
-        </Button>
+        {iconOnly ? (
+          <Button
+            aria-label={translate(labelKey)}
+            disabled={disabled || busy}
+            size="small"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(true);
+            }}
+          >
+            <AccountTreeIcon fontSize="small" />
+          </Button>
+        ) : (
+          <Button
+            disabled={disabled || busy}
+            size="small"
+            startIcon={<AccountTreeIcon />}
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(true);
+            }}
+          >
+            {translate(labelKey)}
+          </Button>
+        )}
       </Stack>
       {open ? (
         <ConvertConfirmDialog

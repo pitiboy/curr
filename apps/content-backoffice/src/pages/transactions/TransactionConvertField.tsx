@@ -17,7 +17,9 @@ export function TransactionConvertField(_props: {
   label?: false;
   sortable?: false;
   source?: string;
+  compact?: boolean;
 }) {
+  const { compact = false } = _props;
   const record = useRecordContext<RaRecord & TransactionRow>();
   const { permissions, isPending } = usePermissions();
   const { matchFor, loading: catalogLoading } = useTransactionWorkflowCatalog();
@@ -40,7 +42,7 @@ export function TransactionConvertField(_props: {
   if (!workflow || !previewInput) return null;
 
   return (
-    <Stack direction="row" spacing={0.5}>
+    <Stack direction="row" spacing={compact ? 0.25 : 0.5}>
       <TransactionConvertPreviewButton
         iconOnly
         previewInput={previewInput}
@@ -49,6 +51,7 @@ export function TransactionConvertField(_props: {
       />
       <TransactionConvertButton
         documentId={String(record.documentId)}
+        iconOnly={compact}
         showPreview={false}
         workflow={workflow}
       />
