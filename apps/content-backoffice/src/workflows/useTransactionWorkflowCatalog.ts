@@ -16,6 +16,7 @@ const httpClient = strapiHttpClient({ storage: localStorage });
 
 let cachedWorkflows: WorkflowTemplateHeader[] | null = null;
 let inflight: Promise<WorkflowTemplateHeader[]> | null = null;
+const catalogInvalidationListeners = new Set<() => void>();
 
 function loadCatalog(): Promise<WorkflowTemplateHeader[]> {
   if (cachedWorkflows) return Promise.resolve(cachedWorkflows);
@@ -35,6 +36,19 @@ function loadCatalog(): Promise<WorkflowTemplateHeader[]> {
 /** Clears the session cache (e.g. after deploy or manual refresh). */
 export function invalidateTransactionWorkflowCatalog(): void {
   cachedWorkflows = null;
+  inflight = null;
+  for (const listener of catalogInvalidationListeners) {
+    listener();
+  }
+}
+
+export function onTransactionWorkflowCatalogInvalidated(
+  listener: () => void,
+): () => void {
+  catalogInvalidationListeners.add(listener);
+  return () => {
+    catalogInvalidationListeners.delete(listener);
+  };
 }
 
 function mayLoadWorkflowCatalog(
@@ -65,20 +79,33 @@ export function useTransactionWorkflowCatalog() {
       setLoading(false);
       return;
     }
+
     let cancelled = false;
-    setLoading(!cachedWorkflows);
-    void loadCatalog()
-      .then((rows) => {
-        if (!cancelled) setWorkflows(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setWorkflows([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+
+    const refreshCatalog = () => {
+      setLoading(!cachedWorkflows);
+      void loadCatalog()
+        .then((rows) => {
+          if (!cancelled) setWorkflows(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setWorkflows([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    };
+
+    refreshCatalog();
+    const unsubscribe = onTransactionWorkflowCatalogInvalidated(() => {
+      if (!cancelled) {
+        refreshCatalog();
+      }
+    });
+
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [canLoadCatalog]);
 

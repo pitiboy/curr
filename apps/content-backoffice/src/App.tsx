@@ -3,6 +3,7 @@ import { Admin, CustomRoutes, Resource } from 'react-admin';
 import { Route } from 'react-router-dom';
 
 import { authProvider } from './auth/authProvider';
+import { DeployRefreshChecker } from './deploy/DeployRefreshChecker';
 import { CONTENT_ROLES } from './auth/roles';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
@@ -33,6 +34,7 @@ import { WorkflowFormGate } from './workflows/WorkflowFormGate';
 export function App() {
   return (
     <BackofficeConfigProvider>
+      <DeployRefreshChecker />
       <JotaiProvider>
         <Admin
           authProvider={authProvider}
