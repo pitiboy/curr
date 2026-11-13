@@ -209,6 +209,13 @@ export const CREDIT_ACCOUNT_IN_FILTER_KEY = 'credit_account_in' as const;
 /** Client-only: published rows with zero linked receipts (reconciliation drill-down). */
 export const RECEIPT_PRESENCE_FILTER_KEY = 'receipt_presence' as const;
 
+/**
+ * Client-only: account heuristic for reconciliation “published without receipt”
+ * (`config.publishedWithoutReceipts` creditCodes / debitCodes).
+ */
+export const RECEIPT_LIKELY_REQUIRED_FILTER_KEY =
+  'receipt_likely_required' as const;
+
 export type TransactionRow = Omit<StrapiTransaction, 'id'> & {
   /** React-admin id: Strapi documentId (not the numeric PK). */
   id: string;
@@ -411,12 +418,14 @@ export function assembleTransactionList(
   const leg = filter[PROJECT_BALANCE_LEG_FILTER_KEY];
   const membershipExternal = filter[MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY];
   const receiptPresence = filter[RECEIPT_PRESENCE_FILTER_KEY];
+  const receiptLikelyRequired = filter[RECEIPT_LIKELY_REQUIRED_FILTER_KEY];
   const merged = mergeByStatus(drafts, published, status).filter(
     (row) =>
       matchesFirstReceiptVendor(row.receipts, filter.vendor) &&
       matchesProjectBalanceLeg(row, leg) &&
       matchesMembershipShareExternal(row, membershipExternal) &&
-      matchesReceiptPresence(row, receiptPresence),
+      matchesReceiptPresence(row, receiptPresence) &&
+      matchesReceiptLikelyRequired(row, receiptLikelyRequired),
   );
   const sorted = sortTransactionRows(
     merged,
@@ -708,6 +717,34 @@ function matchesReceiptPresence(
   const count = receiptCount(row.receipts);
   if (mode === 'none') return count === 0;
   return count > 0;
+}
+
+function matchesReceiptLikelyRequired(
+  row: Pick<StrapiTransaction, 'debit_account' | 'credit_account'>,
+  raw: unknown,
+): boolean {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return true;
+  const creditCodes = Array.isArray(
+    (raw as { creditCodes?: unknown }).creditCodes,
+  )
+    ? ((raw as { creditCodes: unknown[] }).creditCodes.filter(
+        (item): item is string => typeof item === 'string',
+      ) as string[])
+    : [];
+  const debitCodes = Array.isArray((raw as { debitCodes?: unknown }).debitCodes)
+    ? ((raw as { debitCodes: unknown[] }).debitCodes.filter(
+        (item): item is string => typeof item === 'string',
+      ) as string[])
+    : [];
+  if (creditCodes.length === 0 && debitCodes.length === 0) return true;
+  const debit = row.debit_account?.code;
+  const credit = row.credit_account?.code;
+  if (debitCodes.some((pattern) => accountCodeMatchesPattern(debit, pattern))) {
+    return true;
+  }
+  return creditCodes.some((pattern) =>
+    accountCodeMatchesPattern(credit, pattern),
+  );
 }
 
 function matchesMembershipShareExternal(

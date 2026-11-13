@@ -56,7 +56,11 @@
     "key": "reconciliation",
     "enabled": true,
     "config": {
-      "roles": ["controller"]
+      "roles": ["controller"],
+      "publishedWithoutReceipts": {
+        "creditCodes": ["1100"],
+        "debitCodes": ["5000", "54*"]
+      }
     }
   }
 ]

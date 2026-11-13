@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   DEFAULT_CONVERTED_FILTER,
+  RECEIPT_LIKELY_REQUIRED_FILTER_KEY,
   RECEIPT_PRESENCE_FILTER_KEY,
 } from '../../../data/transactionList';
 import {
@@ -31,6 +32,20 @@ describe('reconciliation drilldown', () => {
       status: 'published',
       converted_to_workflow: [...DEFAULT_CONVERTED_FILTER],
       [RECEIPT_PRESENCE_FILTER_KEY]: 'none',
+    });
+  });
+
+  it('passes account heuristic when configured', () => {
+    const link = buildPublishedWithoutReceiptsDrilldown({
+      creditCodes: ['1100'],
+      debitCodes: ['5000', '54*'],
+    });
+    expect(parseFilter(link.search)).toMatchObject({
+      [RECEIPT_PRESENCE_FILTER_KEY]: 'none',
+      [RECEIPT_LIKELY_REQUIRED_FILTER_KEY]: {
+        creditCodes: ['1100'],
+        debitCodes: ['5000', '54*'],
+      },
     });
   });
 });

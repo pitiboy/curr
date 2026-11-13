@@ -17,6 +17,7 @@ import {
 import { Title, useTranslate } from 'react-admin';
 
 import { useOpenDrilldown } from '../../filters/globalTransactionFiltersAtom';
+import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 import {
   ReportPageHeader,
   ReportPageShell,
@@ -26,13 +27,12 @@ import {
   buildDraftTransactionsDrilldown,
   buildPublishedWithoutReceiptsDrilldown,
 } from './reconciliation/drilldown';
-import type { ReconciliationSection } from './reconciliation/types';
+import { publishedWithoutReceiptsFilterFromConfig } from './reconciliation/publishedWithoutReceiptsFilter';
+import {
+  RECONCILIATION_FEATURE_ID,
+  type ReconciliationSection,
+} from './reconciliation/types';
 import { useReconciliationReport } from './reconciliation/useReconciliationReport';
-
-const DRILLDOWN_BUILDERS = {
-  draftTransactions: buildDraftTransactionsDrilldown,
-  publishedWithoutReceipts: buildPublishedWithoutReceiptsDrilldown,
-} as const;
 
 function sectionTitleKey(sectionKey: string): string {
   return `app.reconciliation.sections.${sectionKey}`;
@@ -57,7 +57,24 @@ function formatCell(value: unknown): string {
 export function ReconciliationReportPage() {
   const translate = useTranslate();
   const openDrilldown = useOpenDrilldown();
+  const { features } = useBackofficeConfig();
   const { report, loading, error, refresh } = useReconciliationReport();
+  const publishedWithoutReceiptsFilter =
+    publishedWithoutReceiptsFilterFromConfig(
+      features[RECONCILIATION_FEATURE_ID]?.config,
+    );
+
+  function openSectionDrilldown(drilldown: string) {
+    if (drilldown === 'draftTransactions') {
+      openDrilldown(buildDraftTransactionsDrilldown());
+      return;
+    }
+    if (drilldown === 'publishedWithoutReceipts') {
+      openDrilldown(
+        buildPublishedWithoutReceiptsDrilldown(publishedWithoutReceiptsFilter),
+      );
+    }
+  }
 
   return (
     <ReportPageShell>
@@ -134,16 +151,10 @@ export function ReconciliationReportPage() {
                       : null}
                   </Typography>
                 </Box>
-                {section.drilldown &&
-                section.drilldown in DRILLDOWN_BUILDERS ? (
+                {section.drilldown === 'draftTransactions' ||
+                section.drilldown === 'publishedWithoutReceipts' ? (
                   <Button
-                    onClick={() =>
-                      openDrilldown(
-                        DRILLDOWN_BUILDERS[
-                          section.drilldown as keyof typeof DRILLDOWN_BUILDERS
-                        ](),
-                      )
-                    }
+                    onClick={() => openSectionDrilldown(section.drilldown!)}
                     size="small"
                     variant="contained"
                   >

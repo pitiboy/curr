@@ -1,9 +1,16 @@
 import { readAuditConfig } from '../audit/config';
+import { loadBackofficeFeatureRows } from '../backoffice-features/load';
 import { MEMBER_ACCOUNT_KINDS } from '../member-accounts';
 import { contentApiActor, type PublishGuardStrapi } from '../publish-guard';
 import { assertReconciliationController } from './auth';
 import { defaultConvertedTransactionWhere } from './converted-filter';
 import { ReconciliationError } from './errors';
+import {
+  normalizePublishedWithoutReceiptsAccountFilter,
+  publishedWithoutReceiptsFilterFromConfig,
+  transactionMatchesPublishedWithoutReceiptsFilter,
+  type PublishedWithoutReceiptsAccountFilter,
+} from './published-without-receipts-filter';
 import {
   CONTENT_USER_ROLE_TYPES,
   RECONCILIATION_ITEM_CAP,
@@ -11,6 +18,8 @@ import {
   type ReconciliationReport,
   type ReconciliationSection,
 } from './types';
+
+const RECONCILIATION_FEATURE_KEY = 'reconciliation';
 
 const TRANSACTION_UID = 'api::transaction.transaction';
 const RECEIPT_UID = 'api::receipt.receipt';
@@ -33,6 +42,9 @@ export type ReconciliationStrapi = Pick<
   'requestContext'
 > & {
   db: { query: (uid: string) => DbQuery };
+  documents?: (uid: string) => {
+    findMany: (params?: Record<string, unknown>) => Promise<unknown[]>;
+  };
 };
 
 function capItems<T extends ReconciliationItem>(
@@ -101,7 +113,12 @@ async function loadDraftTransactions(db: ReconciliationStrapi['db']) {
   });
 }
 
-async function loadPublishedWithoutReceipts(db: ReconciliationStrapi['db']) {
+async function loadPublishedWithoutReceipts(
+  db: ReconciliationStrapi['db'],
+  accountFilter?: PublishedWithoutReceiptsAccountFilter | null,
+) {
+  const resolvedFilter =
+    normalizePublishedWithoutReceiptsAccountFilter(accountFilter);
   const [published, receipts] = await Promise.all([
     db.query(TRANSACTION_UID).findMany({
       where: {
@@ -116,6 +133,10 @@ async function loadPublishedWithoutReceipts(db: ReconciliationStrapi['db']) {
         'description',
         'published_by',
       ],
+      populate: {
+        debit_account: { select: ['code'] },
+        credit_account: { select: ['code'] },
+      },
       orderBy: { publishedAt: 'desc' },
     }),
     db.query(RECEIPT_UID).findMany({
@@ -132,8 +153,29 @@ async function loadPublishedWithoutReceipts(db: ReconciliationStrapi['db']) {
 
   return published.filter((row) => {
     const id = row.id;
-    return id == null || !txWithReceipt.has(id as number | string);
+    if (id != null && txWithReceipt.has(id as number | string)) return false;
+    return transactionMatchesPublishedWithoutReceiptsFilter(
+      row,
+      resolvedFilter,
+    );
   });
+}
+
+async function loadPublishedWithoutReceiptsAccountFilter(
+  strapi: ReconciliationStrapi,
+): Promise<PublishedWithoutReceiptsAccountFilter> {
+  if (typeof strapi.documents !== 'function') {
+    return publishedWithoutReceiptsFilterFromConfig(null);
+  }
+  const rows = await loadBackofficeFeatureRows(
+    strapi as {
+      documents: NonNullable<ReconciliationStrapi['documents']>;
+    },
+  );
+  const feature = rows.find((row) => row.key === RECONCILIATION_FEATURE_KEY);
+  return normalizePublishedWithoutReceiptsAccountFilter(
+    publishedWithoutReceiptsFilterFromConfig(feature?.config),
+  );
 }
 
 async function loadOrphanReceipts(db: ReconciliationStrapi['db']) {
@@ -354,6 +396,7 @@ function mapUserItems(rows: Record<string, unknown>[]): ReconciliationItem[] {
 export async function buildReconciliationReport(
   strapi: ReconciliationStrapi,
 ): Promise<ReconciliationReport> {
+  const accountFilter = await loadPublishedWithoutReceiptsAccountFilter(strapi);
   const [
     draftRows,
     publishedNoReceiptRows,
@@ -366,7 +409,7 @@ export async function buildReconciliationReport(
     inactiveUsers,
   ] = await Promise.all([
     loadDraftTransactions(strapi.db),
-    loadPublishedWithoutReceipts(strapi.db),
+    loadPublishedWithoutReceipts(strapi.db, accountFilter),
     loadOrphanReceipts(strapi.db),
     loadMembersWithoutMembership(strapi.db),
     loadMembershipsWithoutMembers(strapi.db),
