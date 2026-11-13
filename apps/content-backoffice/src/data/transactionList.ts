@@ -202,6 +202,21 @@ export const PROJECT_BALANCE_LEG_FILTER_KEY = 'project_balance_leg' as const;
 export const MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY =
   'membership_share_external' as const;
 
+/**
+ * Client-only Tagság kimutatás drill-down mód.
+ * `payment` = külső jóváírás; `deduction` = kivét; `balance` = mindkettő (ignorált belső tételek nélkül).
+ */
+export const MEMBERSHIP_LEDGER_MODE_FILTER_KEY =
+  'membership_ledger_mode' as const;
+
+export type MembershipLedgerModeFilter = 'payment' | 'deduction' | 'balance';
+
+/**
+ * Strapi: credit OR debit account documentId `$in` (balance / tag név drill-down).
+ */
+export const MEMBER_LEDGER_ACCOUNT_IN_FILTER_KEY =
+  'member_ledger_account_in' as const;
+
 /** Strapi `credit_account.documentId.$in` a membership-share drill-downból. */
 export const CREDIT_ACCOUNT_IN_FILTER_KEY = 'credit_account_in' as const;
 
@@ -406,11 +421,13 @@ export function assembleTransactionList(
   const filter = params.filter ?? {};
   const leg = filter[PROJECT_BALANCE_LEG_FILTER_KEY];
   const membershipExternal = filter[MEMBERSHIP_SHARE_EXTERNAL_FILTER_KEY];
+  const membershipLedgerMode = filter[MEMBERSHIP_LEDGER_MODE_FILTER_KEY];
   const merged = mergeByStatus(drafts, published, status).filter(
     (row) =>
       matchesFirstReceiptVendor(row.receipts, filter.vendor) &&
       matchesProjectBalanceLeg(row, leg) &&
-      matchesMembershipShareExternal(row, membershipExternal),
+      matchesMembershipShareExternal(row, membershipExternal) &&
+      matchesMembershipLedgerMode(row, membershipLedgerMode),
   );
   const sorted = sortTransactionRows(
     merged,
@@ -460,7 +477,19 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
       code: { $eq: filter.currency_type.trim() },
     };
   }
-  if (isPresent(filter.debit_account)) {
+  const memberLedgerAccountIn = normalizeStringIdList(
+    filter[MEMBER_LEDGER_ACCOUNT_IN_FILTER_KEY],
+  );
+  if (memberLedgerAccountIn && memberLedgerAccountIn.length > 0) {
+    const idFilter =
+      memberLedgerAccountIn.length === 1
+        ? { documentId: { $eq: memberLedgerAccountIn[0] } }
+        : { documentId: { $in: memberLedgerAccountIn } };
+    // Sibling `$or` would clash with converted `$or` — fold into `$and` below.
+    strapiFilters.__memberLedgerAccountOr = {
+      $or: [{ credit_account: idFilter }, { debit_account: idFilter }],
+    };
+  } else if (isPresent(filter.debit_account)) {
     strapiFilters.debit_account = {
       documentId: { $eq: filter.debit_account },
     };
@@ -468,25 +497,27 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
   const creditAccountIn = normalizeStringIdList(
     filter[CREDIT_ACCOUNT_IN_FILTER_KEY],
   );
-  if (creditAccountIn?.length === 1) {
-    strapiFilters.credit_account = {
-      documentId: { $eq: creditAccountIn[0] },
-    };
-  } else if (creditAccountIn && creditAccountIn.length > 1) {
-    strapiFilters.credit_account = {
-      documentId: { $in: creditAccountIn },
-    };
-  } else if (isPresent(filter.credit_account)) {
-    strapiFilters.credit_account = {
-      documentId: { $eq: filter.credit_account },
-    };
-  } else if (
-    typeof filter.credit_account_code === 'string' &&
-    filter.credit_account_code.trim()
-  ) {
-    strapiFilters.credit_account = {
-      code: { $eq: filter.credit_account_code.trim() },
-    };
+  if (!memberLedgerAccountIn?.length) {
+    if (creditAccountIn?.length === 1) {
+      strapiFilters.credit_account = {
+        documentId: { $eq: creditAccountIn[0] },
+      };
+    } else if (creditAccountIn && creditAccountIn.length > 1) {
+      strapiFilters.credit_account = {
+        documentId: { $in: creditAccountIn },
+      };
+    } else if (isPresent(filter.credit_account)) {
+      strapiFilters.credit_account = {
+        documentId: { $eq: filter.credit_account },
+      };
+    } else if (
+      typeof filter.credit_account_code === 'string' &&
+      filter.credit_account_code.trim()
+    ) {
+      strapiFilters.credit_account = {
+        code: { $eq: filter.credit_account_code.trim() },
+      };
+    }
   }
   if (typeof filter.description === 'string' && filter.description.trim()) {
     strapiFilters.description = { $containsi: filter.description.trim() };
@@ -500,10 +531,23 @@ export function buildTransactionFilters(filter: Record<string, unknown>): {
       ...DEFAULT_CONVERTED_FILTER,
     ],
   );
+  const memberLedgerAccountOr = strapiFilters.__memberLedgerAccountOr as
+    Record<string, unknown> | undefined;
+  delete strapiFilters.__memberLedgerAccountOr;
+
+  const andParts: Record<string, unknown>[] = [];
   if (convertedClauses.length === 1) {
     Object.assign(strapiFilters, convertedClauses[0]);
   } else if (convertedClauses.length > 1) {
-    strapiFilters.$or = convertedClauses;
+    andParts.push({ $or: convertedClauses });
+  }
+  if (memberLedgerAccountOr) {
+    andParts.push(memberLedgerAccountOr);
+  }
+  if (andParts.length === 1) {
+    Object.assign(strapiFilters, andParts[0]);
+  } else if (andParts.length > 1) {
+    strapiFilters.$and = andParts;
   }
 
   return { status, strapiFilters };
@@ -715,6 +759,102 @@ function matchesMembershipShareExternal(
     return false;
   }
   return !MEMBER_LEDGER_DEBIT_CODES.has(debitCode);
+}
+
+const SHARE_CAPITAL_ACCOUNT_CODE = '3000';
+
+function isIgnoredPocketDeductionCredit(creditCode: string): boolean {
+  if (
+    creditCode === SHARE_CAPITAL_ACCOUNT_CODE ||
+    creditCode === TREASURY_CLEARING_ACCOUNT_CODE ||
+    creditCode === '1000' ||
+    creditCode === '1100' ||
+    creditCode === '1200' ||
+    creditCode === '4200'
+  ) {
+    return true;
+  }
+  return /^5/.test(creditCode);
+}
+
+function isTreasuryKorRow(
+  row: Pick<
+    StrapiTransaction,
+    'debit_account' | 'credit_account' | 'currency_type'
+  >,
+): boolean {
+  const debitCode = String(row.debit_account?.code ?? '').trim();
+  const creditCode = String(row.credit_account?.code ?? '').trim();
+  const currencyCode = String(row.currency_type?.code ?? '').trim();
+  if (currencyCode !== KOR_CURRENCY_CODE) return false;
+  const touchesTreasury =
+    debitCode === TREASURY_CLEARING_ACCOUNT_CODE ||
+    creditCode === TREASURY_CLEARING_ACCOUNT_CODE;
+  if (!touchesTreasury) return false;
+  return (
+    debitCode === MEMBER_SHARE_ACCOUNT_CODE ||
+    creditCode === MEMBER_SHARE_ACCOUNT_CODE
+  );
+}
+
+/**
+ * Tagság kimutatás drill-down kliens szűrő — igazodik a riport payment/deduction
+ * szabályaihoz (belső átvezetés, 3000, pocket wash, treasury KOR).
+ */
+function matchesMembershipLedgerMode(
+  row: Pick<
+    StrapiTransaction,
+    'debit_account' | 'credit_account' | 'currency_type'
+  >,
+  mode: unknown,
+): boolean {
+  if (mode !== 'payment' && mode !== 'deduction' && mode !== 'balance') {
+    return true;
+  }
+  const debitCode = String(row.debit_account?.code ?? '').trim();
+  const creditCode = String(row.credit_account?.code ?? '').trim();
+  if (isTreasuryKorRow(row)) return false;
+  if (
+    MEMBER_LEDGER_DEBIT_CODES.has(debitCode) &&
+    MEMBER_LEDGER_DEBIT_CODES.has(creditCode)
+  ) {
+    return false;
+  }
+  if (
+    debitCode === SHARE_CAPITAL_ACCOUNT_CODE ||
+    creditCode === SHARE_CAPITAL_ACCOUNT_CODE
+  ) {
+    return false;
+  }
+
+  if (mode === 'payment') {
+    return (
+      MEMBER_LEDGER_DEBIT_CODES.has(creditCode) &&
+      !MEMBER_LEDGER_DEBIT_CODES.has(debitCode)
+    );
+  }
+
+  if (mode === 'deduction') {
+    if (!MEMBER_LEDGER_DEBIT_CODES.has(debitCode)) return false;
+    if (MEMBER_LEDGER_DEBIT_CODES.has(creditCode)) return false;
+    if (debitCode === MEMBER_SHARE_ACCOUNT_CODE) {
+      return creditCode !== SHARE_CAPITAL_ACCOUNT_CODE;
+    }
+    if (debitCode === '1001') {
+      return !isIgnoredPocketDeductionCredit(creditCode);
+    }
+    return false;
+  }
+
+  // balance: either external payment or counted deduction on a member ledger
+  const isPayment =
+    MEMBER_LEDGER_DEBIT_CODES.has(creditCode) &&
+    !MEMBER_LEDGER_DEBIT_CODES.has(debitCode);
+  if (isPayment) return true;
+  if (!MEMBER_LEDGER_DEBIT_CODES.has(debitCode)) return false;
+  if (debitCode === MEMBER_SHARE_ACCOUNT_CODE) return true;
+  if (debitCode === '1001') return !isIgnoredPocketDeductionCredit(creditCode);
+  return false;
 }
 
 function normalizeStringIdList(raw: unknown): string[] | undefined {
