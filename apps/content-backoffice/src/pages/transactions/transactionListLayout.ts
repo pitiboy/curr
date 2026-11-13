@@ -1,21 +1,13 @@
-/** Column keys omitted from the transaction list datagrid below the `sm` breakpoint. */
-export const TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS = [
-  'entryId',
-  'vendor',
-  'converted_to_workflow',
-  'organization',
-  'credit',
-  'debit',
-  'receipts',
-  'createdAt',
-  'entered_by',
-  'published_by',
-  'publishedAt',
-] as const;
+/**
+ * Column keys omitted from the transaction list datagrid below the `sm`
+ * breakpoint. Empty by default so every column stays visible (horizontal scroll).
+ */
+export const TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS: readonly string[] = [];
 
+/** Full table min-width so mobile can scroll horizontally through every column. */
 export function transactionListFooterMinWidth(
-  mobile: boolean,
+  _mobile: boolean,
   showBulkCheckbox: boolean,
 ): number | string {
-  return mobile ? (showBulkCheckbox ? '30rem' : '27rem') : '52rem';
+  return showBulkCheckbox ? '55rem' : '52rem';
 }

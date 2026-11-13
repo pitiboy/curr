@@ -1,13 +1,6 @@
 import GradingIcon from '@mui/icons-material/Grading';
 import QuizIcon from '@mui/icons-material/Quiz';
-import {
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import { useCallback } from 'react';
@@ -137,20 +130,6 @@ function TransactionOpenField(
   );
 }
 
-function TransactionListMobileActions() {
-  return (
-    <Stack
-      alignItems="center"
-      direction="row"
-      spacing={0.25}
-      sx={{ flexWrap: 'nowrap' }}
-    >
-      <TransactionOpenField compact source="open" />
-      <TransactionConvertField compact source="convert" />
-    </Stack>
-  );
-}
-
 function formatPageAmountTotal(
   amount: number,
   currency: string,
@@ -174,15 +153,7 @@ function formatPageAmountTotal(
 }
 
 /** Grid tracks aligned with Datagrid columns up to `amount` (then a flexible tail). */
-function transactionListFooterGridColumns(
-  mobile: boolean,
-  showBulkCheckbox: boolean,
-): string {
-  if (mobile) {
-    return showBulkCheckbox
-      ? '3rem 5.5rem 4.25rem 5.5rem 3.25rem minmax(4rem, 1fr) 4.25rem'
-      : '5.5rem 4.25rem 5.5rem 3.25rem minmax(4rem, 1fr) 4.25rem';
-  }
+function transactionListFooterGridColumns(showBulkCheckbox: boolean): string {
   return showBulkCheckbox
     ? '3rem 4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)'
     : '4.25rem 4.75rem 5.25rem 7.25rem minmax(5rem, 1fr)';
@@ -190,11 +161,9 @@ function transactionListFooterGridColumns(
 
 function TransactionListAmountFooter({
   locale,
-  mobile,
   showBulkCheckbox,
 }: {
   locale: string;
-  mobile: boolean;
   showBulkCheckbox: boolean;
 }) {
   const translate = useTranslate();
@@ -209,11 +178,6 @@ function TransactionListAmountFooter({
     .map((row) => formatPageAmountTotal(row.amount, row.currency, locale))
     .join('  |  ');
 
-  const gridColumns = transactionListFooterGridColumns(
-    mobile,
-    showBulkCheckbox,
-  );
-
   return (
     <Box
       sx={{
@@ -222,21 +186,20 @@ function TransactionListAmountFooter({
         borderColor: 'divider',
         columnGap: 0,
         display: 'grid',
-        gridTemplateColumns: gridColumns,
+        gridTemplateColumns: transactionListFooterGridColumns(showBulkCheckbox),
         alignItems: 'center',
         minHeight: 40,
-        minWidth: transactionListFooterMinWidth(mobile, showBulkCheckbox),
+        minWidth: transactionListFooterMinWidth(false, showBulkCheckbox),
         py: 0.75,
         typography: 'body2',
         width: 'max-content',
       }}
     >
       {showBulkCheckbox ? <Box aria-hidden /> : null}
-      {mobile ? <Box aria-hidden /> : null}
       <Box
         sx={{
           fontWeight: 600,
-          gridColumn: mobile ? 'span 1' : 'span 3',
+          gridColumn: 'span 3',
           minWidth: 0,
           overflow: 'hidden',
           pl: showBulkCheckbox ? 0.5 : 1,
@@ -286,32 +249,6 @@ function TransactionListEmpty() {
 }
 
 function transactionDatagridColumns(locale: string, mobile: boolean) {
-  const openColumn = (
-    <TransactionOpenField
-      key="open"
-      label={false}
-      sortable={false}
-      source="open"
-    />
-  );
-  const convertColumn = (
-    <TransactionConvertField
-      key="convert"
-      label={false}
-      sortable={false}
-      source="convert"
-    />
-  );
-  const mobileActionsColumn = (
-    <FunctionField
-      key="actions"
-      label={false}
-      render={() => <TransactionListMobileActions />}
-      sortable={false}
-      source="actions"
-    />
-  );
-
   const columns = [
     <NumberField key="entryId" source="entryId" />,
     <FunctionField
@@ -358,8 +295,20 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
       source="converted_to_workflow"
       translateChoice
     />,
-    openColumn,
-    convertColumn,
+    <TransactionOpenField
+      key="open"
+      compact={mobile}
+      label={false}
+      sortable={false}
+      source="open"
+    />,
+    <TransactionConvertField
+      key="convert"
+      compact={mobile}
+      label={false}
+      sortable={false}
+      source="convert"
+    />,
     <FunctionField
       key="organization"
       render={(record: RaRecord) => relationName(record.organization)}
@@ -415,19 +364,14 @@ function transactionDatagridColumns(locale: string, mobile: boolean) {
     />,
   ];
 
-  if (mobile) {
-    const hiddenOnMobile = new Set(TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS);
-    const compactData = columns.filter(
-      (column) =>
-        column.key != null &&
-        !hiddenOnMobile.has(String(column.key)) &&
-        column.key !== 'open' &&
-        column.key !== 'convert',
-    );
-    return [mobileActionsColumn, ...compactData];
-  }
+  if (!mobile) return columns;
 
-  return columns;
+  const hiddenOnMobile = new Set(TRANSACTION_LIST_MOBILE_HIDDEN_COLUMN_KEYS);
+  if (hiddenOnMobile.size === 0) return columns;
+
+  return columns.filter(
+    (column) => column.key == null || !hiddenOnMobile.has(String(column.key)),
+  );
 }
 
 export function TransactionList() {
@@ -487,7 +431,7 @@ export function TransactionList() {
                 editorBulkApprove,
               ),
             },
-            '& .column-open, & .column-convert, & .column-actions': {
+            '& .column-open, & .column-convert': {
               px: mobile ? 0.25 : undefined,
               whiteSpace: 'nowrap',
               width: mobile ? '1%' : undefined,
@@ -515,7 +459,6 @@ export function TransactionList() {
         </Datagrid>
         <TransactionListAmountFooter
           locale={locale}
-          mobile={mobile}
           showBulkCheckbox={editorBulkApprove}
         />
       </Box>
