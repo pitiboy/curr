@@ -1,4 +1,3 @@
-import { PENDING_CHANGES_WRITE_TIMEOUT_MS } from './constants';
 import { PendingChangeEnqueuedError } from './enqueuedError';
 import { classifyWriteFailure, errorMessage } from './errors';
 import { notifyPendingChangeEnqueued } from './notify';
@@ -23,14 +22,6 @@ export function isBrowserOffline(): boolean {
 
 function networkFailureError(message = 'Failed to fetch'): TypeError {
   return new TypeError(message);
-}
-
-function writeTimeout(ms: number): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(networkFailureError('Failed to fetch'));
-    }, ms);
-  });
 }
 
 async function enqueueRetryable(
@@ -65,7 +56,9 @@ async function enqueuePermanent(
 export async function executeWithOutbox<T>(
   input: ExecuteWithOutboxInput,
 ): Promise<T> {
-  // DevTools Offline / real offline: do not wait for TCP timeout.
+  // DevTools Offline / real offline: enqueue without waiting on a hung fetch.
+  // Do not Promise.race a wall-clock timeout: that leaves the request running
+  // and can duplicate creates after a slow (e.g. cold-start) success.
   if (isBrowserOffline()) {
     const offlineError = networkFailureError('Failed to fetch');
     await enqueueRetryable(input, offlineError);
@@ -73,10 +66,7 @@ export async function executeWithOutbox<T>(
   }
 
   try {
-    return (await Promise.race([
-      input.run(),
-      writeTimeout(PENDING_CHANGES_WRITE_TIMEOUT_MS),
-    ])) as T;
+    return (await input.run()) as T;
   } catch (error) {
     if (error instanceof PendingChangeEnqueuedError) {
       throw error;

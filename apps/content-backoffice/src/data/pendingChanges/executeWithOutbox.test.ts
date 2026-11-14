@@ -113,6 +113,40 @@ describe('executeWithOutbox enqueue policy', () => {
     expect(items).toHaveLength(0);
   });
 
+  it('awaits a slow successful write without racing a wall-clock timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveRun!: (value: string) => void;
+      const run = vi.fn(
+        () =>
+          new Promise<string>((resolve) => {
+            resolveRun = resolve;
+          }),
+      );
+      const pending = executeWithOutbox({
+        resource: 'transactions',
+        operation: 'create',
+        payload: {
+          kind: 'dataProvider',
+          method: 'create',
+          resource: 'transactions',
+          params: { data: {} },
+        },
+        run,
+      });
+      await vi.advanceTimersByTimeAsync(30_000);
+      resolveRun('ok');
+      await expect(pending).resolves.toBe('ok');
+      const items = await listPendingChangesForUser({
+        userId: 9,
+        username: 'u9',
+      });
+      expect(items).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('enqueues immediately when navigator.onLine is false', async () => {
     const run = vi.fn(async () => 'should-not-run');
     vi.stubGlobal('navigator', { onLine: false });
