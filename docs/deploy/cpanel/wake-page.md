@@ -14,7 +14,12 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 
 1. Másold a `docs/deploy/wake/` mappát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
 2. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem).
-3. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
+3. Ha a wake landing a **gyökéren** van (`public_html/index.html` ugyanazzal a tartalommal), a hidegindítás alatti backoffice-frissítések **302**-vel ide érkeznek (lásd lent).
+4. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
+
+### „Service Unavailable” frissítéskor (`/backoffice`)
+
+A szöveges `Service Unavailable` helyett **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra rövid HTML üzenetet kap („hidegen indul, átirányítás következik”), majd ~1 mp múlva a **`/`** statikus wake oldalra megy. API hívások továbbra is szöveges `503`-at kapnak.
 
 ### Opcionális Apache / `.htaccess` (nem kötelező)
 
@@ -37,7 +42,7 @@ Más hostingon (nginx, CDN) hasonló szabály opcionális — a wake oldal és a
 ### Korlátok
 
 - A `/api/wake` csak akkor „azonnali”, ha a production `server.js` a `wake-entry` wrappert használja (`strapi start` / CLI közvetlenül nem).
-- Amíg a Strapi bootstrap fut, a többi útvonal `503` (szándékosan).
+- Amíg a Strapi bootstrap fut, a többi útvonal `503` (API), kivéve a fenti böngészős backoffice-átirányítást.
 - A statikus oldal a fő app elérhetőségét a `next` útvonal HEAD kérésével is ellenőrzi.
 
 ## Ellenőrzés
