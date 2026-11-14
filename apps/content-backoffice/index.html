@@ -7,6 +7,16 @@
     <title>Kezelő felület</title>
   </head>
   <body>
+    <script>
+      (function () {
+        try {
+          var p = location.pathname + location.search + location.hash;
+          if (/^\/backoffice(?:\/|$)/.test(p)) {
+            sessionStorage.setItem('kor-wake-next', p);
+          }
+        } catch (_) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

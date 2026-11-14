@@ -1,0 +1,29 @@
+# KÖR — statikus wake oldal Passenger / hidegindítás hibák után
+#
+# 1. Futtasd a repóban: bash scripts/sync-wake-public-html.sh
+# 2. Másold ide a domain public_html gyökerébe: index.html, wake/, és ezt a fájlt .htaccess néven
+#    (vagy illeszd a szabályokat a meglévő .htaccess-be).
+#
+# A Node alkalmazás továbbra is a Setup Node.js App útvonalán fut; ezek a statikus fájlok
+# a dokumentumgyökérben Apache / LiteSpeed alatt szolgálódnak ki.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Wake landing — ne menjen Passengerre
+  RewriteRule ^wake/ - [L]
+  RewriteRule ^index\.html$ - [L]
+</IfModule>
+
+# Ha a Passenger modul engedi a gyökér .htaccess-ben (cPanel / LiteSpeed: ellenőrizd):
+# <IfModule mod_passenger.c>
+#   <Files "index.html">
+#     PassengerEnabled off
+#   </Files>
+# </IfModule>
+
+# Belső átirányítás a gyökér statikus wake oldalra (index.html).
+# Ugyanaz beállítható a cPanel → Advanced → Error Pages felületen is:
+# 502 / 503 / 504 → Redirect the URL to this website → /
+ErrorDocument 502 /
+ErrorDocument 503 /
+ErrorDocument 504 /

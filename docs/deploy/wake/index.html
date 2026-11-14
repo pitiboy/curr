@@ -202,6 +202,7 @@
         const DEFAULT_TARGET = '/backoffice/';
         const WAKE_URL = '/api/wake';
         const READY_URL = '/api/wake/ready';
+        const RETURN_PATH_STORAGE_KEY = 'kor-wake-next';
         const TIMEOUT_MS = 120000;
 
         const params = new URLSearchParams(window.location.search);
@@ -232,8 +233,29 @@
           return isSafeSameOriginRedirectPath(normalized) ? normalized : null;
         }
 
+        function readStoredReturnPath() {
+          try {
+            const stored = sessionStorage.getItem(RETURN_PATH_STORAGE_KEY);
+            if (stored && isSafeSameOriginRedirectPath(stored)) {
+              return stored;
+            }
+          } catch {
+            /* private browsing */
+          }
+          return null;
+        }
+
+        function clearStoredReturnPath() {
+          try {
+            sessionStorage.removeItem(RETURN_PATH_STORAGE_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+
         const redirectTarget =
           resolveRedirectTarget(params.get('next'), DEFAULT_TARGET) ||
+          readStoredReturnPath() ||
           DEFAULT_TARGET;
 
         let attempt = 0;
@@ -369,6 +391,7 @@
             setBusy(false);
             // Let the bar visibly reach 100% before navigating away.
             await sleep(350);
+            clearStoredReturnPath();
             window.location.replace(redirectTarget);
           } catch {
             failProgress();

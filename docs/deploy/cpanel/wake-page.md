@@ -12,9 +12,14 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 
 ## Statikus oldal telepítése
 
-1. Másold a `docs/deploy/wake/` mappát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
-2. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem).
-3. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
+1. Generáld a public_html sablont: `bash scripts/sync-wake-public-html.sh` (forrás: `docs/deploy/wake/index.html`).
+2. Másold a `docs/deploy/cpanel/public-html/` tartalmát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html`, illetve `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
+3. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem). Ha nincs `next` (pl. hibaoldal átirányítás a gyökérre), a wake oldal a backoffice által eltárolt `sessionStorage` (`kor-wake-next`) értéket használja.
+4. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
+
+### Hibaoldal → gyökér (frissítés alvó appról)
+
+Ha menet közben elalszik az app és a böngésző **502/503/504**-et kap, állíts be error redirectet a **site root**-ra (`/`). Részletes lépések: `docs/deploy/cpanel/public-html/README.md`. Minta Apache szabály: `docs/deploy/cpanel/public-html/.htaccess.example` (`ErrorDocument 502 /` stb., vagy cPanel **Error Pages** ugyanerre).
 
 ### Opcionális Apache / `.htaccess` (nem kötelező)
 
