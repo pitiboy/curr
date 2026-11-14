@@ -115,7 +115,7 @@ async function lsWriteAll(items: PendingChangeItem[]): Promise<void> {
 let persistenceMode: 'idb' | 'localStorage' | null = null;
 let activePersistence: PendingChangesPersistence | null = null;
 
-export function useLocalStoragePersistenceForTests(): PendingChangesPersistence {
+export function configureLocalStoragePersistenceForTests(): PendingChangesPersistence {
   persistenceMode = 'localStorage';
   activePersistence = {
     readAll: lsReadAll,
@@ -130,7 +130,7 @@ export function useLocalStoragePersistenceForTests(): PendingChangesPersistence 
 export async function getPendingChangesPersistence(): Promise<PendingChangesPersistence> {
   if (activePersistence) return activePersistence;
   if (persistenceMode === 'localStorage') {
-    activePersistence = useLocalStoragePersistenceForTests();
+    activePersistence = configureLocalStoragePersistenceForTests();
     return activePersistence;
   }
   if (idbAvailable()) {

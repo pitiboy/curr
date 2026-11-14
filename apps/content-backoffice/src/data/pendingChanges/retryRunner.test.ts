@@ -8,15 +8,15 @@ import {
 } from './currentUser';
 import { PENDING_CHANGES_RETRY_INTERVAL_MS } from './constants';
 import { enqueuePendingChange, listPendingChangesForUser } from './store';
-import { useLocalStoragePersistenceForTests } from './persistence';
+import { configureLocalStoragePersistenceForTests } from './persistence';
 import { createPendingChangesRetryRunner } from './retryRunner';
 import * as tabLock from './tabLock';
 
 describe('pendingChanges retryRunner', () => {
   beforeEach(async () => {
     vi.useFakeTimers();
-    useLocalStoragePersistenceForTests();
-    await useLocalStoragePersistenceForTests().reset();
+    configureLocalStoragePersistenceForTests();
+    await configureLocalStoragePersistenceForTests().reset();
     setTestPendingChangeUser({ userId: 3, username: 'retry-user' });
     vi.spyOn(tabLock, 'withPendingChangesSendLock').mockImplementation(
       async (fn) => fn(),

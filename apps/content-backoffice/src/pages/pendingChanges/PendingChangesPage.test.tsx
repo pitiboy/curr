@@ -8,7 +8,7 @@ import {
 } from '../../data/pendingChanges/currentUser';
 import {
   resetPendingChangesPersistenceForTests,
-  useLocalStoragePersistenceForTests,
+  configureLocalStoragePersistenceForTests,
 } from '../../data/pendingChanges/persistence';
 import { enqueuePendingChange } from '../../data/pendingChanges/store';
 
@@ -67,8 +67,8 @@ describe('PendingChangesPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     resetPendingChangesPersistenceForTests();
-    useLocalStoragePersistenceForTests();
-    await useLocalStoragePersistenceForTests().reset();
+    configureLocalStoragePersistenceForTests();
+    await configureLocalStoragePersistenceForTests().reset();
     setTestPendingChangeUser({ userId: 5, username: 'page-user' });
   });
 

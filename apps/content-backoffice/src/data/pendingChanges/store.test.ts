@@ -10,12 +10,12 @@ import {
   removePendingChange,
   updatePendingChange,
 } from './store';
-import { useLocalStoragePersistenceForTests } from './persistence';
+import { configureLocalStoragePersistenceForTests } from './persistence';
 
 describe('pendingChanges store', () => {
   beforeEach(async () => {
-    useLocalStoragePersistenceForTests();
-    await useLocalStoragePersistenceForTests().reset();
+    configureLocalStoragePersistenceForTests();
+    await configureLocalStoragePersistenceForTests().reset();
     setTestPendingChangeUser({ userId: 7, username: 'demo' });
   });
 
@@ -94,7 +94,7 @@ describe('pendingChanges store', () => {
       status: 'pending',
       lastError: null,
     });
-    useLocalStoragePersistenceForTests();
+    configureLocalStoragePersistenceForTests();
     const listed = await listPendingChangesForUser({
       userId: 7,
       username: 'demo',

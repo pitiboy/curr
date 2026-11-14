@@ -5,9 +5,9 @@ export const WAKE_COLD_START_REDIRECT_DELAY_MS = 1000;
 
 function escapeHtmlAttr(value: string): string {
   return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;');
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
 }
 
 export function buildColdStartInterstitialHtml(

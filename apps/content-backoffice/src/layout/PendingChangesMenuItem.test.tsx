@@ -6,7 +6,7 @@ import {
   clearTestPendingChangeUser,
   setTestPendingChangeUser,
 } from '../data/pendingChanges/currentUser';
-import { useLocalStoragePersistenceForTests } from '../data/pendingChanges/persistence';
+import { configureLocalStoragePersistenceForTests } from '../data/pendingChanges/persistence';
 import { enqueuePendingChange } from '../data/pendingChanges/store';
 
 import { PendingChangesMenuItem } from './PendingChangesMenuItem';
@@ -39,8 +39,8 @@ vi.mock('react-admin', async () => {
 
 describe('PendingChangesMenuItem badge', () => {
   beforeEach(async () => {
-    useLocalStoragePersistenceForTests();
-    await useLocalStoragePersistenceForTests().reset();
+    configureLocalStoragePersistenceForTests();
+    await configureLocalStoragePersistenceForTests().reset();
     setTestPendingChangeUser({ userId: 11, username: 'menu' });
   });
 

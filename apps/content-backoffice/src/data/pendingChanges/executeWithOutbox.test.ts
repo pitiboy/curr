@@ -6,13 +6,13 @@ import {
 } from './currentUser';
 import { executeWithOutbox } from './executeWithOutbox';
 import { listPendingChangesForUser } from './store';
-import { useLocalStoragePersistenceForTests } from './persistence';
+import { configureLocalStoragePersistenceForTests } from './persistence';
 import * as notifyModule from './notify';
 
 describe('executeWithOutbox enqueue policy', () => {
   beforeEach(async () => {
-    useLocalStoragePersistenceForTests();
-    await useLocalStoragePersistenceForTests().reset();
+    configureLocalStoragePersistenceForTests();
+    await configureLocalStoragePersistenceForTests().reset();
     setTestPendingChangeUser({ userId: 9, username: 'u9' });
     vi.spyOn(notifyModule, 'notifyPendingChangeEnqueued').mockImplementation(
       () => {},
