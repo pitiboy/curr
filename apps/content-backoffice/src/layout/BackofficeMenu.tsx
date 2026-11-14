@@ -29,7 +29,10 @@ import { useBackofficeConfig } from '../workflows/useBackofficeConfig';
 import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
 
+import { PENDING_CHANGES_FEATURE_ID } from '../pages/pendingChanges/types';
+
 import { AdministrationMenuItem } from './AdministrationMenuItem';
+import { PendingChangesMenuItem } from './PendingChangesMenuItem';
 
 const DEFAULT_RECONCILIATION_ROLES = ['controller'] as const;
 
@@ -63,6 +66,7 @@ export function BackofficeMenu() {
     enabled.includes(RECONCILIATION_FEATURE_ID) &&
     typeof permissions === 'string' &&
     roleAllowed(reconciliationRoles, permissions);
+  const canReadPendingChanges = enabled.includes(PENDING_CHANGES_FEATURE_ID);
 
   return (
     <Menu>
@@ -135,6 +139,7 @@ export function BackofficeMenu() {
           mode="draft"
         />
       ) : null}
+      {canReadPendingChanges ? <PendingChangesMenuItem /> : null}
       <AdministrationMenuItem />
     </Menu>
   );

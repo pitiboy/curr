@@ -23,6 +23,8 @@ import {
   createTransactionDraft,
   updateTransactionDraft,
 } from './transactionDraft';
+import { executeWithOutbox } from './pendingChanges/executeWithOutbox';
+import { withPendingChangesOutbox } from './pendingChanges/withPendingChangesDataProvider';
 import { withDocumentId } from './withDocumentId';
 
 const httpClient = strapiHttpClient();
@@ -79,7 +81,7 @@ async function getTransactionList(params: GetListParams) {
   return assembleTransactionList(drafts, published, params);
 }
 
-export const dataProvider = withDocumentId({
+export const dataProviderInner = withDocumentId({
   ...strapiProvider,
   getList: (resource, params) =>
     resource === 'transactions'
@@ -110,6 +112,9 @@ export const dataProvider = withDocumentId({
         )
       : strapiProvider.create(resource, params),
 } as DataProvider);
+
+/** Replay target: same provider surface, without the outbox enqueue wrapper. */
+export const dataProvider = withPendingChangesOutbox(dataProviderInner);
 
 export function publishTransaction(
   documentId: string,
@@ -147,9 +152,20 @@ export function convertTransactionToWorkflow(
   transactionDocumentId: string,
   workflowDocumentId: string,
 ) {
-  return postConvertTransaction(httpClient, STRAPI_URL, {
-    transactionDocumentId,
-    workflowDocumentId,
+  return executeWithOutbox({
+    resource: 'transactions',
+    operation: 'custom',
+    customName: 'convertTransaction',
+    payload: {
+      kind: 'custom',
+      name: 'convertTransaction',
+      input: { transactionDocumentId, workflowDocumentId },
+    },
+    run: () =>
+      postConvertTransaction(httpClient, STRAPI_URL, {
+        transactionDocumentId,
+        workflowDocumentId,
+      }),
   });
 }
 

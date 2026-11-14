@@ -58,6 +58,11 @@
     "config": {}
   },
   {
+    "key": "pending-changes",
+    "enabled": true,
+    "config": {}
+  },
+  {
     "key": "reconciliation",
     "enabled": true,
     "config": {
