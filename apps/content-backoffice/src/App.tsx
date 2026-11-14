@@ -7,10 +7,13 @@ import { DeployRefreshChecker } from './deploy/DeployRefreshChecker';
 import { CONTENT_ROLES } from './auth/roles';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
+import { PendingChangesRunner } from './data/pendingChanges/PendingChangesRunner';
 import { i18nProvider } from './i18n';
 import { AppTitle } from './layout/AppTitle';
 import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
+import { PendingChangesFeatureGate } from './pages/pendingChanges/PendingChangesFeatureGate';
+import { PendingChangesPage } from './pages/pendingChanges/PendingChangesPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
 import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
@@ -46,6 +49,7 @@ export function App() {
           loginPage={LoginPage}
           title={<AppTitle />}
         >
+          <PendingChangesRunner />
           <Resource
             list={TransactionList}
             name="transactions"
@@ -62,6 +66,14 @@ export function App() {
               path="/transactions/create"
             />
             <Route element={<ProfilePage />} path="/profile" />
+            <Route
+              element={
+                <PendingChangesFeatureGate>
+                  <PendingChangesPage />
+                </PendingChangesFeatureGate>
+              }
+              path="/pending-changes"
+            />
             <Route
               element={
                 <WorkflowFormGate

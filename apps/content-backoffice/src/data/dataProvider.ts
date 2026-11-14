@@ -23,6 +23,11 @@ import {
   createTransactionDraft,
   updateTransactionDraft,
 } from './transactionDraft';
+import {
+  dataProviderPayload,
+  executeWithOutbox,
+} from './pendingChanges/executeWithOutbox';
+import { withPendingChangesOutbox } from './pendingChanges/withPendingChangesDataProvider';
 import { withDocumentId } from './withDocumentId';
 
 const httpClient = strapiHttpClient();
@@ -79,7 +84,7 @@ async function getTransactionList(params: GetListParams) {
   return assembleTransactionList(drafts, published, params);
 }
 
-export const dataProvider = withDocumentId({
+export const dataProviderInner = withDocumentId({
   ...strapiProvider,
   getList: (resource, params) =>
     resource === 'transactions'
@@ -111,6 +116,9 @@ export const dataProvider = withDocumentId({
       : strapiProvider.create(resource, params),
 } as DataProvider);
 
+/** Replay target: same provider surface, without the outbox enqueue wrapper. */
+export const dataProvider = withPendingChangesOutbox(dataProviderInner);
+
 export function publishTransaction(
   documentId: string,
   options?: { eggAuto?: boolean },
@@ -136,20 +144,84 @@ export function saveTransactionDraft(
   documentId: string,
   data: Record<string, unknown>,
 ) {
-  return updateTransactionDraft(httpClient, STRAPI_URL, documentId, data);
+  return executeWithOutbox({
+    resource: 'transactions',
+    operation: 'update',
+    payload: dataProviderPayload('update', 'transactions', {
+      id: documentId,
+      data,
+      previousData: { id: documentId },
+    }),
+    run: () => updateTransactionDraft(httpClient, STRAPI_URL, documentId, data),
+  });
 }
 
 export function createNewTransactionDraft(data: Record<string, unknown>) {
-  return createTransactionDraft(httpClient, STRAPI_URL, data);
+  return executeWithOutbox({
+    resource: 'transactions',
+    operation: 'create',
+    payload: dataProviderPayload('create', 'transactions', { data }),
+    run: () => createTransactionDraft(httpClient, STRAPI_URL, data),
+  });
 }
 
 export function convertTransactionToWorkflow(
   transactionDocumentId: string,
   workflowDocumentId: string,
 ) {
-  return postConvertTransaction(httpClient, STRAPI_URL, {
-    transactionDocumentId,
-    workflowDocumentId,
+  return executeWithOutbox({
+    resource: 'transactions',
+    operation: 'custom',
+    customName: 'convertTransaction',
+    payload: {
+      kind: 'custom',
+      name: 'convertTransaction',
+      input: { transactionDocumentId, workflowDocumentId },
+    },
+    run: () =>
+      postConvertTransaction(httpClient, STRAPI_URL, {
+        transactionDocumentId,
+        workflowDocumentId,
+      }),
+  });
+}
+
+/** Create draft then expand — one outbox item when offline. */
+export function createAndConvertTransaction(
+  data: Record<string, unknown>,
+  workflowDocumentId: string,
+) {
+  return executeWithOutbox({
+    resource: 'transactions',
+    operation: 'custom',
+    customName: 'createAndConvert',
+    payload: {
+      kind: 'custom',
+      name: 'createAndConvert',
+      input: {
+        data: JSON.parse(JSON.stringify(data)) as Record<string, unknown>,
+        workflowDocumentId,
+      },
+    },
+    run: async () => {
+      const created = await createTransactionDraft(
+        httpClient,
+        STRAPI_URL,
+        data,
+      );
+      const documentId =
+        typeof created.data.documentId === 'string'
+          ? created.data.documentId
+          : '';
+      if (!documentId) {
+        throw new Error('Missing documentId after create');
+      }
+      await postConvertTransaction(httpClient, STRAPI_URL, {
+        transactionDocumentId: documentId,
+        workflowDocumentId,
+      });
+      return created;
+    },
   });
 }
 

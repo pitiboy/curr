@@ -104,4 +104,29 @@ describe('collectBulkQuantityDuplicates', () => {
 
     expect(httpClient).toHaveBeenCalledTimes(4);
   });
+
+  it('skips duplicate detection on network failure so offline save can enqueue', async () => {
+    const httpClient = vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    });
+
+    const dups = await collectBulkQuantityDuplicates(
+      httpClient,
+      strapiUrl,
+      '2026-11-06',
+      [
+        {
+          organizationId: 'org-a',
+          organizationLabel: 'House A',
+          amount: 10,
+          currencyTypeId: 'cur-1',
+          debitAccountId: 'd-1',
+          creditAccountId: 'c-1',
+        },
+      ],
+    );
+
+    expect(dups).toEqual([]);
+    expect(httpClient).toHaveBeenCalled();
+  });
 });
