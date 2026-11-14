@@ -70,7 +70,17 @@ type RecordedOp =
       documentId: string;
       converted: string | null | undefined;
     }
-  | { kind: 'create'; converted: string; enteredKey: string }
+  | {
+      kind: 'create';
+      converted: string;
+      enteredKey: string;
+      hasReceiptsField: boolean;
+    }
+  | {
+      kind: 'receiptConnect';
+      transactionDocumentId: string;
+      receiptIds: string[];
+    }
   | { kind: 'delete'; documentId: string }
   | { kind: 'publish'; documentId: string };
 
@@ -104,6 +114,7 @@ function buildConvertStrapi(
         kind: 'create',
         converted: String(data.converted_to_workflow),
         enteredKey: String(data.entered_key ?? ''),
+        hasReceiptsField: 'receipts' in data,
       });
       return { documentId: `created-${createCounter}` };
     },
@@ -114,6 +125,15 @@ function buildConvertStrapi(
       documentId: string;
       data: Record<string, unknown>;
     }) => {
+      const receipts = data.receipts as
+        { connect?: { documentId: string }[] } | undefined;
+      if (receipts?.connect?.length) {
+        ops.push({
+          kind: 'receiptConnect',
+          transactionDocumentId: documentId,
+          receiptIds: receipts.connect.map((row) => row.documentId),
+        });
+      }
       const converted = data.converted_to_workflow;
       ops.push({
         kind: 'update',
@@ -314,5 +334,41 @@ describe('convertTransactions keep_original write order', () => {
         op.converted === null,
     );
     assert.ok(clear);
+  });
+});
+
+describe('convertTransactions copy_receipt', () => {
+  it('connects receipts after step create without receipts on create payload', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      step: [
+        { ...workflowTwoSteps.step[0]!, copy_receipt: true },
+        workflowTwoSteps.step[1]!,
+      ],
+    };
+    const transaction: SourceTransaction = {
+      ...expandableTransaction,
+      receipts: [{ documentId: 'rcpt-shared' }],
+    };
+    const { strapi, ops } = buildConvertStrapi(workflow, transaction);
+
+    await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: transaction.documentId,
+    });
+
+    const creates = ops.filter((op) => op.kind === 'create');
+    assert.ok(
+      creates.every((op) => op.kind === 'create' && !op.hasReceiptsField),
+      'receipts must not be embedded on create (would move links)',
+    );
+    const connects = ops.filter((op) => op.kind === 'receiptConnect');
+    assert.deepEqual(connects, [
+      {
+        kind: 'receiptConnect',
+        transactionDocumentId: 'created-2',
+        receiptIds: ['rcpt-shared'],
+      },
+    ]);
   });
 });
