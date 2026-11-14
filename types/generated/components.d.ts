@@ -13,18 +13,23 @@ export interface WorkflowStep extends Struct.ComponentSchema {
     credit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    >;
+    credit_account_from_original: Schema.Attribute.Enumeration<
+      ['debit', 'credit']
+    >;
+    currency_from_original: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::currency-type.currency-type'
-    > &
-      Schema.Attribute.Required;
+    >;
     debit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    >;
+    debit_account_from_original: Schema.Attribute.Enumeration<
+      ['debit', 'credit']
+    >;
     description: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'{1}'>;
@@ -61,16 +66,19 @@ export interface WorkflowStepMemberCredit extends Struct.ComponentSchema {
     apply_currency_rate: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     copy_receipt: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    currency_from_original: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::currency-type.currency-type'
-    > &
-      Schema.Attribute.Required;
+    >;
     debit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    >;
+    debit_account_from_original: Schema.Attribute.Enumeration<
+      ['debit', 'credit']
+    >;
     description: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'{1}'>;
@@ -115,13 +123,16 @@ export interface WorkflowStepMemberDebit extends Struct.ComponentSchema {
     credit_account: Schema.Attribute.Relation<
       'oneToOne',
       'api::account.account'
-    > &
-      Schema.Attribute.Required;
+    >;
+    credit_account_from_original: Schema.Attribute.Enumeration<
+      ['debit', 'credit']
+    >;
+    currency_from_original: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::currency-type.currency-type'
-    > &
-      Schema.Attribute.Required;
+    >;
     description: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'{1}'>;

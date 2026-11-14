@@ -25,6 +25,8 @@ export type RelatedTransactionItem = {
     code?: string | null;
     name?: string | null;
   } | null;
+  /** Populated receipt stubs (`documentId` enough for presence). */
+  receipts?: Array<{ documentId?: string }> | null;
 };
 
 export function parseRelatedTransactionItem(
@@ -37,6 +39,7 @@ export function parseRelatedTransactionItem(
   // getOne records carry the numeric key as `entryId` (`id` = documentId).
   const rawEntryId = (value as { entryId?: unknown }).entryId;
   const row = value as RelatedTransactionItem;
+  const rawReceipts = (value as { receipts?: unknown }).receipts;
   return {
     documentId,
     entryId:
@@ -52,6 +55,7 @@ export function parseRelatedTransactionItem(
     currency_type: row.currency_type,
     debit_account: row.debit_account,
     credit_account: row.credit_account,
+    ...(Array.isArray(rawReceipts) ? { receipts: rawReceipts } : {}),
   };
 }
 

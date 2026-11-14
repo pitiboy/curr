@@ -23,7 +23,7 @@ type TxRow = {
   published?: boolean;
 };
 
-type ReceiptRow = { documentId: string; tx: string; fileId?: number };
+type ReceiptRow = { documentId: string; txs: string[]; fileId?: number };
 
 type Op =
   | { kind: 'delete'; uid: string; documentId: string }
@@ -34,7 +34,19 @@ type Op =
 function relationDocId(value: unknown): string | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const id = (value as { documentId?: unknown }).documentId;
-  return typeof id === 'string' ? id : undefined;
+  if (typeof id === 'string') return id;
+  if (id && typeof id === 'object' && '$eq' in id) {
+    const eq = (id as { $eq?: unknown }).$eq;
+    return typeof eq === 'string' ? eq : undefined;
+  }
+  return undefined;
+}
+
+function transactionDocumentIdFromWhere(
+  where: Record<string, unknown>,
+): string | undefined {
+  const rel = (where as { transactions?: unknown }).transactions;
+  return relationDocId(rel);
 }
 
 function buildStrapi(options: {
@@ -57,6 +69,26 @@ function buildStrapi(options: {
   const roleType = options.roleType ?? 'controller';
   let transactions = [...options.transactions];
   let receipts = [...(options.receipts ?? [])];
+
+  const JOIN_TABLE = 'transactions_receipts_lnk';
+  const receiptNumericId = new Map<string, number>();
+  const txNumericId = new Map<string, number>();
+  let autoId = 1;
+  for (const t of transactions) {
+    txNumericId.set(t.documentId, autoId++);
+  }
+  for (const r of receipts) {
+    receiptNumericId.set(r.documentId, autoId++);
+  }
+  const links: { receipt_id: number; transaction_id: number }[] = [];
+  for (const r of receipts) {
+    const rid = receiptNumericId.get(r.documentId);
+    if (rid == null) continue;
+    for (const txDoc of r.txs) {
+      const tid = txNumericId.get(txDoc);
+      if (tid != null) links.push({ receipt_id: rid, transaction_id: tid });
+    }
+  }
 
   const toRow = (tx: TxRow) => ({
     documentId: tx.documentId,
@@ -88,11 +120,16 @@ function buildStrapi(options: {
   };
 
   const transactionDb = {
-    findOne: async ({ where }: Record<string, unknown>) => {
+    findOne: async ({ where, select }: Record<string, unknown>) => {
       const hit = transactions.find((tx) =>
         matches(tx, where as Record<string, unknown>),
       );
-      return hit ? toRow(hit) : null;
+      if (!hit) return null;
+      const row = toRow(hit);
+      if (Array.isArray(select) && select.includes('id')) {
+        return { ...row, id: txNumericId.get(hit.documentId) };
+      }
+      return row;
     },
     findMany: async ({ where }: Record<string, unknown>) =>
       transactions
@@ -115,15 +152,34 @@ function buildStrapi(options: {
     },
   };
 
+  const linkQuery = (where: Record<string, number>) =>
+    links.filter((row) =>
+      Object.entries(where).every(
+        ([key, value]) => (row as Record<string, number>)[key] === value,
+      ),
+    );
+
   const receiptDb = {
-    findOne: async () => null,
+    findOne: async ({ where, select }: Record<string, unknown>) => {
+      const w = where as { documentId?: string };
+      const hit = receipts.find((r) => r.documentId === w.documentId);
+      if (!hit) return null;
+      const row = {
+        documentId: hit.documentId,
+        document: hit.fileId != null ? { id: hit.fileId } : null,
+      };
+      if (Array.isArray(select) && select.includes('id')) {
+        return { ...row, id: receiptNumericId.get(hit.documentId) };
+      }
+      return row;
+    },
     findMany: async ({ where }: Record<string, unknown>) => {
-      const txId = relationDocId(
-        (where as { transaction?: unknown }).transaction,
+      const txId = transactionDocumentIdFromWhere(
+        where as Record<string, unknown>,
       );
       return (
         receipts
-          .filter((r) => r.tx === txId)
+          .filter((r) => (txId ? r.txs.includes(txId) : false))
           // Draft + published row share the same upload file.
           .flatMap((r) => {
             const row = {
@@ -174,6 +230,58 @@ function buildStrapi(options: {
       },
     }),
     db: {
+      metadata: {
+        get: (uid: string) =>
+          uid === TRANSACTION_UID
+            ? {
+                attributes: {
+                  receipts: {
+                    joinTable: {
+                      name: JOIN_TABLE,
+                      joinColumn: { name: 'transaction_id' },
+                      inverseJoinColumn: { name: 'receipt_id' },
+                    },
+                  },
+                },
+              }
+            : undefined,
+      },
+      connection: (table: string) => {
+        let pendingWhere: Record<string, number> = {};
+        let counting = false;
+        return {
+          where(cond: Record<string, number>) {
+            pendingWhere = cond;
+            return this;
+          },
+          count() {
+            counting = true;
+            return this;
+          },
+          async first() {
+            const hits = linkQuery(pendingWhere);
+            if (counting) {
+              counting = false;
+              return { count: String(hits.length) };
+            }
+            return hits[0] ?? undefined;
+          },
+          async delete() {
+            for (let i = links.length - 1; i >= 0; i -= 1) {
+              const row = links[i]!;
+              const match = Object.entries(pendingWhere).every(
+                ([key, value]) =>
+                  (row as Record<string, number>)[key] === value,
+              );
+              if (match) links.splice(i, 1);
+            }
+            void table;
+          },
+          async insert(row: { receipt_id: number; transaction_id: number }) {
+            links.push(row);
+          },
+        };
+      },
       query: (uid: string) => {
         if (uid === TRANSACTION_UID) return transactionDb;
         if (uid === RECEIPT_UID) return receiptDb;
@@ -235,7 +343,7 @@ describe('deleteTransactionWithReceipts', () => {
   it('deletes an expanded row with its receipts and upload once', async () => {
     const { strapi, ops } = buildStrapi({
       transactions: cloneFamily(),
-      receipts: [{ documentId: 'rcpt-1', tx: 'step-1', fileId: 7 }],
+      receipts: [{ documentId: 'rcpt-1', txs: ['step-1'], fileId: 7 }],
     });
 
     const result = await deleteTransactionWithReceipts(strapi, 'step-1');
@@ -247,6 +355,31 @@ describe('deleteTransactionWithReceipts', () => {
     ]);
     assert.deepEqual(result.deleted, ['step-1']);
     assert.equal(result.resetOriginal, undefined);
+  });
+
+  it('unlinks a shared receipt from one transaction without deleting it', async () => {
+    const { strapi, ops } = buildStrapi({
+      transactions: [
+        { documentId: 'tx-a', converted_to_workflow: null },
+        { documentId: 'tx-b', converted_to_workflow: null },
+      ],
+      receipts: [
+        { documentId: 'shared-rcpt', txs: ['tx-a', 'tx-b'], fileId: 3 },
+      ],
+    });
+
+    const result = await deleteTransactionWithReceipts(strapi, 'tx-a');
+
+    assert.deepEqual(result.deleted, ['tx-a']);
+    assert.deepEqual(result.receipts, []);
+    assert.ok(
+      !ops.some(
+        (op) =>
+          op.kind === 'delete' &&
+          op.uid === RECEIPT_UID &&
+          op.documentId === 'shared-rcpt',
+      ),
+    );
   });
 
   it('deletes a not-expanded (null) transaction', async () => {
@@ -339,8 +472,8 @@ describe('purgeExpansion', () => {
     const { strapi, ops } = buildStrapi({
       transactions: cloneFamily(),
       receipts: [
-        { documentId: 'rcpt-step', tx: 'step-2', fileId: 11 },
-        { documentId: 'rcpt-orig', tx: 'orig', fileId: 12 },
+        { documentId: 'rcpt-step', txs: ['step-2'], fileId: 11 },
+        { documentId: 'rcpt-orig', txs: ['orig'], fileId: 12 },
       ],
       withDbTransaction: true,
     });
@@ -463,9 +596,9 @@ describe('deleteTransactionWithReceipts — edge cases', () => {
     const { strapi, ops } = buildStrapi({
       transactions: cloneFamily(),
       receipts: [
-        { documentId: 'r1', tx: 'step-1', fileId: 5 },
-        { documentId: 'r2', tx: 'step-1', fileId: 5 },
-        { documentId: 'r3', tx: 'step-1' },
+        { documentId: 'r1', txs: ['step-1'], fileId: 5 },
+        { documentId: 'r2', txs: ['step-1'], fileId: 5 },
+        { documentId: 'r3', txs: ['step-1'] },
       ],
     });
     const result = await deleteTransactionWithReceipts(strapi, 'step-1');
@@ -479,7 +612,7 @@ describe('deleteTransactionWithReceipts — edge cases', () => {
   it('upload removal failure is logged and does not fail the delete', async () => {
     const { strapi, ops, warnings } = buildStrapi({
       transactions: cloneFamily(),
-      receipts: [{ documentId: 'r1', tx: 'step-1', fileId: 9 }],
+      receipts: [{ documentId: 'r1', txs: ['step-1'], fileId: 9 }],
       uploadThrows: true,
     });
     const result = await deleteTransactionWithReceipts(strapi, 'step-1');
@@ -492,7 +625,7 @@ describe('deleteTransactionWithReceipts — edge cases', () => {
   it('skips upload removal when the upload service has no remove()', async () => {
     const { strapi, warnings } = buildStrapi({
       transactions: cloneFamily(),
-      receipts: [{ documentId: 'r1', tx: 'step-1', fileId: 9 }],
+      receipts: [{ documentId: 'r1', txs: ['step-1'], fileId: 9 }],
       uploadWithoutRemove: true,
     });
     await deleteTransactionWithReceipts(strapi, 'step-1');
@@ -502,7 +635,7 @@ describe('deleteTransactionWithReceipts — edge cases', () => {
   it('db failure while deleting propagates and skips upload removal', async () => {
     const { strapi, ops } = buildStrapi({
       transactions: cloneFamily(),
-      receipts: [{ documentId: 'r1', tx: 'step-1', fileId: 9 }],
+      receipts: [{ documentId: 'r1', txs: ['step-1'], fileId: 9 }],
       failDeleteOf: 'step-1',
       withDbTransaction: true,
     });
@@ -577,7 +710,7 @@ describe('purgeExpansion — edge cases', () => {
           parent: 'anchor',
         },
       ],
-      receipts: [{ documentId: 'rcpt-3', tx: 'leg-3', fileId: 21 }],
+      receipts: [{ documentId: 'rcpt-3', txs: ['leg-3'], fileId: 21 }],
       withDbTransaction: true,
     });
     const result = await purgeExpansion(strapi, 'anchor');
@@ -639,7 +772,7 @@ describe('purgeExpansion — edge cases', () => {
   it('failure mid-purge propagates: no reset, no upload removal', async () => {
     const { strapi, ops } = buildStrapi({
       transactions: cloneFamily(),
-      receipts: [{ documentId: 'r1', tx: 'step-1', fileId: 3 }],
+      receipts: [{ documentId: 'r1', txs: ['step-1'], fileId: 3 }],
       failDeleteOf: 'step-2',
       withDbTransaction: true,
     });
@@ -732,7 +865,7 @@ describe('HTTP handlers', () => {
   it('purge-expansion returns the result body', async () => {
     const { strapi } = buildStrapi({
       transactions: cloneFamily(),
-      receipts: [{ documentId: 'r1', tx: 'step-1' }],
+      receipts: [{ documentId: 'r1', txs: ['step-1'] }],
     });
     const ctx = upCtx('orig');
     await handlePurgeExpansion(strapi, ctx);

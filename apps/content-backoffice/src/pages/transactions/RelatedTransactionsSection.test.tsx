@@ -29,6 +29,9 @@ vi.mock('react-admin', async (importOriginal) => {
     'app.transactions_delete_published_warning': 'Véglegesített sort törölsz.',
     'app.transactions_discard_confirm': 'Megerősít',
     'ra.action.cancel': 'Mégsem',
+    'resources.transactions.fields.receipt': 'Bizonylat',
+    'app.receipt_yes': 'Van',
+    'app.receipt_no': 'Nincs',
   };
   return {
     ...actual,
@@ -112,6 +115,36 @@ function renderSection(record: Record<string, unknown>) {
     </MemoryRouter>,
   );
 }
+
+describe('RelatedTransactionsSection receipt column', () => {
+  afterEach(() => {
+    cleanup();
+    permissionsState.permissions = 'controller';
+    getOneState.data = undefined;
+  });
+
+  it('shows receipt count before the view action', () => {
+    renderSection({
+      id: 'anchor',
+      related_transactions: [
+        {
+          id: 2,
+          documentId: 'with-receipt',
+          receipts: [{ documentId: 'r1' }, { documentId: 'r2' }],
+        },
+        { id: 3, documentId: 'without-receipt', receipts: [] },
+      ],
+    });
+    const markers = screen.getAllByLabelText('Bizonylat');
+    // Sorted by entry id: with-receipt (2), without-receipt (3), then self.
+    expect(markers.map((el) => el.textContent?.replace(/\s/g, ''))).toEqual([
+      '2x',
+      '—',
+      '—',
+    ]);
+    expect(screen.getAllByText('Megnyitás')).toHaveLength(2);
+  });
+});
 
 describe('RelatedTransactionsSection delete controls', () => {
   afterEach(() => {

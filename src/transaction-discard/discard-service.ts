@@ -8,6 +8,7 @@ import {
   relationDocumentId,
   type PublishGuardStrapi,
 } from '../publish-guard';
+import { transactionsFilter } from '../receipt-transactions';
 import { TRANSACTION_UID } from '../transaction-workflow/convert';
 
 const RECEIPT_UID = 'api::receipt.receipt';
@@ -96,17 +97,13 @@ async function loadDraftReceipts(
 ): Promise<{ documentId: string; fileId?: number }[]> {
   const rows = await documentsApi(strapi, RECEIPT_UID).findMany({
     status: 'draft',
-    filters: {
-      transaction: { documentId: { $eq: transactionDocumentId } },
-    },
+    filters: transactionsFilter(transactionDocumentId),
     populate: { document: true },
   });
 
   const publishedLinked = await documentsApi(strapi, RECEIPT_UID).findOne({
     status: 'published',
-    filters: {
-      transaction: { documentId: { $eq: transactionDocumentId } },
-    },
+    filters: transactionsFilter(transactionDocumentId),
   });
   if (publishedLinked) {
     throw new DiscardDraftError(
