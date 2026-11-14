@@ -1,3 +1,10 @@
+/**
+ * Session storage key the static wake page reads when `?next=` is missing
+ * (e.g. cPanel Error Pages redirect to site root `/`). The backoffice SPA
+ * sets it in `apps/content-backoffice/index.html`.
+ */
+export const WAKE_RETURN_PATH_STORAGE_KEY = 'kor-wake-next';
+
 /** Lightweight wake API path (no auth, no DB). */
 export const WAKE_PATH = '/api/wake';
 

@@ -19,6 +19,7 @@
     "git:rg2": "bash scripts/reset-strapi-generated-git.sh skip-on",
     "git:reset-generated": "bash scripts/reset-strapi-generated-git.sh reset",
     "git:mm": "bash scripts/git-mm.sh",
+    "sync:wake-public-html": "bash scripts/sync-wake-public-html.sh",
     "test": "node --experimental-strip-types --import ./scripts/ts-extless-resolve.mjs --test \"src/**/*.test.ts\"",
     "test:e2e": "npx playwright test",
     "format": "prettier --write \"apps/content-backoffice/**/*.{ts,tsx,json,md,css,html}\" \".github/**/*.{yml,yaml}\" \"docs/ci/**/*.md\" \"docs/prd/0002-content-backoffice-v2.md\" \"lefthook.yml\" \"package.json\"",
