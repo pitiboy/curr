@@ -3,9 +3,7 @@ export type PendingChangeStatus = 'pending' | 'sending' | 'failed-permanent';
 export type PendingDataProviderMethod =
   'create' | 'update' | 'delete' | 'updateMany' | 'deleteMany';
 
-export type PendingCustomOperation =
-  | 'convertTransaction'
-  | 'createAndConvert';
+export type PendingCustomOperation = 'convertTransaction' | 'createAndConvert';
 
 export type PendingChangePayload =
   | {
