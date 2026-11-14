@@ -20,11 +20,7 @@ import { ChartsLegend } from '@mui/x-charts/ChartsLegend';
 import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
 import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
-import {
-  lineElementClasses,
-  LinePlot,
-  MarkPlot,
-} from '@mui/x-charts/LineChart';
+import { lineClasses, LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import type { ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
@@ -385,7 +381,7 @@ function ProductionBarTrendChart({
             : []),
         ]}
         sx={{
-          [`& .${lineElementClasses.root}[data-series="trend-average"]`]: {
+          [`& .${lineClasses.line}[data-series="trend-average"]`]: {
             strokeDasharray: '6 4',
             strokeWidth: 2,
           },
