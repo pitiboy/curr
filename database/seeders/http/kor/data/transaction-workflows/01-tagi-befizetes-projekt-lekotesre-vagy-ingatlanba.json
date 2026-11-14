@@ -29,7 +29,8 @@
       "credit_code": "1100",
       "currency": "HUF",
       "organization": "{original.organization}",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "copy_receipt": true
     },
     {
       "description": "{original.description} | Lekötés HUF fedezet",
