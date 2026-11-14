@@ -35,8 +35,11 @@ restore_from_head() {
 }
 
 prep_for_git_ops() {
+  # git restore némely hook setupban post-checkout-ot indít; az ne kapcsolja vissza a skipet prep közben
+  export STRAPI_SKIP_POST_CHECKOUT_HOOK=1
   skip_off
   restore_from_head
+  unset STRAPI_SKIP_POST_CHECKOUT_HOOK
 }
 
 stash_generated_if_dirty() {

@@ -18,6 +18,7 @@
     "git:rg1": "bash scripts/reset-strapi-generated-git.sh prep",
     "git:rg2": "bash scripts/reset-strapi-generated-git.sh skip-on",
     "git:reset-generated": "bash scripts/reset-strapi-generated-git.sh reset",
+    "git:safe": "bash scripts/git-safe.sh",
     "git:mm": "bash scripts/git-mm.sh",
     "test": "node --experimental-strip-types --import ./scripts/ts-extless-resolve.mjs --test \"src/**/*.test.ts\"",
     "test:e2e": "npx playwright test",

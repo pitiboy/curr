@@ -1,3 +1,15 @@
+# Sikeres checkout után skip-worktree vissza (git-mm / git-safe / nyers checkout).
+# Nincs natív pre-checkout: a „would be overwritten” előtt a Git nem futtat hookot.
+# STRAPI_SKIP_POST_CHECKOUT_HOOK=1: prep alatti restore ne kapcsolja vissza a skipet.
+post-checkout:
+  commands:
+    strapi-generated-skip-on:
+      run: |
+        if [ "${STRAPI_SKIP_POST_CHECKOUT_HOOK:-}" = "1" ]; then
+          exit 0
+        fi
+        bash scripts/reset-strapi-generated-git.sh skip-on
+
 pre-commit:
   parallel: true
   commands:
