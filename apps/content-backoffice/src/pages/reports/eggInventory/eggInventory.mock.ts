@@ -7,6 +7,7 @@ import {
 import {
   buildKpis,
   memberTotal,
+  producedInPeriod,
   sortMembersByTotal,
 } from './eggInventory.helpers';
 import type {
@@ -32,9 +33,7 @@ export const EGG_REPORT_ACCOUNT_CODES = {
 
 const ALOMS = ['2024 alom', '2025 alom', '2026 alom'] as const;
 
-export function producedInPeriod(point: EggTimeseriesPoint): number {
-  return Object.values(point.byAlom).reduce((sum, n) => sum + n, 0);
-}
+export { producedInPeriod } from './eggInventory.helpers';
 
 function assertConsistent(report: EggInventoryReport): EggInventoryReport {
   const { kpis, byMember, byAlom, timeseries } = report;

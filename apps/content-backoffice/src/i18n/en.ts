@@ -214,6 +214,8 @@ export const enMessages = mergeTranslations(englishMessages, {
       },
       timeseries_title: 'Quantity over time (by flock)',
       trend_total: 'Total (trend)',
+      trend_average: 'Average (period)',
+      produced_daily_avg: 'Avg. daily produced',
       alom_title: 'Breakdown by flock',
       alom_name: 'Flock',
       members_title: 'Member balances',
