@@ -10,7 +10,8 @@
       "credit_code": "{original.credit_account_code}",
       "currency": "HUF",
       "organization": "{original.organization}",
-      "transaction_type": "Átvezetés"
+      "transaction_type": "Átvezetés",
+      "copy_receipt": true
     },
     {
       "description": "{original.description} | Utalás",
@@ -19,7 +20,8 @@
       "credit_code": "1100",
       "currency": "HUF",
       "organization": "{original.organization}",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "copy_receipt": true
     },
     {
       "description": "{original.description} | Lekötés HUF fedezet",
