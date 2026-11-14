@@ -10,6 +10,8 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -20,16 +22,20 @@ import { ChartsLegend } from '@mui/x-charts/ChartsLegend';
 import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
 import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
-import { LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
+import { lineClasses, LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import {
   EGG_REPORT_ALOM_NAMES,
   memberTotal,
-  producedInPeriod,
 } from './eggInventory/eggInventory.mock';
+import {
+  alomProducedDailyAverage,
+  linearTrendSeries,
+  producedInPeriod,
+} from './eggInventory/eggInventory.helpers';
 import type {
   EggInventoryReport,
   EggMemberRow,
@@ -47,6 +53,13 @@ import {
 
 function formatQty(n: number): string {
   return new Intl.NumberFormat('hu-HU').format(n);
+}
+
+function formatDailyAvg(n: number): string {
+  return new Intl.NumberFormat('hu-HU', {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  }).format(n);
 }
 
 function formatMoney(n: number, currency: string): string {
@@ -99,16 +112,18 @@ export function EggInventoryReportPage() {
   );
 }
 
+type TrendMode = 'total' | 'alom';
+
+/** Distinct flock palette (hue-separated; not theme primary/info/success). */
+const EGG_ALOM_COLORS = ['#1B7A4E', '#1D4ED8', '#C2410C'] as const;
+
 function ReportBody({ report }: { report: EggInventoryReport }) {
   const translate = useTranslate();
-  const theme = useTheme();
   const { kpis, timeseries, byAlom, byMember } = report;
   const periods = timeseries.map((p) => p.period);
-  const alomColors = [
-    theme.palette.primary.main,
-    theme.palette.info.main,
-    theme.palette.success.main,
-  ];
+  const bucketCount = timeseries.length;
+  const [trendMode, setTrendMode] = useState<TrendMode>('total');
+  const alomColors = [...EGG_ALOM_COLORS];
 
   return (
     <Stack spacing={3}>
@@ -152,12 +167,34 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
             {translate('app.egg_inventory.empty')}
           </Typography>
         ) : (
-          <ProductionBarTrendChart
-            alomColors={alomColors}
-            periods={periods}
-            timeseries={timeseries}
-            trendLabel={translate('app.egg_inventory.trend_total')}
-          />
+          <Stack spacing={1.5}>
+            <ToggleButtonGroup
+              aria-label={translate('app.egg_inventory.trend_mode_label')}
+              color="primary"
+              exclusive
+              onChange={(_e, value: TrendMode | null) => {
+                if (value) setTrendMode(value);
+              }}
+              size="small"
+              sx={{ alignSelf: 'flex-start', flexWrap: 'wrap' }}
+              value={trendMode}
+            >
+              <ToggleButton value="total">
+                {translate('app.egg_inventory.trend_mode.total')}
+              </ToggleButton>
+              <ToggleButton value="alom">
+                {translate('app.egg_inventory.trend_mode.alom')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <ProductionBarTrendChart
+              alomColors={alomColors}
+              periods={periods}
+              timeseries={timeseries}
+              trendLabel={translate('app.egg_inventory.trend_total')}
+              trendLineLabel={translate('app.egg_inventory.trend_average')}
+              trendMode={trendMode}
+            />
+          </Stack>
         )}
       </Section>
 
@@ -178,6 +215,9 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                 <TableCell align="right">
                   {translate('app.egg_inventory.kpi.remaining')}
                 </TableCell>
+                <TableCell align="right">
+                  {translate('app.egg_inventory.produced_daily_avg')}
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -191,8 +231,45 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                   <TableCell align="right">
                     {formatQty(row.remaining)}
                   </TableCell>
+                  <TableCell align="right">
+                    {formatDailyAvg(
+                      alomProducedDailyAverage(row.produced, bucketCount) ?? 0,
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
+              {byAlom.length > 0 ? (
+                <TableRow>
+                  <TableCell>
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {translate('app.egg_inventory.totals_row')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.produced)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.distributed)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.remaining)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatDailyAvg(
+                        alomProducedDailyAverage(kpis.produced, bucketCount) ??
+                          0,
+                      )}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </ReportScrollX>
@@ -307,15 +384,54 @@ function ProductionBarTrendChart({
   periods,
   alomColors,
   trendLabel,
+  trendLineLabel,
+  trendMode,
 }: {
   timeseries: EggTimeseriesPoint[];
   periods: string[];
   alomColors: string[];
   trendLabel: string;
+  trendLineLabel: string;
+  trendMode: TrendMode;
 }) {
   const theme = useTheme();
   const chartMetrics = useReportChartMetrics();
   const totals = timeseries.map(producedInPeriod);
+  const totalTrend = linearTrendSeries(totals);
+  const alomTrendSeries =
+    trendMode === 'alom'
+      ? EGG_REPORT_ALOM_NAMES.flatMap((name, index) => {
+          const produced = timeseries.map((point) => point.byAlom[name] ?? 0);
+          const trend = linearTrendSeries(produced);
+          if (trend == null) return [];
+          const color = alomColors[index] ?? EGG_ALOM_COLORS[0];
+          return [
+            {
+              type: 'line' as const,
+              id: `alom-trend-${index}`,
+              label: `${name} (${trendLineLabel})`,
+              data: trend,
+              color,
+              curve: 'linear' as const,
+              showMark: false,
+            },
+          ];
+        })
+      : [];
+  const totalTrendSeries =
+    trendMode === 'total' && totalTrend != null
+      ? [
+          {
+            type: 'line' as const,
+            id: 'total-trend',
+            label: trendLineLabel,
+            data: totalTrend,
+            color: theme.palette.warning.main,
+            curve: 'linear' as const,
+            showMark: false,
+          },
+        ]
+      : [];
 
   return (
     <ReportScrollX
@@ -331,7 +447,7 @@ function ProductionBarTrendChart({
             label: name,
             data: timeseries.map((point) => point.byAlom[name] ?? 0),
             stack: 'alom',
-            color: alomColors[index] ?? theme.palette.primary.main,
+            color: alomColors[index] ?? EGG_ALOM_COLORS[0],
           })),
           {
             type: 'line' as const,
@@ -342,7 +458,19 @@ function ProductionBarTrendChart({
             curve: 'linear' as const,
             showMark: true,
           },
+          ...totalTrendSeries,
+          ...alomTrendSeries,
         ]}
+        sx={{
+          [`& .${lineClasses.line}[data-series="total-trend"]`]: {
+            strokeDasharray: '6 4',
+            strokeWidth: 2,
+          },
+          [`& .${lineClasses.line}[data-series^="alom-trend-"]`]: {
+            strokeDasharray: '6 4',
+            strokeWidth: 2,
+          },
+        }}
         xAxis={[
           {
             id: 'period',
