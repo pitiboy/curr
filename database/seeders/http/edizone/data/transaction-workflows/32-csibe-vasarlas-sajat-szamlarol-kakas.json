@@ -21,7 +21,8 @@
       "currency": "HUF",
       "organization": "{original.organization}",
       "transaction_type": "Átvezetés",
-      "apply_currency_rate": true
+      "apply_currency_rate": true,
+      "copy_receipt": true
     },
     {
       "description": "Csibe vásárlás – kifizetés (tojó)",
@@ -31,7 +32,8 @@
       "currency": "HUF",
       "organization": "{original.organization}",
       "transaction_type": "Készpénz",
-      "apply_currency_rate": true
+      "apply_currency_rate": true,
+      "copy_receipt": true
     },
     {
       "description": "Csibe vásárlás – kp fizetés saját számláról (kakas)",
@@ -41,7 +43,8 @@
       "currency": "HUF",
       "organization": "{original.organization}",
       "transaction_type": "Készpénz",
-      "apply_currency_rate": true
+      "apply_currency_rate": true,
+      "copy_receipt": true
     }
   ]
 }

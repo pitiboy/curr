@@ -2,6 +2,15 @@
 
 A statikus SPA a Strapi `public/backoffice` mappájában van. A `strapi::public` middleware a `https://kor.fejlesztesek.hu/backoffice/` útvonalon adja. CI pipeline nincs.
 
+## Cache és frissítés deploy után
+
+A `global::backoffice-cache` middleware (a `strapi::public` előtt) a `/backoffice` statikus fájlokra állítja a `Cache-Control` fejlécet:
+
+- `index.html`, könyvtárgyökér, `version.json` és nem hash-elt fájlok: `no-cache` (a böngésző és a Varnish mindig újraellenőriz).
+- `/backoffice/assets/*` Vite hash-elt bundle: `public, max-age=31536000, immutable`.
+
+A Vite build a `dist/version.json` fájlt is legenerálja (`buildId`: git rövid SHA vagy időbélyeg). Éles buildben a SPA fókusz / lap-visszatérés (`visibilitychange`) eseménynél lekéri a `version.json`-t; ha a `buildId` eltér a beépítettől, teljes oldal újratöltés történik. Ugyanazon eseménynél a transaction workflow katalógus session cache-e is invalidálódik és újratöltődik, így workflow seed deploy után gyakran elég egy lapváltás, nem kell kemény frissítés.
+
 ## Gyökér (`/`) → backoffice
 
 Alapból a Strapi a `/` címet az `/admin`-ra irányítja (`strapi::public` route). Élesen a kor alkalmazás cPanel env-jében add meg: **`PUBLIC_HOME_REDIRECT=/backoffice/`**, majd Strapi deploy + Passenger újraindítás. A `global::home-redirect` middleware csak explicit env mellett kapcsol (lokálisan nincs redirect).

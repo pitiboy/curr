@@ -11,7 +11,8 @@
       "credit_code": "1100",
       "currency": "{original.currency}",
       "organization": "I/4.11.1 Birtokkezelés",
-      "transaction_type": "Utalás"
+      "transaction_type": "Utalás",
+      "copy_receipt": true
     },
     {
       "description": "{original.description} | Lekötés {original.currency} fedezet",

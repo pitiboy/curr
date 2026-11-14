@@ -63,6 +63,10 @@ export default ({ env }) => {
         path: env('FAVICON_PATH', 'favicon.png'),
       },
     },
+    {
+      name: 'global::backoffice-cache',
+      resolve: './src/middlewares/backoffice-cache',
+    },
     'strapi::public',
     {
       name: 'global::home-redirect',
