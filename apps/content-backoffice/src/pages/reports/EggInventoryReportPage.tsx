@@ -10,6 +10,8 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -22,7 +24,7 @@ import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
 import { lineClasses, LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
 
 import {
@@ -110,17 +112,18 @@ export function EggInventoryReportPage() {
   );
 }
 
+type TrendMode = 'total' | 'alom';
+
+/** Distinct flock palette (hue-separated; not theme primary/info/success). */
+const EGG_ALOM_COLORS = ['#1B7A4E', '#1D4ED8', '#C2410C'] as const;
+
 function ReportBody({ report }: { report: EggInventoryReport }) {
   const translate = useTranslate();
-  const theme = useTheme();
   const { kpis, timeseries, byAlom, byMember } = report;
   const periods = timeseries.map((p) => p.period);
   const bucketCount = timeseries.length;
-  const alomColors = [
-    theme.palette.primary.main,
-    theme.palette.info.main,
-    theme.palette.success.main,
-  ];
+  const [trendMode, setTrendMode] = useState<TrendMode>('total');
+  const alomColors = [...EGG_ALOM_COLORS];
 
   return (
     <Stack spacing={3}>
@@ -164,13 +167,34 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
             {translate('app.egg_inventory.empty')}
           </Typography>
         ) : (
-          <ProductionBarTrendChart
-            alomColors={alomColors}
-            periods={periods}
-            timeseries={timeseries}
-            trendLabel={translate('app.egg_inventory.trend_total')}
-            trendLineLabel={translate('app.egg_inventory.trend_average')}
-          />
+          <Stack spacing={1.5}>
+            <ToggleButtonGroup
+              aria-label={translate('app.egg_inventory.trend_mode_label')}
+              color="primary"
+              exclusive
+              onChange={(_e, value: TrendMode | null) => {
+                if (value) setTrendMode(value);
+              }}
+              size="small"
+              sx={{ alignSelf: 'flex-start', flexWrap: 'wrap' }}
+              value={trendMode}
+            >
+              <ToggleButton value="total">
+                {translate('app.egg_inventory.trend_mode.total')}
+              </ToggleButton>
+              <ToggleButton value="alom">
+                {translate('app.egg_inventory.trend_mode.alom')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <ProductionBarTrendChart
+              alomColors={alomColors}
+              periods={periods}
+              timeseries={timeseries}
+              trendLabel={translate('app.egg_inventory.trend_total')}
+              trendLineLabel={translate('app.egg_inventory.trend_average')}
+              trendMode={trendMode}
+            />
+          </Stack>
         )}
       </Section>
 
@@ -361,17 +385,53 @@ function ProductionBarTrendChart({
   alomColors,
   trendLabel,
   trendLineLabel,
+  trendMode,
 }: {
   timeseries: EggTimeseriesPoint[];
   periods: string[];
   alomColors: string[];
   trendLabel: string;
   trendLineLabel: string;
+  trendMode: TrendMode;
 }) {
   const theme = useTheme();
   const chartMetrics = useReportChartMetrics();
   const totals = timeseries.map(producedInPeriod);
-  const trendLine = linearTrendSeries(totals);
+  const totalTrend = linearTrendSeries(totals);
+  const alomTrendSeries =
+    trendMode === 'alom'
+      ? EGG_REPORT_ALOM_NAMES.flatMap((name, index) => {
+          const produced = timeseries.map((point) => point.byAlom[name] ?? 0);
+          const trend = linearTrendSeries(produced);
+          if (trend == null) return [];
+          const color = alomColors[index] ?? EGG_ALOM_COLORS[0];
+          return [
+            {
+              type: 'line' as const,
+              id: `alom-trend-${index}`,
+              label: `${name} (${trendLineLabel})`,
+              data: trend,
+              color,
+              curve: 'linear' as const,
+              showMark: false,
+            },
+          ];
+        })
+      : [];
+  const totalTrendSeries =
+    trendMode === 'total' && totalTrend != null
+      ? [
+          {
+            type: 'line' as const,
+            id: 'total-trend',
+            label: trendLineLabel,
+            data: totalTrend,
+            color: theme.palette.warning.main,
+            curve: 'linear' as const,
+            showMark: false,
+          },
+        ]
+      : [];
 
   return (
     <ReportScrollX
@@ -387,7 +447,7 @@ function ProductionBarTrendChart({
             label: name,
             data: timeseries.map((point) => point.byAlom[name] ?? 0),
             stack: 'alom',
-            color: alomColors[index] ?? theme.palette.primary.main,
+            color: alomColors[index] ?? EGG_ALOM_COLORS[0],
           })),
           {
             type: 'line' as const,
@@ -398,22 +458,15 @@ function ProductionBarTrendChart({
             curve: 'linear' as const,
             showMark: true,
           },
-          ...(trendLine != null
-            ? [
-                {
-                  type: 'line' as const,
-                  id: 'trend-line',
-                  label: trendLineLabel,
-                  data: trendLine,
-                  color: theme.palette.warning.main,
-                  curve: 'linear' as const,
-                  showMark: false,
-                },
-              ]
-            : []),
+          ...totalTrendSeries,
+          ...alomTrendSeries,
         ]}
         sx={{
-          [`& .${lineClasses.line}[data-series="trend-line"]`]: {
+          [`& .${lineClasses.line}[data-series="total-trend"]`]: {
+            strokeDasharray: '6 4',
+            strokeWidth: 2,
+          },
+          [`& .${lineClasses.line}[data-series^="alom-trend-"]`]: {
             strokeDasharray: '6 4',
             strokeWidth: 2,
           },

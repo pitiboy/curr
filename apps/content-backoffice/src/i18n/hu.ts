@@ -258,6 +258,11 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       timeseries_title: 'Mennyiség idősor (alom szerint)',
       trend_total: 'Összesen',
       trend_average: 'Trend',
+      trend_mode_label: 'Trend nézet',
+      trend_mode: {
+        total: 'Összes trend',
+        alom: 'Alom trendek',
+      },
       produced_daily_avg: 'Termelt napi átlag',
       alom_title: 'Alom bontás',
       alom_name: 'Alom',
