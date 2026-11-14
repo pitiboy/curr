@@ -4,6 +4,7 @@ import {
   clearTestPendingChangeUser,
   setTestPendingChangeUser,
 } from './currentUser';
+import { PendingChangeEnqueuedError } from './enqueuedError';
 import { executeWithOutbox } from './executeWithOutbox';
 import { listPendingChangesForUser } from './store';
 import { configureLocalStoragePersistenceForTests } from './persistence';
@@ -38,7 +39,7 @@ describe('executeWithOutbox enqueue policy', () => {
           throw new TypeError('Failed to fetch');
         },
       }),
-    ).rejects.toThrow();
+    ).rejects.toBeInstanceOf(PendingChangeEnqueuedError);
     const items = await listPendingChangesForUser({
       userId: 9,
       username: 'u9',
@@ -62,7 +63,7 @@ describe('executeWithOutbox enqueue policy', () => {
           throw Object.assign(new Error('upstream'), { status: 503 });
         },
       }),
-    ).rejects.toThrow();
+    ).rejects.toBeInstanceOf(PendingChangeEnqueuedError);
     const items = await listPendingChangesForUser({
       userId: 9,
       username: 'u9',
@@ -85,7 +86,7 @@ describe('executeWithOutbox enqueue policy', () => {
           throw Object.assign(new Error('invalid'), { status: 422 });
         },
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(/invalid/);
     const items = await listPendingChangesForUser({
       userId: 9,
       username: 'u9',
@@ -110,5 +111,35 @@ describe('executeWithOutbox enqueue policy', () => {
       username: 'u9',
     });
     expect(items).toHaveLength(0);
+  });
+
+  it('enqueues immediately when navigator.onLine is false', async () => {
+    const run = vi.fn(async () => 'should-not-run');
+    vi.stubGlobal('navigator', { onLine: false });
+    try {
+      await expect(
+        executeWithOutbox({
+          resource: 'transactions',
+          operation: 'create',
+          payload: {
+            kind: 'dataProvider',
+            method: 'create',
+            resource: 'transactions',
+            params: { data: { amount: 1 } },
+          },
+          run,
+        }),
+      ).rejects.toThrow(/Failed to fetch/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(run).not.toHaveBeenCalled();
+    const items = await listPendingChangesForUser({
+      userId: 9,
+      username: 'u9',
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0]?.status).toBe('pending');
+    expect(notifyModule.notifyPendingChangeEnqueued).toHaveBeenCalled();
   });
 });

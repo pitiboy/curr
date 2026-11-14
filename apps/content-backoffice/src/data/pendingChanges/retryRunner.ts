@@ -34,7 +34,11 @@ export function createPendingChangesRetryRunner(
   const replayProvider = options?.innerProvider ?? dataProvider;
   const replayHttpClient =
     options?.httpClient ??
-    (async () => ({ json: {} }) as Awaited<ReturnType<ContentHttpClient>>);
+    (async () => {
+      throw new Error(
+        'pending-changes retry requires httpClient for custom operations',
+      );
+    });
   let timer: ReturnType<typeof setInterval> | null = null;
   let running = false;
 
@@ -122,8 +126,11 @@ export async function retrySinglePendingChange(
         dataProvider: innerProvider ?? dataProvider,
         httpClient:
           httpClient ??
-          (async () =>
-            ({ json: {} }) as Awaited<ReturnType<ContentHttpClient>>),
+          (async () => {
+            throw new Error(
+              'pending-changes retry requires httpClient for custom operations',
+            );
+          }),
       });
       await removePendingChange(item.id);
       invalidate(invalidationResource(item));

@@ -10,8 +10,5 @@ export function setPendingChangesNotify(fn: NotifyFn | null): void {
 }
 
 export function notifyPendingChangeEnqueued(): void {
-  notifyFn?.(
-    'A módosítás nem jutott el a szerverhez, elmentettük a kiküldésre váró módosítások közé.',
-    { type: 'warning' },
-  );
+  notifyFn?.('app.pending_changes.enqueued', { type: 'warning' });
 }

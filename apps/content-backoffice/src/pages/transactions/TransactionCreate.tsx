@@ -15,11 +15,14 @@ import {
   useBlocker,
   useCanBlock,
   useFormIsDirty,
+  useNotify,
+  useRedirect,
   useRegisterMutationMiddleware,
   useTranslate,
   type RaRecord,
 } from 'react-admin';
 
+import { isPendingChangeEnqueuedError } from '../../data/pendingChanges/enqueuedError';
 import { bandedForm, bandedSpanClass } from '../../theme';
 import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { FormIssueAccordion } from './FormIssueAccordion';
@@ -346,6 +349,8 @@ function TransactionCreateForm({
 export function TransactionCreate() {
   const catalog = useAccountCatalog();
   const workflowCatalog = useTransactionWorkflowCatalog();
+  const notify = useNotify();
+  const redirect = useRedirect();
   const [receiptCards, setReceiptCards] = useState<ReceiptCardValue[]>([]);
   const [saveSucceeded, setSaveSucceeded] = useState(false);
   const saveSucceededRef = useRef(false);
@@ -359,6 +364,17 @@ export function TransactionCreate() {
       redirect="list"
       resource="transactions"
       title="app.transactions_create"
+      mutationOptions={{
+        onError: (error: unknown) => {
+          if (isPendingChangeEnqueuedError(error)) {
+            // Outbox toast already shown; treat as leave-safe success.
+            onSaveSucceeded();
+            redirect('/pending-changes');
+            return;
+          }
+          notify('ra.notification.http_error', { type: 'warning' });
+        },
+      }}
       transform={(data) => ({
         ...data,
         receipt_cards: receiptCards,

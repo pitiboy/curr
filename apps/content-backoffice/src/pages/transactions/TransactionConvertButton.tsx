@@ -6,6 +6,7 @@ import { useNotify, useRefresh, useTranslate } from 'react-admin';
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
+import { isPendingChangeEnqueuedError } from '../../data/pendingChanges/enqueuedError';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
@@ -53,13 +54,20 @@ export function TransactionConvertButton({
         refresh();
       })
       .catch((error: unknown) => {
+        if (isPendingChangeEnqueuedError(error)) {
+          setOpen(false);
+          return;
+        }
         const message = strapiErrorMessage(error);
         if (message.includes('transaction-workflow not found')) {
           invalidateTransactionWorkflowCatalog();
         }
-        notify(message || translate('app.transactions_convert_error'), {
-          type: 'error',
-        });
+        notify(
+          message.includes('Failed to fetch')
+            ? 'ra.notification.http_error'
+            : 'app.transactions_convert_error',
+          { type: 'error' },
+        );
       })
       .finally(() => setBusy(false));
   };

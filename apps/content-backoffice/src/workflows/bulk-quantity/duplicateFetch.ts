@@ -1,3 +1,4 @@
+import { isNetworkFailure } from '../../data/pendingChanges/errors';
 import { encodeStrapiQuery } from '../../data/transactionList';
 import type { ContentHttpClient } from '../../data/receiptDraft';
 import {
@@ -189,10 +190,21 @@ async function collectDuplicatesForAccountGroup(
     if (checksThisChunk.length === 0) {
       continue;
     }
-    const [drafts, published] = await Promise.all([
-      fetchStatusMatchesAllPages(httpClient, strapiUrl, 'draft', filters),
-      fetchStatusMatchesAllPages(httpClient, strapiUrl, 'published', filters),
-    ]);
+    let drafts: NonNullable<StrapiListResponse['data']>;
+    let published: NonNullable<StrapiListResponse['data']>;
+    try {
+      [drafts, published] = await Promise.all([
+        fetchStatusMatchesAllPages(httpClient, strapiUrl, 'draft', filters),
+        fetchStatusMatchesAllPages(httpClient, strapiUrl, 'published', filters),
+      ]);
+    } catch (error) {
+      // Offline / transport failure: skip duplicate detection so save can
+      // proceed and queue writes in the pending-changes outbox.
+      if (isNetworkFailure(error)) {
+        continue;
+      }
+      throw error;
+    }
     for (const check of checksThisChunk) {
       const dup = resolveDuplicateForCheck(check, drafts, published);
       if (dup) {

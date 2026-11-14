@@ -18,28 +18,42 @@ export function errorMessage(error: unknown): string {
   return String(error);
 }
 
+/** True for offline / transport failures (no usable HTTP status). */
+export function isNetworkFailure(error: unknown): boolean {
+  if (error instanceof TypeError) {
+    return true;
+  }
+  const status = errorStatus(error);
+  if (status === 0) {
+    return true;
+  }
+  if (status !== undefined) {
+    return false;
+  }
+  const message = errorMessage(error).toLowerCase();
+  return (
+    message.includes('network') ||
+    message.includes('fetch') ||
+    message.includes('timeout') ||
+    message.includes('aborted') ||
+    message.includes('internet_disconnected') ||
+    message.includes('failed to fetch')
+  );
+}
+
 /** HTTP 401 is retryable after re-login; other 4xx listed are permanent failures. */
 export function classifyWriteFailure(error: unknown): {
   retryable: boolean;
   permanent: boolean;
 } {
-  if (error instanceof TypeError) {
+  if (isNetworkFailure(error)) {
     return { retryable: true, permanent: false };
   }
   const status = errorStatus(error);
   if (status === undefined) {
-    const message = errorMessage(error).toLowerCase();
-    if (
-      message.includes('network') ||
-      message.includes('fetch') ||
-      message.includes('timeout') ||
-      message.includes('aborted')
-    ) {
-      return { retryable: true, permanent: false };
-    }
     return { retryable: true, permanent: false };
   }
-  if (status === 0 || status === 502 || status === 503 || status === 504) {
+  if (status === 502 || status === 503 || status === 504) {
     return { retryable: true, permanent: false };
   }
   if (status === 401) {

@@ -25,6 +25,9 @@ export function buildRecordKey(
     const txId = payload.input.transactionDocumentId;
     return `transactions:${typeof txId === 'string' ? txId : fallbackId}:convert`;
   }
+  if (payload.name === 'createAndConvert') {
+    return `transactions:createAndConvert:${fallbackId}`;
+  }
   return fallbackId;
 }
 

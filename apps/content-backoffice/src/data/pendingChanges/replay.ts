@@ -1,6 +1,7 @@
 import type { DataProvider } from 'react-admin';
 
 import { convertTransaction as postConvertTransaction } from '../transactionWorkflow';
+import { createTransactionDraft } from '../transactionDraft';
 import type { ContentHttpClient } from '../receiptDraft';
 import { STRAPI_URL } from '../../config';
 
@@ -45,6 +46,28 @@ export async function replayPendingChange(
       workflowDocumentId: string;
     };
     return postConvertTransaction(httpClient, strapiUrl, input);
+  }
+  if (payload.name === 'createAndConvert') {
+    const input = payload.input as {
+      data: Record<string, unknown>;
+      workflowDocumentId: string;
+    };
+    const created = await createTransactionDraft(
+      httpClient,
+      strapiUrl,
+      input.data,
+    );
+    const documentId =
+      typeof created.data.documentId === 'string'
+        ? created.data.documentId
+        : '';
+    if (!documentId) {
+      throw new Error('Missing documentId after create');
+    }
+    return postConvertTransaction(httpClient, strapiUrl, {
+      transactionDocumentId: documentId,
+      workflowDocumentId: input.workflowDocumentId,
+    });
   }
   throw new Error('Unsupported pending custom operation');
 }

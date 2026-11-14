@@ -566,6 +566,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       menu: 'Kiküldésre váró módosítások',
       title: 'Kiküldésre váró módosítások',
       empty: 'Nincs kiküldésre váró módosítás.',
+      enqueued:
+        'Nincs kapcsolat — a módosítást elmentettük a kiküldésre váró listára. Online újra elküldjük.',
+      error_offline: 'Nincs kapcsolat',
       retry: 'Újraküldés',
       retry_all: 'Összes újraküldése',
       discard: 'Elvetés',
@@ -593,6 +596,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         deleteMany: 'Tömeges törlés',
         custom: 'Egyedi',
         convertTransaction: 'Ügylet kifejtése',
+        createAndConvert: 'Mentés és ügylet kifejtése',
       },
     },
     administration: {

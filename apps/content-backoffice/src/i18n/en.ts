@@ -513,6 +513,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       menu: 'Pending changes',
       title: 'Pending changes',
       empty: 'No pending changes.',
+      enqueued:
+        'No connection — saved to pending changes. We will send it when you are back online.',
+      error_offline: 'No connection',
       retry: 'Retry',
       retry_all: 'Retry all',
       discard: 'Discard',
@@ -539,6 +542,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         deleteMany: 'Bulk delete',
         custom: 'Custom',
         convertTransaction: 'Expand deal',
+        createAndConvert: 'Save and expand deal',
       },
     },
     administration: {

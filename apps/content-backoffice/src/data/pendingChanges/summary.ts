@@ -24,5 +24,18 @@ export function buildPayloadSummary(payload: PendingChangePayload): string {
   if (payload.name === 'convertTransaction') {
     return String(payload.input.transactionDocumentId ?? '');
   }
+  if (payload.name === 'createAndConvert') {
+    const data = payload.input.data as Record<string, unknown> | undefined;
+    const parts: string[] = [];
+    if (data?.description && typeof data.description === 'string') {
+      parts.push(data.description.slice(0, 60));
+    }
+    if (data?.amount !== undefined) parts.push(String(data.amount));
+    const workflowId = payload.input.workflowDocumentId;
+    if (typeof workflowId === 'string' && workflowId) {
+      parts.push(`→ ${workflowId.slice(0, 8)}`);
+    }
+    if (parts.length > 0) return parts.join(' · ');
+  }
   return '';
 }

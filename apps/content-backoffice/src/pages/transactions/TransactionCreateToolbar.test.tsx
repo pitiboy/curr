@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../data/dataProvider', () => ({
   createNewTransactionDraft: vi.fn(),
   convertTransactionToWorkflow: vi.fn(),
+  createAndConvertTransaction: vi.fn(),
 }));
 
 const usePermissions = vi.fn();

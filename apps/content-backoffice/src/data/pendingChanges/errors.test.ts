@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { classifyWriteFailure } from './errors';
+import { classifyWriteFailure, isNetworkFailure } from './errors';
+
+describe('isNetworkFailure', () => {
+  it('detects TypeError Failed to fetch', () => {
+    expect(isNetworkFailure(new TypeError('Failed to fetch'))).toBe(true);
+  });
+
+  it('detects status 0', () => {
+    expect(isNetworkFailure({ status: 0 })).toBe(true);
+  });
+
+  it('rejects ordinary HTTP errors', () => {
+    expect(isNetworkFailure({ status: 503 })).toBe(false);
+    expect(isNetworkFailure({ status: 422 })).toBe(false);
+  });
+});
 
 describe('classifyWriteFailure', () => {
   it('treats network TypeError as retryable', () => {

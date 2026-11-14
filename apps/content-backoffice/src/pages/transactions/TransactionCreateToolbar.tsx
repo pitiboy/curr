@@ -17,10 +17,8 @@ import {
 } from '../../data/accountRowSelection';
 import type { AccountChoice } from '../../data/accountCodes';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
-import {
-  createNewTransactionDraft,
-  convertTransactionToWorkflow,
-} from '../../data/dataProvider';
+import { createAndConvertTransaction } from '../../data/dataProvider';
+import { isPendingChangeEnqueuedError } from '../../data/pendingChanges/enqueuedError';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import {
   invalidateTransactionWorkflowCatalog,
@@ -165,20 +163,13 @@ export function TransactionCreateToolbar({
       return;
     }
     setBusy(true);
-    void createNewTransactionDraft({
-      ...formValues,
-      receipt_cards: receiptCards,
-    })
-      .then((result) => {
-        const documentId =
-          typeof result.data.documentId === 'string'
-            ? result.data.documentId
-            : '';
-        if (!documentId) {
-          throw new Error('Missing documentId after create');
-        }
-        return convertTransactionToWorkflow(documentId, workflow.documentId);
-      })
+    void createAndConvertTransaction(
+      {
+        ...formValues,
+        receipt_cards: receiptCards,
+      },
+      workflow.documentId,
+    )
       .then(() => {
         notify('app.transactions_convert_done', { type: 'success' });
         setOpen(false);
@@ -186,14 +177,24 @@ export function TransactionCreateToolbar({
         redirect('list', 'transactions');
       })
       .catch((error: unknown) => {
+        if (isPendingChangeEnqueuedError(error)) {
+          // Outbox toast already shown; leave create like a successful save.
+          setOpen(false);
+          onSaveSucceeded();
+          redirect('/pending-changes');
+          return;
+        }
         const message = strapiErrorMessage(error);
         if (message.includes('transaction-workflow not found')) {
           invalidateTransactionWorkflowCatalog();
           accountRow?.resetToProfileAfterStaleWorkflow();
         }
-        notify(message || translate('app.transactions_convert_error'), {
-          type: 'error',
-        });
+        notify(
+          message.includes('Failed to fetch')
+            ? 'ra.notification.http_error'
+            : 'app.transactions_convert_error',
+          { type: 'error' },
+        );
       })
       .finally(() => setBusy(false));
   };

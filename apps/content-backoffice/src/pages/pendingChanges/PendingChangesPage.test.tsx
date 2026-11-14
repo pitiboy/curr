@@ -44,6 +44,9 @@ vi.mock('react-admin', async () => {
         'app.pending_changes.col_status': 'Állapot',
         'app.pending_changes.col_actions': 'Műveletek',
         'app.pending_changes.operation.update': 'Módosítás',
+        'app.pending_changes.operation.createAndConvert':
+          'Mentés és ügylet kifejtése',
+        'app.pending_changes.error_offline': 'Nincs kapcsolat',
         'app.pending_changes.status.pending': 'Várakozik',
         'ra.action.cancel': 'Mégse',
         'resources.transactions.name': 'Tranzakciók',
@@ -52,6 +55,10 @@ vi.mock('react-admin', async () => {
     },
   };
 });
+
+vi.mock('ra-strapi', () => ({
+  strapiHttpClient: () => vi.fn(),
+}));
 
 vi.mock('../../data/dataProvider', () => ({
   dataProviderInner: {

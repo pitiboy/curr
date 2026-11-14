@@ -15,8 +15,9 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Title, useDataProvider, useRefresh, useTranslate } from 'react-admin';
+import { strapiHttpClient } from 'ra-strapi';
 
 import { dataProviderInner } from '../../data/dataProvider';
 import {
@@ -40,6 +41,7 @@ export function PendingChangesPage() {
   const translate = useTranslate();
   const dataProvider = useDataProvider();
   const refresh = useRefresh();
+  const httpClient = useMemo(() => strapiHttpClient(), []);
   const { items, reload } = usePendingChangesList();
   const [discardTarget, setDiscardTarget] = useState<PendingChangeItem | null>(
     null,
@@ -59,13 +61,14 @@ export function PendingChangesPage() {
           dataProvider,
           () => invalidate(),
           dataProviderInner,
+          httpClient,
         );
         await reload();
       } finally {
         setBusyId(null);
       }
     },
-    [dataProvider, invalidate, reload],
+    [dataProvider, httpClient, invalidate, reload],
   );
 
   const handleRetryAll = useCallback(async () => {
@@ -78,6 +81,7 @@ export function PendingChangesPage() {
             dataProvider,
             () => invalidate(),
             dataProviderInner,
+            httpClient,
           );
         } catch {
           // continue with next items; FIFO guard may block some
@@ -85,7 +89,7 @@ export function PendingChangesPage() {
       }
     }
     await reload();
-  }, [dataProvider, invalidate, reload]);
+  }, [dataProvider, httpClient, invalidate, reload]);
 
   const confirmDiscard = useCallback(async () => {
     if (!discardTarget) return;
@@ -168,8 +172,21 @@ export function PendingChangesPage() {
                   <TableCell>{item.summary || '—'}</TableCell>
                   <TableCell>{item.attemptCount}</TableCell>
                   <TableCell sx={{ maxWidth: 240 }}>
-                    <Typography noWrap title={item.lastError ?? undefined}>
-                      {item.lastError ?? '—'}
+                    <Typography
+                      noWrap
+                      title={
+                        item.lastError
+                          ? /failed to fetch/i.test(item.lastError)
+                            ? translate('app.pending_changes.error_offline')
+                            : item.lastError
+                          : undefined
+                      }
+                    >
+                      {item.lastError
+                        ? /failed to fetch/i.test(item.lastError)
+                          ? translate('app.pending_changes.error_offline')
+                          : item.lastError
+                        : '—'}
                     </Typography>
                   </TableCell>
                   <TableCell>
