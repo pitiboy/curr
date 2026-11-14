@@ -1,7 +1,7 @@
 import { WAKE_BOOTSTRAP_REDIRECT } from './bootstrap-browser';
 
 /** Rövid szünet, hogy a hidegindítás üzenet olvasható legyen az azonnali 302 helyett. */
-export const WAKE_COLD_START_REDIRECT_DELAY_MS = 2000;
+export const WAKE_COLD_START_REDIRECT_DELAY_MS = 1000;
 
 function escapeHtmlAttr(value: string): string {
   return value

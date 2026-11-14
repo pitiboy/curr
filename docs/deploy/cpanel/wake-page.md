@@ -19,7 +19,7 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 
 ### „Service Unavailable” frissítéskor (`/backoffice`)
 
-A szöveges `Service Unavailable` helyett **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra rövid HTML üzenetet kap („hidegen indul, átirányítás következik”), majd ~2 mp múlva a **`/`** statikus wake oldalra megy. API hívások továbbra is szöveges `503`-at kapnak.
+A szöveges `Service Unavailable` helyett **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra rövid HTML üzenetet kap („hidegen indul, átirányítás következik”), majd ~1 mp múlva a **`/`** statikus wake oldalra megy. API hívások továbbra is szöveges `503`-at kapnak.
 
 ### Opcionális Apache / `.htaccess` (nem kötelező)
 
