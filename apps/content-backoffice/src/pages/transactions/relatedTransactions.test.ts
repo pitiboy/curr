@@ -27,6 +27,33 @@ describe('relatedItemsFromRecord', () => {
     ]);
   });
 
+  it('keeps populated receipts on related rows', () => {
+    const record = {
+      id: 'anchor',
+      entryId: 1,
+      receipts: [{ documentId: 'r-self' }],
+      related_transactions: [
+        {
+          id: 2,
+          documentId: 'child',
+          receipts: [{ documentId: 'r1' }, { documentId: 'r2' }],
+        },
+      ],
+    };
+    expect(relatedItemsFromRecord(record)).toEqual([
+      {
+        documentId: 'anchor',
+        entryId: 1,
+        receipts: [{ documentId: 'r-self' }],
+      },
+      {
+        documentId: 'child',
+        entryId: 2,
+        receipts: [{ documentId: 'r1' }, { documentId: 'r2' }],
+      },
+    ]);
+  });
+
   it('a record with children and a parent lists parent, itself and children', () => {
     const record = {
       id: 'mid',

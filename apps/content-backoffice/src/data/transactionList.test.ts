@@ -550,6 +550,16 @@ describe('encodeStrapiQuery', () => {
     expect(params.get('populate[receipts][populate][receipt_type]')).toBe(
       'true',
     );
+    expect(
+      params.get(
+        'populate[related_transactions][populate][receipts][fields][0]',
+      ),
+    ).toBe('documentId');
+    expect(
+      params.get(
+        'populate[related_transaction][populate][receipts][fields][0]',
+      ),
+    ).toBe('documentId');
   });
 });
 
