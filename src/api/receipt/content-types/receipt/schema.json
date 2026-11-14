@@ -29,6 +29,8 @@
     "amount": {
       "type": "decimal",
       "required": true,
+      "precision": 18,
+      "scale": 2,
       "metadatas": {
         "label": "Összeg",
         "description": "A nyugta összege"

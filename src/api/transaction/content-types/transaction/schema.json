@@ -18,7 +18,9 @@
     },
     "amount": {
       "type": "decimal",
-      "required": true
+      "required": true,
+      "precision": 18,
+      "scale": 2
     },
     "description": {
       "type": "text",

@@ -371,4 +371,48 @@ describe('convertTransactions copy_receipt', () => {
       },
     ]);
   });
+
+  it('connects receipts on draft before publishing the step', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      steps_published: true,
+      step: [
+        { ...workflowTwoSteps.step[0]!, copy_receipt: true },
+        workflowTwoSteps.step[1]!,
+      ],
+    };
+    const transaction: SourceTransaction = {
+      ...completeTransaction,
+      receipts: [{ documentId: 'rcpt-shared' }],
+    };
+    const { strapi, ops } = buildConvertStrapi(workflow, transaction);
+
+    await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: transaction.documentId,
+    });
+
+    // keep_original: created-1 storno, created-2 first step (copy_receipt).
+    const createIdx = ops.findIndex(
+      (op) =>
+        op.kind === 'create' &&
+        op.converted === CONVERTED_EXPANDED &&
+        op.enteredKey.endsWith(':step:0'),
+    );
+    const connectIdx = ops.findIndex(
+      (op) =>
+        op.kind === 'receiptConnect' &&
+        op.transactionDocumentId === 'created-2',
+    );
+    const publishIdx = ops.findIndex(
+      (op) => op.kind === 'publish' && op.documentId === 'created-2',
+    );
+    assert.ok(createIdx >= 0);
+    assert.ok(connectIdx >= 0);
+    assert.ok(publishIdx >= 0);
+    assert.ok(
+      createIdx < connectIdx && connectIdx < publishIdx,
+      'published copy_receipt steps must link receipts before publish',
+    );
+  });
 });

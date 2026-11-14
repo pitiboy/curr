@@ -254,7 +254,11 @@ function transactionWritePayload(
   };
 }
 
-/** manyToMany: connect only — source transaction keeps the same receipts. */
+/**
+ * manyToMany: connect only — source transaction keeps the same receipts.
+ * Must run on the draft before publish; a post-publish draft update would leave
+ * the published version without receipts (Strapi draft/published split).
+ */
 async function connectReceiptsToTransaction(
   strapi: ConvertStrapi,
   transactionDocumentId: string,
@@ -289,6 +293,7 @@ async function createTransactionRow(
   strapi: ConvertStrapi,
   data: Record<string, unknown>,
   published: boolean,
+  receiptDocumentIds: string[] = [],
 ): Promise<string> {
   const api = documentsApi(strapi, TRANSACTION_UID);
   // Always draft first: creating without status can leave an orphan draft when
@@ -319,6 +324,12 @@ async function createTransactionRow(
     });
     created = existing;
   }
+  // copy_receipt before publish so the published version includes the links.
+  await connectReceiptsToTransaction(
+    strapi,
+    created.documentId,
+    receiptDocumentIds,
+  );
   if (published) {
     // Convert generates + publishes as the same editor; SAME_PERSON would 403
     // and leave orphans keyed by entered_key.
@@ -545,8 +556,8 @@ export async function convertTransactions(
             strapi,
             transactionWritePayload(row, transaction, transaction.documentId),
             publishSteps,
+            copyReceipts,
           );
-          await connectReceiptsToTransaction(strapi, documentId, copyReceipts);
           rollbackIds.push(documentId);
           createdDocumentIds.push(documentId);
         }
@@ -566,8 +577,8 @@ export async function convertTransactions(
           strapi,
           transactionWritePayload(row, transaction, previousRelated),
           published,
+          copyReceipts,
         );
-        await connectReceiptsToTransaction(strapi, documentId, copyReceipts);
         previousRelated = documentId;
         createdDocumentIds.push(documentId);
       }
