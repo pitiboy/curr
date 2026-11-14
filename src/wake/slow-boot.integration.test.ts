@@ -34,8 +34,13 @@ describe('slow-boot wake simulation', () => {
     const wakeMs = Date.now() - t0;
     assert.ok(wakeMs < 500, `wake should be fast, took ${wakeMs}ms`);
 
-    const blocked = await fetch(`${base}/backoffice/`, { cache: 'no-store' });
-    assert.equal(blocked.status, 503);
+    const blocked = await fetch(`${base}/backoffice/`, {
+      cache: 'no-store',
+      headers: { Accept: 'text/html' },
+      redirect: 'manual',
+    });
+    assert.equal(blocked.status, 302);
+    assert.match(blocked.headers.get('location') ?? '', /^\/wake\/\?next=/);
 
     setTimeout(() => {
       strapiHandler = (_req, res) => {

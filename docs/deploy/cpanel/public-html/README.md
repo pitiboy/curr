@@ -1,6 +1,8 @@
 # public_html wake + hibaoldal átirányítás
 
-Ha a Passenger alatt alvó Node app közben frissítesz (`/backoffice/…`), a proxy gyakran **502/503/504** hibaoldalt ad — nem a wake landinget. A cPanel **Error Pages** vagy az alábbi **ErrorDocument** szabály a **gyökérre** (`/`) irányít, ahol a statikus `index.html` azonnal elindítja a `/api/wake` mechanizmust.
+A gyakori tünet: böngészőben **„Service Unavailable”** szöveg a `/backoffice`-on — ez a Node `wake-entry` **503**-ja bootstrap közben, **nem** a cPanel hibaoldal. Erre a **backend deploy** oldja meg: böngészős GET `/backoffice/…` → redirect `/wake/`, a `public/wake/index.html` pedig hidegindításkor is kiszolgálódik.
+
+Az alábbi public_html sablon **kiegészítő**: Passenger **502/504** esetén statikus landing a dokumentumgyökérben.
 
 ## Fájlok
 

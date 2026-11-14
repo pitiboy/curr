@@ -62,11 +62,30 @@ describe('wake http-handlers', () => {
     );
   });
 
-  it('returns 503 for app routes while bootstrapping', () => {
+  it('redirects browser backoffice requests to wake while bootstrapping', () => {
     const res = mockRes();
     const req = {
       method: 'GET',
-      url: '/backoffice/',
+      url: '/backoffice/transactions',
+      headers: { accept: 'text/html,application/xhtml+xml' },
+    } as import('node:http').IncomingMessage;
+    const handled = handleEarlyRequest(
+      req,
+      res as never,
+      { ready: false },
+      null,
+    );
+    assert.equal(handled, true);
+    assert.equal(res.statusCode, 302);
+    assert.match(res.headers?.Location ?? '', /^\/wake\/\?next=/);
+  });
+
+  it('returns 503 plain for non-HTML bootstrapping requests', () => {
+    const res = mockRes();
+    const req = {
+      method: 'GET',
+      url: '/api/users/me',
+      headers: { accept: 'application/json' },
     } as import('node:http').IncomingMessage;
     const handled = handleEarlyRequest(
       req,
@@ -76,6 +95,25 @@ describe('wake http-handlers', () => {
     );
     assert.equal(handled, true);
     assert.equal(res.statusCode, 503);
+    assert.equal(res.body, 'Service Unavailable');
+  });
+
+  it('serves wake HTML on /wake/ while bootstrapping', () => {
+    const res = mockRes();
+    const req = {
+      method: 'GET',
+      url: '/wake/?next=%2Fbackoffice%2F',
+      headers: { accept: 'text/html' },
+    } as import('node:http').IncomingMessage;
+    const handled = handleEarlyRequest(
+      req,
+      res as never,
+      { ready: false },
+      null,
+    );
+    assert.equal(handled, true);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body ?? '', /KÖR – indulás/);
   });
 
   it('wake JSON is stable', () => {

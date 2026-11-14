@@ -17,9 +17,13 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 3. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem). Ha nincs `next` (pl. hibaoldal átirányítás a gyökérre), a wake oldal a backoffice által eltárolt `sessionStorage` (`kor-wake-next`) értéket használja.
 4. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
 
-### Hibaoldal → gyökér (frissítés alvó appról)
+### „Service Unavailable” a `/backoffice`-on (fő eset)
 
-Ha menet közben elalszik az app és a böngésző **502/503/504**-et kap, állíts be error redirectet a **site root**-ra (`/`). Részletes lépések: `docs/deploy/cpanel/public-html/README.md`. Minta Apache szabály: `docs/deploy/cpanel/public-html/.htaccess.example` (`ErrorDocument 502 /` stb., vagy cPanel **Error Pages** ugyanerre).
+Frissítéskor látható **szöveges** `Service Unavailable` — ez nem a cPanel hibaoldal, hanem a `wake-entry` **503** válasza, amíg a Strapi bootstrap fut. **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra **302**-vel a `/wake/` oldalra megy, amely azonnal hívja a `/api/wake`-et (a `public/wake/index.html` a Strapi `public/` alól is kiszolgálódik hidegindításkor).
+
+### Hibaoldal → gyökér (Passenger 502/504)
+
+Ha a proxy magát az alkalmazást nem éri el, opcionális: error redirect a statikus wake landingre — `docs/deploy/cpanel/public-html/README.md`.
 
 ### Opcionális Apache / `.htaccess` (nem kötelező)
 
