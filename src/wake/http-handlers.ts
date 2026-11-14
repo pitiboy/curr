@@ -1,5 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import { buildColdStartInterstitialHtml } from './bootstrap-cold-start-page';
+import {
+  isBackofficeBrowserPath,
+  prefersHtmlDocument,
+} from './bootstrap-browser';
 import {
   WAKE_CACHE_CONTROL,
   WAKE_JSON_HEADERS,
@@ -92,9 +97,22 @@ export function respondReady(
 }
 
 export function respondBootstrapping(
+  req: IncomingMessage,
   res: ServerResponse,
-  method: string | undefined,
 ): void {
+  const method = req.method;
+  const pathname = requestPathname(req.url);
+
+  if (isBackofficeBrowserPath(pathname) && prefersHtmlDocument(req)) {
+    res.writeHead(503, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': WAKE_CACHE_CONTROL,
+      'Retry-After': '2',
+    });
+    res.end(buildColdStartInterstitialHtml());
+    return;
+  }
+
   if (method === 'HEAD') {
     res.writeHead(503, {
       'Cache-Control': WAKE_CACHE_CONTROL,
@@ -135,7 +153,7 @@ export function handleEarlyRequest(
   }
 
   if (!strapiHandler) {
-    respondBootstrapping(res, req.method);
+    respondBootstrapping(req, res);
     return true;
   }
 

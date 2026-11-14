@@ -201,10 +201,10 @@ describe('mergeScopedFilter', () => {
     });
   });
 
-  it('scopes receipts via transaction.organization', () => {
+  it('scopes receipts via transactions.organization', () => {
     const merged = mergeScopedFilter(receipt, undefined, ['org-x']);
     assert.deepEqual(merged, {
-      transaction: { organization: { documentId: { $in: ['org-x'] } } },
+      transactions: { organization: { documentId: { $in: ['org-x'] } } },
     });
   });
 

@@ -27,13 +27,28 @@ A fájlok **verziókezelve maradnak** (CI `typecheck`). A `develop` / `npm run d
 
 A jel **nem kerül a repóba** — csak az adott gépen él. Aktív skip esetén Git **figyelmen kívül hagyja** a working copy módosítását ezeken a trackelt fájlokon a `git status`-ban, amíg vissza nem kapcsolod. A Strapi továbbra is generál; más fejlesztőket nem érinti.
 
-**Figyelem:** `skip-worktree` **nem** oldja meg a merge / pull / rebase / branch-váltás blokkolását. Ha a `develop` újraírta a fájlt a lemezen, Git továbbra is megáll („would be overwritten by merge”). Ilyenkor állítsd vissza a commitolt állapotra:
+**Figyelem:** `skip-worktree` **nem** oldja meg a merge / pull / rebase / branch-váltás blokkolását. A Gitnek **nincs** `pre-checkout` hookja — a „would be overwritten” ellenőrzés előtt semmi sem fut. Skip ON mellett a célbranch más generált tartalma is blokkol.
+
+**Branchváltás / merge / pull (terminál):**
+
+```bash
+npm run git:safe -- checkout main
+npm run git:safe -- merge main
+npm run git:safe -- pull
+```
+
+(`scripts/git-safe.sh`: prep → `git …` → skip-on.) A Cursor SCM UI-t ez **nem** fogja el — ott előbb `npm run git:rg1`, aztán a UI checkout, majd `npm run git:rg2` (vagy használd a `git:safe`-et terminálból).
+
+Automatika, ami megvan:
+
+- `lefthook` `post-checkout` → sikeres váltás után `skip-on`
+- Cursor `beforeShellExecution` → terminál/agent `git checkout|switch|merge|pull|rebase` előtt `prep` (SCM UI nem)
+
+Kézi reset (status zaj / elakadás):
 
 ```bash
 npm run git:reset-generated
 ```
-
-(`scripts/reset-strapi-generated-git.sh`: no-skip → `git restore` HEAD-ről → skip újra.)
 
 **Main merge (`mm`):** `npm run git:mm` — generált zajra `prep` + **stash** (futó `dev` esetén), **`git checkout -f`**, merge, stash **drop** (pop nélkül), `skip-worktree` vissza. A reset script **`/tmp`-be másolódik** checkout előtt (main-en lehet, hogy még nincs `scripts/`). Hiba esetén mainről visszarak a kiinduló branchre. Cseréld a személyes `mm` aliast:
 
@@ -80,7 +95,8 @@ git ls-files -v | grep '^S'
 ## Parancsok
 
 ```bash
-npm run git:reset-generated  # merge/pull előtt: generált fájlok = HEAD (skip-worktree mellett is)
+npm run git:reset-generated  # prep + skip-on (napi reset / status zaj)
+npm run git:safe -- checkout <ref>  # prep → git → skip-on (UI checkout helyett)
 npm run git:mm               # main pull + merge (régi mm alias, reset beépítve)
 npm run develop          # Strapi :1337
 npm run dev:all          # Strapi + backoffice (nx)

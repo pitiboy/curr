@@ -159,6 +159,9 @@ function matches(row: unknown, filter: Filter): boolean {
     if (key === '$or') return (cond as Filter[]).some((f) => matches(row, f));
     if (key.startsWith('$')) return applyOperator(row, key, cond);
     const value = isPlainObject(row) ? row[key] : undefined;
+    if (Array.isArray(value) && isPlainObject(cond)) {
+      return value.some((item) => matches(item, cond));
+    }
     if (isPlainObject(cond)) return matches(value, cond);
     return value === cond;
   });
@@ -174,6 +177,21 @@ function relationTarget(value: unknown): string | null | undefined {
   if ('set' in value) return relationTarget(value.set) ?? null;
   if ('connect' in value) return relationTarget(value.connect);
   return undefined;
+}
+
+function relationTargets(value: unknown): string[] {
+  if (value == null) return [];
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : [];
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => relationTargets(item));
+  }
+  if (!isPlainObject(value)) return [];
+  if (typeof value.documentId === 'string' && value.documentId.trim()) {
+    return [value.documentId.trim()];
+  }
+  if ('connect' in value) return relationTargets(value.connect);
+  if ('set' in value) return relationTargets(value.set);
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -194,9 +212,9 @@ function createWorld() {
     seedTransaction(5, 'tx-noorg', null, { description: 'félkész piszkozat' }),
   ];
   const receipts: Row[] = [
-    { id: 1, documentId: 'rc-a1', transaction: 'tx-a1', publishedAt: null },
-    { id: 2, documentId: 'rc-b1', transaction: 'tx-b1', publishedAt: null },
-    { id: 3, documentId: 'rc-c1', transaction: 'tx-c1', publishedAt: null },
+    { id: 1, documentId: 'rc-a1', transactions: ['tx-a1'], publishedAt: null },
+    { id: 2, documentId: 'rc-b1', transactions: ['tx-b1'], publishedAt: null },
+    { id: 3, documentId: 'rc-c1', transactions: ['tx-c1'], publishedAt: null },
   ];
   const accounts: Row[] = [
     { id: 11, documentId: 'acc-1101', code: 1101 },
@@ -221,8 +239,18 @@ function createWorld() {
       return { ...row, organization: orgRef(row.organization) };
     }
     if (uid === RECEIPT) {
-      const tx = transactions.find((t) => t.documentId === row.transaction);
-      return { ...row, transaction: tx ? hydrate(TX, tx) : null };
+      const ids = Array.isArray(row.transactions)
+        ? (row.transactions as string[])
+        : [];
+      return {
+        ...row,
+        transactions: ids
+          .map((documentId) =>
+            transactions.find((t) => t.documentId === documentId),
+          )
+          .filter(Boolean)
+          .map((tx) => hydrate(TX, tx as Row)),
+      };
     }
     return { ...row };
   }
@@ -240,8 +268,36 @@ function createWorld() {
     for (const [key, value] of Object.entries(data)) {
       if (uid === TX && key === 'organization') {
         row.organization = relationTarget(value) ?? null;
-      } else if (uid === RECEIPT && key === 'transaction') {
-        row.transaction = relationTarget(value) ?? null;
+      } else if (uid === RECEIPT && key === 'transactions') {
+        const ids = Array.isArray(row.transactions)
+          ? [...(row.transactions as string[])]
+          : [];
+        const applyIds = (next: string[]) => {
+          row.transactions = [...new Set(next.filter(Boolean))];
+        };
+        if (value && typeof value === 'object' && 'connect' in value) {
+          const connect = relationTargets(value.connect);
+          applyIds([...ids, ...connect]);
+        } else if (value && typeof value === 'object' && 'set' in value) {
+          applyIds(relationTargets(value.set));
+        } else if (
+          value &&
+          typeof value === 'object' &&
+          'disconnect' in value
+        ) {
+          const drop = new Set(relationTargets(value.disconnect));
+          applyIds(ids.filter((id) => !drop.has(id)));
+        } else if (Array.isArray(value)) {
+          applyIds(
+            value.flatMap((item) => {
+              const t = relationTarget(item);
+              return t ? [t] : [];
+            }),
+          );
+        } else {
+          const single = relationTarget(value);
+          applyIds(single ? [single] : []);
+        }
       } else {
         row[key] = value;
       }
@@ -339,9 +395,85 @@ function createWorld() {
 
   const users = Object.values(USERS) as UserRow[];
 
+  const JOIN_TABLE = 'transactions_receipts_lnk';
+  const receiptTxLinks: { receipt_id: number; transaction_id: number }[] = [];
+  for (const r of receipts) {
+    const rid = r.id as number;
+    const txDocs = Array.isArray(r.transactions)
+      ? (r.transactions as string[])
+      : [];
+    for (const txDoc of txDocs) {
+      const tx = transactions.find((t) => t.documentId === txDoc);
+      if (tx?.id != null) {
+        receiptTxLinks.push({
+          receipt_id: rid,
+          transaction_id: tx.id as number,
+        });
+      }
+    }
+  }
+
+  const linkQuery = (where: Record<string, number>) =>
+    receiptTxLinks.filter((row) =>
+      Object.entries(where).every(
+        ([key, value]) => (row as Record<string, number>)[key] === value,
+      ),
+    );
+
   const db = {
+    metadata: {
+      get: (uid: string) =>
+        uid === TX
+          ? {
+              attributes: {
+                receipts: {
+                  joinTable: {
+                    name: JOIN_TABLE,
+                    joinColumn: { name: 'transaction_id' },
+                    inverseJoinColumn: { name: 'receipt_id' },
+                  },
+                },
+              },
+            }
+          : undefined,
+    },
+    connection: (table: string) => {
+      let pendingWhere: Record<string, number> = {};
+      let counting = false;
+      return {
+        where(cond: Record<string, number>) {
+          pendingWhere = cond;
+          return this;
+        },
+        count() {
+          counting = true;
+          return this;
+        },
+        async first() {
+          const hits = linkQuery(pendingWhere);
+          if (counting) {
+            counting = false;
+            return { count: String(hits.length) };
+          }
+          return hits[0] ?? undefined;
+        },
+        async delete() {
+          for (let i = receiptTxLinks.length - 1; i >= 0; i -= 1) {
+            const row = receiptTxLinks[i]!;
+            const match = Object.entries(pendingWhere).every(
+              ([key, value]) => (row as Record<string, number>)[key] === value,
+            );
+            if (match) receiptTxLinks.splice(i, 1);
+          }
+          void table;
+        },
+        async insert(row: { receipt_id: number; transaction_id: number }) {
+          receiptTxLinks.push(row);
+        },
+      };
+    },
     query: (uid: string) => ({
-      findOne: async ({ where }: Row) => {
+      findOne: async ({ where, select }: Row) => {
         const w = (where ?? {}) as Row;
         if (uid === USER) {
           const user = users.find((u) => u.id === w.id);
@@ -360,6 +492,9 @@ function createWorld() {
         if (!row) return null;
         const draftOnly = isPlainObject(w.publishedAt);
         if (draftOnly && row.publishedAt != null) return null;
+        if (Array.isArray(select) && select.includes('id')) {
+          return { id: row.id, documentId: row.documentId };
+        }
         return hydrate(uid, row);
       },
       update: async ({ where, data }: { where: { id: number }; data: Row }) => {
@@ -797,12 +932,11 @@ describe('org scope chain — dataentry create', () => {
     w.as('dataentryA');
     const created = (await w.docs(RECEIPT).create!({
       status: 'draft',
-      data: { transaction: { connect: ['tx-a1'] } },
+      data: { transactions: { connect: ['tx-a1'] } },
     })) as Row;
-    assert.equal(
-      w.receiptRow(created.documentId as string)!.transaction,
+    assert.deepEqual(w.receiptRow(created.documentId as string)!.transactions, [
       'tx-a1',
-    );
+    ]);
   });
 
   it('receipt create on a foreign transaction is forbidden', async () => {
@@ -811,7 +945,7 @@ describe('org scope chain — dataentry create', () => {
       () =>
         w.docs(RECEIPT).create!({
           status: 'draft',
-          data: { transaction: 'tx-b1' },
+          data: { transactions: ['tx-b1'] },
         }),
       forbidden,
     );
@@ -823,13 +957,13 @@ describe('org scope chain — dataentry create', () => {
       () =>
         w.docs(RECEIPT).create!({
           status: 'draft',
-          data: { transaction: { documentId: 'tx-noorg' } },
+          data: { transactions: { documentId: 'tx-noorg' } },
         }),
       forbidden,
     );
   });
 
-  it('receipt create without transaction → validation error', async () => {
+  it('receipt create without transactions → validation error', async () => {
     w.as('dataentryA');
     await assert.rejects(
       () => w.docs(RECEIPT).create!({ status: 'draft', data: {} }),
@@ -843,7 +977,7 @@ describe('org scope chain — dataentry create', () => {
       () =>
         w.docs(RECEIPT).create!({
           status: 'draft',
-          data: { transaction: 'tx-a1' },
+          data: { transactions: ['tx-a1'] },
         }),
       forbidden,
     );
@@ -890,7 +1024,7 @@ describe('org scope chain — editor create', () => {
       () =>
         w.docs(RECEIPT).create!({
           status: 'draft',
-          data: { transaction: 'tx-c1' },
+          data: { transactions: ['tx-c1'] },
         }),
       forbidden,
     );
@@ -1013,11 +1147,11 @@ describe('org scope chain — dataentry update', () => {
         w.docs(RECEIPT).update!({
           documentId: 'rc-a1',
           status: 'draft',
-          data: { transaction: { connect: ['tx-b1'] } },
+          data: { transactions: { connect: ['tx-b1'] } },
         }),
       forbidden,
     );
-    assert.equal(w.receiptRow('rc-a1')!.transaction, 'tx-a1');
+    assert.deepEqual(w.receiptRow('rc-a1')!.transactions, ['tx-a1']);
   });
 
   it('cannot re-link an own receipt to a foreign transaction via set', async () => {
@@ -1026,11 +1160,11 @@ describe('org scope chain — dataentry update', () => {
         w.docs(RECEIPT).update!({
           documentId: 'rc-a1',
           status: 'draft',
-          data: { transaction: { set: [{ documentId: 'tx-c1' }] } },
+          data: { transactions: { set: [{ documentId: 'tx-c1' }] } },
         }),
       forbidden,
     );
-    assert.equal(w.receiptRow('rc-a1')!.transaction, 'tx-a1');
+    assert.deepEqual(w.receiptRow('rc-a1')!.transactions, ['tx-a1']);
   });
 
   it('cannot move an own transaction away via set', async () => {
@@ -1046,13 +1180,16 @@ describe('org scope chain — dataentry update', () => {
     assert.equal(w.txRow('tx-a2')!.organization, 'org-a');
   });
 
-  it('can re-link an own receipt to another own transaction', async () => {
+  it('connects a second own transaction without dropping the first', async () => {
     await w.docs(RECEIPT).update!({
       documentId: 'rc-a1',
       status: 'draft',
-      data: { transaction: 'tx-a2' },
+      data: { transactions: { connect: ['tx-a2'] } },
     });
-    assert.equal(w.receiptRow('rc-a1')!.transaction, 'tx-a2');
+    assert.deepEqual(w.receiptRow('rc-a1')!.transactions.sort(), [
+      'tx-a1',
+      'tx-a2',
+    ]);
   });
 
   it('no membership: every update is forbidden', async () => {
@@ -1175,9 +1312,9 @@ describe('org scope chain — lifecycle actions', () => {
     );
     assert.deepEqual(receiptRead!.params.filters, {
       $and: [
-        { transaction: { documentId: { $eq: 'tx-a1' } } },
+        { transactions: { documentId: { $eq: 'tx-a1' } } },
         {
-          transaction: {
+          transactions: {
             organization: { documentId: { $in: ['org-a', 'org-b'] } },
           },
         },

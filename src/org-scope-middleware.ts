@@ -13,7 +13,7 @@ const ORGANIZATION_UID = 'api::organization.organization';
 /**
  * Content types whose primary org dimension is `organization` (transactions for
  * termelés / átvezetés / osztás / eladás flows and related reads). Receipts are
- * scoped via their linked transaction (`transaction.organization`).
+ * scoped via their linked transactions (`transactions.organization`).
  *
  * `transaction-workflow` is not listed: it has no organization field; workflow
  * templates stay globally readable for convert.
@@ -100,7 +100,7 @@ function mergeReceiptOrgFilter(
   orgDocumentIds: string[],
 ): Record<string, unknown> {
   const pred = organizationDocumentIdFilter(orgDocumentIds);
-  const scope = { transaction: { organization: pred } };
+  const scope = { transactions: { organization: pred } };
   if (!existing || Object.keys(existing).length === 0) {
     return scope;
   }
@@ -201,7 +201,7 @@ export function relationTargetDocumentIds(value: unknown): string[] {
 function transactionDocumentIdsFromReceiptData(
   data: Record<string, unknown>,
 ): string[] {
-  return relationTargetDocumentIds(data.transaction);
+  return relationTargetDocumentIds(data.transactions);
 }
 
 async function assertTransactionsInAllowedOrgs(
@@ -302,7 +302,7 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
         const txIds = transactionDocumentIdsFromReceiptData(data);
         if (txIds.length === 0) {
           throw new errors.ValidationError(
-            'transaction must be set to create a receipt',
+            'transactions must be set to create a receipt',
           );
         }
         await assertTransactionsInAllowedOrgs(strapi, txIds, orgDocumentIds);
@@ -342,7 +342,7 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
           const row = await strapi.db.query(RECEIPT_UID).findOne({
             where: { documentId },
             populate: {
-              transaction: {
+              transactions: {
                 populate: { organization: { fields: ['documentId'] } },
               },
             },
@@ -352,11 +352,16 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
               'This document is not visible for your organization access',
             );
           }
-          const r = row as { transaction?: { organization?: unknown } };
-          const orgId = relationDocumentId(
-            r.transaction?.organization as Record<string, unknown> | undefined,
-          );
-          if (!orgId || !allowedSet.has(orgId)) {
+          const linked = (row as { transactions?: unknown }).transactions;
+          const transactions = Array.isArray(linked) ? linked : [];
+          const visible = transactions.some((tx) => {
+            const orgId = relationDocumentId(
+              (tx as { organization?: unknown })?.organization as
+                Record<string, unknown> | undefined,
+            );
+            return orgId != null && allowedSet.has(orgId);
+          });
+          if (!visible) {
             throw new errors.ForbiddenError(
               'This document is not visible for your organization access',
             );

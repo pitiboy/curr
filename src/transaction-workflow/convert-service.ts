@@ -234,8 +234,6 @@ function transactionWritePayload(
   row: ExpandedStepRow,
   transaction: SourceTransaction,
   relatedDocumentId: string | null,
-  published: boolean,
-  receiptDocumentIds: string[],
 ) {
   return {
     date: transaction.date,
@@ -253,10 +251,29 @@ function transactionWritePayload(
     // Step rows often reuse the header debit/credit pair (e.g. Felújítás
     // Aktiválás); mark expanded so they cannot be expanded again.
     converted_to_workflow: CONVERTED_EXPANDED,
-    ...(receiptDocumentIds.length
-      ? { receipts: receiptDocumentIds.map((documentId) => ({ documentId })) }
-      : {}),
   };
+}
+
+/**
+ * manyToMany: connect only — source transaction keeps the same receipts.
+ * Must run on the draft before publish; a post-publish draft update would leave
+ * the published version without receipts (Strapi draft/published split).
+ */
+async function connectReceiptsToTransaction(
+  strapi: ConvertStrapi,
+  transactionDocumentId: string,
+  receiptDocumentIds: string[],
+): Promise<void> {
+  if (receiptDocumentIds.length === 0) return;
+  await documentsApi(strapi, TRANSACTION_UID).update({
+    documentId: transactionDocumentId,
+    status: 'draft',
+    data: {
+      receipts: {
+        connect: receiptDocumentIds.map((documentId) => ({ documentId })),
+      },
+    },
+  });
 }
 
 async function findDraftByEnteredKey(
@@ -276,6 +293,7 @@ async function createTransactionRow(
   strapi: ConvertStrapi,
   data: Record<string, unknown>,
   published: boolean,
+  receiptDocumentIds: string[] = [],
 ): Promise<string> {
   const api = documentsApi(strapi, TRANSACTION_UID);
   // Always draft first: creating without status can leave an orphan draft when
@@ -306,6 +324,12 @@ async function createTransactionRow(
     });
     created = existing;
   }
+  // copy_receipt before publish so the published version includes the links.
+  await connectReceiptsToTransaction(
+    strapi,
+    created.documentId,
+    receiptDocumentIds,
+  );
   if (published) {
     // Convert generates + publishes as the same editor; SAME_PERSON would 403
     // and leave orphans keyed by entered_key.
@@ -530,14 +554,9 @@ export async function convertTransactions(
           const copyReceipts = row.copy_receipt ? receiptIds : [];
           const documentId = await createTransactionRow(
             strapi,
-            transactionWritePayload(
-              row,
-              transaction,
-              transaction.documentId,
-              publishSteps,
-              copyReceipts,
-            ),
+            transactionWritePayload(row, transaction, transaction.documentId),
             publishSteps,
+            copyReceipts,
           );
           rollbackIds.push(documentId);
           createdDocumentIds.push(documentId);
@@ -556,14 +575,9 @@ export async function convertTransactions(
         const copyReceipts = row.copy_receipt ? receiptIds : [];
         const documentId = await createTransactionRow(
           strapi,
-          transactionWritePayload(
-            row,
-            transaction,
-            previousRelated,
-            published,
-            copyReceipts,
-          ),
+          transactionWritePayload(row, transaction, previousRelated),
           published,
+          copyReceipts,
         );
         previousRelated = documentId;
         createdDocumentIds.push(documentId);

@@ -1,3 +1,4 @@
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import {
@@ -29,6 +30,7 @@ import {
 import { canPurgeExpansion } from '../../auth/roles';
 import { CONVERTED_EXPANDED } from '../../data/transactionList';
 import { deleteTransaction, purgeExpansion } from '../../data/dataProvider';
+import { receiptCount } from '../../data/receiptDraft';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { AccountValue } from './accountField';
 import { DescriptionText } from './DescriptionText';
@@ -289,6 +291,7 @@ function RelatedTransactionRow({
   const translate = useTranslate();
   const isCurrent = item.documentId === currentId;
   const convertedKey = convertedLabelKey(item.converted_to_workflow);
+  const receipts = receiptCount(item.receipts);
   const captions = [
     ...(isParent ? [translate('app.transactions_related_parent_row')] : []),
     ...(convertedKey ? [translate(convertedKey)] : []),
@@ -337,6 +340,38 @@ function RelatedTransactionRow({
       </TableCell>
       <TableCell sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}>
         <AccountValue kind="debit" value={item.debit_account} />
+      </TableCell>
+      <TableCell
+        align="right"
+        sx={{ pr: 1, verticalAlign: 'top', whiteSpace: 'nowrap' }}
+      >
+        {receipts > 0 ? (
+          <Typography
+            aria-label={translate('resources.transactions.fields.receipt')}
+            component="span"
+            sx={{
+              alignItems: 'center',
+              display: 'inline-flex',
+              gap: 0.25,
+              lineHeight: 1,
+            }}
+            title={translate('app.receipt_yes')}
+            variant="body2"
+          >
+            {receipts}x
+            <AttachFileIcon fontSize="inherit" sx={{ fontSize: '1rem' }} />
+          </Typography>
+        ) : (
+          <Typography
+            aria-label={translate('resources.transactions.fields.receipt')}
+            color="text.secondary"
+            component="span"
+            title={translate('app.receipt_no')}
+            variant="body2"
+          >
+            —
+          </Typography>
+        )}
       </TableCell>
       <TableCell
         align="right"

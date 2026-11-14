@@ -411,7 +411,7 @@ async function publishLinkedReceipts(
 ) {
   const rows = await strapi.documents(RECEIPT_UID).findMany({
     status: 'draft',
-    filters: { transaction: { documentId: { $eq: documentId } } },
+    filters: { transactions: { documentId: { $eq: documentId } } },
   });
   const receiptIds = rows
     .map((row) => relationDocumentId(row))
