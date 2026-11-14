@@ -4,7 +4,6 @@ import { Route } from 'react-router-dom';
 
 import { authProvider } from './auth/authProvider';
 import { DeployRefreshChecker } from './deploy/DeployRefreshChecker';
-import { WakeReturnPathSync } from './wake/WakeReturnPathSync';
 import { CONTENT_ROLES } from './auth/roles';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
@@ -47,7 +46,6 @@ export function App() {
           loginPage={LoginPage}
           title={<AppTitle />}
         >
-          <WakeReturnPathSync />
           <Resource
             list={TransactionList}
             name="transactions"

@@ -1,11 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import {
-  buildWakePageUrl,
   isBackofficeBrowserPath,
-  isWakeDocumentPath,
   prefersHtmlDocument,
-  requestPathAndSearch,
+  WAKE_BOOTSTRAP_REDIRECT,
 } from './bootstrap-browser';
 import {
   WAKE_CACHE_CONTROL,
@@ -13,7 +11,6 @@ import {
   WAKE_PATH,
   WAKE_READY_PATH,
 } from './constants';
-import { loadWakeLandingHtml } from './wake-landing-html';
 
 export type WakeReadyState = {
   ready: boolean;
@@ -99,39 +96,19 @@ export function respondReady(
   writeJson(res, 503, { ready: false }, { 'Retry-After': '2' });
 }
 
-export function respondWakeLandingHtml(res: ServerResponse): void {
-  res.writeHead(200, {
-    'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': WAKE_CACHE_CONTROL,
-  });
-  res.end(loadWakeLandingHtml());
-}
-
-export function respondWakePageRedirect(
-  res: ServerResponse,
-  location: string,
-): void {
-  res.writeHead(302, {
-    Location: location,
-    'Cache-Control': WAKE_CACHE_CONTROL,
-  });
-  res.end();
-}
-
 export function respondBootstrapping(
   req: IncomingMessage,
   res: ServerResponse,
 ): void {
   const method = req.method;
-  const { pathname, search } = requestPathAndSearch(req.url);
-
-  if (isWakeDocumentPath(pathname) && prefersHtmlDocument(req)) {
-    respondWakeLandingHtml(res);
-    return;
-  }
+  const pathname = requestPathname(req.url);
 
   if (isBackofficeBrowserPath(pathname) && prefersHtmlDocument(req)) {
-    respondWakePageRedirect(res, buildWakePageUrl(pathname, search));
+    res.writeHead(302, {
+      Location: WAKE_BOOTSTRAP_REDIRECT,
+      'Cache-Control': WAKE_CACHE_CONTROL,
+    });
+    res.end();
     return;
   }
 

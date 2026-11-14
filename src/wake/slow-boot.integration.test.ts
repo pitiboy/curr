@@ -40,7 +40,7 @@ describe('slow-boot wake simulation', () => {
       redirect: 'manual',
     });
     assert.equal(blocked.status, 302);
-    assert.match(blocked.headers.get('location') ?? '', /^\/wake\/\?next=/);
+    assert.equal(blocked.headers.get('location'), '/');
 
     setTimeout(() => {
       strapiHandler = (_req, res) => {

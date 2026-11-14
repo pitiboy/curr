@@ -12,18 +12,14 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 
 ## Statikus oldal telepítése
 
-1. Generáld a public_html sablont: `bash scripts/sync-wake-public-html.sh` (forrás: `docs/deploy/wake/index.html`).
-2. Másold a `docs/deploy/cpanel/public-html/` tartalmát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html`, illetve `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
-3. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem). Ha nincs `next` (pl. hibaoldal átirányítás a gyökérre), a wake oldal a backoffice által eltárolt `sessionStorage` (`kor-wake-next`) értéket használja.
+1. Másold a `docs/deploy/wake/` mappát a domain **dokumentum gyökerébe** (cPanelen gyakran `public_html/wake/`), FTP-vel vagy Fájlkezelővel. Az oldal a Node app-tól függetlenül szolgálódik ki.
+2. A látogatók URL-je: `https://<domain>/wake/?next=/backoffice/` — a `next` paraméter csak ugyanarra az originre mutató relatív útvonal lehet (open redirect védelem).
+3. Ha a wake landing a **gyökéren** van (`public_html/index.html` ugyanazzal a tartalommal), a hidegindítás alatti backoffice-frissítések **302**-vel ide érkeznek (lásd lent).
 4. A Node app továbbra is a meglévő Strapi deploy útvonalon fut (`server.js` + `tmp/restart.txt`).
 
-### „Service Unavailable” a `/backoffice`-on (fő eset)
+### „Service Unavailable” frissítéskor (`/backoffice`)
 
-Frissítéskor látható **szöveges** `Service Unavailable` — ez nem a cPanel hibaoldal, hanem a `wake-entry` **503** válasza, amíg a Strapi bootstrap fut. **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra **302**-vel a `/wake/` oldalra megy, amely azonnal hívja a `/api/wake`-et (a `public/wake/index.html` a Strapi `public/` alól is kiszolgálódik hidegindításkor).
-
-### Hibaoldal → gyökér (Passenger 502/504)
-
-Ha a proxy magát az alkalmazást nem éri el, opcionális: error redirect a statikus wake landingre — `docs/deploy/cpanel/public-html/README.md`.
+A szöveges `Service Unavailable` a `wake-entry` **503** válasza bootstrap közben (nem cPanel hibaoldal). **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra **302** → **`/`** (statikus wake, tipikusan a meglévő `wake/index.html` gyökérre másolva). API hívások továbbra is `503`-at kapnak.
 
 ### Opcionális Apache / `.htaccess` (nem kötelező)
 
@@ -46,7 +42,7 @@ Más hostingon (nginx, CDN) hasonló szabály opcionális — a wake oldal és a
 ### Korlátok
 
 - A `/api/wake` csak akkor „azonnali”, ha a production `server.js` a `wake-entry` wrappert használja (`strapi start` / CLI közvetlenül nem).
-- Amíg a Strapi bootstrap fut, a többi útvonal `503` (szándékosan).
+- Amíg a Strapi bootstrap fut, a többi útvonal `503` (API), kivéve a fenti böngészős backoffice-átirányítást.
 - A statikus oldal a fő app elérhetőségét a `next` útvonal HEAD kérésével is ellenőrzi.
 
 ## Ellenőrzés

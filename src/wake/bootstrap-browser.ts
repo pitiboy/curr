@@ -1,16 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 
-import { resolveRedirectTarget } from './validate-redirect-target';
-
-const WAKE_PREFIX = '/wake';
-
-export function isWakeDocumentPath(pathname: string): boolean {
-  return (
-    pathname === WAKE_PREFIX ||
-    pathname === `${WAKE_PREFIX}/` ||
-    pathname === `${WAKE_PREFIX}/index.html`
-  );
-}
+/** Statikus wake landing (public_html); bootstrap alatt ide irányítunk böngészőt. */
+export const WAKE_BOOTSTRAP_REDIRECT = '/';
 
 export function isBackofficeBrowserPath(pathname: string): boolean {
   return (
@@ -36,22 +27,4 @@ export function prefersHtmlDocument(req: IncomingMessage): boolean {
     return false;
   }
   return accept.includes('*/*');
-}
-
-export function requestPathAndSearch(url: string | undefined): {
-  pathname: string;
-  search: string;
-} {
-  try {
-    const parsed = new URL(url ?? '/', 'http://localhost');
-    return { pathname: parsed.pathname, search: parsed.search };
-  } catch {
-    return { pathname: '/', search: '' };
-  }
-}
-
-export function buildWakePageUrl(pathname: string, search: string): string {
-  const target = resolveRedirectTarget(`${pathname}${search}`, '/backoffice/');
-  const next = target ?? '/backoffice/';
-  return `/wake/?next=${encodeURIComponent(next)}`;
 }
