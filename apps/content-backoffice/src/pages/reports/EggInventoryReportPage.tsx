@@ -20,7 +20,11 @@ import { ChartsLegend } from '@mui/x-charts/ChartsLegend';
 import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
 import { ChartsXAxis } from '@mui/x-charts/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts/ChartsYAxis';
-import { LinePlot, MarkPlot } from '@mui/x-charts/LineChart';
+import {
+  lineElementClasses,
+  LinePlot,
+  MarkPlot,
+} from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import type { ReactNode } from 'react';
 import { Title, useTranslate } from 'react-admin';
@@ -28,8 +32,12 @@ import { Title, useTranslate } from 'react-admin';
 import {
   EGG_REPORT_ALOM_NAMES,
   memberTotal,
-  producedInPeriod,
 } from './eggInventory/eggInventory.mock';
+import {
+  alomProducedDailyAverage,
+  averageProducedPerBucket,
+  producedInPeriod,
+} from './eggInventory/eggInventory.helpers';
 import type {
   EggInventoryReport,
   EggMemberRow,
@@ -47,6 +55,13 @@ import {
 
 function formatQty(n: number): string {
   return new Intl.NumberFormat('hu-HU').format(n);
+}
+
+function formatDailyAvg(n: number): string {
+  return new Intl.NumberFormat('hu-HU', {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  }).format(n);
 }
 
 function formatMoney(n: number, currency: string): string {
@@ -104,6 +119,7 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
   const theme = useTheme();
   const { kpis, timeseries, byAlom, byMember } = report;
   const periods = timeseries.map((p) => p.period);
+  const bucketCount = timeseries.length;
   const alomColors = [
     theme.palette.primary.main,
     theme.palette.info.main,
@@ -154,6 +170,7 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
         ) : (
           <ProductionBarTrendChart
             alomColors={alomColors}
+            averageLabel={translate('app.egg_inventory.trend_average')}
             periods={periods}
             timeseries={timeseries}
             trendLabel={translate('app.egg_inventory.trend_total')}
@@ -178,6 +195,9 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                 <TableCell align="right">
                   {translate('app.egg_inventory.kpi.remaining')}
                 </TableCell>
+                <TableCell align="right">
+                  {translate('app.egg_inventory.produced_daily_avg')}
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -190,6 +210,11 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                   </TableCell>
                   <TableCell align="right">
                     {formatQty(row.remaining)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatDailyAvg(
+                      alomProducedDailyAverage(row.produced, bucketCount) ?? 0,
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -307,15 +332,18 @@ function ProductionBarTrendChart({
   periods,
   alomColors,
   trendLabel,
+  averageLabel,
 }: {
   timeseries: EggTimeseriesPoint[];
   periods: string[];
   alomColors: string[];
   trendLabel: string;
+  averageLabel: string;
 }) {
   const theme = useTheme();
   const chartMetrics = useReportChartMetrics();
   const totals = timeseries.map(producedInPeriod);
+  const averageTotal = averageProducedPerBucket(timeseries);
 
   return (
     <ReportScrollX
@@ -342,7 +370,26 @@ function ProductionBarTrendChart({
             curve: 'linear' as const,
             showMark: true,
           },
+          ...(averageTotal != null
+            ? [
+                {
+                  type: 'line' as const,
+                  id: 'trend-average',
+                  label: averageLabel,
+                  data: periods.map(() => averageTotal),
+                  color: theme.palette.warning.main,
+                  curve: 'linear' as const,
+                  showMark: false,
+                },
+              ]
+            : []),
         ]}
+        sx={{
+          [`& .${lineElementClasses.root}[data-series="trend-average"]`]: {
+            strokeDasharray: '6 4',
+            strokeWidth: 2,
+          },
+        }}
         xAxis={[
           {
             id: 'period',
