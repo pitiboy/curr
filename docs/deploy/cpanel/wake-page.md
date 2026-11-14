@@ -19,7 +19,7 @@ A Node alkalmazás (Strapi + backoffice) cPanel Passenger alatt hosszú inaktivi
 
 ### „Service Unavailable” frissítéskor (`/backoffice`)
 
-A szöveges `Service Unavailable` a `wake-entry` **503** válasza bootstrap közben (nem cPanel hibaoldal). **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra **302** → **`/`** (statikus wake, tipikusan a meglévő `wake/index.html` gyökérre másolva). API hívások továbbra is `503`-at kapnak.
+A szöveges `Service Unavailable` helyett **Backend deploy** után böngészős GET a `/backoffice/…` útvonalra rövid HTML üzenetet kap („hidegen indul, átirányítás következik”), majd ~2 mp múlva a **`/`** statikus wake oldalra megy. API hívások továbbra is szöveges `503`-at kapnak.
 
 ### Opcionális Apache / `.htaccess` (nem kötelező)
 

@@ -62,7 +62,7 @@ describe('wake http-handlers', () => {
     );
   });
 
-  it('redirects browser backoffice requests to wake while bootstrapping', () => {
+  it('shows cold-start interstitial for backoffice while bootstrapping', () => {
     const res = mockRes();
     const req = {
       method: 'GET',
@@ -76,8 +76,10 @@ describe('wake http-handlers', () => {
       null,
     );
     assert.equal(handled, true);
-    assert.equal(res.statusCode, 302);
-    assert.equal(res.headers?.Location, '/');
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.headers?.['Content-Type'], 'text/html; charset=utf-8');
+    assert.match(res.body ?? '', /hidegen indul/);
+    assert.match(res.body ?? '', /location\.replace\("\/"\)/);
   });
 
   it('returns 503 plain for non-HTML bootstrapping requests', () => {

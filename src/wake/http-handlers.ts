@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import { buildColdStartInterstitialHtml } from './bootstrap-cold-start-page';
 import {
   isBackofficeBrowserPath,
   prefersHtmlDocument,
-  WAKE_BOOTSTRAP_REDIRECT,
 } from './bootstrap-browser';
 import {
   WAKE_CACHE_CONTROL,
@@ -104,11 +104,12 @@ export function respondBootstrapping(
   const pathname = requestPathname(req.url);
 
   if (isBackofficeBrowserPath(pathname) && prefersHtmlDocument(req)) {
-    res.writeHead(302, {
-      Location: WAKE_BOOTSTRAP_REDIRECT,
+    res.writeHead(503, {
+      'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': WAKE_CACHE_CONTROL,
+      'Retry-After': '2',
     });
-    res.end();
+    res.end(buildColdStartInterstitialHtml());
     return;
   }
 
