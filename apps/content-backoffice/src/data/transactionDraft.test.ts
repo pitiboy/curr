@@ -161,7 +161,7 @@ describe('createTransactionDraft', () => {
         vendor: 'Bolt',
         document: 7,
         receipt_type: 'type-1',
-        transaction: 'doc-new',
+        transactions: ['doc-new'],
       },
     });
     expect(result.data.id).toBe('doc-new');

@@ -150,7 +150,7 @@ describe('reconciliation report', () => {
       {
         id: 10,
         documentId: 'rc-orphan',
-        transaction: null,
+        transactions: [],
         date: '2026-01-04',
         amount: '5',
         vendor: 'X',

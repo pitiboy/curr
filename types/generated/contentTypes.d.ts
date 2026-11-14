@@ -886,7 +886,7 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     valid_from: Schema.Attribute.DateTime &
       Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'2026-11-10T06:36:16.210Z'>;
+      Schema.Attribute.DefaultTo<'2026-11-13T15:09:13.372Z'>;
     valid_to: Schema.Attribute.DateTime;
   };
 }
@@ -910,6 +910,10 @@ export interface ApiOrganizationOrganization
       'oneToMany',
       'api::organization.organization'
     >;
+    content_users: Schema.Attribute.Relation<
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -929,10 +933,6 @@ export interface ApiOrganizationOrganization
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
-    content_users: Schema.Attribute.Relation<
-      'manyToMany',
-      'plugin::users-permissions.user'
-    >;
     parent: Schema.Attribute.Relation<
       'manyToOne',
       'api::organization.organization'
@@ -1018,8 +1018,8 @@ export interface ApiReceiptReceipt extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required;
     reference: Schema.Attribute.UID;
-    transaction: Schema.Attribute.Relation<
-      'manyToOne',
+    transactions: Schema.Attribute.Relation<
+      'manyToMany',
       'api::transaction.transaction'
     >;
     updatedAt: Schema.Attribute.DateTime;
@@ -1190,28 +1190,12 @@ export interface ApiTransactionWorkflowTransactionWorkflow
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    credit_account_code: Schema.Attribute.Integer &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetMinMax<
-        {
-          max: 9999;
-          min: 1000;
-        },
-        number
-      >;
+    credit_account_code: Schema.Attribute.String & Schema.Attribute.Required;
     currency_type: Schema.Attribute.Relation<
       'oneToOne',
       'api::currency-type.currency-type'
     >;
-    debit_account_code: Schema.Attribute.Integer &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetMinMax<
-        {
-          max: 9999;
-          min: 1000;
-        },
-        number
-      >;
+    debit_account_code: Schema.Attribute.String & Schema.Attribute.Required;
     keep_original: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1303,7 +1287,7 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required;
     published_by: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    receipts: Schema.Attribute.Relation<'oneToMany', 'api::receipt.receipt'>;
+    receipts: Schema.Attribute.Relation<'manyToMany', 'api::receipt.receipt'>;
     related_transaction: Schema.Attribute.Relation<
       'manyToOne',
       'api::transaction.transaction'
@@ -1798,6 +1782,10 @@ export interface PluginUsersPermissionsUser
       'plugin::users-permissions.user'
     > &
       Schema.Attribute.Private;
+    organizations: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::organization.organization'
+    >;
     password: Schema.Attribute.Password &
       Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
@@ -1805,10 +1793,6 @@ export interface PluginUsersPermissionsUser
       }>;
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    organizations: Schema.Attribute.Relation<
-      'manyToMany',
-      'api::organization.organization'
-    >;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     role: Schema.Attribute.Relation<
       'manyToOne',

@@ -17,7 +17,7 @@ type ReceiptPrefill = {
   amount: unknown;
   description: string;
   vendor: string;
-  transaction: string;
+  transactions: string[];
   receipt_type: string;
 };
 
@@ -173,7 +173,7 @@ function receiptPrefill(input: ReceiptInput): ReceiptPrefill {
     amount: input.amount,
     description,
     vendor,
-    transaction,
+    transactions: [transaction],
     receipt_type: receiptType,
   };
 }

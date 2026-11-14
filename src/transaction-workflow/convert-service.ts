@@ -234,8 +234,6 @@ function transactionWritePayload(
   row: ExpandedStepRow,
   transaction: SourceTransaction,
   relatedDocumentId: string | null,
-  published: boolean,
-  receiptDocumentIds: string[],
 ) {
   return {
     date: transaction.date,
@@ -253,10 +251,25 @@ function transactionWritePayload(
     // Step rows often reuse the header debit/credit pair (e.g. Felújítás
     // Aktiválás); mark expanded so they cannot be expanded again.
     converted_to_workflow: CONVERTED_EXPANDED,
-    ...(receiptDocumentIds.length
-      ? { receipts: receiptDocumentIds.map((documentId) => ({ documentId })) }
-      : {}),
   };
+}
+
+/** manyToMany: connect only — source transaction keeps the same receipts. */
+async function connectReceiptsToTransaction(
+  strapi: ConvertStrapi,
+  transactionDocumentId: string,
+  receiptDocumentIds: string[],
+): Promise<void> {
+  if (receiptDocumentIds.length === 0) return;
+  await documentsApi(strapi, TRANSACTION_UID).update({
+    documentId: transactionDocumentId,
+    status: 'draft',
+    data: {
+      receipts: {
+        connect: receiptDocumentIds.map((documentId) => ({ documentId })),
+      },
+    },
+  });
 }
 
 async function findDraftByEnteredKey(
@@ -530,15 +543,10 @@ export async function convertTransactions(
           const copyReceipts = row.copy_receipt ? receiptIds : [];
           const documentId = await createTransactionRow(
             strapi,
-            transactionWritePayload(
-              row,
-              transaction,
-              transaction.documentId,
-              publishSteps,
-              copyReceipts,
-            ),
+            transactionWritePayload(row, transaction, transaction.documentId),
             publishSteps,
           );
+          await connectReceiptsToTransaction(strapi, documentId, copyReceipts);
           rollbackIds.push(documentId);
           createdDocumentIds.push(documentId);
         }
@@ -556,15 +564,10 @@ export async function convertTransactions(
         const copyReceipts = row.copy_receipt ? receiptIds : [];
         const documentId = await createTransactionRow(
           strapi,
-          transactionWritePayload(
-            row,
-            transaction,
-            previousRelated,
-            published,
-            copyReceipts,
-          ),
+          transactionWritePayload(row, transaction, previousRelated),
           published,
         );
+        await connectReceiptsToTransaction(strapi, documentId, copyReceipts);
         previousRelated = documentId;
         createdDocumentIds.push(documentId);
       }

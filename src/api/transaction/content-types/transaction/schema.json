@@ -100,13 +100,13 @@
     },
     "receipts": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToMany",
       "target": "api::receipt.receipt",
       "metadatas": {
         "label": "Bizonylatok",
         "description": "A tranzakcióhoz tartozó bizonylatok"
       },
-      "mappedBy": "transaction"
+      "inversedBy": "transactions"
     },
     "converted_to_workflow": {
       "type": "enumeration",
