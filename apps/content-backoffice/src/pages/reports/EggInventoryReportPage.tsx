@@ -214,6 +214,38 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
                   </TableCell>
                 </TableRow>
               ))}
+              {byAlom.length > 0 ? (
+                <TableRow>
+                  <TableCell>
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {translate('app.egg_inventory.totals_row')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.produced)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.distributed)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatQty(kpis.remaining)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography sx={{ fontWeight: 600 }} variant="body2">
+                      {formatDailyAvg(
+                        alomProducedDailyAverage(kpis.produced, bucketCount) ??
+                          0,
+                      )}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </ReportScrollX>

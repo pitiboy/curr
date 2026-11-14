@@ -229,6 +229,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       sale_qty: 'Sale (qty)',
       sale_revenue: 'Sale revenue',
       member_total: 'Total (qty)',
+      totals_row: 'Total',
       empty: 'No egg traffic for this period. Try another date range.',
       error: 'Could not load the report.',
       retry: 'Retry',

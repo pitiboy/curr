@@ -272,6 +272,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       sale_qty: 'Eladás (db)',
       sale_revenue: 'Eladás bevétel',
       member_total: 'Összesen (db)',
+      totals_row: 'Összesen',
       empty:
         'Nincs megjeleníthető tojásforgalom ebben az időszakban. Válassz másik tartományt.',
       error: 'A kimutatás betöltése nem sikerült.',
