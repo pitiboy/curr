@@ -142,14 +142,22 @@ async function loadPublishedWithoutReceipts(
     }),
     db.query(RECEIPT_UID).findMany({
       select: ['id'],
-      populate: { transaction: { select: ['id'] } },
+      populate: { transactions: { select: ['id'] } },
     }),
   ]);
 
   const txWithReceipt = new Set<number | string>();
   for (const row of receipts) {
-    const txId = asId(row.transaction);
-    if (txId != null) txWithReceipt.add(txId);
+    const linked = row.transactions;
+    const list = Array.isArray(linked)
+      ? linked
+      : linked != null
+        ? [linked]
+        : [];
+    for (const tx of list) {
+      const txId = asId(tx);
+      if (txId != null) txWithReceipt.add(txId);
+    }
   }
 
   return published.filter((row) => {
@@ -180,10 +188,15 @@ async function loadPublishedWithoutReceiptsAccountFilter(
 }
 
 async function loadOrphanReceipts(db: ReconciliationStrapi['db']) {
-  return db.query(RECEIPT_UID).findMany({
-    where: { transaction: { $null: true } },
+  const rows = await db.query(RECEIPT_UID).findMany({
     select: ['documentId', 'date', 'amount', 'vendor', 'description'],
+    populate: { transactions: { select: ['id'] } },
     orderBy: { updatedAt: 'desc' },
+  });
+  return rows.filter((row) => {
+    const linked = row.transactions;
+    const list = Array.isArray(linked) ? linked : [];
+    return list.length === 0;
   });
 }
 

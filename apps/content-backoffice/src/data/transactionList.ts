@@ -86,6 +86,7 @@ export type StrapiTransaction = {
     description?: string | null;
     converted_to_workflow?: ConvertedToWorkflow | boolean | null;
     currency_type?: { code?: string | null; name?: string | null } | null;
+    receipts?: Array<{ documentId?: string }> | null;
   } | null;
   related_transactions?: Array<{
     documentId?: string;
@@ -94,6 +95,7 @@ export type StrapiTransaction = {
     description?: string | null;
     converted_to_workflow?: ConvertedToWorkflow | boolean | null;
     currency_type?: { code?: string | null; name?: string | null } | null;
+    receipts?: Array<{ documentId?: string }> | null;
   }> | null;
 };
 
@@ -165,6 +167,7 @@ export const transactionPopulate = {
       currency_type: { fields: ['code', 'name'] },
       debit_account: { fields: ['code', 'name'] },
       credit_account: { fields: ['code', 'name'] },
+      receipts: { fields: ['documentId'] },
     },
   },
   related_transactions: {
@@ -180,6 +183,7 @@ export const transactionPopulate = {
       currency_type: { fields: ['code', 'name'] },
       debit_account: { fields: ['code', 'name'] },
       credit_account: { fields: ['code', 'name'] },
+      receipts: { fields: ['documentId'] },
     },
   },
   currency_type: {

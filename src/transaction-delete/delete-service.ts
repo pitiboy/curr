@@ -13,6 +13,10 @@
  * database transaction and resets the parent when it is an `original`.
  */
 import {
+  loadReceiptRefsForTransaction,
+  unlinkOrDeleteReceiptsForTransaction,
+} from '../receipt-transactions';
+import {
   contentApiActor,
   relationDocumentId,
   type PublishGuardStrapi,
@@ -154,35 +158,6 @@ async function hasExpansionChild(
   return row != null;
 }
 
-type ReceiptRef = { documentId: string; fileIds: number[] };
-
-/** All receipts (draft + published rows) linked to the transaction. */
-async function loadReceipts(
-  strapi: TransactionDeleteStrapi,
-  transactionDocumentId: string,
-): Promise<ReceiptRef[]> {
-  const rows = await strapi.db.query(RECEIPT_UID).findMany({
-    where: { transaction: { documentId: transactionDocumentId } },
-    populate: { document: true },
-  });
-  const byId = new Map<string, Set<number>>();
-  for (const row of rows ?? []) {
-    const documentId = relationDocumentId(row);
-    if (!documentId) continue;
-    const files = byId.get(documentId) ?? new Set<number>();
-    const document = row.document;
-    if (document && typeof document === 'object' && 'id' in document) {
-      const id = (document as { id?: unknown }).id;
-      if (typeof id === 'number') files.add(id);
-    }
-    byId.set(documentId, files);
-  }
-  return [...byId].map(([documentId, files]) => ({
-    documentId,
-    fileIds: [...files],
-  }));
-}
-
 async function removeUploadFiles(
   strapi: TransactionDeleteStrapi,
   fileIds: number[],
@@ -202,21 +177,21 @@ async function removeUploadFiles(
   }
 }
 
-/** Deletes receipts then the transaction; returns upload ids to remove after commit. */
+/** Unlinks receipts (deletes orphan receipts) then the transaction. */
 async function deleteRowWithReceipts(
   strapi: TransactionDeleteStrapi,
   documentId: string,
   result: TransactionDeleteResult,
 ): Promise<number[]> {
-  const receipts = await loadReceipts(strapi, documentId);
   const fileIds: number[] = [];
-  for (const receipt of receipts) {
-    await strapi.documents(RECEIPT_UID).delete({
-      documentId: receipt.documentId,
-    });
-    result.receipts.push(receipt.documentId);
-    fileIds.push(...receipt.fileIds);
-  }
+  await unlinkOrDeleteReceiptsForTransaction(
+    strapi,
+    documentId,
+    (receiptDocumentId, receiptFileIds) => {
+      result.receipts.push(receiptDocumentId);
+      fileIds.push(...receiptFileIds);
+    },
+  );
   await strapi.documents(TRANSACTION_UID).delete({ documentId });
   result.deleted.push(documentId);
   return fileIds;
