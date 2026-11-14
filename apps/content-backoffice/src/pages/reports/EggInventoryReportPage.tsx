@@ -31,7 +31,7 @@ import {
 } from './eggInventory/eggInventory.mock';
 import {
   alomProducedDailyAverage,
-  averageProducedPerBucket,
+  linearTrendSeries,
   producedInPeriod,
 } from './eggInventory/eggInventory.helpers';
 import type {
@@ -166,10 +166,10 @@ function ReportBody({ report }: { report: EggInventoryReport }) {
         ) : (
           <ProductionBarTrendChart
             alomColors={alomColors}
-            averageLabel={translate('app.egg_inventory.trend_average')}
             periods={periods}
             timeseries={timeseries}
             trendLabel={translate('app.egg_inventory.trend_total')}
+            trendLineLabel={translate('app.egg_inventory.trend_average')}
           />
         )}
       </Section>
@@ -360,18 +360,18 @@ function ProductionBarTrendChart({
   periods,
   alomColors,
   trendLabel,
-  averageLabel,
+  trendLineLabel,
 }: {
   timeseries: EggTimeseriesPoint[];
   periods: string[];
   alomColors: string[];
   trendLabel: string;
-  averageLabel: string;
+  trendLineLabel: string;
 }) {
   const theme = useTheme();
   const chartMetrics = useReportChartMetrics();
   const totals = timeseries.map(producedInPeriod);
-  const averageTotal = averageProducedPerBucket(timeseries);
+  const trendLine = linearTrendSeries(totals);
 
   return (
     <ReportScrollX
@@ -398,13 +398,13 @@ function ProductionBarTrendChart({
             curve: 'linear' as const,
             showMark: true,
           },
-          ...(averageTotal != null
+          ...(trendLine != null
             ? [
                 {
                   type: 'line' as const,
-                  id: 'trend-average',
-                  label: averageLabel,
-                  data: periods.map(() => averageTotal),
+                  id: 'trend-line',
+                  label: trendLineLabel,
+                  data: trendLine,
                   color: theme.palette.warning.main,
                   curve: 'linear' as const,
                   showMark: false,
@@ -413,7 +413,7 @@ function ProductionBarTrendChart({
             : []),
         ]}
         sx={{
-          [`& .${lineClasses.line}[data-series="trend-average"]`]: {
+          [`& .${lineClasses.line}[data-series="trend-line"]`]: {
             strokeDasharray: '6 4',
             strokeWidth: 2,
           },
