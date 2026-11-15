@@ -12,6 +12,7 @@
 # Tagi 1101/1001 → workflow.step-member-debit / step-member-credit (member_account_code).
 # Fix T/K → workflow.step (mindkét account reláció). Convert a forrás trx-ből oldja a tagit.
 # Ha a name + fejléc kód páros már létezik, a POST nem fut le.
+# `collect_asset: true` (opcionális) → könyvelés után a backoffice megnyitja az „Új eszköz” űrlapot.
 
 {{
   if (typeof wfItems === "undefined") {
@@ -407,6 +408,8 @@ Accept: application/json
         credit_account_code: String(item.credit_account_code),
         keep_original: item.keep_original !== false,
         steps_published: item.steps_published !== false,
+        // Backoffice: open the "Új eszköz" form after booking (asset inventory).
+        collect_asset: item.collect_asset === true,
         configuration: null,
         step: steps,
       };

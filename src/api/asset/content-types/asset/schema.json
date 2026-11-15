@@ -1,0 +1,124 @@
+{
+  "kind": "collectionType",
+  "collectionName": "assets",
+  "info": {
+    "singularName": "asset",
+    "pluralName": "assets",
+    "displayName": "Asset",
+    "description": "Egyedi tárgyi eszköz (eszköznyilvántartás)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Név"
+      }
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::asset-category.asset-category"
+    },
+    "ownership_type": {
+      "type": "enumeration",
+      "enum": ["coop_owned", "member_owned_lendable", "barter"],
+      "default": "coop_owned",
+      "required": true,
+      "metadatas": {
+        "label": "Tulajdon típusa"
+      }
+    },
+    "purchase_price": {
+      "type": "decimal",
+      "required": false,
+      "metadatas": {
+        "label": "Beszerzési ár"
+      }
+    },
+    "currency_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::currency-type.currency-type"
+    },
+    "purchase_date": {
+      "type": "date",
+      "required": false,
+      "metadatas": {
+        "label": "Beszerzés dátuma"
+      }
+    },
+    "location": {
+      "type": "string",
+      "required": false,
+      "metadatas": {
+        "label": "Helyszín"
+      }
+    },
+    "responsible_member": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::member.member"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["in_use", "in_storage", "under_repair", "lent_out", "disposed"],
+      "default": "in_use",
+      "required": true,
+      "metadatas": {
+        "label": "Állapot"
+      }
+    },
+    "warranty_until": {
+      "type": "date",
+      "required": false,
+      "metadatas": {
+        "label": "Garancia vége"
+      }
+    },
+    "serial_number": {
+      "type": "string",
+      "required": false,
+      "metadatas": {
+        "label": "Gyári szám"
+      }
+    },
+    "notes": {
+      "type": "text",
+      "required": false,
+      "metadatas": {
+        "label": "Megjegyzés"
+      }
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "metadatas": {
+        "label": "Fotó"
+      }
+    },
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "required": true
+    },
+    "acquisition_transaction": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transaction.transaction"
+    },
+    "disposal_transaction": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transaction.transaction"
+    }
+  }
+}

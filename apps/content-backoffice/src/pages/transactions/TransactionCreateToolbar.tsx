@@ -22,6 +22,7 @@ import {
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
 import { strapiErrorMessage } from '../../data/transactionPublish';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
@@ -72,6 +73,7 @@ export function TransactionCreateToolbar({
   const translate = useTranslate();
   const notify = useNotify();
   const redirect = useRedirect();
+  const openAssetForm = useAssetFormAfterBooking();
   const { isPending } = usePermissions();
   const accountRow = useOptionalTransactionCreateAccountRow();
   const { workflows, loading: catalogLoading } =
@@ -177,13 +179,22 @@ export function TransactionCreateToolbar({
         if (!documentId) {
           throw new Error('Missing documentId after create');
         }
-        return convertTransactionToWorkflow(documentId, workflow.documentId);
+        return convertTransactionToWorkflow(
+          documentId,
+          workflow.documentId,
+        ).then((result) => ({ documentId, result }));
       })
-      .then(() => {
+      .then(async ({ documentId, result }) => {
         notify('app.transactions_convert_done', { type: 'success' });
         setOpen(false);
         onSaveSucceeded();
-        redirect('list', 'transactions');
+        // `collect_asset` workflows continue on the prefilled "Új eszköz" form.
+        const openedAssetForm = await openAssetForm(
+          workflow,
+          documentId,
+          result,
+        );
+        if (!openedAssetForm) redirect('list', 'transactions');
       })
       .catch((error: unknown) => {
         const message = strapiErrorMessage(error);

@@ -8,6 +8,7 @@ import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 
@@ -32,6 +33,7 @@ export function TransactionConvertButton({
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
+  const openAssetForm = useAssetFormAfterBooking();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -47,10 +49,11 @@ export function TransactionConvertButton({
     if (busy) return;
     setBusy(true);
     void convertTransactionToWorkflow(documentId, workflow.documentId)
-      .then(() => {
+      .then(async (result) => {
         notify('app.transactions_convert_done', { type: 'success' });
         setOpen(false);
         refresh();
+        await openAssetForm(workflow, documentId, result);
       })
       .catch((error: unknown) => {
         const message = strapiErrorMessage(error);

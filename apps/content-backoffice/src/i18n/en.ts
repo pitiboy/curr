@@ -4,6 +4,41 @@ import { mergeTranslations } from 'react-admin';
 /** English message catalog (react-admin + app labels). */
 export const enMessages = mergeTranslations(englishMessages, {
   app: {
+    assets: {
+      menu: 'Assets',
+      list_title: 'Asset inventory',
+      create_title: 'New asset',
+      edit_title: 'Edit asset',
+      show_title: 'Asset details',
+      no_photo: 'No photo',
+      responsible_member_help:
+        'For member-owned items the responsible member is also the owner.',
+      transaction_picker_help_debit:
+        'Optional. An empty search lists the latest 1500 debits; search by description or amount.',
+      transaction_picker_help_credit:
+        'Optional. An empty search lists the latest 1500 credits; search by description or amount.',
+      transaction_picker_empty: 'No matches',
+      collect_after_booking:
+        'The deal is booked. Record the asset in the inventory.',
+      ownership_types: {
+        coop_owned: 'Cooperative owned',
+        member_owned_lendable: 'Member owned, lendable',
+        barter: 'Brought in by barter',
+      },
+      statuses: {
+        in_use: 'In use',
+        in_storage: 'In storage',
+        under_repair: 'Under repair',
+        lent_out: 'Lent out',
+        disposed: 'Disposed',
+      },
+    },
+    asset_categories: {
+      menu: 'Asset categories',
+      list_title: 'Asset categories',
+      create_title: 'New asset category',
+      edit_title: 'Edit asset category',
+    },
     title: 'Backoffice',
     menu_placeholder: 'No menu items',
     transactions_list: 'Transactions',
@@ -375,6 +410,31 @@ export const enMessages = mergeTranslations(englishMessages, {
       },
     },
     reconciliation: {
+      fixed_assets: {
+        title: 'Fixed assets (1500) reconciliation',
+        subtitle:
+          'Per currency: the 1500 balance (up to %{date}, KOR treasury rows excluded) versus the purchase prices of coop-owned, non-disposed assets linked to a transaction. The sidebar filters (status, organization, currency, deal expansion, range end) apply.',
+        ok: 'Matches',
+        mismatch: 'Mismatch',
+        empty: 'No 1500 rows and no recorded assets for these filters.',
+        unlinked_assets:
+          'Coop-owned, non-disposed assets without an acquisition transaction (%{count})',
+        unlinked_debits: '1500 debits without an asset (%{count})',
+        treasury_excluded:
+          '%{count} KOR treasury (1100) rows were left out of the calculation.',
+        columns: {
+          currency: 'Currency',
+          ledger: '1500 balance',
+          assets: 'Assets total',
+          difference: 'Difference',
+          name: 'Asset',
+          organization: 'Organization',
+          price: 'Purchase price',
+          date: 'Date',
+          description: 'Description',
+          amount: 'Amount',
+        },
+      },
       menu: 'Reconciliation report',
       title: 'Reconciliation report',
       subtitle: 'Read-only domain and user-hygiene checks. Does not fix data.',
@@ -572,6 +632,36 @@ export const enMessages = mergeTranslations(englishMessages, {
     receipt_saved: 'Receipt saved.',
   },
   resources: {
+    assets: {
+      name: 'Asset |||| Assets',
+      fields: {
+        name: 'Name',
+        category: 'Category',
+        ownership_type: 'Ownership',
+        status: 'Status',
+        responsible_member: 'Responsible member',
+        location: 'Location',
+        purchase_price: 'Purchase price',
+        currency_type: 'Currency',
+        purchase_date: 'Purchase date',
+        warranty_until: 'Warranty until',
+        serial_number: 'Serial number',
+        notes: 'Notes',
+        photo: 'Photo',
+        organization: 'Organization',
+        acquisition_transaction: 'Acquisition transaction',
+        disposal_transaction: 'Disposal transaction',
+        q: 'Search',
+      },
+    },
+    'asset-categories': {
+      name: 'Asset category |||| Asset categories',
+      fields: {
+        name: 'Name',
+        description: 'Description',
+        sort_order: 'Sort order',
+      },
+    },
     transactions: {
       name: 'Transaction |||| Transactions',
       fields: {

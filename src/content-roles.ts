@@ -41,6 +41,13 @@ export const CONTENT_ROLE_ACTIONS = [
   'api::backoffice.backoffice.config',
   'api::transaction-workflow.transaction-workflow.find',
   'api::transaction-workflow.transaction-workflow.findOne',
+  // Eszköznyilvántartás: org-scoped read/write (see org-scope middleware).
+  'api::asset.asset.find',
+  'api::asset.asset.findOne',
+  'api::asset.asset.create',
+  'api::asset.asset.update',
+  'api::asset-category.asset-category.find',
+  'api::asset-category.asset-category.findOne',
 ] as const;
 
 export const EDITOR_ONLY_CONTENT_ACTIONS = [
@@ -58,6 +65,10 @@ export const CONTROLLER_ONLY_CONTENT_ACTIONS = [
   'api::transaction.transaction.purgeExpansion',
   'api::receipt.receipt.delete',
   'api::backoffice.backoffice.reconciliation',
+  'api::asset.asset.delete',
+  'api::asset-category.asset-category.create',
+  'api::asset-category.asset-category.update',
+  'api::asset-category.asset-category.delete',
 ] as const;
 
 /** Content API actions granted to a role type by the bootstrap. */
