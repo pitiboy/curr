@@ -18,6 +18,7 @@ import {
 } from '../../data/transactionBulkConvert';
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
 import type { TransactionRow } from '../../data/transactionList';
+import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
@@ -43,7 +44,6 @@ export function TransactionBulkConvertButton() {
   const { workflows, loading: catalogLoading } =
     useTransactionWorkflowCatalog();
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<BulkConvertClassification | null>(
     null,
   );
@@ -65,37 +65,41 @@ export function TransactionBulkConvertButton() {
     setOpen(true);
   };
 
+  const convertGuard = useSubmitGuard<
+    BulkConvertClassification,
+    Awaited<ReturnType<typeof bulkConvertTransactions>>
+  >({
+    run: (classification) =>
+      bulkConvertTransactions(
+        classification.ready.map((item) => ({
+          transactionDocumentId: item.record.documentId,
+          workflowDocumentId: item.workflow.documentId,
+        })),
+        convertTransactionToWorkflow,
+      ),
+    onSuccess: (outcome, classification) => {
+      setOpen(false);
+      setPending(null);
+      unselectAll();
+      refresh();
+      if (
+        outcome.failed.some((row) =>
+          row.message.includes('transaction-workflow not found'),
+        )
+      ) {
+        invalidateTransactionWorkflowCatalog();
+      }
+      notifyBulkOutcome(outcome, classification.skipped, translate, notify);
+    },
+    onError: () => {
+      notify('ra.notification.http_error', { type: 'error' });
+    },
+  });
+  const busy = convertGuard.busy;
+
   const onConfirm = () => {
-    const ready = pending?.ready ?? [];
-    if (!ready.length || busy) return;
-    setBusy(true);
-    void bulkConvertTransactions(
-      ready.map((item) => ({
-        transactionDocumentId: item.record.documentId,
-        workflowDocumentId: item.workflow.documentId,
-      })),
-      convertTransactionToWorkflow,
-    )
-      .then((outcome) => {
-        setOpen(false);
-        setPending(null);
-        unselectAll();
-        refresh();
-        if (
-          outcome.failed.some((row) =>
-            row.message.includes('transaction-workflow not found'),
-          )
-        ) {
-          invalidateTransactionWorkflowCatalog();
-        }
-        notifyBulkOutcome(outcome, pending?.skipped ?? [], translate, notify);
-      })
-      .catch(() => {
-        notify('ra.notification.http_error', { type: 'error' });
-      })
-      .finally(() => {
-        setBusy(false);
-      });
+    if (!pending?.ready.length) return;
+    convertGuard.submit(pending);
   };
 
   const readyCount = pending?.ready.length ?? 0;

@@ -89,6 +89,8 @@ type BuildOptions = {
   failAfterCreates?: number;
   /** Throw from publish for the given documentId. */
   failPublishDocumentId?: string;
+  /** Source row reflects writes (mark original / delete) and creates yield. */
+  stateful?: boolean;
 };
 
 function buildConvertStrapi(
@@ -98,11 +100,15 @@ function buildConvertStrapi(
 ): { strapi: ConvertStrapi; ops: RecordedOp[] } {
   const ops: RecordedOp[] = [];
   let createCounter = 0;
+  let source: SourceTransaction | null = { ...transaction };
+  const yieldTick = () => new Promise((resolve) => setImmediate(resolve));
 
   const transactionApi = {
-    findOne: async () => transaction,
+    findOne: async () => (options.stateful ? source : transaction),
     findMany: async () => [],
     create: async ({ data }: { data: Record<string, unknown> }) => {
+      // Simulate the DB round-trip so concurrent converts interleave.
+      if (options.stateful) await yieldTick();
       createCounter += 1;
       if (
         options.failAfterCreates != null &&
@@ -135,6 +141,18 @@ function buildConvertStrapi(
         });
       }
       const converted = data.converted_to_workflow;
+      if (
+        options.stateful &&
+        source &&
+        documentId === source.documentId &&
+        'converted_to_workflow' in data
+      ) {
+        source = {
+          ...source,
+          converted_to_workflow:
+            converted as SourceTransaction['converted_to_workflow'],
+        };
+      }
       ops.push({
         kind: 'update',
         documentId,
@@ -148,6 +166,7 @@ function buildConvertStrapi(
       return {};
     },
     delete: async ({ documentId }: { documentId: string }) => {
+      if (options.stateful && source?.documentId === documentId) source = null;
       ops.push({ kind: 'delete', documentId });
       return {};
     },
@@ -335,6 +354,38 @@ describe('convertTransactions keep_original write order', () => {
     );
     assert.ok(clear);
   });
+});
+
+describe('convertTransactions concurrent requests (double submit)', () => {
+  for (const keepOriginal of [true, false]) {
+    it(`expands the source once when two converts race (keep_original=${keepOriginal})`, async () => {
+      const workflow: WorkflowTemplate = {
+        ...workflowTwoSteps,
+        keep_original: keepOriginal,
+      };
+      const { strapi, ops } = buildConvertStrapi(
+        workflow,
+        expandableTransaction,
+        { stateful: true },
+      );
+      const request = {
+        workflowDocumentId: workflow.documentId,
+        transactionDocumentId: expandableTransaction.documentId,
+      };
+
+      const [first, second] = await Promise.all([
+        convertTransactions(strapi, request),
+        convertTransactions(strapi, request),
+      ]);
+
+      assert.equal(first.length, 1);
+      assert.equal(second.length, 0);
+      const stepCreates = ops.filter(
+        (op) => op.kind === 'create' && op.converted === CONVERTED_EXPANDED,
+      );
+      assert.equal(stepCreates.length, 2);
+    });
+  }
 });
 
 describe('convertTransactions copy_receipt', () => {
