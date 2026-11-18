@@ -17,6 +17,15 @@ import {
   handleTransactionDelete,
 } from '../../../transaction-delete/delete-handlers';
 import { type TransactionDeleteStrapi } from '../../../transaction-delete/delete-service';
+import { handleParseVoice } from '../../../voice-transaction/handler';
+import { createLlmClientFromEnv } from '../../../voice-transaction/llm-factory';
+import {
+  rateLimiterFromEnv,
+  type RateLimiter,
+} from '../../../voice-transaction/rate-limit';
+import type { VoiceContextStrapi } from '../../../voice-transaction/context';
+
+let voiceRateLimiter: RateLimiter | null = null;
 
 export default factories.createCoreController(
   'api::transaction.transaction',
@@ -35,6 +44,22 @@ export default factories.createCoreController(
     async purgeExpansion(ctx) {
       await handlePurgeExpansion(
         strapi as unknown as TransactionDeleteStrapi,
+        ctx,
+      );
+    },
+    async parseVoice(ctx) {
+      voiceRateLimiter ??= rateLimiterFromEnv();
+      await handleParseVoice(
+        {
+          strapi: strapi as unknown as VoiceContextStrapi,
+          loadFeatures: () =>
+            loadBackofficeFeatureRows(
+              strapi as Parameters<typeof loadBackofficeFeatureRows>[0],
+            ),
+          llm: createLlmClientFromEnv(),
+          rateLimiter: voiceRateLimiter,
+        },
+        strapi.log,
         ctx,
       );
     },

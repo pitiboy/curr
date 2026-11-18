@@ -163,6 +163,30 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_finalize_same_person:
       'A módosítások elmentve, a tranzakció piszkozat maradt. A rögzítő nem véglegesítheti a saját tranzakcióját.',
     form_issues_count: '%{errors} hiba, %{warnings} figyelmeztetés',
+    voice_start: 'Diktálás',
+    voice_stop: 'Diktálás vége',
+    voice_hint:
+      'Mondd el magyarul a tranzakciót (pl. „tegnap ötezer forint táp készpénzből”). Mentés előtt mindent ellenőrizz.',
+    voice_listening: 'Figyelek…',
+    voice_processing: 'Értelmezés…',
+    voice_unsupported:
+      'Ez a böngésző nem támogatja a hangalapú diktálást. Próbáld Chrome-ban vagy Edge-ben, vagy töltsd ki az űrlapot kézzel.',
+    voice_error_mic_denied:
+      'Nincs engedély a mikrofonhoz. Engedélyezd a böngésző beállításaiban.',
+    voice_error_no_speech: 'Nem hallottam beszédet. Próbáld újra.',
+    voice_error_no_mic: 'Nem található mikrofon.',
+    voice_error_network: 'Hálózati hiba a beszédfelismerés közben.',
+    voice_error_generic: 'A beszédfelismerés megszakadt. Próbáld újra.',
+    voice_error_request: 'A diktálás értelmezése nem sikerült. Próbáld újra.',
+    voice_review_notice:
+      'Az űrlapot a diktálás alapján kitöltöttük. Semmi nincs mentve: ellenőrizd a mezőket, majd mentsd a szokásos módon.',
+    voice_filled_fields: 'Kitöltve:',
+    voice_low_confidence: 'bizonytalan',
+    voice_nothing_filled:
+      'A diktálásból egyetlen mezőt sem sikerült kitölteni.',
+    voice_workflow_selected: 'Kiválasztott ügylet-sablon: %{name}',
+    voice_member_mentioned:
+      'Említett tag: %{name}. A tranzakción nincs tag mező, ellenőrizd a számlákat.',
     transactions_create_issues_title: 'Mentés',
     transactions_create_issues_hint:
       'A tranzakció piszkozatként mentődik. A csillagos mezőket töltsd ki; a bizonylat most még elhagyható.',

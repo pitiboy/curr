@@ -38,6 +38,7 @@ const DEFAULT_REDACT_KEYS = [
   'id_token',
   'apiKey',
   'resetPasswordToken',
+  'transcript',
 ];
 
 function parseList(raw: string | undefined, fallback: string[]): string[] {
