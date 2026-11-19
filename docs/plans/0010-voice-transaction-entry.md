@@ -18,17 +18,17 @@ A felhasználó magyarul lediktálja a tranzakciót a `/#/transactions/create` o
 
 ## 2. Backend
 
-| Elem           | Döntés                                                                                                                                                                     |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Route          | `POST /transactions/parse-voice`, scope `api::transaction.transaction.parseVoice` (minden content role: dataentry, editor, controller)                                     |
-| Feature flag   | Settings sor `voice_transaction_entry` (`enabled`, opcionális `config.roles`). Edizone és KOR seedben bekapcsolva. Kikapcsolva: 403, SPA gomb rejtve                       |
-| Org-hozzáférés | dataentry / editor: csak a saját M2M szervezetek; controller: minden szervezet. Idegen `organizationId` → 403 még az LLM hívás előtt                                       |
-| Kontextus      | elérhető szervezetek, számlák (kód + név), pénznemek, tagok, publikált ügylet-sablonok. Egy sablon `configuration.feature` mezője kikapcsolt feature sorra mutatva kimarad |
-| LLM            | `LlmJsonClient` interfész (`llm.ts`), provider adapter `llm-anthropic.ts`, választás `LLM_PROVIDER` alapján. Strict JSON schema (structured output). Kulcs csak szerveren  |
-| Validálás      | minden ID-nak a kontextusban kell lennie; különben `null` + magyar figyelmeztetés. Dátum `YYYY-MM-DD`, összeg > 0, azonos tartozik/követel számla elutasítva               |
-| KÖR kincstár   | `1100` csak kifejezett diktálásra (kód, „kincstár” vagy a számla neve). Promptban és szerveroldali őrként is                                                               |
-| Rate limit     | in-memory, felhasználónként (`VOICE_PARSE_RATE_LIMIT` / `VOICE_PARSE_RATE_WINDOW_SECONDS`, alap 10 / 60 s). Egy Strapi processzre érvényes                                 |
-| Naplózás       | csak átirat-hossz, kimenet, státusz, időtartam; nyers átirat soha. Az audit log alap redact listája kiegészül a `transcript` kulccsal                                      |
+| Elem           | Döntés                                                                                                                                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route          | `POST /transactions/parse-voice`, scope `api::transaction.transaction.parseVoice` (minden content role: dataentry, editor, controller)                                                                                           |
+| Feature flag   | Settings sor `voice_transaction_entry` (`enabled`, opcionális `config.roles`). Edizone és KOR seedben bekapcsolva. Kikapcsolva: 403, SPA gomb rejtve                                                                             |
+| Org-hozzáférés | dataentry / editor: csak a saját M2M szervezetek; controller: minden szervezet. Idegen `organizationId` → 403 még az LLM hívás előtt                                                                                             |
+| Kontextus      | elérhető szervezetek, számlák (kód + név), pénznemek, tagok, publikált ügylet-sablonok. Egy sablon `configuration.feature` mezője kikapcsolt feature sorra mutatva kimarad                                                       |
+| LLM            | `LlmJsonClient` interfész (`llm.ts`), adapterek: `llm-anthropic.ts`, `llm-gemini.ts`; választás `LLM_PROVIDER` alapján (`anthropic` / `gemini`). Strict JSON schema. Kulcs csak szerveren. Lokális demó: Gemini free (AI Studio) |
+| Validálás      | minden ID-nak a kontextusban kell lennie; különben `null` + magyar figyelmeztetés. Dátum `YYYY-MM-DD`, összeg > 0, azonos tartozik/követel számla elutasítva                                                                     |
+| KÖR kincstár   | `1100` csak kifejezett diktálásra (kód, „kincstár” vagy a számla neve). Promptban és szerveroldali őrként is                                                                                                                     |
+| Rate limit     | in-memory, felhasználónként (`VOICE_PARSE_RATE_LIMIT` / `VOICE_PARSE_RATE_WINDOW_SECONDS`, alap 10 / 60 s). Egy Strapi processzre érvényes                                                                                       |
+| Naplózás       | csak átirat-hossz, kimenet, státusz, időtartam; nyers átirat soha. Az audit log alap redact listája kiegészül a `transcript` kulccsal                                                                                            |
 
 Válasz: `{ date, amount, currency_type, debit_account, credit_account, organization, member, workflow, description, confidence, low_confidence_fields[], warnings[], labels }` — az ID-k Strapi `documentId`-k.
 
@@ -41,7 +41,7 @@ Válasz: `{ date, amount, currency_type, debit_account, credit_account, organiza
 
 ## 4. Env
 
-`.env.example`: `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_MS`, `VOICE_PARSE_RATE_LIMIT`, `VOICE_PARSE_RATE_WINDOW_SECONDS`. Kulcs nélkül az endpoint 503-at ad.
+`.env.example`: `LLM_PROVIDER` (`anthropic` \| `gemini`), `LLM_API_KEY`, `LLM_MODEL` (alap: Claude Opus / `gemini-2.5-flash`), `LLM_TIMEOUT_MS`, `VOICE_PARSE_RATE_LIMIT`, `VOICE_PARSE_RATE_WINDOW_SECONDS`. Kulcs nélkül az endpoint 503-at ad. Ingyenes demó: Google AI Studio kulcs + `LLM_PROVIDER=gemini`.
 
 ## 5. Tesztek
 

@@ -1,4 +1,5 @@
 import { createAnthropicLlmClient } from './llm-anthropic';
+import { createGeminiLlmClient } from './llm-gemini';
 import { readLlmEnv, type LlmJsonClient } from './llm';
 
 /**
@@ -13,6 +14,8 @@ export function createLlmClientFromEnv(
   switch (config.provider) {
     case 'anthropic':
       return createAnthropicLlmClient(config);
+    case 'gemini':
+      return createGeminiLlmClient(config);
     default:
       return null;
   }

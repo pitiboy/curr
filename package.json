@@ -81,6 +81,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.10.0",
+    "@google/genai": "^3.6.1",
     "@neon/config": "^1.7.2",
     "@neon/env": "^1.4.3",
     "@strapi/plugin-cloud": "5.58.0",

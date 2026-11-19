@@ -87,10 +87,14 @@ export type VoiceActor = {
 
 export class VoiceParseError extends Error {
   status: number;
+  cause?: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, options?: { cause?: unknown }) {
     super(message);
     this.name = 'VoiceParseError';
     this.status = status;
+    if (options?.cause !== undefined) {
+      this.cause = options.cause;
+    }
   }
 }
