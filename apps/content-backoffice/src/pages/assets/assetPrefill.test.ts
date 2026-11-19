@@ -7,6 +7,7 @@ import {
   assetCreatePathWithPrefill,
   buildAssetPrefillRecord,
   findMemberByAccount,
+  loadAcquisitionPrefill,
   pickAcquisitionTransactionId,
   prefillChanges,
 } from './assetPrefill';
@@ -216,5 +217,120 @@ describe('findMemberByAccount', () => {
       findMemberByAccount(client as never, ['nobody']),
     ).resolves.toBeNull();
     await expect(findMemberByAccount(client as never, [])).resolves.toBeNull();
+  });
+});
+
+describe('loadAcquisitionPrefill', () => {
+  type Opts = {
+    legCredit?: string;
+    originalCredit?: string;
+    members?: unknown[];
+    linkedAssets?: unknown[];
+  };
+
+  function fakeClient(opts: Opts = {}) {
+    const seen: string[] = [];
+    const client = async (url: string) => {
+      const decoded = decodeURIComponent(url);
+      seen.push(decoded);
+      const list = (data: unknown[]) => ({
+        json: { data, meta: { pagination: { pageCount: 1 } } },
+      });
+      if (decoded.includes('/api/transactions/tx-leg')) {
+        if (!decoded.includes('status=published'))
+          return { json: { data: null } };
+        return {
+          json: {
+            data: {
+              documentId: 'tx-leg',
+              amount: '7878',
+              date: '2026-11-19',
+              description: 'Lapát | Vásárlás',
+              currency_type: { documentId: 'huf', code: 'HUF' },
+              organization: { documentId: 'org-1' },
+              credit_account: { documentId: opts.legCredit ?? 'acc-1000' },
+              related_transaction: {
+                documentId: 'tx-orig',
+                credit_account: {
+                  documentId: opts.originalCredit ?? 'acc-1001',
+                },
+              },
+            },
+          },
+        };
+      }
+      if (decoded.includes('/api/assets')) return list(opts.linkedAssets ?? []);
+      if (decoded.includes('/api/members')) return list(opts.members ?? []);
+      return list([]);
+    };
+    return { client, seen };
+  }
+
+  it('falls back to the original deal credit account for the member', async () => {
+    const { client, seen } = fakeClient({
+      members: [
+        { documentId: 'member-1', account: { documentId: 'acc-1001' } },
+      ],
+    });
+    const prefill = await loadAcquisitionPrefill(
+      client as never,
+      'http://strapi',
+      'tx-leg',
+    );
+    expect(prefill).toEqual({
+      name: 'Lapát',
+      purchase_price: 7878,
+      currency_type: 'huf',
+      purchase_date: '2026-11-19',
+      organization: 'org-1',
+      responsible_member: 'member-1',
+    });
+    const memberQuery = seen.find((u) => u.includes('/api/members'))!;
+    expect(memberQuery).toContain('acc-1000');
+    expect(memberQuery).toContain('acc-1001');
+  });
+
+  it('leaves the member empty when no account belongs to a member', async () => {
+    const { client } = fakeClient();
+    const prefill = await loadAcquisitionPrefill(
+      client as never,
+      'http://strapi',
+      'tx-leg',
+    );
+    expect(prefill).not.toHaveProperty('responsible_member');
+  });
+
+  it('subtracts the other linked assets, excluding the edited one', async () => {
+    const { client, seen } = fakeClient({
+      linkedAssets: [
+        {
+          documentId: 'a1',
+          purchase_price: 5000,
+          acquisition_transaction: { documentId: 'tx-leg' },
+        },
+        {
+          documentId: 'self',
+          purchase_price: 2878,
+          acquisition_transaction: { documentId: 'tx-leg' },
+        },
+      ],
+    });
+    const prefill = await loadAcquisitionPrefill(
+      client as never,
+      'http://strapi',
+      'tx-leg',
+      'self',
+    );
+    expect(prefill.purchase_price).toBe(2878);
+    expect(
+      seen.some((u) => u.includes('filters[acquisition_transaction]')),
+    ).toBe(true);
+  });
+
+  it('returns nothing for an unknown transaction', async () => {
+    const client = async () => ({ json: { data: null } });
+    await expect(
+      loadAcquisitionPrefill(client as never, 'http://strapi', 'missing'),
+    ).resolves.toEqual({});
   });
 });
