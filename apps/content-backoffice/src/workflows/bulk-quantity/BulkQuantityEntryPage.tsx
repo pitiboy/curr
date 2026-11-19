@@ -17,6 +17,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { strapiHttpClient } from 'ra-strapi';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -1115,10 +1116,10 @@ export function BulkQuantityEntryPage({
         key={bulkFormKey}
         defaultValues={{ date: todayIsoDate(), _bulkRowCount: 0 }}
         sx={
-          singleLayout
-            ? [
-                bandedForm,
-                (theme) => ({
+          [
+            bandedForm,
+            singleLayout
+              ? (theme: Theme) => ({
                   // Keep the RA form stack one column; we own the two-pane layout.
                   '&& > .MuiStack-root': {
                     gridTemplateColumns: 'minmax(0, 1fr)',
@@ -1126,9 +1127,9 @@ export function BulkQuantityEntryPage({
                       gridTemplateColumns: 'minmax(0, 1fr)',
                     },
                   },
-                }),
-              ]
-            : bandedForm
+                })
+              : null,
+          ] as SxProps<Theme>
         }
         toolbar={
           hasDistribution ? (
