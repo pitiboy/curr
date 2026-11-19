@@ -1,6 +1,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../assets/useAssetFormAfterBooking', () => ({
+  useAssetFormAfterBooking: () => async () => false,
+}));
+
 const usePermissions = vi.fn();
 
 vi.mock('@mui/material/useMediaQuery', () => ({

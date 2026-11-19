@@ -23,6 +23,7 @@ import {
 } from '../../data/dataProvider';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { useSubmitGuard } from '../../submit/useSubmitGuard';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
@@ -73,6 +74,7 @@ export function TransactionCreateToolbar({
   const translate = useTranslate();
   const notify = useNotify();
   const redirect = useRedirect();
+  const openAssetForm = useAssetFormAfterBooking();
   const { isPending } = usePermissions();
   const accountRow = useOptionalTransactionCreateAccountRow();
   const { workflows, loading: catalogLoading } =
@@ -150,30 +152,45 @@ export function TransactionCreateToolbar({
 
   // lockOnSuccess: after save + convert we redirect away; a late second tap
   // must not create (and expand) a second source transaction.
-  const saveAndConvertGuard = useSubmitGuard<{
-    formValues: Record<string, unknown>;
-    workflowDocumentId: string;
-  }>({
+  const saveAndConvertGuard = useSubmitGuard<
+    {
+      formValues: Record<string, unknown>;
+      workflowDocumentId: string;
+    },
+    {
+      documentId: string;
+      result: Awaited<ReturnType<typeof convertTransactionToWorkflow>>;
+    }
+  >({
     lockOnSuccess: true,
     run: async ({ formValues, workflowDocumentId }) => {
-      const result = await createNewTransactionDraft({
+      const created = await createNewTransactionDraft({
         ...formValues,
         receipt_cards: receiptCards,
       });
       const documentId =
-        typeof result.data.documentId === 'string'
-          ? result.data.documentId
+        typeof created.data.documentId === 'string'
+          ? created.data.documentId
           : '';
       if (!documentId) {
         throw new Error('Missing documentId after create');
       }
-      return convertTransactionToWorkflow(documentId, workflowDocumentId);
+      const result = await convertTransactionToWorkflow(
+        documentId,
+        workflowDocumentId,
+      );
+      return { documentId, result };
     },
-    onSuccess: () => {
+    onSuccess: ({ documentId, result }) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
       onSaveSucceeded();
-      redirect('list', 'transactions');
+      // `collect_asset` workflows continue on the prefilled "Új eszköz" form.
+      void openAssetForm(workflow, documentId, result).then(
+        (openedAssetForm) => {
+          if (!openedAssetForm) redirect('list', 'transactions');
+        },
+      );
     },
     onError: (error: unknown) => {
       const message = strapiErrorMessage(error);

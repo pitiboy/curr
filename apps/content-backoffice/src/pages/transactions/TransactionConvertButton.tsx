@@ -9,6 +9,7 @@ import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 
@@ -33,6 +34,7 @@ export function TransactionConvertButton({
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
+  const openAssetForm = useAssetFormAfterBooking();
   const [open, setOpen] = useState(false);
 
   const previewInput = useMemo<ConvertPreviewRequest>(
@@ -47,10 +49,11 @@ export function TransactionConvertButton({
   const convertGuard = useSubmitGuard({
     lockOnSuccess: true,
     run: () => convertTransactionToWorkflow(documentId, workflow.documentId),
-    onSuccess: () => {
+    onSuccess: (result) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
       refresh();
+      void openAssetForm(workflow, documentId, result);
     },
     onError: (error: unknown) => {
       const message = strapiErrorMessage(error);

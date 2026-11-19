@@ -264,6 +264,11 @@ export type WorkflowTemplateHeader = {
    * organization, and Convert rejects an empty source org.
    */
   requires_source_organization: boolean;
+  /**
+   * Workflow-level flag (`transaction-workflow.collect_asset`): after a
+   * successful booking the backoffice opens the "Új eszköz" form, prefilled.
+   */
+  collect_asset?: boolean;
 };
 
 export type TransactionWorkflowMatchInput = {

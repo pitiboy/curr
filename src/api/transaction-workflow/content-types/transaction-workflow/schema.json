@@ -45,6 +45,11 @@
       "required": true,
       "default": true
     },
+    "collect_asset": {
+      "type": "boolean",
+      "required": false,
+      "default": false
+    },
     "configuration": {
       "type": "json"
     },

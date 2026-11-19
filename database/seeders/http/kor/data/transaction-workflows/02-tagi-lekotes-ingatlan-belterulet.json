@@ -5,7 +5,7 @@
   "transaction_type": "Lekötés",
   "steps": [
     {
-      "description": "{original.description} | Telek vételár",
+      "description": "{original.description} | Ingatlan vételár",
       "percent": 100,
       "debit_code": "{original.debit_account_code}",
       "credit_code": "1100",

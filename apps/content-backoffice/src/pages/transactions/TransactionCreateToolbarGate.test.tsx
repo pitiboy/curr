@@ -8,6 +8,10 @@ vi.mock('../../data/dataProvider', () => ({
 
 import { TransactionCreateToolbarGate } from './TransactionCreateToolbar';
 
+vi.mock('../assets/useAssetFormAfterBooking', () => ({
+  useAssetFormAfterBooking: () => async () => false,
+}));
+
 const usePermissions = vi.fn();
 
 vi.mock('react-admin', async (importOriginal) => {

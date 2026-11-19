@@ -47,6 +47,45 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     },
   },
   app: {
+    assets: {
+      menu: 'Eszközök',
+      list_title: 'Eszköznyilvántartás',
+      create_title: 'Új eszköz',
+      edit_title: 'Eszköz szerkesztése',
+      show_title: 'Eszköz adatai',
+      no_photo: 'Nincs fotó',
+      responsible_member_help:
+        'Tagi tulajdonú eszköznél a felelős tag egyben a tulajdonos is.',
+      transaction_picker_help_debit:
+        'Opcionális. A legutóbbi 1500-as terhelések látszanak (KOR tételek nélkül); leírásra vagy összegre szűkíthetsz.',
+      transaction_picker_help_credit:
+        'Opcionális. A legutóbbi 1500-as jóváírások látszanak (pl. „Tárgyi eszköz selejtezés” ügylet), a beszerzési ügyletek belső sorai és a KOR tételek nélkül; leírásra vagy összegre szűkíthetsz.',
+      transaction_picker_empty: 'Nincs találat',
+      transaction_picker_usage:
+        'Már %{count} eszközhöz kötve: %{linked} / %{amount} %{currency}',
+      transaction_picker_over_linked:
+        'Figyelem: a tranzakcióhoz kötött eszközök összege ezzel az eszközzel %{total} %{currency} lenne, ami több, mint a tranzakció összege (%{amount} %{currency}).',
+      collect_after_booking:
+        'Az ügylet könyvelve. Rögzítsd az eszközt az eszköznyilvántartásban.',
+      ownership_types: {
+        coop_owned: 'Szövetkezeti tulajdon',
+        member_owned_lendable: 'Tagé, kölcsönkérhető',
+        barter: 'Barterben behozott',
+      },
+      statuses: {
+        in_use: 'Használatban',
+        in_storage: 'Raktáron',
+        under_repair: 'Javításon',
+        lent_out: 'Kölcsönadva',
+        disposed: 'Selejtezve',
+      },
+    },
+    asset_categories: {
+      menu: 'Eszköz kategóriák',
+      list_title: 'Eszköz kategóriák',
+      create_title: 'Új eszköz kategória',
+      edit_title: 'Eszköz kategória szerkesztése',
+    },
     title: 'Kezelő felület',
     menu_placeholder: 'Nincs menüpont',
     transactions_list: 'Tranzakciók',
@@ -213,6 +252,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     account_profile_all: 'Minden számla',
     account_profile_cost: 'Költség',
     account_profile_revenue: 'Bevétel',
+    account_profile_investment: 'Befektetés',
     account_profile_group_profiles: 'Profilok',
     account_profile_group_workflows: 'Ügylet-sablonok',
     account_profile_workflows_loading: 'Sablonok betöltése…',
@@ -422,6 +462,35 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       },
     },
     reconciliation: {
+      fixed_assets: {
+        title: 'Tárgyi eszközök (1500) egyeztetés',
+        subtitle:
+          'Pénznemenként: az 1500-as számla egyenlege (%{date}-ig, a KOR kincstári tételek nélkül) és a szövetkezeti tulajdonú, nem selejtezett, tranzakcióhoz kötött eszközök beszerzési árának összege. A bal oldali szűrők (státusz, szervezet, pénznem, ügylet bontás, időszak vége) itt is érvényesek.',
+        ok: 'Egyezik',
+        mismatch: 'Eltérés',
+        empty: 'Nincs 1500-as tétel és nyilvántartott eszköz a szűrésben.',
+        unlinked_assets:
+          'Szövetkezeti, nem selejtezett eszköz beszerzési tranzakció nélkül (%{count})',
+        unlinked_debits: '1500-as terhelés eszköz nélkül (%{count})',
+        transaction_mismatches:
+          'Tranzakció, ahol a hozzá kötött eszközök beszerzési ára nem egyezik az összeggel (%{count})',
+        treasury_excluded:
+          '%{count} KOR kincstári (1100) tétel kimaradt a számításból.',
+        columns: {
+          currency: 'Pénznem',
+          ledger: '1500 egyenleg',
+          assets: 'Eszközök összesen',
+          difference: 'Eltérés',
+          name: 'Eszköz',
+          organization: 'Szervezet',
+          price: 'Beszerzési ár',
+          date: 'Dátum',
+          description: 'Leírás',
+          amount: 'Összeg',
+          asset_count: 'Eszközök',
+          linked_total: 'Eszközök összesen',
+        },
+      },
       menu: 'Konzisztencia jelentés',
       title: 'Konzisztencia jelentés',
       subtitle:
@@ -625,6 +694,36 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     receipt_saved: 'A bizonylat mentve.',
   },
   resources: {
+    assets: {
+      name: 'Eszköz |||| Eszközök',
+      fields: {
+        name: 'Név',
+        category: 'Kategória',
+        ownership_type: 'Tulajdon típusa',
+        status: 'Állapot',
+        responsible_member: 'Felelős tag',
+        location: 'Helyszín',
+        purchase_price: 'Beszerzési ár',
+        currency_type: 'Pénznem',
+        purchase_date: 'Beszerzés dátuma',
+        warranty_until: 'Garancia vége',
+        serial_number: 'Gyári szám',
+        notes: 'Megjegyzés',
+        photo: 'Fotó',
+        organization: 'Szervezet',
+        acquisition_transaction: 'Beszerzési tranzakció',
+        disposal_transaction: 'Selejtezési tranzakció',
+        q: 'Keresés',
+      },
+    },
+    'asset-categories': {
+      name: 'Eszköz kategória |||| Eszköz kategóriák',
+      fields: {
+        name: 'Név',
+        description: 'Leírás',
+        sort_order: 'Sorrend',
+      },
+    },
     transactions: {
       name: 'Tranzakció |||| Tranzakciók',
       fields: {

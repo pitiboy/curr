@@ -1,5 +1,5 @@
 {
-  "name": "Közös készpénzes belterületi ingatlan vásárlás",
+  "name": "Közös készpénzes belterületi ingatlan vagy eszköz vásárlás",
   "debit_account_code": "15?0",
   "credit_account_code": "1001",
   "steps": [
@@ -13,7 +13,7 @@
       "transaction_type": "Utalás"
     },
     {
-      "description": "{original.description} | Telek vételár",
+      "description": "{original.description} | Vásárlás",
       "percent": 100,
       "debit_code": "{original.debit_account_code}",
       "credit_code": "1000",
