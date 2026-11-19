@@ -37,6 +37,12 @@
     "purchase_price": {
       "type": "decimal",
       "required": false,
+      "precision": 18,
+      "scale": 4,
+      "column": {
+        "type": "decimal",
+        "args": [18, 4]
+      },
       "metadatas": {
         "label": "Beszerzési ár"
       }

@@ -6,7 +6,7 @@
  *
  * Idempotent: skips missing table/column and already-wide columns.
  * DDL uses inlined numeric(18, 4) — knex value binds are invalid in ALTER TYPE.
- * Receipt amount stays at scale 2.
+ * Receipt/asset money columns are widened in a later migration.
  */
 
 const TARGET_PRECISION = 18;

@@ -9,8 +9,8 @@ export type TransactionUsage = {
   linkedTotal: number;
 };
 
-/** Rounding tolerance (amounts are 2-decimal). */
-export const TRANSACTION_USAGE_TOLERANCE = 0.005;
+/** Rounding tolerance (amounts are 4-decimal). */
+export const TRANSACTION_USAGE_TOLERANCE = 0.00005;
 
 type UsageAssetRow = {
   documentId?: string;
@@ -41,7 +41,8 @@ export function summarizeTransactionUsage(
     entry.assetCount += 1;
     const price = Number(row.purchase_price);
     if (row.purchase_price != null && Number.isFinite(price)) {
-      entry.linkedTotal = Math.round((entry.linkedTotal + price) * 100) / 100;
+      entry.linkedTotal =
+        Math.round((entry.linkedTotal + price) * 10_000) / 10_000;
     }
     usage.set(txId, entry);
   }
@@ -83,6 +84,6 @@ export function overLinkedTotal(
     return null;
   }
   const own = ownPrice != null && Number.isFinite(ownPrice) ? ownPrice : 0;
-  const total = Math.round(((usage?.linkedTotal ?? 0) + own) * 100) / 100;
+  const total = Math.round(((usage?.linkedTotal ?? 0) + own) * 10_000) / 10_000;
   return total - transactionAmount > TRANSACTION_USAGE_TOLERANCE ? total : null;
 }
