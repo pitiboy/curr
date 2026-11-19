@@ -14,6 +14,7 @@ export const CONTENT_ROLE_ACTIONS = [
   'api::transaction.transaction.findOne',
   'api::transaction.transaction.create',
   'api::transaction.transaction.update',
+  'api::transaction.transaction.parseVoice',
   'api::receipt.receipt.find',
   'api::receipt.receipt.findOne',
   'api::receipt.receipt.create',

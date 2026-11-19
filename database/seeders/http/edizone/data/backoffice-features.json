@@ -73,6 +73,13 @@
     "config": {}
   },
   {
+    "key": "voice_transaction_entry",
+    "enabled": true,
+    "config": {
+      "roles": ["dataentry", "editor", "controller"]
+    }
+  },
+  {
     "key": "assets",
     "enabled": true,
     "config": {}

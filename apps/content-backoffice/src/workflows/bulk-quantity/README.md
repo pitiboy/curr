@@ -4,7 +4,7 @@ Reusable **bulk quantity entry** for deal-style forms: one shared date and one n
 
 For the **`egg-production`** Settings row, optional JSON `initialPublicationStatus`: `"draft"` (default) or `"published"`. When `"published"`, successful creates/updates call `POST /api/transactions/:documentId/actions/publish?eggAuto=1` (`dataentry` or `editor`). The server verifies the Setting row still requests `published`, then runs publish with linked context so the same user can finalize; manual list „Véglegesítés” stays under the usual `publisher_must_differ` rules (no `eggAuto`).
 
-Optional **distribution** (second wizard step) allocates the day’s total quantity to members of a configured organization. The egg daily entry workflow uses this; other resources (fruit, pigs) can reuse the same config shape.
+Optional **distribution** allocates the day’s total quantity to members of a configured organization. Default UI is a **wizard** (production → distribution). Set `layout: 'single'` to show both sections on one page (egg daily entry). Empty distribution on save = production (+ pool) only. Opt-in `voice: { enabled: true }` adds microphone dictation via `POST /api/transactions/parse-voice` with `workflowId` (egg: hen-house + member quantities).
 
 ## Member ↔ organization
 
@@ -47,7 +47,7 @@ Set `distribution` on `BulkQuantityWorkflowConfig` (`BulkQuantityDistributionCon
 
 Sale revenue currency: `app.egg_sale_currency` setting or `saleCurrency` in the workflow row’s `config` JSON (default `HUF`).
 
-Pure logic: `logic.ts`, `distributionLogic.ts`, `membershipRules.ts`. Plans: `distributionPlans.ts`. Loaders: `loadCatalog.ts`, `loadDistribution.ts`. UI: `BulkQuantityEntryPage.tsx` (wizard when `distribution` is set).
+Pure logic: `logic.ts`, `distributionLogic.ts`, `membershipRules.ts`. Plans: `distributionPlans.ts`. Loaders: `loadCatalog.ts`, `loadDistribution.ts`. UI: `BulkQuantityEntryPage.tsx` (wizard or `layout: 'single'`). Voice: `VoiceBulkQuantityEntry.tsx`, `voiceBulkQuantity.ts`.
 
 ## Egg daily entry constants
 

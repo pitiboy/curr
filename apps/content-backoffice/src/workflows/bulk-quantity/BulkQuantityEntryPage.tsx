@@ -17,6 +17,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { strapiHttpClient } from 'ra-strapi';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -39,7 +40,7 @@ import {
   eggSaleCurrencyForWorkflow,
 } from '../parseBackofficeConfig';
 import { useBackofficeConfig } from '../useBackofficeConfig';
-import { bandedForm } from '../../theme';
+import { bandedForm, bandedSpanClass } from '../../theme';
 import {
   distributionRowsFromQuantities,
   isOverDistributed,
@@ -102,6 +103,8 @@ import type {
   DistributionResolvedRefs,
   DistributionTransactionLegPlan,
 } from './types';
+import { VoiceBulkQuantityEntry } from './VoiceBulkQuantityEntry';
+import type { VoiceEggBulkFormPlan } from './voiceBulkQuantity';
 
 const httpClient = strapiHttpClient({ storage: localStorage });
 
@@ -134,28 +137,42 @@ function FormDateWatcher({ onDate }: { onDate: (isoDate: string) => void }) {
 type WizardToolbarProps = {
   activeStep: number;
   hasDistribution: boolean;
+  singleLayout: boolean;
   disabled: boolean;
   saving: boolean;
   onProductionOnly: () => void;
   onNext: () => void;
   onBack: () => void;
   onSaveAll: () => void;
+  onSingleSave: () => void;
 };
 
 function WizardToolbar({
   activeStep,
   hasDistribution,
+  singleLayout,
   disabled,
   saving,
   onProductionOnly,
   onNext,
   onBack,
   onSaveAll,
+  onSingleSave,
 }: WizardToolbarProps) {
   const translate = useTranslate();
   return (
     <Toolbar>
-      {activeStep === 0 && hasDistribution ? (
+      {singleLayout ? (
+        <Button
+          disabled={disabled || saving}
+          type="button"
+          variant="contained"
+          onClick={onSingleSave}
+        >
+          {translate('app.bulk_quantity.save')}
+        </Button>
+      ) : null}
+      {!singleLayout && activeStep === 0 && hasDistribution ? (
         <>
           <Button
             disabled={disabled || saving}
@@ -176,12 +193,12 @@ function WizardToolbar({
           </Button>
         </>
       ) : null}
-      {activeStep === 0 && !hasDistribution ? (
+      {!singleLayout && activeStep === 0 && !hasDistribution ? (
         <Button disabled={disabled || saving} type="submit" variant="contained">
           {translate('app.bulk_quantity.save')}
         </Button>
       ) : null}
-      {activeStep === 1 ? (
+      {!singleLayout && activeStep === 1 ? (
         <>
           <Button disabled={saving} type="button" onClick={onBack}>
             {translate('app.bulk_quantity.back_production')}
@@ -216,6 +233,7 @@ export function BulkQuantityEntryPage({
   const eggInitialPublication =
     eggProductionInitialPublicationStatus(backofficeConfig);
   const hasDistribution = Boolean(config.distribution);
+  const singleLayout = config.layout === 'single' && hasDistribution;
 
   const [activeStep, setActiveStep] = useState(0);
   const [henHouses, setHenHouses] = useState<BulkQuantityHenHouse[]>([]);
@@ -916,6 +934,58 @@ export function BulkQuantityEntryPage({
     });
   };
 
+  /** Single-page save: empty distribution → production (+ pool) only. */
+  const handleSingleSave = async () => {
+    if (!refs) {
+      return;
+    }
+    const validationError = validateProductionInputs();
+    if (validationError) {
+      return;
+    }
+    const includeDistribution = distributedTotal > 0;
+    if (includeDistribution) {
+      if (memberNeedsSaleRate(distributionMembers) && eggToSaleRate === null) {
+        return;
+      }
+      for (const member of distributionMembers) {
+        if (invalidQuantityInput(memberQuantities[member.memberId])) {
+          return;
+        }
+      }
+    }
+    const date = formDate;
+    const prepared = await prepareSave(
+      date,
+      includeDistribution,
+      eggToSaleRate ?? 1,
+    );
+    if (!prepared.ready) {
+      return;
+    }
+    await runProductionAndPool(
+      prepared.productionPlans,
+      prepared.poolLegPlans,
+      date,
+      includeDistribution ? prepared.legPlans : [],
+    );
+  };
+
+  const applyVoicePlan = useCallback((plan: VoiceEggBulkFormPlan) => {
+    if (plan.date) {
+      setFormDate(plan.date);
+    }
+    if (Object.keys(plan.quantities).length > 0) {
+      setQuantities((previous) => ({ ...previous, ...plan.quantities }));
+    }
+    if (Object.keys(plan.memberQuantities).length > 0) {
+      setMemberQuantities((previous) => ({
+        ...previous,
+        ...plan.memberQuantities,
+      }));
+    }
+  }, []);
+
   const confirmGlobalConflicts = async () => {
     if (!submitDate) {
       return;
@@ -995,21 +1065,30 @@ export function BulkQuantityEntryPage({
     }
   };
 
+  const distributionNeeded =
+    (singleLayout && distributedTotal > 0) ||
+    (!singleLayout && activeStep === 1);
   const stepDisabled =
     catalogPending ||
     !refs ||
     !poolRefs ||
     saving ||
     productionRows.length === 0 ||
-    (activeStep === 1 &&
+    (distributionNeeded &&
       memberNeedsSaleRate(distributionMembers) &&
       eggToSaleRate === null);
+
+  const showProduction = singleLayout || activeStep === 0;
+  const showDistribution =
+    hasDistribution && (singleLayout || activeStep === 1);
 
   return (
     <Box
       sx={{
         p: { xs: 1, sm: 2 },
-        maxWidth: hasDistribution ? { xs: '100%', md: 960 } : 640,
+        maxWidth: hasDistribution
+          ? { xs: '100%', md: singleLayout ? 1100 : 960 }
+          : 640,
       }}
     >
       <Title title={config.labelKey} />
@@ -1018,7 +1097,7 @@ export function BulkQuantityEntryPage({
           {catalogError}
         </Alert>
       ) : null}
-      {hasDistribution ? (
+      {hasDistribution && !singleLayout ? (
         <Stepper activeStep={activeStep} sx={{ mb: 2 }}>
           <Step completed={activeStep > 0}>
             <StepLabel>
@@ -1036,7 +1115,22 @@ export function BulkQuantityEntryPage({
       <SimpleForm
         key={bulkFormKey}
         defaultValues={{ date: todayIsoDate(), _bulkRowCount: 0 }}
-        sx={bandedForm}
+        sx={
+          [
+            bandedForm,
+            singleLayout
+              ? (theme: Theme) => ({
+                  // Keep the RA form stack one column; we own the two-pane layout.
+                  '&& > .MuiStack-root': {
+                    gridTemplateColumns: 'minmax(0, 1fr)',
+                    [theme.breakpoints.up('md')]: {
+                      gridTemplateColumns: 'minmax(0, 1fr)',
+                    },
+                  },
+                })
+              : null,
+          ] as SxProps<Theme>
+        }
         toolbar={
           hasDistribution ? (
             <WizardToolbar
@@ -1044,10 +1138,12 @@ export function BulkQuantityEntryPage({
               disabled={stepDisabled}
               hasDistribution={hasDistribution}
               saving={saving}
+              singleLayout={singleLayout}
               onBack={() => setActiveStep(0)}
               onNext={() => void handleNext()}
               onProductionOnly={() => void handleProductionOnly()}
               onSaveAll={() => void handleSaveAll()}
+              onSingleSave={() => void handleSingleSave()}
             />
           ) : (
             <Toolbar>
@@ -1068,7 +1164,139 @@ export function BulkQuantityEntryPage({
         <BulkQuantityFormDirtySync rowCount={productionRows.length} />
         <FormDateWatcher onDate={setFormDate} />
 
-        {activeStep === 0 ? (
+        {config.voice?.enabled ? (
+          <VoiceBulkQuantityEntry
+            disabled={catalogPending || saving}
+            organizationId={poolRefs?.parentOrganizationId ?? null}
+            voice={config.voice}
+            workflowId={config.workflowId}
+            onApplied={applyVoicePlan}
+          />
+        ) : null}
+
+        {singleLayout && hasDistribution ? (
+          <Box
+            className={bandedSpanClass}
+            sx={(theme) => ({
+              display: 'grid',
+              gap: theme.spacing(2),
+              width: '100%',
+              alignItems: 'start',
+              gridTemplateColumns: 'minmax(0, 1fr)',
+              [theme.breakpoints.up('md')]: {
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              },
+            })}
+          >
+            <Stack spacing={2} sx={{ minWidth: 0, width: '100%' }}>
+              <DateInput fullWidth source="date" />
+              {catalogPending ? (
+                <Typography color="text.secondary" variant="body2">
+                  {translate('ra.message.loading')}
+                </Typography>
+              ) : null}
+              {!catalogPending && henHouses.length === 0 ? (
+                <Typography color="warning.main" variant="body2">
+                  {translate('app.bulk_quantity.no_hen_houses')}
+                </Typography>
+              ) : null}
+              <Typography variant="subtitle1">
+                {translate('app.bulk_quantity.step_production')}
+              </Typography>
+              {henHouses.map((house) => (
+                <TextField
+                  key={house.documentId}
+                  fullWidth
+                  inputMode="numeric"
+                  label={house.name}
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      step: 1,
+                      style: { fontSize: '1.25rem', padding: '14px 12px' },
+                    },
+                  }}
+                  type="number"
+                  value={quantities[house.documentId] ?? ''}
+                  onChange={(event) =>
+                    setQuantities((previous) => ({
+                      ...previous,
+                      [house.documentId]: event.target.value,
+                    }))
+                  }
+                />
+              ))}
+              <Box sx={{ display: { xs: 'none', md: 'block' }, pt: 1 }}>
+                <DistributionSummaryBlock
+                  currencyCode={config.currencyCode}
+                  distributedTotal={distributedTotal}
+                  distributionLoadError={distributionLoadError}
+                  eggSaleCurrency={eggSaleCurrency}
+                  eggToSaleRate={eggToSaleRate}
+                  overLimit={overLimit}
+                  producedTotal={producedTotal}
+                  rateValidFrom={rateValidFrom}
+                  remaining={remaining}
+                />
+              </Box>
+            </Stack>
+
+            <Stack spacing={2} sx={{ minWidth: 0, width: '100%' }}>
+              <Typography variant="subtitle1">
+                {translate('app.bulk_quantity.step_distribution')}
+              </Typography>
+              {distributionMembers.length === 0 ? (
+                <Typography color="warning.main" variant="body2">
+                  {translate('app.bulk_quantity.distribution_no_members', {
+                    org: config.distribution?.memberOrganizationName ?? '',
+                  })}
+                </Typography>
+              ) : null}
+              {distributionMembers.map((member) => (
+                <TextField
+                  key={member.memberId}
+                  disabled={
+                    memberNeedsSaleRate([member]) && eggToSaleRate === null
+                  }
+                  fullWidth
+                  inputMode="numeric"
+                  label={member.memberName}
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      step: 1,
+                      style: { fontSize: '1.25rem', padding: '14px 12px' },
+                    },
+                  }}
+                  type="number"
+                  value={memberQuantities[member.memberId] ?? ''}
+                  onChange={(event) =>
+                    setMemberQuantities((previous) => ({
+                      ...previous,
+                      [member.memberId]: event.target.value,
+                    }))
+                  }
+                />
+              ))}
+            </Stack>
+
+            <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%' }}>
+              <DistributionSummaryBlock
+                currencyCode={config.currencyCode}
+                distributedTotal={distributedTotal}
+                distributionLoadError={distributionLoadError}
+                eggSaleCurrency={eggSaleCurrency}
+                eggToSaleRate={eggToSaleRate}
+                overLimit={overLimit}
+                producedTotal={producedTotal}
+                rateValidFrom={rateValidFrom}
+                remaining={remaining}
+              />
+            </Box>
+          </Box>
+        ) : null}
+
+        {!singleLayout && showProduction ? (
           <>
             <Stack spacing={2} sx={{ width: '100%' }}>
               <DateInput fullWidth source="date" />
@@ -1117,7 +1345,7 @@ export function BulkQuantityEntryPage({
           </>
         ) : null}
 
-        {activeStep === 1 && hasDistribution ? (
+        {!singleLayout && showDistribution ? (
           <>
             <Stack spacing={2} sx={{ width: '100%' }}>
               <DateInput fullWidth source="date" />
@@ -1241,6 +1469,69 @@ export function BulkQuantityEntryPage({
         onConfirm={() => void confirmGlobalConflicts()}
       />
     </Box>
+  );
+}
+
+function DistributionSummaryBlock({
+  producedTotal,
+  remaining,
+  distributedTotal,
+  overLimit,
+  currencyCode,
+  eggSaleCurrency,
+  eggToSaleRate,
+  rateValidFrom,
+  distributionLoadError,
+}: {
+  producedTotal: number;
+  remaining: number;
+  distributedTotal: number;
+  overLimit: boolean;
+  currencyCode: string;
+  eggSaleCurrency: string;
+  eggToSaleRate: number | null;
+  rateValidFrom: string | null;
+  distributionLoadError: string | null;
+}) {
+  const translate = useTranslate();
+  return (
+    <Stack spacing={1}>
+      <Typography variant="subtitle1">
+        {translate('app.bulk_quantity.distribution_summary')}
+      </Typography>
+      <Typography variant="body1">
+        {translate('app.bulk_quantity.distribution_produced', {
+          count: producedTotal,
+        })}
+      </Typography>
+      {remaining >= 0 ? (
+        <Typography variant="body1">
+          {translate('app.bulk_quantity.distribution_remaining', {
+            count: remaining,
+          })}
+        </Typography>
+      ) : null}
+      {eggToSaleRate !== null && rateValidFrom ? (
+        <Typography color="text.secondary" variant="body2">
+          {translate('app.bulk_quantity.distribution_rate', {
+            from: currencyCode,
+            to: eggSaleCurrency,
+            rate: eggToSaleRate,
+            date: rateValidFrom.slice(0, 10),
+          })}
+        </Typography>
+      ) : null}
+      {distributionLoadError ? (
+        <Alert severity="warning">{distributionLoadError}</Alert>
+      ) : null}
+      {overLimit ? (
+        <Alert severity="warning">
+          {translate('app.bulk_quantity.distribution_over_limit', {
+            count: distributedTotal - producedTotal,
+          })}
+        </Alert>
+      ) : null}
+    </Stack>
   );
 }
 

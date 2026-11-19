@@ -337,11 +337,11 @@ Mentésenként egy tranzakció jön létre nem nulla soronként; alapból piszko
 
 Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A workflow kapcsoló a **Settings** collection `egg-production` sorában van (edizone seed: enabled, `initialPublicationStatus: draft`; kor: disabled); ugyanez kapcsolja a **Tojás készlet** kimutatást is. Régi `egg-daily-entry` kulcs → migráció: [`database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js`](../database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
 
-### Napi tojás továbbosztás (edizone backoffice, 2. lépés)
+### Napi tojás továbbosztás (edizone backoffice, egylépéses űrlap)
 
-A **Napi tojás rögzítés** űrlap két lépésből áll: (1) termelés az ólankénti mezőkkel (fent), (2) **továbbosztás** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.members` → egy vagy több tag (many-to-many), `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. Egy membership rekord közös szabályokkal több tagot is lefedhet. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
+A **Napi tojás rögzítés** űrlap egy oldalon mutatja a termelést (ólankénti mezők, fent) és a **továbbosztást** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.members` → egy vagy több tag (many-to-many), `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. Egy membership rekord közös szabályokkal több tagot is lefedhet. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
 
-A 2. lépés mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. **Csak termelés mentése** kihagyja a továbbosztást; a 2. lépés végén a termelés és a továbbosztás együtt mentődik. A nem nulla sorok tranzakciói alapból piszkozatként jönnek létre (auto-publish: lásd fent az `initialPublicationStatus` és `publisher_must_differ` szabályt), ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
+Az űrlap mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. Egy **Mentés** gomb van: ha a továbbosztás mezők üresek / nullák, csak a termelés (+ pool átvezetés) mentődik; ha van legalább egy nem nulla tag-mennyiség, termelés és továbbosztás együtt. Hangalapú kitöltés: a `voice_transaction_entry` feature mellett mikrofon → `POST /api/transactions/parse-voice` `workflowId: egg-production` (ól + tag mennyiségek); mentés továbbra is kézi. A nem nulla sorok tranzakciói alapból piszkozatként jönnek létre (auto-publish: lásd fent az `initialPublicationStatus` és `publisher_must_differ` szabályt), ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
 
 | Szabály               | Tartozik ←                  | Követel                 | Összeg                | Pénznem                             | Szervezet    | Típus       |
 | --------------------- | --------------------------- | ----------------------- | --------------------- | ----------------------------------- | ------------ | ----------- |
@@ -358,7 +358,7 @@ Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár
 
 ```mermaid
 sequenceDiagram
-  participant BO as Backoffice (2 lepes)
+  participant BO as Backoffice (egylepes)
   participant Ol as Tyukol (termelés)
   participant Keszlet as 1300 Keszletek
   participant Tag as 1001 sajat szamla
@@ -669,7 +669,7 @@ Ha egy lépés más pénznemben könyvel, mint a forrás (pl. EGG darab → HUF 
 
 > forrás összeg × `percent` / 100 × árfolyam × tagsági ratio, két tizedesre kerekítve
 
-- **Árfolyam:** a `currency-rate` legfrissebb sora a forrás pénznemből a lépés pénznemébe, amely a forrás tranzakció **dátumáig** (beleértve) érvényes. Ugyanez a szabály a [Napi tojás továbbosztás](#napi-tojás-továbbosztás-edizone-backoffice-2-lépés) űrlapon. Fordított irányú árfolyamból nem számol. Azonos pénznemnél az árfolyam 1.
+- **Árfolyam:** a `currency-rate` legfrissebb sora a forrás pénznemből a lépés pénznemébe, amely a forrás tranzakció **dátumáig** (beleértve) érvényes. Ugyanez a szabály a [Napi tojás továbbosztás](#napi-tojás-továbbosztás-edizone-backoffice-egylépéses-űrlap) űrlapon. Fordított irányú árfolyamból nem számol. Azonos pénznemnél az árfolyam 1.
 - **Nincs árfolyam:** a konverzió **nem fut le**, és draft sor sem jön létre. Az editor hibaüzenetet kap (melyik pénznempár, melyik dátum), és előbb fel kell vinni az árfolyamot.
 - **Tagsági ratio:** ha a forrás egyik oldala tagi számla, és a lépés valóban pénznemet vált, az összeget a tag tagsági ratio-jával is szorozza. A szabály kulcsa a forrás pénznemének kódja kisbetűvel (tojásnál `rules.egg`, munkaóránál később `rules.hour`). A tagságon megadott szabály felülírja a tagságtípusét; ha egyik sincs, a ratio 1. A tranzakció napján érvényes **összes** tagság számít; ha ezek eltérő ratio-t adnak, a konverzió nem fut le, és az editor hibaüzenetet kap. A `mode` (pl. `internal`) nem számít.
 - **Nyomon követés:** ha a ratio nem 1, a generált sor leírása végére kerül, pl. „Tojás eladás (kp befizetés) · ratio 0.75 (Érdeklődő)”. Az előnézet a ratio-t és a tagságot is mutatja.

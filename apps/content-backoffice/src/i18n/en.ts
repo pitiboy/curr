@@ -158,6 +158,32 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalize_same_person:
       'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
     form_issues_count: '%{errors} error(s), %{warnings} warning(s)',
+    voice_start: 'Dictate',
+    voice_stop: 'Stop dictation',
+    voice_hint:
+      'Say the transaction in Hungarian (e.g. "tegnap ötezer forint táp készpénzből"). Check everything before saving.',
+    voice_bulk_hint:
+      'Dictate the daily eggs in Hungarian (hen-house production and distribution). Check everything before saving.',
+    voice_listening: 'Listening…',
+    voice_processing: 'Parsing…',
+    voice_unsupported:
+      'This browser does not support voice dictation. Try Chrome or Edge, or fill in the form by hand.',
+    voice_error_mic_denied:
+      'No microphone permission. Allow it in the browser settings.',
+    voice_error_no_speech: 'No speech detected. Try again.',
+    voice_error_no_mic: 'No microphone found.',
+    voice_error_network: 'Network error during speech recognition.',
+    voice_error_generic: 'Speech recognition stopped. Try again.',
+    voice_error_request: 'Could not parse the dictation. Try again.',
+    voice_retry: 'Retry',
+    voice_review_notice:
+      'The form was filled from your dictation. Nothing is saved: check the fields, then save as usual.',
+    voice_filled_fields: 'Filled:',
+    voice_low_confidence: 'uncertain',
+    voice_nothing_filled: 'No field could be filled from the dictation.',
+    voice_workflow_selected: 'Selected workflow template: %{name}',
+    voice_member_mentioned:
+      'Member mentioned: %{name}. Transactions have no member field; check the accounts.',
     transactions_create_issues_title: 'Save',
     transactions_create_issues_hint:
       'The transaction is saved as a draft. Fill in the starred fields; a receipt can wait for now.',
@@ -544,6 +570,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
       step_production: 'Production',
       step_distribution: 'Distribution',
+      distribution_summary: 'Distribution summary',
       next_distribution: 'Next: distribution',
       back_production: 'Back: production',
       save_production_only: 'Save production only',

@@ -36,6 +36,7 @@ import { transactionFormErrors } from './transactionForm';
 import { shouldConfirmDirtyCreateLeave } from './transactionLeave';
 import { TransactionCreateToolbarGate } from './TransactionCreateToolbar';
 import { TransactionTypeInput } from './TransactionTypeInput';
+import { VoiceTransactionEntry } from './VoiceTransactionEntry';
 
 function todayLocalIsoDate(now = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -299,6 +300,8 @@ function TransactionCreateForm({
         saveSucceeded={saveSucceeded}
         saveSucceededRef={saveSucceededRef}
       />
+
+      <VoiceTransactionEntry />
 
       <DateInput fullWidth source="date" validate={required()} />
       <CreateOrganizationInput />
