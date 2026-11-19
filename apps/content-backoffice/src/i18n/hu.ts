@@ -252,6 +252,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     account_profile_all: 'Minden számla',
     account_profile_cost: 'Költség',
     account_profile_revenue: 'Bevétel',
+    account_profile_investment: 'Befektetés',
     account_profile_group_profiles: 'Profilok',
     account_profile_group_workflows: 'Ügylet-sablonok',
     account_profile_workflows_loading: 'Sablonok betöltése…',

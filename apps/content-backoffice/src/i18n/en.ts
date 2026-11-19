@@ -209,6 +209,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     account_profile_all: 'All accounts',
     account_profile_cost: 'Expense',
     account_profile_revenue: 'Revenue',
+    account_profile_investment: 'Investment',
     account_profile_group_profiles: 'Profiles',
     account_profile_group_workflows: 'Transaction templates',
     account_profile_workflows_loading: 'Loading templates…',
