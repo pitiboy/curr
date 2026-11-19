@@ -8,6 +8,9 @@ export const ASSET_CATEGORIES_RESOURCE = 'asset-categories';
 /** Tárgyi eszközök főkönyvi számla — holds the book value of coop-owned assets. */
 export const FIXED_ASSET_ACCOUNT_CODE = '1500';
 
+/** KOR currency: KOR-denominated rows are never offered as asset bookings. */
+export const KOR_CURRENCY_CODE = 'KOR';
+
 export const ASSET_OWNERSHIP_TYPES = [
   'coop_owned',
   'member_owned_lendable',

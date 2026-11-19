@@ -57,9 +57,9 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       responsible_member_help:
         'Tagi tulajdonú eszköznél a felelős tag egyben a tulajdonos is.',
       transaction_picker_help_debit:
-        'Opcionális. Üres keresésnél a legutóbbi 1500-as terhelések látszanak; kereshetsz leírásra vagy összegre.',
+        'Opcionális. A legutóbbi 1500-as terhelések látszanak (KOR tételek nélkül); leírásra vagy összegre szűkíthetsz.',
       transaction_picker_help_credit:
-        'Opcionális. Üres keresésnél a legutóbbi 1500-as jóváírások látszanak; kereshetsz leírásra vagy összegre.',
+        'Opcionális. A legutóbbi 1500-as jóváírások látszanak (pl. „Tárgyi eszköz selejtezés” ügylet), a beszerzési ügyletek belső sorai és a KOR tételek nélkül; leírásra vagy összegre szűkíthetsz.',
       transaction_picker_empty: 'Nincs találat',
       collect_after_booking:
         'Az ügylet könyvelve. Rögzítsd az eszközt az eszköznyilvántartásban.',

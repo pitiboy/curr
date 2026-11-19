@@ -14,9 +14,9 @@ export const enMessages = mergeTranslations(englishMessages, {
       responsible_member_help:
         'For member-owned items the responsible member is also the owner.',
       transaction_picker_help_debit:
-        'Optional. An empty search lists the latest 1500 debits; search by description or amount.',
+        'Optional. Lists the latest 1500 debits (KOR rows excluded); narrow by description or amount.',
       transaction_picker_help_credit:
-        'Optional. An empty search lists the latest 1500 credits; search by description or amount.',
+        'Optional. Lists the latest 1500 credits (e.g. a “Fixed asset disposal” deal), excluding acquisition deals’ internal legs and KOR rows; narrow by description or amount.',
       transaction_picker_empty: 'No matches',
       collect_after_booking:
         'The deal is booked. Record the asset in the inventory.',

@@ -89,6 +89,26 @@ describe('asset purchase workflow seed', () => {
     }
   });
 
+  it('disposal workflow credits 1500 against 5800 without collecting an asset', () => {
+    for (const instance of INSTANCES) {
+      const wf = JSON.parse(
+        readFileSync(
+          new URL(
+            `./http/${instance}/data/transaction-workflows/42-targyi-eszkoz-selejtezes.json`,
+            import.meta.url,
+          ),
+          'utf8',
+        ),
+      );
+      assert.equal(wf.name, 'Tárgyi eszköz selejtezés');
+      assert.equal(wf.debit_account_code, '5800');
+      assert.equal(wf.credit_account_code, '1500');
+      assert.notEqual(wf.collect_asset, true);
+      assert.equal(wf.steps.length, 1);
+      assert.equal(wf.steps[0].credit_code, '{original.credit_account_code}');
+    }
+  });
+
   it('the assets backoffice feature is enabled for kor and edizone', () => {
     for (const instance of INSTANCES) {
       const rows = JSON.parse(
