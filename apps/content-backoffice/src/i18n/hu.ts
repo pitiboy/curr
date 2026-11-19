@@ -470,6 +470,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         blocked: 'Letiltva',
       },
     },
+    home: 'Nyitólap',
     profile: 'Profil',
     profile_name: 'Név',
     profile_email: 'E-mail',
