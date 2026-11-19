@@ -551,6 +551,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         'Már van rögzítés erre a napra (termelés vagy továbbosztás). Az alábbi választás minden érintett sorra vonatkozik.',
       step_production: 'Termelés',
       step_distribution: 'Továbbosztás',
+      distribution_summary: 'Továbbosztás összesítő',
       next_distribution: 'Tovább: továbbosztás',
       back_production: 'Vissza: termelés',
       save_production_only: 'Csak termelés mentése',

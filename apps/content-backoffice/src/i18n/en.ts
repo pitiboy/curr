@@ -500,6 +500,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
       step_production: 'Production',
       step_distribution: 'Distribution',
+      distribution_summary: 'Distribution summary',
       next_distribution: 'Next: distribution',
       back_production: 'Back: production',
       save_production_only: 'Save production only',

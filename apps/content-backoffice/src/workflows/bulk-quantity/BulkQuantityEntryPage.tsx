@@ -38,7 +38,7 @@ import {
   eggSaleCurrencyForWorkflow,
 } from '../parseBackofficeConfig';
 import { useBackofficeConfig } from '../useBackofficeConfig';
-import { bandedForm } from '../../theme';
+import { bandedForm, bandedSpanClass } from '../../theme';
 import {
   distributionRowsFromQuantities,
   isOverDistributed,
@@ -1065,7 +1065,9 @@ export function BulkQuantityEntryPage({
     <Box
       sx={{
         p: { xs: 1, sm: 2 },
-        maxWidth: hasDistribution ? { xs: '100%', md: 960 } : 640,
+        maxWidth: hasDistribution
+          ? { xs: '100%', md: singleLayout ? 1100 : 960 }
+          : 640,
       }}
     >
       <Title title={config.labelKey} />
@@ -1092,7 +1094,22 @@ export function BulkQuantityEntryPage({
       <SimpleForm
         key={bulkFormKey}
         defaultValues={{ date: todayIsoDate(), _bulkRowCount: 0 }}
-        sx={bandedForm}
+        sx={
+          singleLayout
+            ? [
+                bandedForm,
+                (theme) => ({
+                  // Keep the RA form stack one column; we own the two-pane layout.
+                  '&& > .MuiStack-root': {
+                    gridTemplateColumns: 'minmax(0, 1fr)',
+                    [theme.breakpoints.up('md')]: {
+                      gridTemplateColumns: 'minmax(0, 1fr)',
+                    },
+                  },
+                }),
+              ]
+            : bandedForm
+        }
         toolbar={
           hasDistribution ? (
             <WizardToolbar
@@ -1136,7 +1153,129 @@ export function BulkQuantityEntryPage({
           />
         ) : null}
 
-        {showProduction ? (
+        {singleLayout && hasDistribution ? (
+          <Box
+            className={bandedSpanClass}
+            sx={(theme) => ({
+              display: 'grid',
+              gap: theme.spacing(2),
+              width: '100%',
+              alignItems: 'start',
+              gridTemplateColumns: 'minmax(0, 1fr)',
+              [theme.breakpoints.up('md')]: {
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              },
+            })}
+          >
+            <Stack spacing={2} sx={{ minWidth: 0, width: '100%' }}>
+              <DateInput fullWidth source="date" />
+              {catalogPending ? (
+                <Typography color="text.secondary" variant="body2">
+                  {translate('ra.message.loading')}
+                </Typography>
+              ) : null}
+              {!catalogPending && henHouses.length === 0 ? (
+                <Typography color="warning.main" variant="body2">
+                  {translate('app.bulk_quantity.no_hen_houses')}
+                </Typography>
+              ) : null}
+              <Typography variant="subtitle1">
+                {translate('app.bulk_quantity.step_production')}
+              </Typography>
+              {henHouses.map((house) => (
+                <TextField
+                  key={house.documentId}
+                  fullWidth
+                  inputMode="numeric"
+                  label={house.name}
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      step: 1,
+                      style: { fontSize: '1.25rem', padding: '14px 12px' },
+                    },
+                  }}
+                  type="number"
+                  value={quantities[house.documentId] ?? ''}
+                  onChange={(event) =>
+                    setQuantities((previous) => ({
+                      ...previous,
+                      [house.documentId]: event.target.value,
+                    }))
+                  }
+                />
+              ))}
+              <Box sx={{ display: { xs: 'none', md: 'block' }, pt: 1 }}>
+                <DistributionSummaryBlock
+                  currencyCode={config.currencyCode}
+                  distributedTotal={distributedTotal}
+                  distributionLoadError={distributionLoadError}
+                  eggSaleCurrency={eggSaleCurrency}
+                  eggToSaleRate={eggToSaleRate}
+                  overLimit={overLimit}
+                  producedTotal={producedTotal}
+                  rateValidFrom={rateValidFrom}
+                  remaining={remaining}
+                />
+              </Box>
+            </Stack>
+
+            <Stack spacing={2} sx={{ minWidth: 0, width: '100%' }}>
+              <Typography variant="subtitle1">
+                {translate('app.bulk_quantity.step_distribution')}
+              </Typography>
+              {distributionMembers.length === 0 ? (
+                <Typography color="warning.main" variant="body2">
+                  {translate('app.bulk_quantity.distribution_no_members', {
+                    org: config.distribution?.memberOrganizationName ?? '',
+                  })}
+                </Typography>
+              ) : null}
+              {distributionMembers.map((member) => (
+                <TextField
+                  key={member.memberId}
+                  disabled={
+                    memberNeedsSaleRate([member]) && eggToSaleRate === null
+                  }
+                  fullWidth
+                  inputMode="numeric"
+                  label={member.memberName}
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      step: 1,
+                      style: { fontSize: '1.25rem', padding: '14px 12px' },
+                    },
+                  }}
+                  type="number"
+                  value={memberQuantities[member.memberId] ?? ''}
+                  onChange={(event) =>
+                    setMemberQuantities((previous) => ({
+                      ...previous,
+                      [member.memberId]: event.target.value,
+                    }))
+                  }
+                />
+              ))}
+            </Stack>
+
+            <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%' }}>
+              <DistributionSummaryBlock
+                currencyCode={config.currencyCode}
+                distributedTotal={distributedTotal}
+                distributionLoadError={distributionLoadError}
+                eggSaleCurrency={eggSaleCurrency}
+                eggToSaleRate={eggToSaleRate}
+                overLimit={overLimit}
+                producedTotal={producedTotal}
+                rateValidFrom={rateValidFrom}
+                remaining={remaining}
+              />
+            </Box>
+          </Box>
+        ) : null}
+
+        {!singleLayout && showProduction ? (
           <>
             <Stack spacing={2} sx={{ width: '100%' }}>
               <DateInput fullWidth source="date" />
@@ -1149,12 +1288,6 @@ export function BulkQuantityEntryPage({
               {!catalogPending && henHouses.length === 0 ? (
                 <Typography color="warning.main" variant="body2">
                   {translate('app.bulk_quantity.no_hen_houses')}
-                </Typography>
-              ) : null}
-
-              {singleLayout ? (
-                <Typography variant="subtitle1">
-                  {translate('app.bulk_quantity.step_production')}
                 </Typography>
               ) : null}
 
@@ -1182,7 +1315,7 @@ export function BulkQuantityEntryPage({
                 />
               ))}
             </Stack>
-            {hasDistribution && !singleLayout ? (
+            {hasDistribution ? (
               <Box
                 aria-hidden
                 sx={{ display: { xs: 'none', md: 'block' }, minHeight: 1 }}
@@ -1191,15 +1324,10 @@ export function BulkQuantityEntryPage({
           </>
         ) : null}
 
-        {showDistribution ? (
+        {!singleLayout && showDistribution ? (
           <>
-            <Stack spacing={2} sx={{ width: '100%', mt: singleLayout ? 3 : 0 }}>
-              {!singleLayout ? <DateInput fullWidth source="date" /> : null}
-              {singleLayout ? (
-                <Typography variant="subtitle1">
-                  {translate('app.bulk_quantity.step_distribution')}
-                </Typography>
-              ) : null}
+            <Stack spacing={2} sx={{ width: '100%' }}>
+              <DateInput fullWidth source="date" />
               <Typography variant="body1">
                 {translate('app.bulk_quantity.distribution_produced', {
                   count: producedTotal,
@@ -1320,6 +1448,69 @@ export function BulkQuantityEntryPage({
         onConfirm={() => void confirmGlobalConflicts()}
       />
     </Box>
+  );
+}
+
+function DistributionSummaryBlock({
+  producedTotal,
+  remaining,
+  distributedTotal,
+  overLimit,
+  currencyCode,
+  eggSaleCurrency,
+  eggToSaleRate,
+  rateValidFrom,
+  distributionLoadError,
+}: {
+  producedTotal: number;
+  remaining: number;
+  distributedTotal: number;
+  overLimit: boolean;
+  currencyCode: string;
+  eggSaleCurrency: string;
+  eggToSaleRate: number | null;
+  rateValidFrom: string | null;
+  distributionLoadError: string | null;
+}) {
+  const translate = useTranslate();
+  return (
+    <Stack spacing={1}>
+      <Typography variant="subtitle1">
+        {translate('app.bulk_quantity.distribution_summary')}
+      </Typography>
+      <Typography variant="body1">
+        {translate('app.bulk_quantity.distribution_produced', {
+          count: producedTotal,
+        })}
+      </Typography>
+      {remaining >= 0 ? (
+        <Typography variant="body1">
+          {translate('app.bulk_quantity.distribution_remaining', {
+            count: remaining,
+          })}
+        </Typography>
+      ) : null}
+      {eggToSaleRate !== null && rateValidFrom ? (
+        <Typography color="text.secondary" variant="body2">
+          {translate('app.bulk_quantity.distribution_rate', {
+            from: currencyCode,
+            to: eggSaleCurrency,
+            rate: eggToSaleRate,
+            date: rateValidFrom.slice(0, 10),
+          })}
+        </Typography>
+      ) : null}
+      {distributionLoadError ? (
+        <Alert severity="warning">{distributionLoadError}</Alert>
+      ) : null}
+      {overLimit ? (
+        <Alert severity="warning">
+          {translate('app.bulk_quantity.distribution_over_limit', {
+            count: distributedTotal - producedTotal,
+          })}
+        </Alert>
+      ) : null}
+    </Stack>
   );
 }
 
