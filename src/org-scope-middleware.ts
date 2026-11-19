@@ -9,6 +9,13 @@ import {
 const TRANSACTION_UID = 'api::transaction.transaction';
 const RECEIPT_UID = 'api::receipt.receipt';
 const ORGANIZATION_UID = 'api::organization.organization';
+const ASSET_UID = 'api::asset.asset';
+
+/** Asset relations to transactions: the linked rows must be in the user's orgs too. */
+const ASSET_TRANSACTION_FIELDS = [
+  'acquisition_transaction',
+  'disposal_transaction',
+] as const;
 
 /**
  * Content types whose primary org dimension is `organization` (transactions for
@@ -16,12 +23,15 @@ const ORGANIZATION_UID = 'api::organization.organization';
  * scoped via their linked transactions (`transactions.organization`).
  *
  * `transaction-workflow` is not listed: it has no organization field; workflow
- * templates stay globally readable for convert.
+ * templates stay globally readable for convert. Assets (equipment inventory)
+ * carry their own required `organization`, so they use the default
+ * `organization` filter. `asset-category` is a global lookup (not scoped).
  */
 export const ORG_SCOPED_DOCUMENT_UIDS = [
   TRANSACTION_UID,
   RECEIPT_UID,
   ORGANIZATION_UID,
+  ASSET_UID,
 ] as const;
 
 export const ORG_SCOPED_DOCUMENT_UID_SET = new Set<string>(
@@ -230,6 +240,12 @@ function connectDocumentIds(data: Record<string, unknown>): string[] {
   return relationTargetDocumentIds(data.organization);
 }
 
+function assetTransactionDocumentIds(data: Record<string, unknown>): string[] {
+  return ASSET_TRANSACTION_FIELDS.flatMap((field) =>
+    relationTargetDocumentIds(data[field]),
+  );
+}
+
 /**
  * Registers first in the Document Service chain so later middleware (e.g. publish guard) sees constrained params.
  */
@@ -326,6 +342,16 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
             }
           }
         }
+        if (context.uid === ASSET_UID) {
+          const txIds = assetTransactionDocumentIds(data);
+          if (txIds.length > 0) {
+            await assertTransactionsInAllowedOrgs(
+              strapi,
+              txIds,
+              orgDocumentIds,
+            );
+          }
+        }
       }
     }
 
@@ -397,7 +423,10 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
       }
     }
 
-    if (context.action === 'update' && context.uid === TRANSACTION_UID) {
+    if (
+      context.action === 'update' &&
+      (context.uid === TRANSACTION_UID || context.uid === ASSET_UID)
+    ) {
       const data = asRecord(params.data);
       const requested = connectDocumentIds(data);
       if (requested.length > 0) {
@@ -405,9 +434,17 @@ export function registerOrgScopeMiddleware(strapi: OrgScopeStrapi) {
         for (const id of requested) {
           if (!allowed.has(id)) {
             throw new errors.ForbiddenError(
-              'Cannot point a transaction at an organization outside your access',
+              context.uid === ASSET_UID
+                ? 'Cannot point an asset at an organization outside your access'
+                : 'Cannot point a transaction at an organization outside your access',
             );
           }
+        }
+      }
+      if (context.uid === ASSET_UID) {
+        const txIds = assetTransactionDocumentIds(data);
+        if (txIds.length > 0) {
+          await assertTransactionsInAllowedOrgs(strapi, txIds, orgDocumentIds);
         }
       }
     }

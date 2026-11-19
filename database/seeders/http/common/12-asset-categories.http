@@ -1,0 +1,87 @@
+# Eszköz kategóriák (eszköznyilvántartás)
+# A rekordok a dataDir/asset-categories.json fájlban vannak.
+#
+#   npm run seed:http:kor -- local
+#   npm run seed:http:edizone -- prod
+#
+# A dataDir a kor/data vagy az edizone/data mappa.
+# Környezet: local | prod a http-client.env.json-ban.
+# Token: http-client.private.env.json, példányonként Full access API token.
+# A Strapi bootstrap (ensureAssetCategories) ugyanezt a listát hozza létre.
+# Idempotens: név szerinti lookup; ha a név már létezik, a POST nem fut le.
+
+{{
+  if (typeof acItems === "undefined") {
+    const fs = require("fs");
+    const path = require("path");
+    if (typeof dataDir === "undefined" || !dataDir) {
+      throw new Error("dataDir is missing");
+    }
+    exports.acItems = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), dataDir, "asset-categories.json"), "utf8")
+    );
+    exports.acIds = {};
+    exports.acFailed = {};
+  }
+}}
+
+###
+# @name lookup-asset-category
+# @loop for item of acItems
+{{
+  exports.encoded = encodeURIComponent(item.name);
+}}
+GET {{baseUrl}}/api/asset-categories?filters[name][$eq]={{encoded}}&pagination[pageSize]=1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200) {
+    acFailed[item.name] = true;
+    exports.acFailed = acFailed;
+    console.error("lookup failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const found = parsed && parsed.data && parsed.data[0] && parsed.data[0].documentId;
+    if (found) {
+      acIds[item.name] = found;
+      exports.acIds = acIds;
+    }
+  }
+}}
+
+###
+# @name create-asset-category
+# @loop for item of acItems
+{{
+  if (acIds[item.name] || acFailed[item.name]) {
+    exports.$cancel = true;
+  } else {
+    exports.acPayload = JSON.stringify({ data: item });
+  }
+}}
+POST {{baseUrl}}/api/asset-categories
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{{acPayload}}
+
+{{
+  let parsed = response.parsedBody;
+  if (!parsed && response.body) {
+    try { parsed = JSON.parse(response.body); } catch (error) { parsed = null; }
+  }
+  if (response.statusCode !== 200 && response.statusCode !== 201) {
+    console.error("create failed: " + item.name, response.statusCode, response.body);
+  } else {
+    const created = parsed && parsed.data && parsed.data.documentId;
+    if (created) {
+      acIds[item.name] = created;
+      exports.acIds = acIds;
+    }
+  }
+}}

@@ -17,6 +17,10 @@
               "type": "contentType"
             },
             {
+              "uid": "api::asset.asset",
+              "type": "contentType"
+            },
+            {
               "uid": "api::currency-rate.currency-rate",
               "type": "contentType"
             }
@@ -56,6 +60,10 @@
             },
             {
               "uid": "api::account-category.account-category",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::asset-category.asset-category",
               "type": "contentType"
             },
             {

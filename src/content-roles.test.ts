@@ -37,4 +37,40 @@ describe('contentRoleActions', () => {
       assert.ok(controller.includes(action), action);
     }
   });
+
+  it('every content role reads and writes assets, but only controller deletes', () => {
+    for (const role of ['dataentry', 'editor', 'controller']) {
+      const actions = contentRoleActions(role);
+      for (const action of [
+        'api::asset.asset.find',
+        'api::asset.asset.findOne',
+        'api::asset.asset.create',
+        'api::asset.asset.update',
+        'api::asset-category.asset-category.find',
+        'api::asset-category.asset-category.findOne',
+      ]) {
+        assert.ok(actions.includes(action), `${role}: ${action}`);
+      }
+    }
+    for (const role of ['dataentry', 'editor']) {
+      const actions = contentRoleActions(role);
+      for (const action of [
+        'api::asset.asset.delete',
+        'api::asset-category.asset-category.create',
+        'api::asset-category.asset-category.update',
+        'api::asset-category.asset-category.delete',
+      ]) {
+        assert.equal(actions.includes(action), false, `${role}: ${action}`);
+      }
+    }
+    const controller = contentRoleActions('controller');
+    for (const action of [
+      'api::asset.asset.delete',
+      'api::asset-category.asset-category.create',
+      'api::asset-category.asset-category.update',
+      'api::asset-category.asset-category.delete',
+    ]) {
+      assert.ok(controller.includes(action), action);
+    }
+  });
 });

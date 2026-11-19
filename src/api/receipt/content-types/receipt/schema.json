@@ -30,7 +30,11 @@
       "type": "decimal",
       "required": true,
       "precision": 18,
-      "scale": 2,
+      "scale": 4,
+      "column": {
+        "type": "decimal",
+        "args": [18, 4]
+      },
       "metadatas": {
         "label": "Összeg",
         "description": "A nyugta összege"

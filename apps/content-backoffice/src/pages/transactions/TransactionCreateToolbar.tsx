@@ -22,6 +22,8 @@ import {
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
 import { strapiErrorMessage } from '../../data/transactionPublish';
+import { useSubmitGuard } from '../../submit/useSubmitGuard';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
@@ -72,6 +74,7 @@ export function TransactionCreateToolbar({
   const translate = useTranslate();
   const notify = useNotify();
   const redirect = useRedirect();
+  const openAssetForm = useAssetFormAfterBooking();
   const { isPending } = usePermissions();
   const accountRow = useOptionalTransactionCreateAccountRow();
   const { workflows, loading: catalogLoading } =
@@ -89,7 +92,6 @@ export function TransactionCreateToolbar({
     requireOrganizationForSave,
   );
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const matchInput = useMemo(
     () =>
@@ -148,6 +150,61 @@ export function TransactionCreateToolbar({
   const convertNeedsOrganization =
     requireOrganizationForConvert && organizationValueMissing(organizationId);
 
+  // lockOnSuccess: after save + convert we redirect away; a late second tap
+  // must not create (and expand) a second source transaction.
+  const saveAndConvertGuard = useSubmitGuard<
+    {
+      formValues: Record<string, unknown>;
+      workflowDocumentId: string;
+    },
+    {
+      documentId: string;
+      result: Awaited<ReturnType<typeof convertTransactionToWorkflow>>;
+    }
+  >({
+    lockOnSuccess: true,
+    run: async ({ formValues, workflowDocumentId }) => {
+      const created = await createNewTransactionDraft({
+        ...formValues,
+        receipt_cards: receiptCards,
+      });
+      const documentId =
+        typeof created.data.documentId === 'string'
+          ? created.data.documentId
+          : '';
+      if (!documentId) {
+        throw new Error('Missing documentId after create');
+      }
+      const result = await convertTransactionToWorkflow(
+        documentId,
+        workflowDocumentId,
+      );
+      return { documentId, result };
+    },
+    onSuccess: ({ documentId, result }) => {
+      notify('app.transactions_convert_done', { type: 'success' });
+      setOpen(false);
+      onSaveSucceeded();
+      // `collect_asset` workflows continue on the prefilled "Új eszköz" form.
+      void openAssetForm(workflow, documentId, result).then(
+        (openedAssetForm) => {
+          if (!openedAssetForm) redirect('list', 'transactions');
+        },
+      );
+    },
+    onError: (error: unknown) => {
+      const message = strapiErrorMessage(error);
+      if (message.includes('transaction-workflow not found')) {
+        invalidateTransactionWorkflowCatalog();
+        accountRow?.resetToProfileAfterStaleWorkflow();
+      }
+      notify(message || translate('app.transactions_convert_error'), {
+        type: 'error',
+      });
+    },
+  });
+  const busy = saveAndConvertGuard.busy;
+
   const onSaveAndConvert = () => {
     if (!workflow || busy) return;
     const formValues = (values ?? {}) as Record<string, unknown>;
@@ -164,38 +221,10 @@ export function TransactionCreateToolbar({
       );
       return;
     }
-    setBusy(true);
-    void createNewTransactionDraft({
-      ...formValues,
-      receipt_cards: receiptCards,
-    })
-      .then((result) => {
-        const documentId =
-          typeof result.data.documentId === 'string'
-            ? result.data.documentId
-            : '';
-        if (!documentId) {
-          throw new Error('Missing documentId after create');
-        }
-        return convertTransactionToWorkflow(documentId, workflow.documentId);
-      })
-      .then(() => {
-        notify('app.transactions_convert_done', { type: 'success' });
-        setOpen(false);
-        onSaveSucceeded();
-        redirect('list', 'transactions');
-      })
-      .catch((error: unknown) => {
-        const message = strapiErrorMessage(error);
-        if (message.includes('transaction-workflow not found')) {
-          invalidateTransactionWorkflowCatalog();
-          accountRow?.resetToProfileAfterStaleWorkflow();
-        }
-        notify(message || translate('app.transactions_convert_error'), {
-          type: 'error',
-        });
-      })
-      .finally(() => setBusy(false));
+    saveAndConvertGuard.submit({
+      formValues,
+      workflowDocumentId: workflow.documentId,
+    });
   };
 
   const actionsDisabled = busy || !formReady;

@@ -292,7 +292,7 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
     assert.equal(rows[1].credit_account.documentId, memberPrivate.documentId);
   });
 
-  it('multiplies percent and rate, rounding to 2 decimals', () => {
+  it('multiplies percent and rate, rounding to 4 decimals', () => {
     const workflow: WorkflowTemplate = {
       ...eggSaleWorkflow,
       step: [{ ...eggSaleWorkflow.step![1], percent: 50 }],
@@ -303,8 +303,8 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
       new Map(),
       new Map([[huf.documentId, rate(33.3333)]]),
     );
-    // 7 × 0.5 × 33.3333 = 116.66655 → 116.67
-    assert.equal(row.amount, 116.67);
+    // 7 × 0.5 × 33.3333 = 116.66655 → 116.6666
+    assert.equal(row.amount, 116.6666);
   });
 
   it('throws 422 CURRENCY_RATE_MISSING with from/to/date details', () => {
@@ -463,7 +463,7 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
     );
     assert.equal(expanded[0]?.amount, 2_000_000);
     assert.equal(expanded[0]?.appliedRate, null);
-    assert.equal(expanded[1]?.amount, 3333.33);
+    assert.equal(expanded[1]?.amount, 3333.3333);
     assert.equal(expanded[1]?.appliedRate?.inverted, true);
   });
 });
@@ -554,8 +554,8 @@ describe('expandWorkflowSteps with member ratio', () => {
       new Map([[huf.documentId, rate(33.3333)]]),
       { ...ratio075, ratio: 0.3 },
     );
-    // 7 × 33.3333 × 0.3 = 69.999930 → 70
-    assert.equal(row.amount, 70);
+    // 7 × 33.3333 × 0.3 = 69.99993 → 69.9999
+    assert.equal(row.amount, 69.9999);
   });
 
   it('ratio 0 books 0 HUF rows', () => {

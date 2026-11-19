@@ -85,5 +85,10 @@
     "config": {
       "roles": ["dataentry", "editor", "controller"]
     }
+  },
+  {
+    "key": "assets",
+    "enabled": true,
+    "config": {}
   }
 ]

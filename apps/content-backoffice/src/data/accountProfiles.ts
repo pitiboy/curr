@@ -9,9 +9,13 @@ import {
 } from './accountCodes';
 
 /** Empty string = no profile filter (all loaded accounts). */
-export type AccountProfile = '' | 'cost' | 'revenue';
+export type AccountProfile = '' | 'cost' | 'revenue' | 'investment';
 
 const REVENUE_CREDIT = /^4/;
+/** Cash / bank funding legs for investment (10*, 11*). */
+const INVESTMENT_CREDIT = /^1[01]/;
+/** Other asset accounts under 1* (not 10* / 11*). */
+const INVESTMENT_DEBIT = /^1(?![01])/;
 
 type NonEmptyAccountProfile = Exclude<AccountProfile, ''>;
 
@@ -31,6 +35,10 @@ function accountMatchesProfile(
       return kind === 'debit'
         ? patterns.credit.test(code)
         : REVENUE_CREDIT.test(code);
+    case 'investment':
+      return kind === 'debit'
+        ? INVESTMENT_DEBIT.test(code)
+        : INVESTMENT_CREDIT.test(code);
     default:
       return true;
   }
@@ -81,9 +89,9 @@ export function accountChoicesForProfile(
   return selected ? sortAccountChoices([...filtered, selected]) : filtered;
 }
 
-/** Cost / revenue profiles for the create and review account row. */
+/** Cost / revenue / investment profiles for the create and review account row. */
 export function selectableAccountProfiles(): NonEmptyAccountProfile[] {
-  return ['cost', 'revenue'];
+  return ['cost', 'revenue', 'investment'];
 }
 
 export function selectableAccountProfilesWithAll(): AccountProfile[] {

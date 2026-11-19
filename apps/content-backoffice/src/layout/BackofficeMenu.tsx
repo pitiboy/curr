@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import ListIcon from '@mui/icons-material/List';
@@ -19,6 +21,7 @@ import {
   useGlobalTransactionFilters,
   useApplyMenuOverride,
 } from '../filters/globalTransactionFiltersAtom';
+import { ASSETS_FEATURE_ID } from '../pages/assets/assetConstants';
 import { MEMBERSHIP_LEDGER_FEATURE_ID } from '../pages/reports/membershipLedger/types';
 import { MEMBERSHIP_SHARE_FEATURE_ID } from '../pages/reports/membershipShare/types';
 import { PROJECT_BALANCE_FEATURE_ID } from '../pages/reports/projectBalance/types';
@@ -30,6 +33,7 @@ import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
 
 import { AdministrationMenuItem } from './AdministrationMenuItem';
+import { HomePageMenuItem } from './HomePageMenuItem';
 
 const DEFAULT_RECONCILIATION_ROLES = ['controller'] as const;
 
@@ -52,6 +56,9 @@ export function BackofficeMenu() {
     canWrite && enabled.includes(MEMBERSHIP_LEDGER_FEATURE_ID);
   const canReadProjectBalance =
     canWrite && enabled.includes(PROJECT_BALANCE_FEATURE_ID);
+  const canReadAssets = canWrite && enabled.includes(ASSETS_FEATURE_ID);
+  const canManageAssetCategories =
+    canReadAssets && permissions === 'controller';
   const reconciliationRolesFromConfig = featureRolesFromConfig(
     features[RECONCILIATION_FEATURE_ID]?.config,
   );
@@ -121,6 +128,20 @@ export function BackofficeMenu() {
           to="/reports/project-balance"
         />
       ) : null}
+      {canReadAssets ? (
+        <Menu.Item
+          leftIcon={<Inventory2OutlinedIcon />}
+          primaryText={translate('app.assets.menu')}
+          to="/assets"
+        />
+      ) : null}
+      {canManageAssetCategories ? (
+        <Menu.Item
+          leftIcon={<CategoryOutlinedIcon />}
+          primaryText={translate('app.asset_categories.menu')}
+          to="/asset-categories"
+        />
+      ) : null}
       {canReadReconciliation ? (
         <Menu.Item
           leftIcon={<FactCheckIcon />}
@@ -136,6 +157,7 @@ export function BackofficeMenu() {
         />
       ) : null}
       <AdministrationMenuItem />
+      <HomePageMenuItem />
     </Menu>
   );
 }

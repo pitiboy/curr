@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "asset_categories",
+  "info": {
+    "singularName": "asset-category",
+    "pluralName": "asset-categories",
+    "displayName": "Asset Category",
+    "description": "Eszköz kategória (tárgyi eszköz nyilvántartás)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255,
+      "metadatas": {
+        "label": "Név",
+        "description": "Az eszköz kategória neve"
+      }
+    },
+    "description": {
+      "type": "text",
+      "required": false,
+      "metadatas": {
+        "label": "Leírás"
+      }
+    },
+    "sort_order": {
+      "type": "integer",
+      "required": false,
+      "metadatas": {
+        "label": "Sorrend"
+      }
+    }
+  }
+}

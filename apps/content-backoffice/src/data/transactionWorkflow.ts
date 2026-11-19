@@ -24,6 +24,7 @@ type StrapiWorkflowRow = {
     name?: string | null;
   } | null;
   step?: StrapiWorkflowStepRow[] | null;
+  collect_asset?: boolean | null;
 };
 
 function normalizeAccountCodePattern(
@@ -97,6 +98,7 @@ function toWorkflowHeader(
         }
       : null,
     requires_source_organization: workflowRequiresSourceOrganization(row.step),
+    collect_asset: row.collect_asset === true,
   };
 }
 

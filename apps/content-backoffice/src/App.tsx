@@ -11,6 +11,20 @@ import { i18nProvider } from './i18n';
 import { AppTitle } from './layout/AppTitle';
 import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
+import { AssetCreate } from './pages/assets/AssetCreate';
+import { AssetEdit } from './pages/assets/AssetEdit';
+import { AssetCategoryGate, AssetGate } from './pages/assets/AssetGate';
+import { AssetList } from './pages/assets/AssetList';
+import { AssetShow } from './pages/assets/AssetShow';
+import {
+  AssetCategoryCreate,
+  AssetCategoryEdit,
+  AssetCategoryList,
+} from './pages/assets/AssetCategoryPages';
+import {
+  ASSET_CATEGORIES_RESOURCE,
+  ASSETS_RESOURCE,
+} from './pages/assets/assetConstants';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
 import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
@@ -51,6 +65,51 @@ export function App() {
             name="transactions"
             options={{ label: 'app.transactions_list' }}
             show={TransactionShow}
+          />
+          <Resource
+            create={
+              <AssetGate>
+                <AssetCreate />
+              </AssetGate>
+            }
+            edit={
+              <AssetGate>
+                <AssetEdit />
+              </AssetGate>
+            }
+            list={
+              <AssetGate>
+                <AssetList />
+              </AssetGate>
+            }
+            name={ASSETS_RESOURCE}
+            options={{ label: 'app.assets.menu' }}
+            recordRepresentation="name"
+            show={
+              <AssetGate>
+                <AssetShow />
+              </AssetGate>
+            }
+          />
+          <Resource
+            create={
+              <AssetCategoryGate>
+                <AssetCategoryCreate />
+              </AssetCategoryGate>
+            }
+            edit={
+              <AssetCategoryGate>
+                <AssetCategoryEdit />
+              </AssetCategoryGate>
+            }
+            list={
+              <AssetCategoryGate>
+                <AssetCategoryList />
+              </AssetCategoryGate>
+            }
+            name={ASSET_CATEGORIES_RESOURCE}
+            options={{ label: 'app.asset_categories.menu' }}
+            recordRepresentation="name"
           />
           <CustomRoutes>
             <Route

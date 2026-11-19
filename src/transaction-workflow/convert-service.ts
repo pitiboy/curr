@@ -436,6 +436,38 @@ async function syncSourceAfterConvert(
   }
 }
 
+/**
+ * In-process mutex per source transaction. Two convert requests for the same
+ * source (double click, retry while the first is still running) would both
+ * read `converted_to_workflow = null` and expand the workflow twice. The
+ * second request waits here and then re-reads the source, which by then is
+ * marked `original` (keep_original) or deleted, so it is skipped.
+ * Single Strapi process only; a multi-node deploy needs a DB-level claim.
+ */
+const convertLocks = new Map<string, Promise<void>>();
+
+export async function withTransactionConvertLock<T>(
+  documentId: string,
+  task: () => Promise<T>,
+): Promise<T> {
+  const previous = convertLocks.get(documentId) ?? Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const tail = previous.then(() => current);
+  convertLocks.set(documentId, tail);
+  await previous;
+  try {
+    return await task();
+  } finally {
+    release();
+    if (convertLocks.get(documentId) === tail) {
+      convertLocks.delete(documentId);
+    }
+  }
+}
+
 export async function convertTransactions(
   strapi: ConvertStrapi,
   request: ConvertRequest,
@@ -472,129 +504,154 @@ export async function convertTransactions(
   );
 
   const results: ConvertResultItem[] = [];
+  // One resolver per request: same-day rate lookups are cached across rows.
   const resolveRate = createRateResolver(strapi);
 
-  for (const transaction of transactions) {
-    if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
-      continue;
-    }
-
-    const workflow = pickMatchingWorkflow(workflows, transaction);
-    if (!workflow) continue;
-
-    const keepOriginal = workflow.keep_original !== false;
-    const published =
-      request.steps_published ?? workflow.steps_published !== false;
-    const siblingMap = await loadMemberSiblingMap(strapi, transaction);
-    // Resolve rate + member ratio before any write (no rollback needed on 422).
-    const rates = await resolveWorkflowRates(
-      resolveRate,
-      workflow,
-      transaction,
+  for (const candidate of transactions) {
+    const result = await withTransactionConvertLock(
+      candidate.documentId,
+      async () => {
+        // Re-read under the lock: a concurrent convert may have finished.
+        const [transaction] = await loadTransactions(
+          strapi,
+          candidate.documentId,
+        );
+        if (!transaction) return null;
+        return convertOneTransaction(
+          strapi,
+          request,
+          workflows,
+          transaction,
+          resolveRate,
+        );
+      },
     );
-    const memberRatio = await loadMemberRatio(strapi, workflow, transaction);
-    const expanded = expandWorkflowSteps(
-      workflow,
-      transaction,
-      siblingMap,
-      rates,
-      memberRatio,
+    if (result) results.push(result);
+  }
+
+  return results;
+}
+
+async function convertOneTransaction(
+  strapi: ConvertStrapi,
+  request: ConvertRequest,
+  workflows: WorkflowTemplate[],
+  transaction: SourceTransaction,
+  resolveRate: ReturnType<typeof createRateResolver>,
+): Promise<ConvertResultItem | null> {
+  if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
+    return null;
+  }
+
+  const workflow = pickMatchingWorkflow(workflows, transaction);
+  if (!workflow) return null;
+
+  const keepOriginal = workflow.keep_original !== false;
+  const published =
+    request.steps_published ?? workflow.steps_published !== false;
+  const siblingMap = await loadMemberSiblingMap(strapi, transaction);
+  // Resolve rate + member ratio before any write (no rollback needed on 422).
+  const rates = await resolveWorkflowRates(resolveRate, workflow, transaction);
+  const memberRatio = await loadMemberRatio(strapi, workflow, transaction);
+  const expanded = expandWorkflowSteps(
+    workflow,
+    transaction,
+    siblingMap,
+    rates,
+    memberRatio,
+  );
+  assertKeepOriginalReceiptPolicy(keepOriginal, transaction, expanded);
+
+  const receiptIds =
+    transaction.receipts?.map((row) => row.documentId).filter(Boolean) ?? [];
+
+  let stornoDocumentId: string | undefined;
+  const createdDocumentIds: string[] = [];
+
+  if (keepOriginal) {
+    const stornoShape = buildStornoRowShape(transaction);
+    // Mirror the source gate: incomplete draft must not force-publish storno
+    // (publish-guard 400 would otherwise leave original+storno orphans).
+    const sourceDraftForPublish = await loadDraftForPublishCheck(
+      strapi,
+      transaction.documentId,
     );
-    assertKeepOriginalReceiptPolicy(keepOriginal, transaction, expanded);
+    const publishStorno = shouldPublishConvertedSource(
+      stornoPublishFields(stornoShape),
+      published,
+    );
+    const publishSteps = shouldPublishConvertedSource(
+      sourceDraftForPublish,
+      published,
+    );
+    const rollbackIds: string[] = [];
 
-    const receiptIds =
-      transaction.receipts?.map((row) => row.documentId).filter(Boolean) ?? [];
+    try {
+      await syncSourceAfterConvert(strapi, transaction.documentId, published);
 
-    let stornoDocumentId: string | undefined;
-    const createdDocumentIds: string[] = [];
-
-    if (keepOriginal) {
-      const stornoShape = buildStornoRowShape(transaction);
-      // Mirror the source gate: incomplete draft must not force-publish storno
-      // (publish-guard 400 would otherwise leave original+storno orphans).
-      const sourceDraftForPublish = await loadDraftForPublishCheck(
+      stornoDocumentId = await createTransactionRow(
         strapi,
-        transaction.documentId,
+        {
+          date: stornoShape.date,
+          amount: stornoShape.amount,
+          description: stornoShape.description,
+          debit_account: stornoShape.debit_account?.documentId,
+          credit_account: stornoShape.credit_account?.documentId,
+          currency_type: stornoShape.currency_type.documentId,
+          ...(stornoShape.organization?.documentId
+            ? { organization: stornoShape.organization.documentId }
+            : {}),
+          transaction_type: stornoShape.transaction_type?.documentId,
+          related_transaction: stornoShape.related_transaction.documentId,
+          entered_key: stornoShape.entered_key,
+          converted_to_workflow: CONVERTED_STORNO,
+        },
+        publishStorno,
       );
-      const publishStorno = shouldPublishConvertedSource(
-        stornoPublishFields(stornoShape),
-        published,
-      );
-      const publishSteps = shouldPublishConvertedSource(
-        sourceDraftForPublish,
-        published,
-      );
-      const rollbackIds: string[] = [];
+      rollbackIds.push(stornoDocumentId);
 
-      try {
-        await syncSourceAfterConvert(strapi, transaction.documentId, published);
-
-        stornoDocumentId = await createTransactionRow(
-          strapi,
-          {
-            date: stornoShape.date,
-            amount: stornoShape.amount,
-            description: stornoShape.description,
-            debit_account: stornoShape.debit_account?.documentId,
-            credit_account: stornoShape.credit_account?.documentId,
-            currency_type: stornoShape.currency_type.documentId,
-            ...(stornoShape.organization?.documentId
-              ? { organization: stornoShape.organization.documentId }
-              : {}),
-            transaction_type: stornoShape.transaction_type?.documentId,
-            related_transaction: stornoShape.related_transaction.documentId,
-            entered_key: stornoShape.entered_key,
-            converted_to_workflow: CONVERTED_STORNO,
-          },
-          publishStorno,
-        );
-        rollbackIds.push(stornoDocumentId);
-
-        for (const row of expanded) {
-          const copyReceipts = row.copy_receipt ? receiptIds : [];
-          const documentId = await createTransactionRow(
-            strapi,
-            transactionWritePayload(row, transaction, transaction.documentId),
-            publishSteps,
-            copyReceipts,
-          );
-          rollbackIds.push(documentId);
-          createdDocumentIds.push(documentId);
-        }
-      } catch (error) {
-        await rollbackKeepOriginalConvert(
-          strapi,
-          transaction.documentId,
-          rollbackIds,
-        );
-        throw error;
-      }
-    } else {
-      let previousRelated: string | null = null;
       for (const row of expanded) {
         const copyReceipts = row.copy_receipt ? receiptIds : [];
         const documentId = await createTransactionRow(
           strapi,
-          transactionWritePayload(row, transaction, previousRelated),
-          published,
+          transactionWritePayload(row, transaction, transaction.documentId),
+          publishSteps,
           copyReceipts,
         );
-        previousRelated = documentId;
+        rollbackIds.push(documentId);
         createdDocumentIds.push(documentId);
       }
-      await documentsApi(strapi, TRANSACTION_UID).delete({
-        documentId: transaction.documentId,
-      });
+    } catch (error) {
+      await rollbackKeepOriginalConvert(
+        strapi,
+        transaction.documentId,
+        rollbackIds,
+      );
+      throw error;
     }
-
-    results.push({
-      transactionDocumentId: transaction.documentId,
-      workflowDocumentId: workflow.documentId,
-      stornoDocumentId,
-      createdDocumentIds,
-      appliedRates: appliedRatesOf(expanded),
+  } else {
+    let previousRelated: string | null = null;
+    for (const row of expanded) {
+      const copyReceipts = row.copy_receipt ? receiptIds : [];
+      const documentId = await createTransactionRow(
+        strapi,
+        transactionWritePayload(row, transaction, previousRelated),
+        published,
+        copyReceipts,
+      );
+      previousRelated = documentId;
+      createdDocumentIds.push(documentId);
+    }
+    await documentsApi(strapi, TRANSACTION_UID).delete({
+      documentId: transaction.documentId,
     });
   }
 
-  return results;
+  return {
+    transactionDocumentId: transaction.documentId,
+    workflowDocumentId: workflow.documentId,
+    stornoDocumentId,
+    createdDocumentIds,
+    appliedRates: appliedRatesOf(expanded),
+  };
 }

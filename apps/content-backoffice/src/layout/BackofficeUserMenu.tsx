@@ -1,4 +1,5 @@
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import HomeIcon from '@mui/icons-material/Home';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -53,6 +54,22 @@ const ProfileMenuItem = forwardRef<HTMLAnchorElement>(
           <AccountCircleIcon fontSize="small" />
         </ListItemIcon>
         <ListItemText>{translate('app.profile')}</ListItemText>
+      </MenuItem>
+    );
+  },
+);
+
+const JumpHomeMenuItem = forwardRef<HTMLAnchorElement>(
+  function JumpHomeMenuItem(props, ref) {
+    const translate = useTranslate();
+    const { onClose } = useUserMenu();
+
+    return (
+      <MenuItem {...props} component="a" href="/" onClick={onClose} ref={ref}>
+        <ListItemIcon>
+          <HomeIcon fontSize="small" />
+        </ListItemIcon>
+        <ListItemText>{translate('app.home')}</ListItemText>
       </MenuItem>
     );
   },
@@ -127,6 +144,7 @@ function BackofficeUserMenu() {
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <ProfileMenuItem />
+          <JumpHomeMenuItem />
           <Logout />
         </Menu>
       </UserMenuContextProvider>
