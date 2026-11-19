@@ -7,6 +7,7 @@ import { convertTransactionToWorkflow } from '../../data/dataProvider';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
+import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
 import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
@@ -35,7 +36,6 @@ export function TransactionConvertButton({
   const refresh = useRefresh();
   const openAssetForm = useAssetFormAfterBooking();
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const previewInput = useMemo<ConvertPreviewRequest>(
     () => ({
@@ -45,26 +45,30 @@ export function TransactionConvertButton({
     [documentId, workflow.documentId],
   );
 
+  // A transaction converts once; stay locked until the refresh hides the button.
+  const convertGuard = useSubmitGuard({
+    lockOnSuccess: true,
+    run: () => convertTransactionToWorkflow(documentId, workflow.documentId),
+    onSuccess: (result) => {
+      notify('app.transactions_convert_done', { type: 'success' });
+      setOpen(false);
+      refresh();
+      void openAssetForm(workflow, documentId, result);
+    },
+    onError: (error: unknown) => {
+      const message = strapiErrorMessage(error);
+      if (message.includes('transaction-workflow not found')) {
+        invalidateTransactionWorkflowCatalog();
+      }
+      notify(message || translate('app.transactions_convert_error'), {
+        type: 'error',
+      });
+    },
+  });
+  const busy = convertGuard.busy;
+
   const onConfirm = () => {
-    if (busy) return;
-    setBusy(true);
-    void convertTransactionToWorkflow(documentId, workflow.documentId)
-      .then(async (result) => {
-        notify('app.transactions_convert_done', { type: 'success' });
-        setOpen(false);
-        refresh();
-        await openAssetForm(workflow, documentId, result);
-      })
-      .catch((error: unknown) => {
-        const message = strapiErrorMessage(error);
-        if (message.includes('transaction-workflow not found')) {
-          invalidateTransactionWorkflowCatalog();
-        }
-        notify(message || translate('app.transactions_convert_error'), {
-          type: 'error',
-        });
-      })
-      .finally(() => setBusy(false));
+    convertGuard.submit();
   };
 
   return (

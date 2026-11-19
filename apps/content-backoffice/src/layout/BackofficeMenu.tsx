@@ -33,6 +33,7 @@ import { visibleWorkflowForms } from '../workflows/effectiveWorkflows';
 import { workflowForms } from '../workflows/registry';
 
 import { AdministrationMenuItem } from './AdministrationMenuItem';
+import { HomePageMenuItem } from './HomePageMenuItem';
 
 const DEFAULT_RECONCILIATION_ROLES = ['controller'] as const;
 
@@ -156,6 +157,7 @@ export function BackofficeMenu() {
         />
       ) : null}
       <AdministrationMenuItem />
+      <HomePageMenuItem />
     </Menu>
   );
 }

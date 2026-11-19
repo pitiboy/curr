@@ -489,6 +489,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         blocked: 'Blocked',
       },
     },
+    home: 'Home',
     profile: 'Profile',
     profile_name: 'Name',
     profile_email: 'Email',

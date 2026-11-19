@@ -19,6 +19,7 @@ import {
 } from '../../data/transactionBulkApprove';
 import { publishTransaction } from '../../data/dataProvider';
 import type { TransactionRow } from '../../data/transactionList';
+import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 
 function selectedRows(
@@ -40,7 +41,6 @@ export function TransactionBulkApproveButton() {
   const { selectedIds, data } = useListContext<TransactionRow>();
   const { publisherMustDiffer } = useBackofficeConfig();
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<BulkApproveClassification | null>(
     null,
   );
@@ -71,27 +71,31 @@ export function TransactionBulkApproveButton() {
       });
   };
 
+  const publishGuard = useSubmitGuard<
+    BulkApproveClassification,
+    Awaited<ReturnType<typeof bulkPublishTransactions>>
+  >({
+    run: (classification) =>
+      bulkPublishTransactions(
+        classification.ready.map((row) => row.documentId),
+        publishTransaction,
+      ),
+    onSuccess: (outcome, classification) => {
+      setOpen(false);
+      setPending(null);
+      unselectAll();
+      refresh();
+      notifyBulkOutcome(outcome, classification.skipped, translate, notify);
+    },
+    onError: () => {
+      notify('ra.notification.http_error', { type: 'error' });
+    },
+  });
+  const busy = publishGuard.busy;
+
   const onConfirm = () => {
-    const ready = pending?.ready ?? [];
-    if (!ready.length || busy) return;
-    setBusy(true);
-    void bulkPublishTransactions(
-      ready.map((row) => row.documentId),
-      publishTransaction,
-    )
-      .then((outcome) => {
-        setOpen(false);
-        setPending(null);
-        unselectAll();
-        refresh();
-        notifyBulkOutcome(outcome, pending?.skipped ?? [], translate, notify);
-      })
-      .catch(() => {
-        notify('ra.notification.http_error', { type: 'error' });
-      })
-      .finally(() => {
-        setBusy(false);
-      });
+    if (!pending?.ready.length) return;
+    publishGuard.submit(pending);
   };
 
   const readyCount = pending?.ready.length ?? 0;

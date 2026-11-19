@@ -27,6 +27,7 @@ import {
   Title,
   Toolbar,
   useDataProvider,
+  useNotify,
   useTranslate,
 } from 'react-admin';
 
@@ -57,6 +58,7 @@ import {
   collectBulkQuantityDuplicates,
   type DuplicateLookupCheck,
 } from './duplicateFetch';
+import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { loadBulkQuantityCatalog } from './loadCatalog';
 import {
   loadCurrencyRates,
@@ -252,7 +254,18 @@ export function BulkQuantityEntryPage({
     useState(false);
   const [conflictOpen, setConflictOpen] = useState(false);
   const [globalConflictOpen, setGlobalConflictOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const notify = useNotify();
+  // One write pipeline at a time (duplicate check → production → pool →
+  // distribution). The XState guard drops a second tap synchronously, even
+  // while the first run is still awaiting the duplicate lookup.
+  const saveGuard = useSubmitGuard<() => Promise<void>>({
+    run: (task) => task(),
+    onError: () => notify('ra.notification.http_error', { type: 'error' }),
+  });
+  const saving = saveGuard.submitting;
+  const runGuarded = (task: () => Promise<void>) => {
+    saveGuard.submit(task);
+  };
   const [submitDate, setSubmitDate] = useState<string | null>(null);
   const [formDate, setFormDate] = useState(todayIsoDate());
   const [eggToSaleRate, setEggToSaleRate] = useState<number | null>(null);
@@ -664,7 +677,6 @@ export function BulkQuantityEntryPage({
       distributionLegPlans: DistributionTransactionLegPlan[] = [],
       priorProductionResults: BulkQuantityRowResult[] = [],
     ) => {
-      setSaving(true);
       const productionResults = await executeRowPlansSequentially(
         dataProvider,
         productionPlans,
@@ -694,8 +706,6 @@ export function BulkQuantityEntryPage({
           attachDistributionLegAnchors(distributionLegPlans, submissionAnchor),
         );
       }
-      setSaving(false);
-
       const legBatches = [...poolBatch, ...distributionBatch];
       const expectedSteps =
         productionPlans.length +
@@ -830,15 +840,17 @@ export function BulkQuantityEntryPage({
     if (validationError) {
       return validationError;
     }
-    const prepared = await prepareSave(date, false, eggToSaleRate ?? 1);
-    if (!prepared.ready) {
-      return {};
-    }
-    await runProductionAndPool(
-      prepared.productionPlans,
-      prepared.poolLegPlans,
-      date,
-    );
+    runGuarded(async () => {
+      const prepared = await prepareSave(date, false, eggToSaleRate ?? 1);
+      if (!prepared.ready) {
+        return;
+      }
+      await runProductionAndPool(
+        prepared.productionPlans,
+        prepared.poolLegPlans,
+        date,
+      );
+    });
     return {};
   };
 
@@ -852,15 +864,17 @@ export function BulkQuantityEntryPage({
     }
     const date = formDate;
     setSubmitDate(date);
-    const prepared = await prepareSave(date, false, eggToSaleRate ?? 1);
-    if (!prepared.ready) {
-      return;
-    }
-    await runProductionAndPool(
-      prepared.productionPlans,
-      prepared.poolLegPlans,
-      date,
-    );
+    runGuarded(async () => {
+      const prepared = await prepareSave(date, false, eggToSaleRate ?? 1);
+      if (!prepared.ready) {
+        return;
+      }
+      await runProductionAndPool(
+        prepared.productionPlans,
+        prepared.poolLegPlans,
+        date,
+      );
+    });
   };
 
   const handleNext = async () => {
@@ -888,16 +902,18 @@ export function BulkQuantityEntryPage({
       }
     }
     const date = formDate;
-    const prepared = await prepareSave(date, true, eggToSaleRate ?? 1);
-    if (!prepared.ready) {
-      return;
-    }
-    await runProductionAndPool(
-      prepared.productionPlans,
-      prepared.poolLegPlans,
-      date,
-      prepared.legPlans,
-    );
+    runGuarded(async () => {
+      const prepared = await prepareSave(date, true, eggToSaleRate ?? 1);
+      if (!prepared.ready) {
+        return;
+      }
+      await runProductionAndPool(
+        prepared.productionPlans,
+        prepared.poolLegPlans,
+        date,
+        prepared.legPlans,
+      );
+    });
   };
 
   const confirmGlobalConflicts = async () => {
@@ -915,11 +931,13 @@ export function BulkQuantityEntryPage({
     setPendingPoolLegPlans(poolLegPlans);
     setPendingLegPlans(legPlans);
     setGlobalConflictOpen(false);
-    await runProductionAndPool(
-      productionPlans,
-      poolLegPlans,
-      submitDate,
-      pendingIncludeDistribution ? legPlans : [],
+    runGuarded(() =>
+      runProductionAndPool(
+        productionPlans,
+        poolLegPlans,
+        submitDate,
+        pendingIncludeDistribution ? legPlans : [],
+      ),
     );
   };
 
@@ -939,7 +957,7 @@ export function BulkQuantityEntryPage({
     setPendingProductionPlans(plans);
     setPendingPoolLegPlans(poolLegPlans);
     setConflictOpen(false);
-    await runProductionAndPool(plans, poolLegPlans, submitDate);
+    runGuarded(() => runProductionAndPool(plans, poolLegPlans, submitDate));
   };
 
   const retryFailed = async () => {
@@ -965,12 +983,14 @@ export function BulkQuantityEntryPage({
       poolRetry.length > 0 ||
       legRetry.length > 0
     ) {
-      await runProductionAndPool(
-        productionRetry,
-        poolRetry,
-        submitDate,
-        legRetry,
-        priorProduction,
+      runGuarded(() =>
+        runProductionAndPool(
+          productionRetry,
+          poolRetry,
+          submitDate,
+          legRetry,
+          priorProduction,
+        ),
       );
     }
   };

@@ -39,6 +39,7 @@ import {
   samePersonPublishBlocked,
   strapiErrorMessage,
 } from '../../data/transactionPublish';
+import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
 import {
   CONVERTED_EXPANDED,
@@ -274,7 +275,6 @@ function ReceiptAttachEditor({
   const notify = useNotify();
   const refresh = useRefresh();
   const { getValues } = useFormContext();
-  const [saving, setSaving] = useState(false);
   const pending = cards.filter((card) => card.file && card.file.size > 0);
   const values = getValues() as Record<string, unknown>;
   const formDescription =
@@ -287,32 +287,44 @@ function ReceiptAttachEditor({
     isFilled(values.amount),
   );
 
-  const saveReceipts = () => {
-    if (!canSave || saving) return;
-    setSaving(true);
-    Promise.all(
-      pending.map((card) =>
-        attachTransactionReceipt(record.documentId, {
-          file: card.file as File,
-          vendor: card.vendor,
-          receiptTypeId: card.receiptTypeId,
-          date: values.date,
-          amount: values.amount,
-          description: formDescription,
-        }),
+  const receiptGuard = useSubmitGuard<{
+    cards: ReceiptCardValue[];
+    values: Record<string, unknown>;
+    description: string;
+  }>({
+    run: (input) =>
+      Promise.all(
+        input.cards.map((card) =>
+          attachTransactionReceipt(record.documentId, {
+            file: card.file as File,
+            vendor: card.vendor,
+            receiptTypeId: card.receiptTypeId,
+            date: input.values.date,
+            amount: input.values.amount,
+            description: input.description,
+          }),
+        ),
       ),
-    )
-      .then(() => {
-        onCardsChange([]);
-        notify('app.receipt_saved', { type: 'success' });
-        refresh();
-      })
-      .catch((error: unknown) => {
-        notify(strapiErrorMessage(error) || 'ra.notification.http_error', {
-          type: 'error',
-        });
-      })
-      .finally(() => setSaving(false));
+    onSuccess: () => {
+      onCardsChange([]);
+      notify('app.receipt_saved', { type: 'success' });
+      refresh();
+    },
+    onError: (error: unknown) => {
+      notify(strapiErrorMessage(error) || 'ra.notification.http_error', {
+        type: 'error',
+      });
+    },
+  });
+  const saving = receiptGuard.busy;
+
+  const saveReceipts = () => {
+    if (!canSave) return;
+    receiptGuard.submit({
+      cards: pending,
+      values,
+      description: formDescription,
+    });
   };
 
   return (
