@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ASSET_CREATE_PATH,
+  acquisitionFieldPrefill,
   assetCreatePathAfterBooking,
   assetCreatePathWithPrefill,
   buildAssetPrefillRecord,
+  findMemberByAccount,
   pickAcquisitionTransactionId,
+  prefillChanges,
 } from './assetPrefill';
 
 function sourceFromPath(path: string): Record<string, unknown> {
@@ -141,5 +144,77 @@ describe('assetCreatePathAfterBooking', () => {
     expect(decodeURIComponent(legQuery ?? '')).toContain(
       'filters[documentId][$in][0]=leg-1500',
     );
+  });
+});
+
+describe('acquisitionFieldPrefill', () => {
+  const tx = {
+    amount: '7878',
+    date: '2026-11-19T00:00:00.000Z',
+    description: 'Lapát | Vásárlás',
+    currency_type: { documentId: 'huf' },
+    organization: { documentId: 'org' },
+  };
+
+  it('maps the transaction onto the asset fields', () => {
+    expect(acquisitionFieldPrefill(tx, { memberId: 'm1' })).toEqual({
+      name: 'Lapát',
+      purchase_price: 7878,
+      currency_type: 'huf',
+      purchase_date: '2026-11-19',
+      organization: 'org',
+      responsible_member: 'm1',
+    });
+  });
+
+  it('offers only what is still free on the transaction', () => {
+    expect(
+      acquisitionFieldPrefill(tx, { linkedTotal: 5000 }).purchase_price,
+    ).toBe(2878);
+    expect(
+      acquisitionFieldPrefill(tx, { linkedTotal: 7878 }),
+    ).not.toHaveProperty('purchase_price');
+  });
+});
+
+describe('prefillChanges', () => {
+  it('fills empty fields and keeps what the user typed', () => {
+    expect(
+      prefillChanges(
+        { name: 'Saját név', purchase_price: null, organization: '' },
+        { name: 'Lapát', purchase_price: 100, organization: 'org' },
+      ),
+    ).toEqual({ purchase_price: 100, organization: 'org' });
+  });
+
+  it('follows a new pick on fields the previous pick filled', () => {
+    expect(
+      prefillChanges(
+        { purchase_price: 100, currency_type: 'huf', name: 'Kézzel' },
+        { purchase_price: 250, currency_type: 'huf', name: 'Talicska' },
+        { purchase_price: 100, currency_type: 'huf', name: 'Lapát' },
+      ),
+    ).toEqual({ purchase_price: 250 });
+  });
+});
+
+describe('findMemberByAccount', () => {
+  it('matches a share or pocket account, leg account first', async () => {
+    const client = async () => ({
+      json: {
+        data: [
+          { documentId: 'm-orig', account: { documentId: 'acc-orig' } },
+          { documentId: 'm-leg', private_account: { documentId: 'acc-leg' } },
+        ],
+        meta: { pagination: { pageCount: 1 } },
+      },
+    });
+    await expect(
+      findMemberByAccount(client as never, ['acc-leg', 'acc-orig']),
+    ).resolves.toBe('m-leg');
+    await expect(
+      findMemberByAccount(client as never, ['nobody']),
+    ).resolves.toBeNull();
+    await expect(findMemberByAccount(client as never, [])).resolves.toBeNull();
   });
 });

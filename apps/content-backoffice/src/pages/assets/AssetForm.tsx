@@ -73,7 +73,11 @@ export function AssetForm(props: Omit<SimpleFormProps, 'children'>) {
         validate={required()}
       />
 
-      <TransactionPickerInput side="debit" source="acquisition_transaction" />
+      <TransactionPickerInput
+        prefillOnPick
+        side="debit"
+        source="acquisition_transaction"
+      />
       <TransactionPickerInput side="credit" source="disposal_transaction" />
 
       <NumberInput fullWidth source="purchase_price" validate={minValue(0)} />

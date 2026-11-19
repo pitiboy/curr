@@ -1,13 +1,15 @@
 import { Autocomplete, Box, TextField } from '@mui/material';
 import { strapiHttpClient } from 'ra-strapi';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   useGetOne,
   useInput,
   useRecordContext,
   useTranslate,
 } from 'react-admin';
-import { useWatch } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
+
+import { STRAPI_URL } from '../../config';
 
 import type { AssetRecord } from '../../data/assetData';
 import {
@@ -16,6 +18,11 @@ import {
   type TransactionPickerOption,
   type TransactionPickerSide,
 } from './transactionPicker';
+import {
+  loadAcquisitionPrefill,
+  prefillChanges,
+  type AcquisitionFieldPrefill,
+} from './assetPrefill';
 import {
   loadTransactionUsage,
   overLinkedTotal,
@@ -40,9 +47,12 @@ type RefField = 'acquisition_transaction' | 'disposal_transaction';
 export function TransactionPickerInput({
   source,
   side,
+  prefillOnPick = false,
 }: {
   source: RefField;
   side: TransactionPickerSide;
+  /** Fill price, currency, date, organization, member… from the picked row. */
+  prefillOnPick?: boolean;
 }) {
   const translate = useTranslate();
   const record = useRecordContext<AssetRecord>();
@@ -53,6 +63,27 @@ export function TransactionPickerInput({
   const [options, setOptions] = useState<TransactionPickerOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const { getValues, setValue } = useFormContext();
+  const lastPrefill = useRef<AcquisitionFieldPrefill>({});
+  const pickSeq = useRef(0);
+
+  const applyPrefill = (transactionId: string) => {
+    const seq = ++pickSeq.current;
+    loadAcquisitionPrefill(httpClient, STRAPI_URL, transactionId, assetId)
+      .then((next) => {
+        if (seq !== pickSeq.current) return;
+        const changes = prefillChanges(
+          getValues() as Record<string, unknown>,
+          next,
+          lastPrefill.current,
+        );
+        for (const [key, fieldValue] of Object.entries(changes)) {
+          setValue(key, fieldValue, { shouldDirty: true });
+        }
+        lastPrefill.current = next;
+      })
+      .catch(() => undefined);
+  };
 
   const knownRef =
     record?.refs?.[source]?.documentId === value ? record.refs[source] : null;
@@ -171,7 +202,10 @@ export function TransactionPickerInput({
       loading={loading}
       loadingText={translate('ra.page.loading')}
       noOptionsText={translate('app.assets.transaction_picker_empty')}
-      onChange={(_, option) => field.onChange(option?.id ?? null)}
+      onChange={(_, option) => {
+        field.onChange(option?.id ?? null);
+        if (prefillOnPick && option?.id) applyPrefill(option.id);
+      }}
       onClose={() => setOpen(false)}
       onInputChange={(_, text, reason) => {
         if (reason === 'input') setSearch(text);
