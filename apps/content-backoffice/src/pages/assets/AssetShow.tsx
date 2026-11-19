@@ -1,29 +1,45 @@
 import { Box, Typography } from '@mui/material';
 import {
+  DateField,
   EditButton,
   FunctionField,
-  Labeled,
+  ListButton,
   Show,
   SimpleShowLayout,
   TextField,
   TopToolbar,
+  useLocaleState,
   useRecordContext,
   useTranslate,
 } from 'react-admin';
 
 import type { AssetRecord } from '../../data/assetData';
+import { bandedShow, bandedSpanClass } from '../../theme';
+import { dateFieldProps } from '../transactions/dateField';
 import { ASSETS_RESOURCE } from './assetConstants';
 import { EnumLabel, TransactionRefLink } from './assetDisplay';
-import { formatAssetPrice } from './assetFormat';
+import { amountFormat } from './assetFormat';
+import { AssetPhotoThumb } from './AssetPhotoThumb';
 
 function AssetPhoto() {
   const record = useRecordContext<AssetRecord>();
   const translate = useTranslate();
   if (!record?.photo) {
     return (
-      <Typography color="text.secondary" variant="body2">
-        {translate('app.assets.no_photo')}
-      </Typography>
+      <Box
+        sx={{
+          alignItems: 'center',
+          color: 'text.secondary',
+          display: 'flex',
+          gap: 1.5,
+          minHeight: 56,
+        }}
+      >
+        <AssetPhotoThumb record={record} size={56} />
+        <Typography variant="body2">
+          {translate('app.assets.no_photo')}
+        </Typography>
+      </Box>
     );
   }
   return (
@@ -32,12 +48,23 @@ function AssetPhoto() {
       component="img"
       src={record.photo.url}
       sx={{
-        maxWidth: '100%',
-        maxHeight: 360,
+        bgcolor: 'action.hover',
         borderRadius: 1,
+        display: 'block',
+        maxHeight: 360,
+        maxWidth: '100%',
         objectFit: 'contain',
       }}
     />
+  );
+}
+
+function ShowActions() {
+  return (
+    <TopToolbar>
+      <ListButton />
+      <EditButton />
+    </TopToolbar>
   );
 }
 
@@ -51,22 +78,22 @@ function refName(
 /** Eszköz részletei: adatok, fotó, beszerzési / selejtezési tranzakció. */
 export function AssetShow() {
   const translate = useTranslate();
+  const [locale] = useLocaleState();
   const label = (field: string) =>
     translate(`resources.assets.fields.${field}`);
+  const dateProps = dateFieldProps(locale);
   return (
     <Show
-      actions={
-        <TopToolbar>
-          <EditButton />
-        </TopToolbar>
-      }
+      actions={<ShowActions />}
       resource={ASSETS_RESOURCE}
       title="app.assets.show_title"
     >
-      <SimpleShowLayout>
-        <Labeled label={label('photo')}>
-          <AssetPhoto />
-        </Labeled>
+      <SimpleShowLayout spacing={0} sx={bandedShow}>
+        <FunctionField<AssetRecord>
+          className={bandedSpanClass}
+          label={label('photo')}
+          render={() => <AssetPhoto />}
+        />
         <TextField source="name" />
         <FunctionField<AssetRecord>
           label={label('category')}
@@ -85,22 +112,6 @@ export function AssetShow() {
           )}
         />
         <FunctionField<AssetRecord>
-          label={label('purchase_price')}
-          render={(record) => formatAssetPrice(record)}
-        />
-        <TextField emptyText="—" source="purchase_date" />
-        <TextField emptyText="—" source="warranty_until" />
-        <FunctionField<AssetRecord>
-          label={label('organization')}
-          render={(record) => refName(record, 'organization')}
-        />
-        <FunctionField<AssetRecord>
-          label={label('responsible_member')}
-          render={(record) => refName(record, 'responsible_member')}
-        />
-        <TextField emptyText="—" source="location" />
-        <TextField emptyText="—" source="serial_number" />
-        <FunctionField<AssetRecord>
           label={label('acquisition_transaction')}
           render={(record) => (
             <TransactionRefLink value={record.refs?.acquisition_transaction} />
@@ -112,7 +123,34 @@ export function AssetShow() {
             <TransactionRefLink value={record.refs?.disposal_transaction} />
           )}
         />
+        <FunctionField<AssetRecord>
+          label={label('purchase_price')}
+          render={(record) => (
+            <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              {record.purchase_price == null
+                ? '—'
+                : amountFormat.format(record.purchase_price)}
+            </Box>
+          )}
+        />
+        <FunctionField<AssetRecord>
+          label={label('currency_type')}
+          render={(record) => record.refs?.currency_type?.code ?? '—'}
+        />
+        <DateField emptyText="—" source="purchase_date" {...dateProps} />
+        <DateField emptyText="—" source="warranty_until" {...dateProps} />
+        <FunctionField<AssetRecord>
+          label={label('organization')}
+          render={(record) => refName(record, 'organization')}
+        />
+        <FunctionField<AssetRecord>
+          label={label('responsible_member')}
+          render={(record) => refName(record, 'responsible_member')}
+        />
+        <TextField emptyText="—" source="location" />
+        <TextField emptyText="—" source="serial_number" />
         <TextField
+          className={bandedSpanClass}
           emptyText="—"
           source="notes"
           sx={{ whiteSpace: 'pre-wrap' }}
