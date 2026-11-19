@@ -140,12 +140,21 @@ Meglévő `name` + fejléc kód páros nem íródik felül. Előfeltétel: `1900
 
 ## Tojás napló import (edizone)
 
+> **Egyszeri, elavult import.** A script a régi Google Sheet napló egyszeri
+> betöltésére szolgált. Új napi tojás rögzítés a backoffice **Napi tojás
+> rögzítés** űrlapján megy, amely a `POST /api/egg-production/entries`
+> endpointon keresztül, workflow sablonokkal könyvel (lásd
+> [docs/transaction-workflow.md](../../docs/transaction-workflow.md#napi-tojás-endpoint-post-apiegg-productionentries)).
+> A scriptet nem fejlesztjük tovább.
+
 A Google Sheet tojás naplóból generált tranzakciók az
 `http/edizone/data/transactions.json` fájlban vannak. A konverter a
 `database/seeders/egg-sheet-to-transactions.mjs` script. A
-`PRODUCTION_FROM`, `SALES_FROM` és `DISTRIBUTION_FROM` alapértelmezetten
-`2026-09-01` (nyitó készlet nulla; csak ettől a naptól jönnek be sorok,
-eladásokkal együtt). A `SHARES_FROM_2026_09_01` konstans a későbbi
+`PRODUCTION_FROM`, `SALES_FROM` és `DISTRIBUTION_FROM` a kódban
+`2026-10-01` (nyitó készlet nulla; csak ettől a naptól jönnek be sorok,
+eladásokkal együtt). A korábbi `2026-09-01` itt elírás volt; a
+`SHARES_FROM_2026_09_01` konstans neve ellenére a `from` mezője is
+`PRODUCTION_FROM`. A `SHARES_FROM_2026_09_01` konstans a későbbi
 elszámolási riporthoz rögzíti az 1/3–1/3–1/3 részesedést; a D/P/G kivét
 oszlopok könyvelése ettől független.
 

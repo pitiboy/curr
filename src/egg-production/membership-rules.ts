@@ -1,4 +1,10 @@
-/** Typed shape for membership / membership-type `rules` JSON (extensible per resource key). */
+/**
+ * Tagsági / tagsági típus `rules` JSON — tojás továbbosztás szabály.
+ * (Korábban: apps/content-backoffice/.../bulk-quantity/membershipRules.ts.)
+ *
+ * `rules.egg = { mode: 'internal' | 'sale', ratio }`. A Convert csak a
+ * `ratio`-t nézi; a `mode`-ot ez az űrlap kezeli (egg-production service).
+ */
 
 export type EggDistributionRule = {
   mode: 'internal' | 'sale';

@@ -1,13 +1,4 @@
-import type {
-  BulkQuantityConflictChoice,
-  BulkQuantityDuplicate,
-  BulkQuantityGlobalConflictChoice,
-  BulkQuantityHenHouse,
-  BulkQuantityResolvedRefs,
-  BulkQuantityRow,
-  BulkQuantityRowPlan,
-  BulkQuantityRowResult,
-} from './types';
+import type { BulkQuantityHenHouse, BulkQuantityRow } from './types';
 
 export function todayIsoDate(now = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -61,159 +52,17 @@ export function rowsFromQuantities(
   return rows;
 }
 
-export function duplicateQueryFilters(input: {
-  date: string;
-  organizationId: string;
-  currencyTypeId: string;
-  debitAccountId: string;
-  creditAccountId: string;
-}): Record<string, unknown> {
-  return {
-    date: { $eq: input.date },
-    organization: { documentId: { $eq: input.organizationId } },
-    currency_type: { documentId: { $eq: input.currencyTypeId } },
-    debit_account: { documentId: { $eq: input.debitAccountId } },
-    credit_account: { documentId: { $eq: input.creditAccountId } },
-  };
-}
-
-export type DuplicateCandidate = {
-  documentId: string;
-  amount: number;
-};
-
-export function pickDuplicateCandidate(
-  matches: readonly DuplicateCandidate[],
-): DuplicateCandidate | null {
-  if (matches.length === 0) {
-    return null;
-  }
-  return matches[0] ?? null;
-}
-
-export function mergeDuplicateMatches<
-  T extends { documentId?: string; amount?: string | number | null },
->(drafts: readonly T[], published: readonly T[]): T[] {
-  const byId = new Map<string, T>();
-  for (const row of drafts) {
-    if (row.documentId) {
-      byId.set(row.documentId, row);
+/** Non-zero member quantities in member list order (request `distributions`). */
+export function distributionRequestRows(
+  memberIds: readonly string[],
+  quantities: Record<string, unknown>,
+): { memberId: string; quantity: number }[] {
+  const rows: { memberId: string; quantity: number }[] = [];
+  for (const memberId of memberIds) {
+    const quantity = parseQuantityInput(quantities[memberId]);
+    if (quantity !== null) {
+      rows.push({ memberId, quantity });
     }
   }
-  for (const row of published) {
-    if (row.documentId) {
-      byId.set(row.documentId, row);
-    }
-  }
-  return [...byId.values()];
-}
-
-export function toDuplicateCandidate(row: {
-  documentId?: string;
-  amount?: string | number | null;
-}): DuplicateCandidate | null {
-  if (!row.documentId) {
-    return null;
-  }
-  const amount = Number(row.amount);
-  if (!Number.isFinite(amount)) {
-    return null;
-  }
-  return { documentId: row.documentId, amount };
-}
-
-export function buildTransactionPayload(
-  refs: BulkQuantityResolvedRefs,
-  row: BulkQuantityRow,
-  date: string,
-  description: string,
-): Record<string, unknown> {
-  return {
-    date,
-    amount: row.amount,
-    description,
-    organization: row.organizationId,
-    debit_account: refs.debitAccountId,
-    credit_account: refs.creditAccountId,
-    currency_type: refs.currencyTypeId,
-    transaction_type: refs.transactionTypeId,
-  };
-}
-
-export function buildRowPlans(
-  rows: readonly BulkQuantityRow[],
-  duplicates: readonly BulkQuantityDuplicate[],
-  choices: Readonly<Record<string, BulkQuantityConflictChoice>>,
-): BulkQuantityRowPlan[] {
-  const duplicateByOrg = new Map(
-    duplicates.map((item) => [item.row.organizationId, item]),
-  );
-  return rows.map((row) => {
-    const duplicate = duplicateByOrg.get(row.organizationId);
-    if (!duplicate) {
-      return { ...row, action: 'insert' as const };
-    }
-    const choice = choices[row.organizationId] ?? 'update';
-    return {
-      ...row,
-      action: choice,
-      updateDocumentId:
-        choice === 'update' ? duplicate.existingDocumentId : undefined,
-    };
-  });
-}
-
-export function mergeRowResults(
-  previous: readonly BulkQuantityRowResult[],
-  next: readonly BulkQuantityRowResult[],
-): BulkQuantityRowResult[] {
-  const byOrg = new Map(previous.map((row) => [row.organizationId, row]));
-  for (const row of next) {
-    byOrg.set(row.organizationId, row);
-  }
-  return [...byOrg.values()];
-}
-
-export function failedRowIds(
-  results: readonly BulkQuantityRowResult[],
-): string[] {
-  return results
-    .filter((row) => row.status === 'error')
-    .map((row) => row.organizationId);
-}
-
-export function plansForRetry(
-  plans: readonly BulkQuantityRowPlan[],
-  failedIds: readonly string[],
-): BulkQuantityRowPlan[] {
-  const failed = new Set(failedIds);
-  return plans.filter((plan) => failed.has(plan.organizationId));
-}
-
-export function buildRowPlansWithGlobalChoice(
-  rows: readonly BulkQuantityRow[],
-  duplicates: readonly BulkQuantityDuplicate[],
-  choice: BulkQuantityGlobalConflictChoice,
-): BulkQuantityRowPlan[] {
-  const duplicateByOrg = new Map(
-    duplicates.map((item) => [item.row.organizationId, item]),
-  );
-  return rows.map((row) => {
-    const duplicate = duplicateByOrg.get(row.organizationId);
-    if (!duplicate) {
-      return { ...row, action: 'insert' as const };
-    }
-    return {
-      ...row,
-      action: choice,
-      updateDocumentId:
-        choice === 'update' ? duplicate.existingDocumentId : undefined,
-    };
-  });
-}
-
-export function hasAnyDuplicate(
-  duplicates: readonly BulkQuantityDuplicate[],
-): boolean {
-  return duplicates.length > 0;
+  return rows;
 }

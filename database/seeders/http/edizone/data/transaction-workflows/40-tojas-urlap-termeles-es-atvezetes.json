@@ -1,0 +1,36 @@
+{
+  "name": "Tojás napi termelés és készlet átvezetés (űrlap)",
+  "status": "draft",
+  "debit_account_code": "0000",
+  "credit_account_code": "0000",
+  "currency": "EGG",
+  "steps": [
+    {
+      "description": "Napi tojás — {original.description}: {original.amount} db",
+      "percent": 100,
+      "debit_code": "1300",
+      "credit_code": "4500",
+      "currency": "EGG",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Tojás készlet átvezetés (ól) — {original.description} → Tyúktartás ({original.amount} db)",
+      "percent": 100,
+      "debit_code": "4500",
+      "credit_code": "1300",
+      "currency": "EGG",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Tojás készlet átvezetés (Tyúktartás) — {original.description} ({original.amount} db)",
+      "percent": 100,
+      "debit_code": "1300",
+      "credit_code": "4500",
+      "currency": "EGG",
+      "organization": "Tyúktartás",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

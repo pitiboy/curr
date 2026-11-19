@@ -11,7 +11,9 @@
 # köztük 1900, 4500, EGG, FRUIT és a Tojóól szervezet a kor/data fájlokban.
 # Tagi 1101/1001 → workflow.step-member-debit / step-member-credit (member_account_code).
 # Fix T/K → workflow.step (mindkét account reláció). Convert a forrás trx-ből oldja a tagit.
-# Ha a name + fejléc kód páros már létezik, a POST nem fut le.
+# Ha a name + fejléc kód páros már létezik, a POST nem fut le (idempotens).
+# "status": "draft" → draft sablon (lookup + POST is draft): a napi tojás
+# űrlap sablonjai (40–42, fejléc 0000/0000) így nem illeszkednek a Convert-be.
 
 {{
   if (typeof wfItems === "undefined") {
@@ -221,8 +223,11 @@ Accept: application/json
   exports.encodedName = encodeURIComponent(item.name);
   exports.debitCode = encodeURIComponent(String(item.debit_account_code));
   exports.creditCode = encodeURIComponent(String(item.credit_account_code));
+  // "status": "draft" a JSON-ban → draft sablon (pl. tojás űrlap sablonok):
+  // a Convert és a backoffice katalógus csak a published sablonokat látja.
+  exports.wfStatus = item.status === "draft" ? "draft" : "published";
 }}
-GET {{baseUrl}}/api/transaction-workflows?filters[name][$eq]={{encodedName}}&filters[debit_account_code][$eq]={{debitCode}}&filters[credit_account_code][$eq]={{creditCode}}&status=published&pagination[pageSize]=1
+GET {{baseUrl}}/api/transaction-workflows?filters[name][$eq]={{encodedName}}&filters[debit_account_code][$eq]={{debitCode}}&filters[credit_account_code][$eq]={{creditCode}}&status={{wfStatus}}&pagination[pageSize]=1
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -252,6 +257,7 @@ Accept: application/json
   const key = item.name + "|" + item.debit_account_code + "|" + item.credit_account_code;
   exports.wfPayload = null;
   exports.$cancel = false;
+  exports.wfStatus = item.status === "draft" ? "draft" : "published";
   if (wfExists[key] || wfFailed[key]) {
     console.error("create skipped (exists): " + item.name);
     exports.$cancel = true;
@@ -416,7 +422,7 @@ Accept: application/json
     }
   }
 }}
-POST {{baseUrl}}/api/transaction-workflows?status=published
+POST {{baseUrl}}/api/transaction-workflows?status={{wfStatus}}
 Authorization: Bearer {{token}}
 Accept: application/json
 Content-Type: application/json
