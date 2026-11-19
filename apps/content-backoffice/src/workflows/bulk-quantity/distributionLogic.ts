@@ -121,7 +121,7 @@ export function saleRevenueAmount(
   eggToSaleRate: number,
 ): number {
   const raw = eggs * ratio * eggToSaleRate;
-  return Math.round(raw * 100) / 100;
+  return Math.round(raw * 10_000) / 10_000;
 }
 
 export function distributionRowsFromQuantities(

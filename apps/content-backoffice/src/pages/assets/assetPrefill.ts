@@ -181,7 +181,7 @@ export function acquisitionFieldPrefill(
   const amount = positiveAmount(tx.amount);
   if (amount != null) {
     const remaining =
-      Math.round((amount - (options.linkedTotal ?? 0)) * 100) / 100;
+      Math.round((amount - (options.linkedTotal ?? 0)) * 10_000) / 10_000;
     if (remaining > 0) out.purchase_price = remaining;
   }
   const currency = relationDocumentId(tx.currency_type);

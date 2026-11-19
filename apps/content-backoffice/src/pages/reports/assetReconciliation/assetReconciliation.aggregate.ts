@@ -49,8 +49,8 @@ function needsLink(asset: AssetReconciliationAsset): boolean {
   );
 }
 
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
+function roundAmount(value: number): number {
+  return Math.round(value * 10_000) / 10_000;
 }
 
 function add(map: Map<string, number>, key: string, value: number): void {
@@ -96,9 +96,9 @@ export function transactionLinkMismatches(
     const direct = byId.get(id);
     const legs = direct ? [direct] : (legsByOriginal.get(id) ?? []);
     if (legs.length === 0) continue;
-    const amount = round2(legs.reduce((sum, leg) => sum + leg.amount, 0));
-    const assetTotal = round2(total);
-    const difference = round2(assetTotal - amount);
+    const amount = roundAmount(legs.reduce((sum, leg) => sum + leg.amount, 0));
+    const assetTotal = roundAmount(total);
+    const difference = roundAmount(assetTotal - amount);
     if (Math.abs(difference) < ASSET_RECONCILIATION_TOLERANCE) continue;
     const first = legs[0]!;
     mismatches.push({
@@ -167,9 +167,9 @@ export function aggregateAssetReconciliation(
   ].sort((a, b) => a.localeCompare(b));
   const rows: AssetReconciliationCurrencyRow[] = currencies.map(
     (currencyCode) => {
-      const ledgerBalance = round2(ledger.get(currencyCode) ?? 0);
-      const assetTotal = round2(assetTotals.get(currencyCode) ?? 0);
-      const difference = round2(ledgerBalance - assetTotal);
+      const ledgerBalance = roundAmount(ledger.get(currencyCode) ?? 0);
+      const assetTotal = roundAmount(assetTotals.get(currencyCode) ?? 0);
+      const difference = roundAmount(ledgerBalance - assetTotal);
       return {
         currencyCode,
         ledgerBalance,
