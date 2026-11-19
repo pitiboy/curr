@@ -9,7 +9,7 @@
  * tagi oldal forrás trx / testvér számlából.
  * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
  * legfrissebb valid_from ≤ forrás nap vége) × tagsági ratio (csak valódi váltásnál,
- * `rules[forrás pénznem kód]`), 2 tizedes; rate-et és ratio-t a hívó oldja fel.
+ * `rules[forrás pénznem kód]`), 4 tizedes; rate-et és ratio-t a hívó oldja fel.
  * KOR-t érintő párnál direkt sor hiányában inverz: `1 / rate(to → from)`.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat),
  * opcionális gépi `code` (pl. CURRENCY_RATE_MISSING) és `details`.
@@ -726,9 +726,9 @@ export function rateCutoff(date: string): string {
   return `${isoDay(date)}T23:59:59.999Z`;
 }
 
-/** Two-decimal rounding for rate-applied amounts (matches saleRevenueAmount). */
+/** Four-decimal rounding for rate-applied amounts (matches saleRevenueAmount / transaction.amount scale). */
 export function roundAmount(value: number): number {
-  return Math.round(value * 100) / 100;
+  return Math.round(value * 10_000) / 10_000;
 }
 
 /**

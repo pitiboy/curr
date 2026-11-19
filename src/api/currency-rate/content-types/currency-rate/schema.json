@@ -16,7 +16,11 @@
       "type": "decimal",
       "required": true,
       "precision": 10,
-      "scale": 6,
+      "scale": 4,
+      "column": {
+        "type": "decimal",
+        "args": [10, 4]
+      },
       "metadatas": {
         "label": "Árfolyam",
         "description": "Az árfolyam értéke (hány egység cél pénznem = 1 egység forrás pénznem)"
