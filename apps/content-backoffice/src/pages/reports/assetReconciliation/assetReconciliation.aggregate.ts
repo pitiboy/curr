@@ -9,6 +9,7 @@ import type {
   AssetReconciliationCurrencyRow,
   AssetReconciliationReport,
   AssetReconciliationTransaction,
+  AssetReconciliationTransactionMismatch,
 } from './types';
 
 const NO_CURRENCY = '—';
@@ -56,6 +57,65 @@ function add(map: Map<string, number>, key: string, value: number): void {
   map.set(key, (map.get(key) ?? 0) + value);
 }
 
+/**
+ * Per acquisition transaction: Σ purchase_price of every asset linked to it
+ * (any ownership / status — over-linking is about the purchase itself) versus
+ * its 1500 debit. An asset may link to the expanded 1500 leg or to the
+ * original; for an original the 1500 debit is the sum of its expanded legs.
+ * Transactions outside the current filters (no 1500 debit found) are skipped.
+ */
+export function transactionLinkMismatches(
+  debits: readonly AssetReconciliationTransaction[],
+  assets: readonly AssetReconciliationAsset[],
+): AssetReconciliationTransactionMismatch[] {
+  const byId = new Map<string, AssetReconciliationTransaction>();
+  const legsByOriginal = new Map<string, AssetReconciliationTransaction[]>();
+  for (const tx of debits) {
+    byId.set(tx.documentId, tx);
+    if (tx.relatedDocumentId) {
+      const legs = legsByOriginal.get(tx.relatedDocumentId) ?? [];
+      legs.push(tx);
+      legsByOriginal.set(tx.relatedDocumentId, legs);
+    }
+  }
+
+  const linked = new Map<string, { count: number; total: number }>();
+  for (const asset of assets) {
+    const id = asset.acquisitionTransactionId;
+    if (!id) continue;
+    const entry = linked.get(id) ?? { count: 0, total: 0 };
+    entry.count += 1;
+    if (asset.purchasePrice != null && Number.isFinite(asset.purchasePrice)) {
+      entry.total += asset.purchasePrice;
+    }
+    linked.set(id, entry);
+  }
+
+  const mismatches: AssetReconciliationTransactionMismatch[] = [];
+  for (const [id, { count, total }] of linked) {
+    const direct = byId.get(id);
+    const legs = direct ? [direct] : (legsByOriginal.get(id) ?? []);
+    if (legs.length === 0) continue;
+    const amount = round2(legs.reduce((sum, leg) => sum + leg.amount, 0));
+    const assetTotal = round2(total);
+    const difference = round2(assetTotal - amount);
+    if (Math.abs(difference) < ASSET_RECONCILIATION_TOLERANCE) continue;
+    const first = legs[0]!;
+    mismatches.push({
+      documentId: id,
+      date: first.date,
+      description: first.description,
+      currencyCode: first.currencyCode || NO_CURRENCY,
+      amount,
+      assetCount: count,
+      assetTotal,
+      difference,
+    });
+  }
+  mismatches.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+  return mismatches;
+}
+
 export function aggregateAssetReconciliation(
   transactions: readonly AssetReconciliationTransaction[],
   assets: readonly AssetReconciliationAsset[],
@@ -71,6 +131,7 @@ export function aggregateAssetReconciliation(
 
   let excludedTreasuryCount = 0;
   const unlinkedDebits: AssetReconciliationTransaction[] = [];
+  const debits: AssetReconciliationTransaction[] = [];
   for (const tx of transactions) {
     const debit = tx.debitCode === FIXED_ASSET_ACCOUNT_CODE;
     const credit = tx.creditCode === FIXED_ASSET_ACCOUNT_CODE;
@@ -84,6 +145,7 @@ export function aggregateAssetReconciliation(
     if (debit && !credit) add(ledger, currency, tx.amount);
     if (credit && !debit) add(ledger, currency, -tx.amount);
     if (debit && !credit && tx.amount > 0) {
+      debits.push(tx);
       const linked =
         linkedTxIds.has(tx.documentId) ||
         (tx.relatedDocumentId != null && linkedTxIds.has(tx.relatedDocumentId));
@@ -119,16 +181,19 @@ export function aggregateAssetReconciliation(
   );
 
   unlinkedDebits.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+  const transactionMismatches = transactionLinkMismatches(debits, assets);
   unlinkedAssets.sort((a, b) => a.name.localeCompare(b.name, 'hu'));
 
   return {
     rows,
     unlinkedAssets,
     unlinkedDebits,
+    transactionMismatches,
     excludedTreasuryCount,
     ok:
       rows.every((row) => row.matched) &&
       unlinkedAssets.length === 0 &&
-      unlinkedDebits.length === 0,
+      unlinkedDebits.length === 0 &&
+      transactionMismatches.length === 0,
   };
 }

@@ -6,6 +6,10 @@ import {
 } from '../../data/transactionList';
 import { loadReportTransactions } from '../reports/shared/reportTransactionStatus';
 import { FIXED_ASSET_ACCOUNT_CODE, KOR_CURRENCY_CODE } from './assetConstants';
+import {
+  loadTransactionUsage,
+  type TransactionUsage,
+} from './transactionUsage';
 
 /** Rows shown per picker search (both publication states). */
 export const TRANSACTION_PICKER_PAGE_SIZE = 20;
@@ -16,7 +20,17 @@ export type TransactionPickerSide = 'debit' | 'credit';
 export type TransactionPickerOption = {
   id: string;
   label: string;
+  amount?: number | null;
+  currencyCode?: string | null;
+  /** Assets already linked to it on this side (the edited asset excluded). */
+  usage?: TransactionUsage;
 };
+
+function toAmount(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 /**
  * Strapi filters for the asset form's transaction picker. Always limited to
@@ -130,6 +144,7 @@ export async function searchTransactionsForPicker(
   httpClient: ContentHttpClient,
   search: string,
   side: TransactionPickerSide,
+  excludeAssetId?: string | null,
 ): Promise<TransactionPickerOption[]> {
   let rows = await loadReportTransactions<PickerRow>(
     httpClient,
@@ -156,12 +171,24 @@ export async function searchTransactionsForPicker(
     ]);
     rows = excludeAcquisitionDeals(rows, acquisitionDeals);
   }
-  return rows
+  const shown = rows
     .filter((row) => row.documentId)
     .sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')))
-    .slice(0, TRANSACTION_PICKER_PAGE_SIZE)
-    .map((row) => ({
-      id: row.documentId as string,
+    .slice(0, TRANSACTION_PICKER_PAGE_SIZE);
+  const usage = await loadTransactionUsage(
+    httpClient,
+    shown.map((row) => row.documentId as string),
+    side,
+    excludeAssetId,
+  );
+  return shown.map((row) => {
+    const id = row.documentId as string;
+    return {
+      id,
       label: transactionOptionLabel(row),
-    }));
+      amount: toAmount(row.amount),
+      currencyCode: row.currency_type?.code ?? null,
+      usage: usage.get(id),
+    };
+  });
 }

@@ -222,8 +222,72 @@ export function AssetReconciliationSection({
             </ReportScrollX>
           )}
 
+          <SubTitle>
+            {t('transaction_mismatches', {
+              count: report.transactionMismatches.length,
+            })}
+          </SubTitle>
+          {report.transactionMismatches.length === 0 ? (
+            <Typography color="text.secondary" variant="body2">
+              {translate('app.reconciliation.empty_section')}
+            </Typography>
+          ) : (
+            <ReportScrollX>
+              <Table data-testid="asset-transaction-mismatches" size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('columns.date')}</TableCell>
+                    <TableCell>{t('columns.description')}</TableCell>
+                    <TableCell align="right">
+                      {t('columns.asset_count')}
+                    </TableCell>
+                    <TableCell align="right">{t('columns.amount')}</TableCell>
+                    <TableCell align="right">
+                      {t('columns.linked_total')}
+                    </TableCell>
+                    <TableCell align="right">
+                      {t('columns.difference')}
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {report.transactionMismatches
+                    .slice(0, ASSET_RECONCILIATION_ITEM_CAP)
+                    .map((row) => (
+                      <TableRow key={row.documentId}>
+                        <TableCell>{row.date ?? '—'}</TableCell>
+                        <TableCell>
+                          <Link
+                            component={RouterLink}
+                            to={`/transactions/${encodeURIComponent(row.documentId)}/show`}
+                          >
+                            {row.description || row.documentId}
+                          </Link>
+                        </TableCell>
+                        <TableCell align="right">{row.assetCount}</TableCell>
+                        <TableCell align="right">
+                          {`${formatAmount(row.amount)} ${row.currencyCode}`}
+                        </TableCell>
+                        <TableCell align="right">
+                          {`${formatAmount(row.assetTotal)} ${row.currencyCode}`}
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{ color: 'warning.main', fontWeight: 600 }}
+                        >
+                          {formatAmount(row.difference)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </ReportScrollX>
+          )}
+
           {report.unlinkedAssets.length > ASSET_RECONCILIATION_ITEM_CAP ||
-          report.unlinkedDebits.length > ASSET_RECONCILIATION_ITEM_CAP ? (
+          report.unlinkedDebits.length > ASSET_RECONCILIATION_ITEM_CAP ||
+          report.transactionMismatches.length >
+            ASSET_RECONCILIATION_ITEM_CAP ? (
             <Typography color="text.secondary" variant="caption">
               {translate('app.reconciliation.capped', {
                 cap: ASSET_RECONCILIATION_ITEM_CAP,

@@ -61,6 +61,10 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       transaction_picker_help_credit:
         'Opcionális. A legutóbbi 1500-as jóváírások látszanak (pl. „Tárgyi eszköz selejtezés” ügylet), a beszerzési ügyletek belső sorai és a KOR tételek nélkül; leírásra vagy összegre szűkíthetsz.',
       transaction_picker_empty: 'Nincs találat',
+      transaction_picker_usage:
+        'Már %{count} eszközhöz kötve: %{linked} / %{amount} %{currency}',
+      transaction_picker_over_linked:
+        'Figyelem: a tranzakcióhoz kötött eszközök összege ezzel az eszközzel %{total} %{currency} lenne, ami több, mint a tranzakció összege (%{amount} %{currency}).',
       collect_after_booking:
         'Az ügylet könyvelve. Rögzítsd az eszközt az eszköznyilvántartásban.',
       ownership_types: {
@@ -467,6 +471,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         unlinked_assets:
           'Szövetkezeti, nem selejtezett eszköz beszerzési tranzakció nélkül (%{count})',
         unlinked_debits: '1500-as terhelés eszköz nélkül (%{count})',
+        transaction_mismatches:
+          'Tranzakció, ahol a hozzá kötött eszközök beszerzési ára nem egyezik az összeggel (%{count})',
         treasury_excluded:
           '%{count} KOR kincstári (1100) tétel kimaradt a számításból.',
         columns: {
@@ -480,6 +486,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
           date: 'Dátum',
           description: 'Leírás',
           amount: 'Összeg',
+          asset_count: 'Eszközök',
+          linked_total: 'Eszközök összesen',
         },
       },
       menu: 'Konzisztencia jelentés',

@@ -18,6 +18,10 @@ export const enMessages = mergeTranslations(englishMessages, {
       transaction_picker_help_credit:
         'Optional. Lists the latest 1500 credits (e.g. a “Fixed asset disposal” deal), excluding acquisition deals’ internal legs and KOR rows; narrow by description or amount.',
       transaction_picker_empty: 'No matches',
+      transaction_picker_usage:
+        'Already linked to %{count} asset(s): %{linked} / %{amount} %{currency}',
+      transaction_picker_over_linked:
+        'Warning: with this asset the linked assets would total %{total} %{currency}, more than the transaction amount (%{amount} %{currency}).',
       collect_after_booking:
         'The deal is booked. Record the asset in the inventory.',
       ownership_types: {
@@ -420,6 +424,8 @@ export const enMessages = mergeTranslations(englishMessages, {
         unlinked_assets:
           'Coop-owned, non-disposed assets without an acquisition transaction (%{count})',
         unlinked_debits: '1500 debits without an asset (%{count})',
+        transaction_mismatches:
+          'Transactions whose linked assets’ purchase prices do not add up to the amount (%{count})',
         treasury_excluded:
           '%{count} KOR treasury (1100) rows were left out of the calculation.',
         columns: {
@@ -433,6 +439,8 @@ export const enMessages = mergeTranslations(englishMessages, {
           date: 'Date',
           description: 'Description',
           amount: 'Amount',
+          asset_count: 'Assets',
+          linked_total: 'Assets total',
         },
       },
       menu: 'Reconciliation report',

@@ -109,10 +109,24 @@ describe('searchTransactionsForPicker', () => {
     },
   ];
 
+  const dealLookups = (urls: string[]) =>
+    urls.filter((u) => u.includes('/api/transactions') && u.includes('[$in]'));
+
   function fakeClient() {
     const urls: string[] = [];
     const client = async (url: string) => {
       urls.push(decodeURIComponent(url));
+      if (url.includes('/api/assets')) {
+        const data = [
+          {
+            documentId: 'other-asset',
+            purchase_price: 1000,
+            acquisition_transaction: { documentId: 'selejt' },
+            disposal_transaction: { documentId: 'selejt' },
+          },
+        ];
+        return { json: { data, meta: { pagination: { pageCount: 1 } } } };
+      }
       const isDealLookup = decodeURIComponent(url).includes('[$in]');
       const published = url.includes('status=published');
       const data = !published
@@ -138,13 +152,34 @@ describe('searchTransactionsForPicker', () => {
       'credit',
     );
     expect(options.map((o) => o.id)).toEqual(['selejt']);
-    expect(urls.some((u) => u.includes('[$in]'))).toBe(true);
+    expect(dealLookups(urls)).toHaveLength(2);
   });
 
   it('skips the deal lookup on the acquisition side', async () => {
     const { client, urls } = fakeClient();
     await searchTransactionsForPicker(client as never, '', 'debit');
-    expect(urls.some((u) => u.includes('[$in]'))).toBe(false);
+    expect(dealLookups(urls)).toHaveLength(0);
+  });
+
+  it('attaches existing asset links, excluding the edited asset', async () => {
+    const { client } = fakeClient();
+    const options = await searchTransactionsForPicker(
+      client as never,
+      '',
+      'credit',
+    );
+    expect(options[0]).toMatchObject({
+      amount: 3434,
+      currencyCode: 'HUF',
+      usage: { assetCount: 1, linkedTotal: 1000 },
+    });
+    const editing = await searchTransactionsForPicker(
+      fakeClient().client as never,
+      '',
+      'credit',
+      'other-asset',
+    );
+    expect(editing[0]?.usage).toBeUndefined();
   });
 });
 

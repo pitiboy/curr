@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   aggregateAssetReconciliation,
   isKorTreasuryTransaction,
+  transactionLinkMismatches,
 } from './assetReconciliation.aggregate';
 import type {
   AssetReconciliationAsset,
@@ -243,5 +244,103 @@ describe('aggregateAssetReconciliation', () => {
     );
     expect(report.rows).toEqual([]);
     expect(report.ok).toBe(true);
+  });
+});
+
+describe('transactionLinkMismatches', () => {
+  it('accepts several assets that add up to one purchase', () => {
+    const report = aggregateAssetReconciliation(
+      [tx({ documentId: 't1', amount: 300 })],
+      [
+        asset({
+          documentId: 'a1',
+          purchasePrice: 100,
+          acquisitionTransactionId: 't1',
+        }),
+        asset({
+          documentId: 'a2',
+          purchasePrice: 200,
+          acquisitionTransactionId: 't1',
+        }),
+      ],
+    );
+    expect(report.transactionMismatches).toEqual([]);
+    expect(report.ok).toBe(true);
+  });
+
+  it('flags a transaction linked twice (over-linked)', () => {
+    const report = aggregateAssetReconciliation(
+      [
+        tx({ documentId: 't1', amount: 7878, description: 'Lapát' }),
+        tx({ documentId: 't2', amount: 7878 }),
+      ],
+      [
+        asset({
+          documentId: 'a1',
+          purchasePrice: 7878,
+          acquisitionTransactionId: 't1',
+        }),
+        asset({
+          documentId: 'a2',
+          purchasePrice: 7878,
+          acquisitionTransactionId: 't1',
+        }),
+      ],
+    );
+    expect(report.transactionMismatches).toEqual([
+      expect.objectContaining({
+        documentId: 't1',
+        description: 'Lapát',
+        amount: 7878,
+        assetCount: 2,
+        assetTotal: 15756,
+        difference: 7878,
+      }),
+    ]);
+    // Per currency the two errors cancel out — only the per-transaction table shows it.
+    expect(report.rows[0]?.matched).toBe(true);
+    expect(report.ok).toBe(false);
+  });
+
+  it('flags an under-linked purchase and an asset without a price', () => {
+    const mismatches = transactionLinkMismatches(
+      [tx({ documentId: 't1', amount: 300 })],
+      [
+        asset({
+          documentId: 'a1',
+          purchasePrice: null,
+          acquisitionTransactionId: 't1',
+        }),
+      ],
+    );
+    expect(mismatches).toEqual([
+      expect.objectContaining({ assetTotal: 0, difference: -300 }),
+    ]);
+  });
+
+  it('resolves an asset linked to the original via its expanded 1500 legs', () => {
+    const mismatches = transactionLinkMismatches(
+      [
+        tx({ documentId: 'leg1', amount: 200, relatedDocumentId: 'orig' }),
+        tx({ documentId: 'leg2', amount: 100, relatedDocumentId: 'orig' }),
+      ],
+      [
+        asset({
+          documentId: 'a1',
+          purchasePrice: 300,
+          acquisitionTransactionId: 'orig',
+        }),
+      ],
+    );
+    expect(mismatches).toEqual([]);
+  });
+
+  it('skips transactions outside the filtered 1500 rows', () => {
+    expect(
+      transactionLinkMismatches(
+        [],
+        [asset({ documentId: 'a1', acquisitionTransactionId: 'elsewhere' })],
+      ),
+    ).toEqual([]);
   });
 });

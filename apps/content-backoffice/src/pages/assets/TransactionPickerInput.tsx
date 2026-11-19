@@ -1,4 +1,4 @@
-import { Autocomplete, TextField } from '@mui/material';
+import { Autocomplete, Box, TextField } from '@mui/material';
 import { strapiHttpClient } from 'ra-strapi';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -7,6 +7,7 @@ import {
   useRecordContext,
   useTranslate,
 } from 'react-admin';
+import { useWatch } from 'react-hook-form';
 
 import type { AssetRecord } from '../../data/assetData';
 import {
@@ -15,8 +16,22 @@ import {
   type TransactionPickerOption,
   type TransactionPickerSide,
 } from './transactionPicker';
+import {
+  loadTransactionUsage,
+  overLinkedTotal,
+  type TransactionUsage,
+} from './transactionUsage';
 
 const httpClient = strapiHttpClient({ storage: localStorage });
+const usageNumber = new Intl.NumberFormat('hu-HU', {
+  maximumFractionDigits: 2,
+});
+
+function toNumber(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 const SEARCH_DEBOUNCE_MS = 300;
 
 type RefField = 'acquisition_transaction' | 'disposal_transaction';
@@ -31,6 +46,7 @@ export function TransactionPickerInput({
 }) {
   const translate = useTranslate();
   const record = useRecordContext<AssetRecord>();
+  const assetId = record?.documentId ?? null;
   const { field, fieldState } = useInput({ source });
   const value = typeof field.value === 'string' ? field.value : '';
   const [search, setSearch] = useState('');
@@ -76,7 +92,7 @@ export function TransactionPickerInput({
     let active = true;
     const timer = setTimeout(() => {
       setLoading(true);
-      searchTransactionsForPicker(httpClient, search, side)
+      searchTransactionsForPicker(httpClient, search, side, assetId)
         .then((rows) => {
           if (active) setOptions(rows);
         })
@@ -91,7 +107,55 @@ export function TransactionPickerInput({
       active = false;
       clearTimeout(timer);
     };
-  }, [open, search, side]);
+  }, [assetId, open, search, side]);
+
+  // Other assets already linked to the selected transaction (this one excluded).
+  const [selectedUsage, setSelectedUsage] = useState<TransactionUsage>();
+  useEffect(() => {
+    if (!value) return;
+    let active = true;
+    loadTransactionUsage(httpClient, [value], side, assetId)
+      .then((usage) => {
+        if (active) setSelectedUsage(usage.get(value));
+      })
+      .catch(() => {
+        if (active) setSelectedUsage(undefined);
+      });
+    return () => {
+      active = false;
+    };
+  }, [assetId, side, value]);
+
+  const ownPrice = toNumber(useWatch({ name: 'purchase_price' }));
+  const selectedAmount = toNumber(
+    knownRef?.amount ??
+      (fetched as { amount?: unknown } | undefined)?.amount ??
+      options.find((option) => option.id === value)?.amount,
+  );
+  const currency =
+    knownRef?.currencyCode ??
+    (fetched as { currency_type?: { code?: string | null } } | undefined)
+      ?.currency_type?.code ??
+    options.find((option) => option.id === value)?.currencyCode ??
+    '';
+  const overTotal =
+    value && side === 'debit'
+      ? overLinkedTotal(selectedUsage, ownPrice, selectedAmount)
+      : null;
+
+  const usageText = (
+    usage: TransactionUsage | undefined,
+    amount?: number | null,
+    code?: string | null,
+  ) =>
+    usage && usage.assetCount > 0
+      ? translate('app.assets.transaction_picker_usage', {
+          count: usage.assetCount,
+          linked: usageNumber.format(usage.linkedTotal),
+          amount: amount == null ? '—' : usageNumber.format(amount),
+          currency: code ?? '',
+        })
+      : null;
 
   const allOptions =
     selected && !options.some((option) => option.id === selected.id)
@@ -116,11 +180,52 @@ export function TransactionPickerInput({
       onOpen={() => setOpen(true)}
       open={open}
       options={allOptions}
+      renderOption={(props, option) => {
+        const { key, ...rest } = props as typeof props & { key: string };
+        const usage = usageText(
+          option.usage,
+          option.amount,
+          option.currencyCode,
+        );
+        return (
+          <Box component="li" key={key} {...rest}>
+            <Box>
+              {option.label}
+              {usage ? (
+                <Box
+                  component="span"
+                  sx={{
+                    color: 'warning.main',
+                    display: 'block',
+                    fontSize: '0.8125rem',
+                  }}
+                >
+                  {usage}
+                </Box>
+              ) : null}
+            </Box>
+          </Box>
+        );
+      }}
       renderInput={(params) => (
         <TextField
           {...params}
           error={Boolean(fieldState.error)}
-          helperText={translate(`app.assets.transaction_picker_help_${side}`)}
+          helperText={
+            overTotal != null ? (
+              <Box component="span" sx={{ color: 'warning.main' }}>
+                {translate('app.assets.transaction_picker_over_linked', {
+                  total: usageNumber.format(overTotal),
+                  amount: usageNumber.format(selectedAmount ?? 0),
+                  currency,
+                })}
+              </Box>
+            ) : value && selectedUsage && selectedUsage.assetCount > 0 ? (
+              usageText(selectedUsage, selectedAmount, currency)
+            ) : (
+              translate(`app.assets.transaction_picker_help_${side}`)
+            )
+          }
           label={translate(`resources.assets.fields.${source}`)}
           margin="dense"
           variant="filled"

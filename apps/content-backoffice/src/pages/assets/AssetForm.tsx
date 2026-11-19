@@ -73,6 +73,9 @@ export function AssetForm(props: Omit<SimpleFormProps, 'children'>) {
         validate={required()}
       />
 
+      <TransactionPickerInput side="debit" source="acquisition_transaction" />
+      <TransactionPickerInput side="credit" source="disposal_transaction" />
+
       <NumberInput fullWidth source="purchase_price" validate={minValue(0)} />
       <ReferenceInput
         perPage={100}
@@ -119,9 +122,6 @@ export function AssetForm(props: Omit<SimpleFormProps, 'children'>) {
 
       <TextInput fullWidth source="location" />
       <TextInput fullWidth source="serial_number" />
-
-      <TransactionPickerInput side="debit" source="acquisition_transaction" />
-      <TransactionPickerInput side="credit" source="disposal_transaction" />
 
       <TextInput
         className={bandedSpanClass}
