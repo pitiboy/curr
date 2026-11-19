@@ -1,54 +1,58 @@
 # Bulk quantity entry workflows
 
-Reusable **bulk quantity entry** for deal-style forms: one shared date and one numeric input per child organization under a configured parent org. Each non-zero row becomes its own `transaction` via the normal content-backoffice data provider (draft by default).
+**Bulk quantity entry** wizard: one shared date and one numeric input per child organization under a configured parent org, with an optional second step that distributes the day's quantity to members. The egg daily entry (`/workflows/egg-production`) is the only user today.
 
-For the **`egg-production`** Settings row, optional JSON `initialPublicationStatus`: `"draft"` (default) or `"published"`. When `"published"`, successful creates/updates call `POST /api/transactions/:documentId/actions/publish?eggAuto=1` (`dataentry` or `editor`). The server verifies the Setting row still requests `published`, then runs publish with linked context so the same user can finalize; manual list „Véglegesítés” stays under the usual `publisher_must_differ` rules (no `eggAuto`).
+## Saving: one backend request
 
-Optional **distribution** (second wizard step) allocates the day’s total quantity to members of a configured organization. The egg daily entry workflow uses this; other resources (fruit, pigs) can reuse the same config shape.
+The SPA no longer builds or writes transaction legs. On save the wizard sends **one** request to `config.entriesPath` (egg: `POST /api/egg-production/entries`):
+
+```json
+{
+  "date": "2026-11-18",
+  "productions": [
+    { "organizationId": "<hen house documentId>", "quantity": 120 }
+  ],
+  "distributions": [{ "memberId": "<member documentId>", "quantity": 10 }],
+  "conflictChoice": "skip | replace | add",
+  "conflictChoices": { "<hen house documentId>": "skip" },
+  "publish": false
+}
+```
+
+The backend (`src/egg-production/`) builds production + pool transfer + distribution legs with the transaction-workflow engine (`expandWorkflowSteps`, dedicated templates), checks the `egg-production` feature flag, role and organization scope, detects duplicates, and writes every leg in **one DB transaction** — any failure leaves nothing behind. `?dryRun=1` returns the same plan without writing (preview).
+
+UI flow (`BulkQuantityEntryPage.tsx`):
+
+1. Save → one POST without a conflict choice.
+2. `409 EGG_CONFLICT_CHOICE_REQUIRED` → conflict dialog (global with distribution, per hen house otherwise): **Meglévő sor frissítése** (`replace`), **Új sor felvétele** (`add`), **Meglévő sor megtartása** (`skip`) → the same body is sent again with the choice.
+3. Success → inputs reset, per-row results (hen house / member: new, updated, kept, published) and server warnings are shown.
+4. Any other error → error alert with the server message (Hungarian), inputs kept, **Mentés újrapróbálása** resends the same body.
+
+Client modules: `eggEntriesApi.ts` (request/response types, error parsing, result summary), `logic.ts` (quantity parsing, request rows), `loadCatalog.ts` (hen houses), `loadDistribution.ts` (members + currency rates for display). Totals, rule and rate helpers are imported from the backend (`src/egg-production/distribution.ts`) so both sides use the same code.
+
+## Auto-publish
+
+The `egg-production` Settings row may set `config.initialPublicationStatus`: `"draft"` (default) or `"published"`. With `"published"` the wizard sends `publish: true`; the server re-checks the Setting and publishes every written leg inside the same DB transaction with the linked `eggAuto` context (`dataentry` may finalize, same person allowed). The manual list „Véglegesítés” and `POST /api/transactions/:id/actions/publish?eggAuto=1` are unchanged.
 
 ## Member ↔ organization
 
 Members are **not** linked to organizations directly. The **`membership`** collection connects them:
 
-- `membership.organization` — which org (for eggs: `Tyúktartás`, constant `DISTRIBUTION_MEMBER_ORG` in `configs/eggDailyEntry.config.ts`)
-- `membership.members` — one or more member records (many-to-many; each with `account` / `private_account`)
+- `membership.organization` — which org (for eggs: `Tyúktartás`, `POULTRY_STOCK_ORGANIZATION_NAME` in `eggDailyEntry.constants.ts`, from `database/seeders/egg-poultry.constants.json`)
+- `membership.members` — one or more member records (many-to-many; the backend uses `private_account` = `1001`)
 - `membership.membership_type` — role/type; default egg rules live on `membership_type.rules`, overridable on `membership.rules`
 
-One membership row can cover a whole group (shared rules). Distribution expands each membership’s `members`, dedupes by member id, and keeps rows valid on the form date (`valid_from` / `valid_to`).
+`rules.egg = { mode: 'internal' | 'sale', ratio }` is resolved by the backend (`src/egg-production/membership-rules.ts`, with fallback by membership type name). The wizard only uses it to know whether a sale rate is needed.
+
+## Egg legs (built by the backend)
+
+Per hen house: production `1300` ← `4500` (EGG, hen house org), pool transfer `4500` ← `1300` on the hen house and `1300` ← `4500` on `Tyúktartás` (`Átvezetés`). Per member: `internal` one leg `1001` ← `1300` (EGG, `Tyúktartás`); `sale` three legs — `1001` ← `1300` (EGG), `1000` ← `1001` (sale currency, `Készpénz`), `4000` ← `1000` (sale currency, `Átvezetés`), amount = qty × ratio × EGG→sale rate. `related_transaction`: first production is the anchor, pool legs → own production, distribution legs → anchor. Undistributed stock stays on `1300`. Templates, endpoint and error codes: [docs/transaction-workflow.md](../../../../../docs/transaction-workflow.md#napi-tojás-endpoint-post-apiegg-productionentries).
 
 ## Add a new production-only workflow
 
-1. Create a config module under `configs/`, exporting a `BulkQuantityWorkflowConfig`:
+A new resource needs a backend endpoint like `src/egg-production/` (templates + service); the wizard is reusable:
 
-   - `workflowId` — must match a **Settings** row with that `key` and `enabled: true` (seed per instance under `database/seeders/http/<instance>/data/backoffice-features.json`).
-   - `parentOrganizationName` — exact name of the parent organization whose **direct children** are listed as quantity rows.
-   - `currencyCode`, `debitAccountCode`, `creditAccountCode`, `transactionTypeName` — resolved from Strapi master data at runtime.
-   - `descriptionKey` — i18n key with `%{organization}` and `%{amount}` placeholders.
-   - `path`, `labelKey`, `roles` — menu route, menu label, and allowed roles.
-
-2. Register the form in `workflows/registry.ts`:
-
-   ```tsx
-   element: <BulkQuantityEntryPage config={myConfig} />,
-   ```
-
-3. Add Hungarian and English strings under `app.workflows.<id>` and `app.bulk_quantity.description.<slug>` in `src/i18n/hu.ts` and `en.ts`.
-
-4. Extend unit tests in `logic.test.ts` / `distributionLogic.test.ts` for any new pure helpers; keep registry and server workflow list tests in `workflows.test.ts`.
-
-## Add distribution to a workflow
-
-Set `distribution` on `BulkQuantityWorkflowConfig` (`BulkQuantityDistributionConfig`):
-
-- `memberOrganizationName` — list memberships here
-- `bookingOrganizationName` — `transaction.organization` on distribution legs (egg: same poultry org)
-- Account codes and transaction type names for internal vs sale legs
-- Egg rules key is `egg` on membership / membership-type `rules` JSON
-
-Sale revenue currency: `app.egg_sale_currency` setting or `saleCurrency` in the workflow row’s `config` JSON (default `HUF`).
-
-Pure logic: `logic.ts`, `distributionLogic.ts`, `membershipRules.ts`. Plans: `distributionPlans.ts`. Loaders: `loadCatalog.ts`, `loadDistribution.ts`. UI: `BulkQuantityEntryPage.tsx` (wizard when `distribution` is set).
-
-## Egg daily entry constants
-
-See `configs/eggDailyEntry.config.ts`: production `1300`/`4500` on the **hen-house org**; immediately after each production row the form saves two **pool transfer** legs (each with `related_transaction` → that coop’s production; distribution legs → first production in the same submit). Same `related_transaction` / `related_transactions` relation as workflow convert. (`poolTransfer.ts`) — coop `4500`/`1300` then parent `Tyúktartás` `1300`/`4500` (EGG, `Átvezetés`), so coop 1300 net returns to zero and pooled stock sits on `Tyúktartás` (name in `database/seeders/egg-poultry.constants.json`). Distribution `internal` one leg `1001` ← `1300` (EGG) on the parent org; `sale` three legs — `1001` ← `1300` (EGG), `1000` ← `1001` (HUF, `Készpénz`), listán `1000` → `4000` bevétel (HUF, `Átvezetés`).
+1. Create a config module under `configs/` exporting a `BulkQuantityWorkflowConfig` (`workflowId` = Settings key, `parentOrganizationName`, `currencyCode`, `entriesPath`, `path`, `labelKey`, `roles`, optional `distribution.memberOrganizationName`).
+2. Register the form in `workflows/registry.tsx`: `element: <BulkQuantityEntryPage config={myConfig} />`.
+3. Add Hungarian and English strings under `app.workflows.<id>` in `src/i18n/hu.ts` and `en.ts`.
+4. Tests: `logic.test.ts`, `eggEntriesApi.test.ts`, `BulkQuantityEntryPage.test.tsx` (one request per save); backend `src/egg-production/*.test.ts`.

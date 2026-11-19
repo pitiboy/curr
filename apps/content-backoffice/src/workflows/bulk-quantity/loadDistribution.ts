@@ -1,11 +1,12 @@
 import { encodeStrapiQuery } from '../../data/transactionList';
 import type { ContentHttpClient } from '../../data/receiptDraft';
-import type { CurrencyRateRow } from './distributionLogic';
-import { membershipValidOnDate } from './distributionLogic';
+import {
+  membershipValidOnDate,
+  type CurrencyRateRow,
+} from '../../../../../src/egg-production/distribution.ts';
 import type {
   BulkQuantityDistributionConfig,
   DistributionMember,
-  DistributionResolvedRefs,
 } from './types';
 
 type ListResponse<T> = { data?: T[] };
@@ -15,8 +16,6 @@ type OrganizationRow = { documentId?: string; name?: string | null };
 type MembershipMemberRow = {
   documentId?: string;
   name?: string | null;
-  account?: { documentId?: string; code?: string | null } | null;
-  private_account?: { documentId?: string; code?: string | null } | null;
 };
 
 type MembershipRow = {
@@ -69,12 +68,7 @@ export async function loadDistributionMembers(
       organization: { documentId: { $eq: org.documentId } },
     },
     populate: {
-      members: {
-        populate: {
-          account: { fields: ['documentId', 'code'] },
-          private_account: { fields: ['documentId', 'code'] },
-        },
-      },
+      members: { fields: ['documentId', 'name'] },
       membership_type: { fields: ['name', 'rules'] },
     },
     sort: ['name:asc'],
@@ -104,8 +98,6 @@ export async function loadDistributionMembers(
         membershipTypeName: row.membership_type?.name ?? null,
         membershipRules: row.rules,
         membershipTypeRules: row.membership_type?.rules,
-        account: member.account ?? null,
-        private_account: member.private_account ?? null,
       });
     }
   }
@@ -150,95 +142,4 @@ export async function loadCurrencyRates(
       };
     })
     .filter((row): row is CurrencyRateRow => row !== null);
-}
-
-export async function loadDistributionRefs(
-  httpClient: ContentHttpClient,
-  strapiUrl: string,
-  config: BulkQuantityDistributionConfig,
-  productionCurrencyCode: string,
-  saleCurrencyCode: string,
-): Promise<DistributionResolvedRefs | null> {
-  const [
-    bookingOrg,
-    eggCurrency,
-    saleCurrency,
-    inventoryAccount,
-    saleCashAccount,
-    revenueAccount,
-    internalType,
-    saleEggType,
-    saleCashPaymentType,
-    saleRevenueType,
-  ] = await Promise.all([
-    fetchOneByFilter(httpClient, strapiUrl, 'organizations', {
-      name: { $eq: config.bookingOrganizationName },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'currency-types', {
-      code: { $eq: productionCurrencyCode },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'currency-types', {
-      code: { $eq: saleCurrencyCode },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-      code: { $eq: config.inventoryAccountCode },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-      code: { $eq: config.saleCashAccountCode },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'accounts', {
-      code: { $eq: config.revenueCreditAccountCode },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
-      name: { $eq: config.internalTransactionTypeName },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
-      name: { $eq: config.saleEggTransactionTypeName },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
-      name: { $eq: config.saleCashPaymentTransactionTypeName },
-    }),
-    fetchOneByFilter(httpClient, strapiUrl, 'transaction-types', {
-      name: { $eq: config.saleRevenueTransactionTypeName },
-    }),
-  ]);
-
-  const bookingOrganizationId = bookingOrg?.documentId;
-  const eggCurrencyTypeId = eggCurrency?.documentId;
-  const saleCurrencyTypeId = saleCurrency?.documentId;
-  const inventoryAccountId = inventoryAccount?.documentId;
-  const saleCashAccountId = saleCashAccount?.documentId;
-  const revenueAccountId = revenueAccount?.documentId;
-  const internalTransactionTypeId = internalType?.documentId;
-  const saleEggTransactionTypeId = saleEggType?.documentId;
-  const saleCashPaymentTransactionTypeId = saleCashPaymentType?.documentId;
-  const saleRevenueTransactionTypeId = saleRevenueType?.documentId;
-
-  if (
-    !bookingOrganizationId ||
-    !eggCurrencyTypeId ||
-    !saleCurrencyTypeId ||
-    !inventoryAccountId ||
-    !saleCashAccountId ||
-    !revenueAccountId ||
-    !internalTransactionTypeId ||
-    !saleEggTransactionTypeId ||
-    !saleCashPaymentTransactionTypeId ||
-    !saleRevenueTransactionTypeId
-  ) {
-    return null;
-  }
-
-  return {
-    bookingOrganizationId,
-    eggCurrencyTypeId,
-    saleCurrencyTypeId,
-    inventoryAccountId,
-    saleCashAccountId,
-    revenueAccountId,
-    internalTransactionTypeId,
-    saleEggTransactionTypeId,
-    saleCashPaymentTransactionTypeId,
-    saleRevenueTransactionTypeId,
-  };
 }

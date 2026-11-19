@@ -510,16 +510,21 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       no_rows: 'Adj meg legalább egy nem nulla darabszámot.',
       invalid_quantity: 'Egész szám, 0 vagy nagyobb.',
       results_heading: 'Mentés eredménye',
-      auto_publish_done: 'Mentve és közzétéve.',
-      auto_publish_done_after_update: 'Frissítve és közzétéve.',
-      auto_publish_failed: 'Közzététel nem sikerült.',
-      retry_failed: 'Sikertelen sorok újrapróbálása',
+      save_success: 'Mentve.',
+      save_failed_nothing_saved:
+        'A mentés nem sikerült, semmi nem került rögzítésre.',
+      result_created: '%{count} új sor',
+      result_updated: '%{count} sor frissítve',
+      result_skipped: '%{count} meglévő sor megtartva',
+      result_published: 'közzétéve',
+      retry_failed: 'Mentés újrapróbálása',
       conflict_title: 'Már van rögzítés erre a napra',
       conflict_body:
-        'Ugyanerre a napra, ólra és könyvelési párosra már létezik tranzakció. Válaszd ki, mit tegyünk soronként.',
+        'Ugyanerre a napra, szervezetre, pénznemre és könyvelési párosra már létezik tranzakció. Válaszd ki, mit tegyünk soronként.',
       conflict_existing: 'Meglévő összeg: %{amount}',
       conflict_update: 'Meglévő sor frissítése',
       conflict_insert: 'Új sor felvétele',
+      conflict_skip: 'Meglévő sor megtartása (kihagyás)',
       conflict_continue: 'Folytatás',
       conflict_global_body:
         'Már van rögzítés erre a napra (termelés vagy továbbosztás). Az alábbi választás minden érintett sorra vonatkozik.',
@@ -540,22 +545,6 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       distribution_no_members:
         'Nincs tag a(z) „%{org}” szervezetben ehhez a naphoz.',
       distribution_members_failed: 'A taglista betöltése nem sikerült.',
-      pool_transfer: {
-        coop: 'Tojás készlet átvezetés (ól) — %{organization} → Tyúktartás (%{amount} db)',
-        parent:
-          'Tojás készlet átvezetés (Tyúktartás) — %{organization} (%{amount} db)',
-      },
-      description: {
-        egg: 'Napi tojás — %{organization}: %{amount} db',
-        egg_distribution_internal:
-          'Tojás továbbosztás (belső) — %{member}: %{amount} db',
-        egg_distribution_sale_egg:
-          'Tojás eladás (tojás) — %{member}: %{amount} db',
-        egg_distribution_cash:
-          'Tojás eladás (kp befizetés) — %{member}: %{amount} db → %{revenue} Ft',
-        egg_distribution_revenue:
-          'Tojás eladás (bevétel) — %{member}: %{amount} db → %{revenue} Ft',
-      },
     },
     login_google: 'Bejelentkezés Google-lel',
     oauth_errors: {

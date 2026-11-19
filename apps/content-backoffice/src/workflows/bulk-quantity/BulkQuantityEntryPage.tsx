@@ -26,81 +26,50 @@ import {
   SimpleForm,
   Title,
   Toolbar,
-  useDataProvider,
   useNotify,
   useTranslate,
 } from 'react-admin';
 
 import { STRAPI_URL } from '../../config';
-import { publishTransaction } from '../../data/dataProvider';
-import { strapiErrorMessage } from '../../data/transactionPublish';
 import {
-  eggProductionInitialPublicationStatus,
-  eggSaleCurrencyForWorkflow,
-} from '../parseBackofficeConfig';
-import { useBackofficeConfig } from '../useBackofficeConfig';
-import { bandedForm } from '../../theme';
-import {
-  distributionRowsFromQuantities,
   isOverDistributed,
   memberNeedsSaleRate,
   pickLatestCurrencyRate,
   remainingEggs,
   totalDistributed,
   totalProduced,
-} from './distributionLogic';
+} from '../../../../../src/egg-production/distribution.ts';
 import {
-  buildDistributionLegList,
-  legPlansWithGlobalChoice,
-  legToTransactionPayload,
-} from './distributionPlans';
-import {
-  collectBulkQuantityDuplicates,
-  type DuplicateLookupCheck,
-} from './duplicateFetch';
+  eggProductionInitialPublicationStatus,
+  eggSaleCurrencyForWorkflow,
+} from '../parseBackofficeConfig';
+import { useBackofficeConfig } from '../useBackofficeConfig';
+import { bandedForm } from '../../theme';
 import { useSubmitGuard } from '../../submit/useSubmitGuard';
-import { loadBulkQuantityCatalog } from './loadCatalog';
 import {
-  loadCurrencyRates,
-  loadDistributionMembers,
-  loadDistributionRefs,
-} from './loadDistribution';
+  EGG_CONFLICT_CHOICE_REQUIRED,
+  conflictGroups,
+  parseEggEntriesError,
+  postEggEntries,
+  summarizeEggEntries,
+  type EggConflict,
+  type EggEntriesRequest,
+  type EggPlanWarning,
+  type EggRowSummary,
+} from './eggEntriesApi';
+import { loadHenHouses } from './loadCatalog';
+import { loadCurrencyRates, loadDistributionMembers } from './loadDistribution';
 import {
-  buildRowPlans,
-  buildRowPlansWithGlobalChoice,
-  buildTransactionPayload,
-  failedRowIds,
+  distributionRequestRows,
   invalidQuantityInput,
-  mergeRowResults,
-  plansForRetry,
   rowsFromQuantities,
   todayIsoDate,
 } from './logic';
-import {
-  buildPoolTransferLegPlans,
-  type PoolTransferResolvedRefs,
-} from './poolTransfer';
-import { submissionAnchorDocumentId } from '../../../../../src/transaction-event-anchor.ts';
-import {
-  attachDistributionLegAnchors,
-  attachPoolLegAnchors,
-  type BulkQuantityAfterSaveOutcome,
-  executeLegPlans,
-  executeRowPlansSequentially,
-  productionAnchorByOrganizationId,
-} from './saveRows';
 import type {
-  BulkQuantityConflictChoice,
-  BulkQuantityDuplicate,
-  BulkQuantityGlobalConflictChoice,
   BulkQuantityHenHouse,
-  BulkQuantityResolvedRefs,
-  BulkQuantityRowPlan,
-  BulkQuantityRowResult,
   BulkQuantityWorkflowConfig,
   DistributionMember,
-  DistributionResolvedRefs,
-  DistributionTransactionLegPlan,
+  EggConflictChoice,
 } from './types';
 
 const httpClient = strapiHttpClient({ storage: localStorage });
@@ -201,30 +170,26 @@ function WizardToolbar({
   );
 }
 
+type SaveError = { message: string; label: string | null };
+
 export function BulkQuantityEntryPage({
   config,
 }: {
   config: BulkQuantityWorkflowConfig;
 }) {
   const translate = useTranslate();
-  const dataProvider = useDataProvider();
+  const notify = useNotify();
   const backofficeConfig = useBackofficeConfig();
   const eggSaleCurrency = eggSaleCurrencyForWorkflow(
     backofficeConfig,
     config.workflowId,
   );
-  const eggInitialPublication =
-    eggProductionInitialPublicationStatus(backofficeConfig);
+  const autoPublish =
+    eggProductionInitialPublicationStatus(backofficeConfig) === 'published';
   const hasDistribution = Boolean(config.distribution);
 
   const [activeStep, setActiveStep] = useState(0);
   const [henHouses, setHenHouses] = useState<BulkQuantityHenHouse[]>([]);
-  const [refs, setRefs] = useState<BulkQuantityResolvedRefs | null>(null);
-  const [poolRefs, setPoolRefs] = useState<PoolTransferResolvedRefs | null>(
-    null,
-  );
-  const [distributionRefs, setDistributionRefs] =
-    useState<DistributionResolvedRefs | null>(null);
   const [distributionMembers, setDistributionMembers] = useState<
     DistributionMember[]
   >([]);
@@ -234,30 +199,21 @@ export function BulkQuantityEntryPage({
   const [memberQuantities, setMemberQuantities] = useState<
     Record<string, string>
   >({});
-  const [results, setResults] = useState<BulkQuantityRowResult[]>([]);
-  const [conflicts, setConflicts] = useState<BulkQuantityDuplicate[]>([]);
+  const [resultRows, setResultRows] = useState<EggRowSummary[]>([]);
+  const [warnings, setWarnings] = useState<EggPlanWarning[]>([]);
+  const [saveError, setSaveError] = useState<SaveError | null>(null);
+  const [conflicts, setConflicts] = useState<EggConflict[]>([]);
   const [conflictChoices, setConflictChoices] = useState<
-    Record<string, BulkQuantityConflictChoice>
+    Record<string, EggConflictChoice>
   >({});
   const [globalConflictChoice, setGlobalConflictChoice] =
-    useState<BulkQuantityGlobalConflictChoice>('update');
-  const [pendingProductionPlans, setPendingProductionPlans] = useState<
-    BulkQuantityRowPlan[]
-  >([]);
-  const [pendingPoolLegPlans, setPendingPoolLegPlans] = useState<
-    DistributionTransactionLegPlan[]
-  >([]);
-  const [pendingLegPlans, setPendingLegPlans] = useState<
-    DistributionTransactionLegPlan[]
-  >([]);
-  const [pendingIncludeDistribution, setPendingIncludeDistribution] =
-    useState(false);
+    useState<EggConflictChoice>('replace');
   const [conflictOpen, setConflictOpen] = useState(false);
   const [globalConflictOpen, setGlobalConflictOpen] = useState(false);
-  const notify = useNotify();
-  // One write pipeline at a time (duplicate check → production → pool →
-  // distribution). The XState guard drops a second tap synchronously, even
-  // while the first run is still awaiting the duplicate lookup.
+  /** Last request body (no conflict choice): conflict dialog / retry resend it. */
+  const [pendingRequest, setPendingRequest] =
+    useState<EggEntriesRequest | null>(null);
+  // One request at a time; the XState guard drops a second tap synchronously.
   const saveGuard = useSubmitGuard<() => Promise<void>>({
     run: (task) => task(),
     onError: () => notify('ra.notification.http_error', { type: 'error' }),
@@ -266,25 +222,21 @@ export function BulkQuantityEntryPage({
   const runGuarded = (task: () => Promise<void>) => {
     saveGuard.submit(task);
   };
-  const [submitDate, setSubmitDate] = useState<string | null>(null);
   const [formDate, setFormDate] = useState(todayIsoDate());
   const [eggToSaleRate, setEggToSaleRate] = useState<number | null>(null);
   const [rateValidFrom, setRateValidFrom] = useState<string | null>(null);
   const [distributionLoadError, setDistributionLoadError] = useState<
     string | null
   >(null);
-  /** Remounts SimpleForm so react-hook-form state resets after a full successful save. */
+  /** Remounts SimpleForm so react-hook-form state resets after a successful save. */
   const [bulkFormKey, setBulkFormKey] = useState(0);
 
-  const resetAfterFullSuccess = useCallback(() => {
+  const resetInputs = useCallback(() => {
     setQuantities({});
     setMemberQuantities({});
-    setResults([]);
     setConflicts([]);
     setConflictChoices({});
-    setPendingProductionPlans([]);
-    setPendingPoolLegPlans([]);
-    setPendingLegPlans([]);
+    setPendingRequest(null);
     setConflictOpen(false);
     setGlobalConflictOpen(false);
     setActiveStep(0);
@@ -296,92 +248,26 @@ export function BulkQuantityEntryPage({
     let active = true;
     setCatalogPending(true);
     setCatalogError(null);
-
-    const distribution = config.distribution;
-    loadBulkQuantityCatalog(httpClient, STRAPI_URL, config)
-      .then(
-        async ({
-          henHouses: houses,
-          refs: loadedRefs,
-          poolRefs: loadedPoolRefs,
-        }) => {
-          if (!active) {
-            return;
-          }
-          setHenHouses(houses);
-          if (!loadedRefs || !loadedPoolRefs) {
-            setCatalogError(translate('app.bulk_quantity.catalog_missing'));
-            setRefs(null);
-            setPoolRefs(null);
-            return;
-          }
-          setRefs(loadedRefs);
-          setPoolRefs(loadedPoolRefs);
-          if (!distribution) {
-            return;
-          }
-          const distRefs = await loadDistributionRefs(
-            httpClient,
-            STRAPI_URL,
-            distribution,
-            config.currencyCode,
-            eggSaleCurrency,
-          );
-          if (!distRefs) {
-            setCatalogError(translate('app.bulk_quantity.catalog_missing'));
-            setDistributionRefs(null);
-            return;
-          }
-          setDistributionRefs(distRefs);
-        },
-      )
+    loadHenHouses(httpClient, STRAPI_URL, config.parentOrganizationName)
+      .then((houses) => {
+        if (active) setHenHouses(houses);
+      })
       .catch(() => {
         if (active) {
           setCatalogError(translate('app.bulk_quantity.catalog_missing'));
         }
       })
       .finally(() => {
-        if (active) {
-          setCatalogPending(false);
-        }
+        if (active) setCatalogPending(false);
       });
-
     return () => {
       active = false;
     };
-  }, [config, eggSaleCurrency, translate]);
-
-  const buildAfterSave = useCallback(
-    async (ctx: {
-      documentId: string;
-      wasUpdate: boolean;
-    }): Promise<BulkQuantityAfterSaveOutcome> => {
-      if (eggInitialPublication !== 'published') {
-        return { status: 'ok' };
-      }
-      try {
-        await publishTransaction(ctx.documentId, { eggAuto: true });
-        return {
-          status: 'ok',
-          note: ctx.wasUpdate
-            ? translate('app.bulk_quantity.auto_publish_done_after_update')
-            : translate('app.bulk_quantity.auto_publish_done'),
-        };
-      } catch (error) {
-        return {
-          status: 'error',
-          message:
-            strapiErrorMessage(error) ||
-            translate('app.bulk_quantity.auto_publish_failed'),
-        };
-      }
-    },
-    [eggInitialPublication, translate],
-  );
+  }, [config.parentOrganizationName, translate]);
 
   const refreshDistributionContext = useCallback(
     async (isoDate: string) => {
-      if (!config.distribution || !distributionRefs) {
+      if (!config.distribution) {
         return;
       }
       setDistributionLoadError(null);
@@ -421,27 +307,15 @@ export function BulkQuantityEntryPage({
         );
       }
     },
-    [
-      config.currencyCode,
-      config.distribution,
-      distributionRefs,
-      eggSaleCurrency,
-      translate,
-    ],
+    [config.currencyCode, config.distribution, eggSaleCurrency, translate],
   );
 
   useEffect(() => {
-    if (!hasDistribution || !distributionRefs || catalogPending) {
+    if (!hasDistribution || catalogPending) {
       return;
     }
     void refreshDistributionContext(formDate);
-  }, [
-    catalogPending,
-    distributionRefs,
-    formDate,
-    hasDistribution,
-    refreshDistributionContext,
-  ]);
+  }, [catalogPending, formDate, hasDistribution, refreshDistributionContext]);
 
   const productionRows = useMemo(
     () => rowsFromQuantities(henHouses, quantities),
@@ -464,35 +338,6 @@ export function BulkQuantityEntryPage({
 
   const remaining = remainingEggs(producedTotal, distributedTotal);
   const overLimit = isOverDistributed(producedTotal, distributedTotal);
-
-  const failedIds = useMemo(() => failedRowIds(results), [results]);
-
-  const buildProductionPayload = useCallback(
-    (plan: BulkQuantityRowPlan, date: string) => {
-      if (!refs) {
-        return {};
-      }
-      const description = translate(config.descriptionKey, {
-        organization: plan.organizationName,
-        amount: plan.amount,
-      });
-      return buildTransactionPayload(refs, plan, date, description);
-    },
-    [config, refs, translate],
-  );
-
-  const runLegPlans = useCallback(
-    async (
-      plans: DistributionTransactionLegPlan[],
-    ): Promise<BulkQuantityRowResult[]> => {
-      const batch = await executeLegPlans(dataProvider, plans, {
-        onAfterSuccessfulSave: buildAfterSave,
-      });
-      setResults((previous) => mergeRowResults(previous, batch));
-      return batch;
-    },
-    [buildAfterSave, dataProvider],
-  );
 
   const resolveDate = (value: unknown): string | null => {
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -522,315 +367,79 @@ export function BulkQuantityEntryPage({
     return null;
   };
 
-  const buildLegPayloads = useCallback(
-    (date: string, rate: number) => {
-      if (!config.distribution || !distributionRefs) {
-        return { legs: [], legPlans: [] as DistributionTransactionLegPlan[] };
-      }
-      const distRows = distributionRowsFromQuantities(
-        distributionMembers.map((member) => ({
-          memberId: member.memberId,
-          memberName: member.memberName,
-          membershipTypeName: member.membershipTypeName,
-          membershipRules: member.membershipRules,
-          membershipTypeRules: member.membershipTypeRules,
-          memberAccountId: null,
-        })),
-        memberQuantities,
-      );
-      const legs = buildDistributionLegList({
-        distributionRows: distRows,
-        members: distributionMembers,
-        distributionRefs,
-        distributionConfig: config.distribution,
-        eggToSaleRate: rate,
-      });
-      const buildPayload = (leg: (typeof legs)[number]) => {
-        const description = translate(
-          leg.descriptionKey,
-          leg.descriptionParams,
-        );
-        return legToTransactionPayload(leg, date, description);
-      };
-      return { legs, buildPayload, distRows };
-    },
-    [
-      config.distribution,
-      distributionMembers,
-      distributionRefs,
-      memberQuantities,
-      translate,
-    ],
-  );
-
-  const collectDuplicates = async (
+  const buildRequest = (
     date: string,
     includeDistribution: boolean,
-    rate: number,
-  ): Promise<BulkQuantityDuplicate[]> => {
-    if (!refs) {
-      return [];
-    }
-    const checks: DuplicateLookupCheck[] = [];
-    const rows = rowsFromQuantities(henHouses, quantities);
-    for (const row of rows) {
-      checks.push({
-        organizationId: row.organizationId,
-        organizationLabel: row.organizationName,
-        amount: row.amount,
-        currencyTypeId: refs.currencyTypeId,
-        debitAccountId: refs.debitAccountId,
-        creditAccountId: refs.creditAccountId,
-      });
-      if (poolRefs) {
-        const poolLegs = buildPoolTransferLegPlans({
-          row,
-          date,
-          poolRefs,
-          coopOutDescription: 'pool',
-          parentInDescription: 'pool',
-          action: 'insert',
-        });
-        for (const leg of poolLegs) {
-          checks.push({
-            organizationId: String(leg.payload.organization),
-            organizationLabel: leg.legKey,
-            amount: row.amount,
-            currencyTypeId: String(leg.payload.currency_type),
-            debitAccountId: String(leg.payload.debit_account),
-            creditAccountId: String(leg.payload.credit_account),
-          });
-        }
-      }
-    }
-    if (includeDistribution && config.distribution && distributionRefs) {
-      const { legs } = buildLegPayloads(date, rate);
-      for (const leg of legs) {
-        checks.push({
-          organizationId: leg.organizationId,
-          organizationLabel: leg.legKey,
-          amount: leg.amount,
-          currencyTypeId: leg.currencyTypeId,
-          debitAccountId: leg.debitAccountId,
-          creditAccountId: leg.creditAccountId,
-        });
-      }
-    }
-    return collectBulkQuantityDuplicates(httpClient, STRAPI_URL, date, checks);
-  };
+  ): EggEntriesRequest => ({
+    date,
+    productions: rowsFromQuantities(henHouses, quantities).map((row) => ({
+      organizationId: row.organizationId,
+      quantity: row.amount,
+    })),
+    distributions: includeDistribution
+      ? distributionRequestRows(
+          distributionMembers.map((member) => member.memberId),
+          memberQuantities,
+        )
+      : [],
+    publish: autoPublish,
+  });
 
-  const buildPoolLegPlansForRows = useCallback(
-    (
-      productionPlans: BulkQuantityRowPlan[],
-      date: string,
-      duplicates: BulkQuantityDuplicate[],
-      globalChoice?: BulkQuantityGlobalConflictChoice,
-    ): DistributionTransactionLegPlan[] => {
-      if (!poolRefs) {
-        return [];
-      }
-      return productionPlans.flatMap((plan) => {
-        const legs = buildPoolTransferLegPlans({
-          row: plan,
-          date,
-          poolRefs,
-          coopOutDescription: translate(
-            'app.bulk_quantity.pool_transfer.coop',
-            {
-              organization: plan.organizationName,
-              amount: plan.amount,
-            },
-          ),
-          parentInDescription: translate(
-            'app.bulk_quantity.pool_transfer.parent',
-            {
-              organization: plan.organizationName,
-              amount: plan.amount,
-            },
-          ),
-          action: plan.action,
-        });
-        return legs.map((leg) => {
-          const duplicate = duplicates.find(
-            (item) => item.row.organizationName === leg.legKey,
-          );
-          const action = duplicate ? (globalChoice ?? plan.action) : leg.action;
-          return {
-            ...leg,
-            action,
-            updateDocumentId:
-              action === 'update' && duplicate
-                ? duplicate.existingDocumentId
-                : undefined,
-          };
-        });
-      });
-    },
-    [poolRefs, translate],
-  );
-
-  const runProductionAndPool = useCallback(
-    async (
-      productionPlans: BulkQuantityRowPlan[],
-      poolLegPlans: DistributionTransactionLegPlan[],
-      date: string,
-      distributionLegPlans: DistributionTransactionLegPlan[] = [],
-      priorProductionResults: BulkQuantityRowResult[] = [],
-    ) => {
-      const productionResults = await executeRowPlansSequentially(
-        dataProvider,
-        productionPlans,
-        (plan) => buildProductionPayload(plan, date),
-        {
-          linkFollowingRowsToFirstSuccess: true,
-          onAfterSuccessfulSave: buildAfterSave,
-        },
+  /** Single POST; 409 → conflict dialog, anything else → error alert. */
+  const send = async (
+    request: EggEntriesRequest,
+    choice?: Pick<EggEntriesRequest, 'conflictChoice' | 'conflictChoices'>,
+  ) => {
+    setSaveError(null);
+    setPendingRequest(request);
+    try {
+      const response = await postEggEntries(
+        httpClient,
+        STRAPI_URL,
+        config.entriesPath,
+        { ...request, ...choice },
       );
-      setResults((previous) => mergeRowResults(previous, productionResults));
-      const mergedProduction = [
-        ...priorProductionResults,
-        ...productionResults,
-      ];
-      const submissionAnchor = submissionAnchorDocumentId(mergedProduction);
-      const productionByOrg =
-        productionAnchorByOrganizationId(mergedProduction);
-      let poolBatch: BulkQuantityRowResult[] = [];
-      let distributionBatch: BulkQuantityRowResult[] = [];
-      if (poolLegPlans.length > 0) {
-        poolBatch = await runLegPlans(
-          attachPoolLegAnchors(poolLegPlans, productionByOrg, submissionAnchor),
-        );
-      }
-      if (distributionLegPlans.length > 0) {
-        distributionBatch = await runLegPlans(
-          attachDistributionLegAnchors(distributionLegPlans, submissionAnchor),
-        );
-      }
-      const legBatches = [...poolBatch, ...distributionBatch];
-      const expectedSteps =
-        productionPlans.length +
-        poolLegPlans.length +
-        distributionLegPlans.length;
+      resetInputs();
+      setResultRows(summarizeEggEntries(response));
+      setWarnings(response.warnings);
+      notify('app.bulk_quantity.save_success', { type: 'success' });
+    } catch (error) {
+      const parsed = parseEggEntriesError(error);
       if (
-        expectedSteps > 0 &&
-        productionResults.length === productionPlans.length &&
-        legBatches.length ===
-          poolLegPlans.length + distributionLegPlans.length &&
-        failedRowIds([...productionResults, ...legBatches]).length === 0
+        parsed.status === 409 &&
+        parsed.code === EGG_CONFLICT_CHOICE_REQUIRED
       ) {
-        resetAfterFullSuccess();
+        setConflicts(parsed.conflicts);
+        if (hasDistribution) {
+          setGlobalConflictOpen(true);
+        } else {
+          setConflictChoices(
+            Object.fromEntries(
+              conflictGroups(parsed.conflicts).map((row) => [
+                row.groupKey,
+                'replace' as const,
+              ]),
+            ),
+          );
+          setConflictOpen(true);
+        }
+        return;
       }
-    },
-    [
-      buildAfterSave,
-      buildProductionPayload,
-      dataProvider,
-      resetAfterFullSuccess,
-      runLegPlans,
-    ],
-  );
-
-  const buildSavePlans = (
-    date: string,
-    includeDistribution: boolean,
-    rate: number,
-    duplicates: BulkQuantityDuplicate[],
-    choice: BulkQuantityGlobalConflictChoice,
-  ) => {
-    const rows = rowsFromQuantities(henHouses, quantities);
-    const productionPlans = buildRowPlansWithGlobalChoice(
-      rows,
-      duplicates.filter((item) =>
-        rows.some((row) => row.organizationId === item.row.organizationId),
-      ),
-      choice,
-    );
-    const poolLegPlans = buildPoolLegPlansForRows(
-      productionPlans,
-      date,
-      duplicates,
-      choice,
-    );
-    let legPlans: DistributionTransactionLegPlan[] = [];
-    if (includeDistribution && config.distribution && distributionRefs) {
-      const { legs, buildPayload } = buildLegPayloads(date, rate);
-      legPlans = legPlansWithGlobalChoice(
-        legs,
-        duplicates.filter((item) =>
-          legs.some((leg) => leg.legKey === item.row.organizationName),
-        ),
-        choice,
-        buildPayload!,
-      );
+      setResultRows([]);
+      setWarnings([]);
+      setSaveError({
+        message: parsed.message || translate('ra.notification.http_error'),
+        label: parsed.label,
+      });
     }
-    return { productionPlans, poolLegPlans, legPlans };
   };
 
-  const prepareSave = async (
-    date: string,
-    includeDistribution: boolean,
-    rate: number,
-  ) => {
-    const rows = rowsFromQuantities(henHouses, quantities);
-    const duplicates = await collectDuplicates(date, includeDistribution, rate);
-    setSubmitDate(date);
-    setPendingIncludeDistribution(includeDistribution);
-
-    if (hasDistribution) {
-      const { productionPlans, poolLegPlans, legPlans } = buildSavePlans(
-        date,
-        includeDistribution,
-        rate,
-        duplicates,
-        globalConflictChoice,
-      );
-      setPendingProductionPlans(productionPlans);
-      setPendingPoolLegPlans(poolLegPlans);
-      setPendingLegPlans(legPlans);
-
-      if (duplicates.length > 0) {
-        setConflicts(duplicates);
-        setGlobalConflictOpen(true);
-        return {
-          ready: false as const,
-          productionPlans,
-          poolLegPlans,
-          legPlans,
-        };
-      }
-      return { ready: true as const, productionPlans, poolLegPlans, legPlans };
-    }
-
-    const defaultChoices = Object.fromEntries(
-      duplicates.map((item) => [item.row.organizationId, 'update' as const]),
-    );
-    setConflictChoices(defaultChoices);
-    const plans = buildRowPlans(rows, duplicates, defaultChoices);
-    const poolLegPlans = buildPoolLegPlansForRows(plans, date, duplicates);
-    setPendingProductionPlans(plans);
-    setPendingPoolLegPlans(poolLegPlans);
-    if (duplicates.length > 0) {
-      setConflicts(duplicates);
-      setConflictOpen(true);
-      return {
-        ready: false as const,
-        productionPlans: plans,
-        poolLegPlans,
-        legPlans: [] as DistributionTransactionLegPlan[],
-      };
-    }
-    return {
-      ready: true as const,
-      productionPlans: plans,
-      poolLegPlans,
-      legPlans: [] as DistributionTransactionLegPlan[],
-    };
+  const submitWith = (date: string, includeDistribution: boolean) => {
+    const request = buildRequest(date, includeDistribution);
+    runGuarded(() => send(request));
   };
 
   const submit = async (values: Record<string, unknown>) => {
-    if (!refs) {
-      return {};
-    }
     const date = resolveDate(values.date);
     if (!date) {
       return { date: translate('ra.validation.required') };
@@ -840,59 +449,26 @@ export function BulkQuantityEntryPage({
     if (validationError) {
       return validationError;
     }
-    runGuarded(async () => {
-      const prepared = await prepareSave(date, false, eggToSaleRate ?? 1);
-      if (!prepared.ready) {
-        return;
-      }
-      await runProductionAndPool(
-        prepared.productionPlans,
-        prepared.poolLegPlans,
-        date,
-      );
-    });
+    submitWith(date, false);
     return {};
   };
 
-  const handleProductionOnly = async () => {
-    if (!refs) {
+  const handleProductionOnly = () => {
+    if (validateProductionInputs()) {
       return;
     }
-    const validationError = validateProductionInputs();
-    if (validationError) {
-      return;
-    }
-    const date = formDate;
-    setSubmitDate(date);
-    runGuarded(async () => {
-      const prepared = await prepareSave(date, false, eggToSaleRate ?? 1);
-      if (!prepared.ready) {
-        return;
-      }
-      await runProductionAndPool(
-        prepared.productionPlans,
-        prepared.poolLegPlans,
-        date,
-      );
-    });
+    submitWith(formDate, false);
   };
 
   const handleNext = async () => {
-    if (!refs) {
-      return;
-    }
-    const validationError = validateProductionInputs();
-    if (validationError) {
+    if (validateProductionInputs()) {
       return;
     }
     await refreshDistributionContext(formDate);
     setActiveStep(1);
   };
 
-  const handleSaveAll = async () => {
-    if (!refs) {
-      return;
-    }
+  const handleSaveAll = () => {
     if (memberNeedsSaleRate(distributionMembers) && eggToSaleRate === null) {
       return;
     }
@@ -901,109 +477,70 @@ export function BulkQuantityEntryPage({
         return;
       }
     }
-    const date = formDate;
-    runGuarded(async () => {
-      const prepared = await prepareSave(date, true, eggToSaleRate ?? 1);
-      if (!prepared.ready) {
-        return;
-      }
-      await runProductionAndPool(
-        prepared.productionPlans,
-        prepared.poolLegPlans,
-        date,
-        prepared.legPlans,
-      );
-    });
+    submitWith(formDate, true);
   };
 
-  const confirmGlobalConflicts = async () => {
-    if (!submitDate) {
+  const confirmGlobalConflicts = () => {
+    if (!pendingRequest) {
       return;
     }
-    const { productionPlans, poolLegPlans, legPlans } = buildSavePlans(
-      submitDate,
-      pendingIncludeDistribution,
-      eggToSaleRate ?? 1,
-      conflicts,
-      globalConflictChoice,
-    );
-    setPendingProductionPlans(productionPlans);
-    setPendingPoolLegPlans(poolLegPlans);
-    setPendingLegPlans(legPlans);
     setGlobalConflictOpen(false);
-    runGuarded(() =>
-      runProductionAndPool(
-        productionPlans,
-        poolLegPlans,
-        submitDate,
-        pendingIncludeDistribution ? legPlans : [],
-      ),
-    );
+    const request = pendingRequest;
+    runGuarded(() => send(request, { conflictChoice: globalConflictChoice }));
   };
 
-  const confirmConflicts = async () => {
-    if (!submitDate) {
+  const confirmConflicts = () => {
+    if (!pendingRequest) {
       return;
     }
-    const rows = pendingProductionPlans.map(
-      ({ organizationId, organizationName, amount }) => ({
-        organizationId,
-        organizationName,
-        amount,
+    setConflictOpen(false);
+    const request = pendingRequest;
+    runGuarded(() =>
+      send(request, {
+        conflictChoice: globalConflictChoice,
+        conflictChoices,
       }),
     );
-    const plans = buildRowPlans(rows, conflicts, conflictChoices);
-    const poolLegPlans = buildPoolLegPlansForRows(plans, submitDate, conflicts);
-    setPendingProductionPlans(plans);
-    setPendingPoolLegPlans(poolLegPlans);
-    setConflictOpen(false);
-    runGuarded(() => runProductionAndPool(plans, poolLegPlans, submitDate));
   };
 
-  const retryFailed = async () => {
-    if (!submitDate) {
+  const retry = () => {
+    if (!pendingRequest) {
       return;
     }
-    const productionRetry = plansForRetry(pendingProductionPlans, failedIds);
-    const poolRetry = pendingPoolLegPlans.filter((plan) =>
-      failedIds.includes(plan.legKey),
-    );
-    const priorProduction = results.filter(
-      (row) =>
-        row.status === 'success' &&
-        productionRows.some(
-          (production) => production.organizationId === row.organizationId,
-        ),
-    );
-    const legRetry = pendingLegPlans.filter((plan) =>
-      failedIds.includes(plan.legKey),
-    );
-    if (
-      productionRetry.length > 0 ||
-      poolRetry.length > 0 ||
-      legRetry.length > 0
-    ) {
-      runGuarded(() =>
-        runProductionAndPool(
-          productionRetry,
-          poolRetry,
-          submitDate,
-          legRetry,
-          priorProduction,
-        ),
-      );
-    }
+    const request = pendingRequest;
+    runGuarded(() => send(request));
   };
 
   const stepDisabled =
     catalogPending ||
-    !refs ||
-    !poolRefs ||
     saving ||
     productionRows.length === 0 ||
     (activeStep === 1 &&
       memberNeedsSaleRate(distributionMembers) &&
       eggToSaleRate === null);
+
+  const resultMessage = (row: EggRowSummary) => {
+    const parts: string[] = [];
+    if (row.created > 0) {
+      parts.push(
+        translate('app.bulk_quantity.result_created', { count: row.created }),
+      );
+    }
+    if (row.updated > 0) {
+      parts.push(
+        translate('app.bulk_quantity.result_updated', { count: row.updated }),
+      );
+    }
+    if (row.skipped > 0) {
+      parts.push(
+        translate('app.bulk_quantity.result_skipped', { count: row.skipped }),
+      );
+    }
+    if (row.published) {
+      parts.push(translate('app.bulk_quantity.result_published'));
+    }
+    return parts.join(', ');
+  };
 
   return (
     <Box
@@ -1046,17 +583,14 @@ export function BulkQuantityEntryPage({
               saving={saving}
               onBack={() => setActiveStep(0)}
               onNext={() => void handleNext()}
-              onProductionOnly={() => void handleProductionOnly()}
-              onSaveAll={() => void handleSaveAll()}
+              onProductionOnly={handleProductionOnly}
+              onSaveAll={handleSaveAll}
             />
           ) : (
             <Toolbar>
               <SaveButton
                 disabled={
-                  catalogPending ||
-                  !refs ||
-                  saving ||
-                  productionRows.length === 0
+                  catalogPending || saving || productionRows.length === 0
                 }
                 label="app.bulk_quantity.save"
               />
@@ -1193,28 +727,37 @@ export function BulkQuantityEntryPage({
         ) : null}
       </SimpleForm>
 
-      {results.length > 0 ? (
-        <Stack spacing={1} sx={{ mt: 3 }}>
+      {resultRows.length > 0 || warnings.length > 0 || saveError ? (
+        <Stack data-testid="bulk-quantity-results" spacing={1} sx={{ mt: 3 }}>
           <Typography variant="subtitle1">
             {translate('app.bulk_quantity.results_heading')}
           </Typography>
-          {results.map((row) => (
+          {resultRows.map((row) => (
             <Alert
-              key={row.organizationId}
-              severity={row.status === 'success' ? 'success' : 'error'}
+              key={`${row.group}:${row.groupKey}`}
+              severity={row.created + row.updated > 0 ? 'success' : 'info'}
             >
-              {row.organizationName}
-              {row.message ? `: ${row.message}` : ''}
+              {row.label}: {resultMessage(row)}
             </Alert>
           ))}
-          {failedIds.length > 0 ? (
-            <Button
-              disabled={saving}
-              variant="outlined"
-              onClick={() => void retryFailed()}
+          {warnings.map((warning) => (
+            <Alert
+              key={`${warning.code}:${warning.groupKey}`}
+              severity="warning"
             >
-              {translate('app.bulk_quantity.retry_failed')}
-            </Button>
+              {warning.message}
+            </Alert>
+          ))}
+          {saveError ? (
+            <>
+              <Alert severity="error">
+                {translate('app.bulk_quantity.save_failed_nothing_saved')}{' '}
+                {saveError.message}
+              </Alert>
+              <Button disabled={saving} variant="outlined" onClick={retry}>
+                {translate('app.bulk_quantity.retry_failed')}
+              </Button>
+            </>
           ) : null}
         </Stack>
       ) : null}
@@ -1224,23 +767,56 @@ export function BulkQuantityEntryPage({
         conflicts={conflicts}
         open={conflictOpen}
         onCancel={() => setConflictOpen(false)}
-        onChange={(organizationId, choice) =>
+        onChange={(groupKey, choice) =>
           setConflictChoices((previous) => ({
             ...previous,
-            [organizationId]: choice,
+            [groupKey]: choice,
           }))
         }
-        onConfirm={() => void confirmConflicts()}
+        onConfirm={confirmConflicts}
       />
 
       <GlobalConflictDialog
         choice={globalConflictChoice}
+        conflicts={conflicts}
         open={globalConflictOpen}
         onCancel={() => setGlobalConflictOpen(false)}
         onChange={setGlobalConflictChoice}
-        onConfirm={() => void confirmGlobalConflicts()}
+        onConfirm={confirmGlobalConflicts}
       />
     </Box>
+  );
+}
+
+function ConflictChoiceRadios({
+  value,
+  onChange,
+}: {
+  value: EggConflictChoice;
+  onChange: (choice: EggConflictChoice) => void;
+}) {
+  const translate = useTranslate();
+  return (
+    <RadioGroup
+      value={value}
+      onChange={(_event, next) => onChange(next as EggConflictChoice)}
+    >
+      <FormControlLabel
+        control={<Radio />}
+        label={translate('app.bulk_quantity.conflict_update')}
+        value="replace"
+      />
+      <FormControlLabel
+        control={<Radio />}
+        label={translate('app.bulk_quantity.conflict_insert')}
+        value="add"
+      />
+      <FormControlLabel
+        control={<Radio />}
+        label={translate('app.bulk_quantity.conflict_skip')}
+        value="skip"
+      />
+    </RadioGroup>
   );
 }
 
@@ -1253,12 +829,9 @@ function PerRowConflictDialog({
   onCancel,
 }: {
   open: boolean;
-  conflicts: BulkQuantityDuplicate[];
-  choices: Record<string, BulkQuantityConflictChoice>;
-  onChange: (
-    organizationId: string,
-    choice: BulkQuantityConflictChoice,
-  ) => void;
+  conflicts: EggConflict[];
+  choices: Record<string, EggConflictChoice>;
+  onChange: (groupKey: string, choice: EggConflictChoice) => void;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -1271,10 +844,10 @@ function PerRowConflictDialog({
           {translate('app.bulk_quantity.conflict_body')}
         </Typography>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {conflicts.map((conflict) => (
-            <Box key={conflict.row.organizationId}>
+          {conflictGroups(conflicts).map((conflict) => (
+            <Box key={conflict.groupKey}>
               <Typography sx={{ fontWeight: 600 }} variant="subtitle2">
-                {conflict.row.organizationName}
+                {conflict.label}
               </Typography>
               <Typography color="text.secondary" variant="body2">
                 {translate('app.bulk_quantity.conflict_existing', {
@@ -1282,26 +855,10 @@ function PerRowConflictDialog({
                 })}
               </Typography>
               <FormControl>
-                <RadioGroup
-                  value={choices[conflict.row.organizationId] ?? 'update'}
-                  onChange={(_event, value) =>
-                    onChange(
-                      conflict.row.organizationId,
-                      value as BulkQuantityConflictChoice,
-                    )
-                  }
-                >
-                  <FormControlLabel
-                    control={<Radio />}
-                    label={translate('app.bulk_quantity.conflict_update')}
-                    value="update"
-                  />
-                  <FormControlLabel
-                    control={<Radio />}
-                    label={translate('app.bulk_quantity.conflict_insert')}
-                    value="insert"
-                  />
-                </RadioGroup>
+                <ConflictChoiceRadios
+                  value={choices[conflict.groupKey] ?? 'replace'}
+                  onChange={(choice) => onChange(conflict.groupKey, choice)}
+                />
               </FormControl>
             </Box>
           ))}
@@ -1320,13 +877,15 @@ function PerRowConflictDialog({
 function GlobalConflictDialog({
   open,
   choice,
+  conflicts,
   onChange,
   onConfirm,
   onCancel,
 }: {
   open: boolean;
-  choice: BulkQuantityGlobalConflictChoice;
-  onChange: (choice: BulkQuantityGlobalConflictChoice) => void;
+  choice: EggConflictChoice;
+  conflicts: EggConflict[];
+  onChange: (choice: EggConflictChoice) => void;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -1338,24 +897,18 @@ function GlobalConflictDialog({
         <Typography gutterBottom variant="body2">
           {translate('app.bulk_quantity.conflict_global_body')}
         </Typography>
+        <Stack component="ul" spacing={0.5} sx={{ my: 1, pl: 2 }}>
+          {conflictGroups(conflicts).map((conflict) => (
+            <Typography key={conflict.groupKey} component="li" variant="body2">
+              {conflict.label} —{' '}
+              {translate('app.bulk_quantity.conflict_existing', {
+                amount: conflict.existingAmount,
+              })}
+            </Typography>
+          ))}
+        </Stack>
         <FormControl sx={{ mt: 1 }}>
-          <RadioGroup
-            value={choice}
-            onChange={(_event, value) =>
-              onChange(value as BulkQuantityGlobalConflictChoice)
-            }
-          >
-            <FormControlLabel
-              control={<Radio />}
-              label={translate('app.bulk_quantity.conflict_update')}
-              value="update"
-            />
-            <FormControlLabel
-              control={<Radio />}
-              label={translate('app.bulk_quantity.conflict_insert')}
-              value="insert"
-            />
-          </RadioGroup>
+          <ConflictChoiceRadios value={choice} onChange={onChange} />
         </FormControl>
       </DialogContent>
       <DialogActions>
