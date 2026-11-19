@@ -134,6 +134,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     voice_error_network: 'Network error during speech recognition.',
     voice_error_generic: 'Speech recognition stopped. Try again.',
     voice_error_request: 'Could not parse the dictation. Try again.',
+    voice_retry: 'Retry',
     voice_review_notice:
       'The form was filled from your dictation. Nothing is saved: check the fields, then save as usual.',
     voice_filled_fields: 'Filled:',

@@ -21,7 +21,7 @@ describe('readLlmEnv', () => {
       provider: 'anthropic',
       apiKey: 'sk-ant-test',
       model: DEFAULT_ANTHROPIC_MODEL,
-      timeoutMs: 30_000,
+      timeoutMs: 60_000,
     });
   });
 
@@ -38,11 +38,16 @@ describe('readLlmEnv', () => {
     const env = readLlmEnv({
       LLM_PROVIDER: 'gemini',
       LLM_API_KEY: 'AIza-test',
-      LLM_MODEL: 'gemini-2.0-flash',
+      LLM_MODEL: 'gemini-3.5-flash',
       LLM_TIMEOUT_MS: '15000',
     });
-    assert.equal(env?.model, 'gemini-2.0-flash');
+    assert.equal(env?.model, 'gemini-3.5-flash');
     assert.equal(env?.timeoutMs, 15_000);
+  });
+
+  it('defaults timeout to 60s', () => {
+    const env = readLlmEnv({ LLM_API_KEY: 'sk-ant-test' });
+    assert.equal(env?.timeoutMs, 60_000);
   });
 });
 

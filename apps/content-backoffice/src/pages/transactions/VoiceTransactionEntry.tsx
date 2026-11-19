@@ -71,6 +71,8 @@ function VoiceTransactionEntryPanel() {
   const accountRow = useOptionalTransactionCreateAccountRow();
   const [busy, setBusy] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
+  /** Last transcript sent to parse-voice; kept so LLM failures can retry without re-dictating. */
+  const [lastTranscript, setLastTranscript] = useState<string | null>(null);
   const [plan, setPlan] = useState<VoiceFormPlan | null>(null);
   // Values to apply after the ügylet-sablon prefill; a tick triggers the effect.
   const pendingAfterWorkflowRef = useRef<VoiceFormPlan['afterWorkflow'] | null>(
@@ -103,12 +105,15 @@ function VoiceTransactionEntryPanel() {
 
   const submitTranscript = useCallback(
     async (transcript: string) => {
+      const text = transcript.trim();
+      if (!text) return;
+      setLastTranscript(text);
       setBusy(true);
       setRequestError(null);
       try {
         const organization = getValues('organization');
         const result = await parseVoiceTranscript(httpClient, STRAPI_URL, {
-          transcript,
+          transcript: text,
           organizationId:
             typeof organization === 'string' && organization
               ? organization
@@ -141,6 +146,11 @@ function VoiceTransactionEntryPanel() {
     },
     [accountRow, getValues, translate, write],
   );
+
+  const retryParse = useCallback(() => {
+    if (!lastTranscript || busy) return;
+    void submitTranscript(lastTranscript);
+  }, [busy, lastTranscript, submitTranscript]);
 
   const speech = useSpeechRecognition({ onFinal: submitTranscript });
 
@@ -198,7 +208,25 @@ function VoiceTransactionEntryPanel() {
         {speech.errorKey ? (
           <Alert severity="warning">{translate(speech.errorKey)}</Alert>
         ) : null}
-        {requestError ? <Alert severity="error">{requestError}</Alert> : null}
+        {requestError ? (
+          <Alert
+            action={
+              lastTranscript ? (
+                <Button
+                  color="inherit"
+                  disabled={busy}
+                  onClick={retryParse}
+                  size="small"
+                >
+                  {translate('app.voice_retry')}
+                </Button>
+              ) : null
+            }
+            severity="error"
+          >
+            {requestError}
+          </Alert>
+        ) : null}
 
         {plan ? <VoiceResultSummary plan={plan} /> : null}
       </Stack>

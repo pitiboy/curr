@@ -34,9 +34,13 @@ export type LlmEnv = {
 
 export const DEFAULT_LLM_PROVIDER = 'anthropic';
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-opus-5-5';
-/** Free-tier friendly Flash model on Google AI Studio. */
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
-export const DEFAULT_LLM_TIMEOUT_MS = 30_000;
+/**
+ * Free-tier friendly Flash-Lite on Google AI Studio.
+ * Full `gemini-3.5-flash` is slower and often hits the default timeout on large
+ * org/account contexts; 2.5 models return 404 for new API keys.
+ */
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export const DEFAULT_LLM_TIMEOUT_MS = 60_000;
 
 /** Kept for callers that still import the old name. */
 export const DEFAULT_LLM_MODEL = DEFAULT_ANTHROPIC_MODEL;

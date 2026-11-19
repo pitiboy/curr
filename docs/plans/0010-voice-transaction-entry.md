@@ -41,7 +41,7 @@ Válasz: `{ date, amount, currency_type, debit_account, credit_account, organiza
 
 ## 4. Env
 
-`.env.example`: `LLM_PROVIDER` (`anthropic` \| `gemini`), `LLM_API_KEY`, `LLM_MODEL` (alap: Claude Opus / `gemini-2.5-flash`), `LLM_TIMEOUT_MS`, `VOICE_PARSE_RATE_LIMIT`, `VOICE_PARSE_RATE_WINDOW_SECONDS`. Kulcs nélkül az endpoint 503-at ad. Ingyenes demó: Google AI Studio kulcs + `LLM_PROVIDER=gemini`.
+`.env.example`: `LLM_PROVIDER` (`anthropic` \| `gemini`), `LLM_API_KEY`, `LLM_MODEL` (alap: Claude Opus / `gemini-3.5-flash-lite`), `LLM_TIMEOUT_MS` (alap 60 s), `VOICE_PARSE_RATE_LIMIT`, `VOICE_PARSE_RATE_WINDOW_SECONDS`. Kulcs nélkül az endpoint 503-at ad. Ingyenes demó: Google AI Studio kulcs + `LLM_PROVIDER=gemini`.
 
 ## 5. Tesztek
 

@@ -178,6 +178,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     voice_error_network: 'Hálózati hiba a beszédfelismerés közben.',
     voice_error_generic: 'A beszédfelismerés megszakadt. Próbáld újra.',
     voice_error_request: 'A diktálás értelmezése nem sikerült. Próbáld újra.',
+    voice_retry: 'Újra',
     voice_review_notice:
       'Az űrlapot a diktálás alapján kitöltöttük. Semmi nincs mentve: ellenőrizd a mezőket, majd mentsd a szokásos módon.',
     voice_filled_fields: 'Kitöltve:',

@@ -143,6 +143,7 @@ export async function parseVoiceTransaction(
       throw new VoiceParseError(
         'Az értelmező most nem érhető el. Próbáld újra később.',
         502,
+        { cause: error },
       );
     }
     throw error;

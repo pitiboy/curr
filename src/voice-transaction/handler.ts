@@ -64,7 +64,9 @@ export async function handleParseVoice(
         },
       };
       log.warn(
-        `[voice-parse] outcome=error status=${error.status} user=${userId ?? '-'} transcriptLength=${transcriptLength} ms=${Date.now() - started}`,
+        `[voice-parse] outcome=error status=${error.status} user=${userId ?? '-'} transcriptLength=${transcriptLength} ms=${Date.now() - started}${
+          error.cause instanceof Error ? ` detail=${error.cause.message}` : ''
+        }`,
       );
       return;
     }
