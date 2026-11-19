@@ -49,8 +49,11 @@ export async function handleParseVoice(
     const result = await parseVoiceTransaction(deps, actor, request);
     ctx.status = 200;
     ctx.body = { data: result };
+    const workflowTag = request.workflowId
+      ? ` workflow=${request.workflowId}`
+      : '';
     log.info(
-      `[voice-parse] outcome=ok user=${userId} transcriptLength=${transcriptLength} confidence=${result.confidence.toFixed(2)} warnings=${result.warnings.length} ms=${Date.now() - started}`,
+      `[voice-parse] outcome=ok user=${userId} transcriptLength=${transcriptLength} confidence=${result.confidence.toFixed(2)} warnings=${result.warnings.length}${workflowTag} ms=${Date.now() - started}`,
     );
   } catch (error) {
     if (error instanceof VoiceParseError) {

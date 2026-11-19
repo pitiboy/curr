@@ -123,6 +123,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     voice_stop: 'Stop dictation',
     voice_hint:
       'Say the transaction in Hungarian (e.g. "tegnap ötezer forint táp készpénzből"). Check everything before saving.',
+    voice_bulk_hint:
+      'Dictate the daily eggs in Hungarian (hen-house production and distribution). Check everything before saving.',
     voice_listening: 'Listening…',
     voice_processing: 'Parsing…',
     voice_unsupported:

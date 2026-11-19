@@ -100,6 +100,8 @@ import type {
   DistributionResolvedRefs,
   DistributionTransactionLegPlan,
 } from './types';
+import { VoiceBulkQuantityEntry } from './VoiceBulkQuantityEntry';
+import type { VoiceEggBulkFormPlan } from './voiceBulkQuantity';
 
 const httpClient = strapiHttpClient({ storage: localStorage });
 
@@ -132,28 +134,42 @@ function FormDateWatcher({ onDate }: { onDate: (isoDate: string) => void }) {
 type WizardToolbarProps = {
   activeStep: number;
   hasDistribution: boolean;
+  singleLayout: boolean;
   disabled: boolean;
   saving: boolean;
   onProductionOnly: () => void;
   onNext: () => void;
   onBack: () => void;
   onSaveAll: () => void;
+  onSingleSave: () => void;
 };
 
 function WizardToolbar({
   activeStep,
   hasDistribution,
+  singleLayout,
   disabled,
   saving,
   onProductionOnly,
   onNext,
   onBack,
   onSaveAll,
+  onSingleSave,
 }: WizardToolbarProps) {
   const translate = useTranslate();
   return (
     <Toolbar>
-      {activeStep === 0 && hasDistribution ? (
+      {singleLayout ? (
+        <Button
+          disabled={disabled || saving}
+          type="button"
+          variant="contained"
+          onClick={onSingleSave}
+        >
+          {translate('app.bulk_quantity.save')}
+        </Button>
+      ) : null}
+      {!singleLayout && activeStep === 0 && hasDistribution ? (
         <>
           <Button
             disabled={disabled || saving}
@@ -174,12 +190,12 @@ function WizardToolbar({
           </Button>
         </>
       ) : null}
-      {activeStep === 0 && !hasDistribution ? (
+      {!singleLayout && activeStep === 0 && !hasDistribution ? (
         <Button disabled={disabled || saving} type="submit" variant="contained">
           {translate('app.bulk_quantity.save')}
         </Button>
       ) : null}
-      {activeStep === 1 ? (
+      {!singleLayout && activeStep === 1 ? (
         <>
           <Button disabled={saving} type="button" onClick={onBack}>
             {translate('app.bulk_quantity.back_production')}
@@ -214,6 +230,7 @@ export function BulkQuantityEntryPage({
   const eggInitialPublication =
     eggProductionInitialPublicationStatus(backofficeConfig);
   const hasDistribution = Boolean(config.distribution);
+  const singleLayout = config.layout === 'single' && hasDistribution;
 
   const [activeStep, setActiveStep] = useState(0);
   const [henHouses, setHenHouses] = useState<BulkQuantityHenHouse[]>([]);
@@ -900,6 +917,58 @@ export function BulkQuantityEntryPage({
     );
   };
 
+  /** Single-page save: empty distribution → production (+ pool) only. */
+  const handleSingleSave = async () => {
+    if (!refs) {
+      return;
+    }
+    const validationError = validateProductionInputs();
+    if (validationError) {
+      return;
+    }
+    const includeDistribution = distributedTotal > 0;
+    if (includeDistribution) {
+      if (memberNeedsSaleRate(distributionMembers) && eggToSaleRate === null) {
+        return;
+      }
+      for (const member of distributionMembers) {
+        if (invalidQuantityInput(memberQuantities[member.memberId])) {
+          return;
+        }
+      }
+    }
+    const date = formDate;
+    const prepared = await prepareSave(
+      date,
+      includeDistribution,
+      eggToSaleRate ?? 1,
+    );
+    if (!prepared.ready) {
+      return;
+    }
+    await runProductionAndPool(
+      prepared.productionPlans,
+      prepared.poolLegPlans,
+      date,
+      includeDistribution ? prepared.legPlans : [],
+    );
+  };
+
+  const applyVoicePlan = useCallback((plan: VoiceEggBulkFormPlan) => {
+    if (plan.date) {
+      setFormDate(plan.date);
+    }
+    if (Object.keys(plan.quantities).length > 0) {
+      setQuantities((previous) => ({ ...previous, ...plan.quantities }));
+    }
+    if (Object.keys(plan.memberQuantities).length > 0) {
+      setMemberQuantities((previous) => ({
+        ...previous,
+        ...plan.memberQuantities,
+      }));
+    }
+  }, []);
+
   const confirmGlobalConflicts = async () => {
     if (!submitDate) {
       return;
@@ -975,15 +1044,22 @@ export function BulkQuantityEntryPage({
     }
   };
 
+  const distributionNeeded =
+    (singleLayout && distributedTotal > 0) ||
+    (!singleLayout && activeStep === 1);
   const stepDisabled =
     catalogPending ||
     !refs ||
     !poolRefs ||
     saving ||
     productionRows.length === 0 ||
-    (activeStep === 1 &&
+    (distributionNeeded &&
       memberNeedsSaleRate(distributionMembers) &&
       eggToSaleRate === null);
+
+  const showProduction = singleLayout || activeStep === 0;
+  const showDistribution =
+    hasDistribution && (singleLayout || activeStep === 1);
 
   return (
     <Box
@@ -998,7 +1074,7 @@ export function BulkQuantityEntryPage({
           {catalogError}
         </Alert>
       ) : null}
-      {hasDistribution ? (
+      {hasDistribution && !singleLayout ? (
         <Stepper activeStep={activeStep} sx={{ mb: 2 }}>
           <Step completed={activeStep > 0}>
             <StepLabel>
@@ -1024,10 +1100,12 @@ export function BulkQuantityEntryPage({
               disabled={stepDisabled}
               hasDistribution={hasDistribution}
               saving={saving}
+              singleLayout={singleLayout}
               onBack={() => setActiveStep(0)}
               onNext={() => void handleNext()}
               onProductionOnly={() => void handleProductionOnly()}
               onSaveAll={() => void handleSaveAll()}
+              onSingleSave={() => void handleSingleSave()}
             />
           ) : (
             <Toolbar>
@@ -1048,7 +1126,17 @@ export function BulkQuantityEntryPage({
         <BulkQuantityFormDirtySync rowCount={productionRows.length} />
         <FormDateWatcher onDate={setFormDate} />
 
-        {activeStep === 0 ? (
+        {config.voice?.enabled ? (
+          <VoiceBulkQuantityEntry
+            disabled={catalogPending || saving}
+            organizationId={poolRefs?.parentOrganizationId ?? null}
+            voice={config.voice}
+            workflowId={config.workflowId}
+            onApplied={applyVoicePlan}
+          />
+        ) : null}
+
+        {showProduction ? (
           <>
             <Stack spacing={2} sx={{ width: '100%' }}>
               <DateInput fullWidth source="date" />
@@ -1061,6 +1149,12 @@ export function BulkQuantityEntryPage({
               {!catalogPending && henHouses.length === 0 ? (
                 <Typography color="warning.main" variant="body2">
                   {translate('app.bulk_quantity.no_hen_houses')}
+                </Typography>
+              ) : null}
+
+              {singleLayout ? (
+                <Typography variant="subtitle1">
+                  {translate('app.bulk_quantity.step_production')}
                 </Typography>
               ) : null}
 
@@ -1088,7 +1182,7 @@ export function BulkQuantityEntryPage({
                 />
               ))}
             </Stack>
-            {hasDistribution ? (
+            {hasDistribution && !singleLayout ? (
               <Box
                 aria-hidden
                 sx={{ display: { xs: 'none', md: 'block' }, minHeight: 1 }}
@@ -1097,10 +1191,15 @@ export function BulkQuantityEntryPage({
           </>
         ) : null}
 
-        {activeStep === 1 && hasDistribution ? (
+        {showDistribution ? (
           <>
-            <Stack spacing={2} sx={{ width: '100%' }}>
-              <DateInput fullWidth source="date" />
+            <Stack spacing={2} sx={{ width: '100%', mt: singleLayout ? 3 : 0 }}>
+              {!singleLayout ? <DateInput fullWidth source="date" /> : null}
+              {singleLayout ? (
+                <Typography variant="subtitle1">
+                  {translate('app.bulk_quantity.step_distribution')}
+                </Typography>
+              ) : null}
               <Typography variant="body1">
                 {translate('app.bulk_quantity.distribution_produced', {
                   count: producedTotal,

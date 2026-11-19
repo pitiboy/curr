@@ -167,6 +167,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     voice_stop: 'Diktálás vége',
     voice_hint:
       'Mondd el magyarul a tranzakciót (pl. „tegnap ötezer forint táp készpénzből”). Mentés előtt mindent ellenőrizz.',
+    voice_bulk_hint:
+      'Mondd el magyarul a napi tojást (ólankénti termelés és továbbosztás). Mentés előtt mindent ellenőrizz.',
     voice_listening: 'Figyelek…',
     voice_processing: 'Értelmezés…',
     voice_unsupported:

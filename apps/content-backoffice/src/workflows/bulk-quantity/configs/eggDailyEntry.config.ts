@@ -56,4 +56,6 @@ export const eggDailyEntryConfig: BulkQuantityWorkflowConfig = {
   descriptionKey: 'app.bulk_quantity.description.egg',
   roles: ['dataentry', 'editor', 'controller'],
   distribution: eggDistributionConfig,
+  layout: 'single',
+  voice: { enabled: true },
 };

@@ -6,6 +6,15 @@
 
 export const VOICE_TRANSACTION_FEATURE_KEY = 'voice_transaction_entry';
 
+/** Settings / workflow key for the egg bulk-quantity voice branch. */
+export const VOICE_EGG_WORKFLOW_ID = 'egg-production';
+
+/** Workflow ids accepted by parse-voice beyond the default single-transaction path. */
+export const VOICE_SUPPORTED_WORKFLOW_IDS = [VOICE_EGG_WORKFLOW_ID] as const;
+
+export type VoiceSupportedWorkflowId =
+  (typeof VOICE_SUPPORTED_WORKFLOW_IDS)[number];
+
 /** Ledger code of the KOR treasury account (Bankszámlák számla). */
 export const KOR_TREASURY_ACCOUNT_CODE = '1100';
 
@@ -79,6 +88,62 @@ export type VoiceParseResult = {
   /** Display labels for the returned IDs (e.g. "1100 Bankszámlák számla"). */
   labels: Partial<Record<VoiceResultIdField, string>>;
 };
+
+export type VoiceEggHenHouse = { id: string; name: string };
+export type VoiceEggMember = { id: string; name: string };
+
+/** Context for the egg-production bulk voice branch. */
+export type VoiceEggParseContext = {
+  today: string;
+  parentOrganizationId: string;
+  parentOrganizationName: string;
+  henHouses: VoiceEggHenHouse[];
+  members: VoiceEggMember[];
+};
+
+export const VOICE_EGG_RESULT_FIELDS = [
+  'date',
+  'production',
+  'distribution',
+] as const;
+
+export type VoiceEggResultField = (typeof VOICE_EGG_RESULT_FIELDS)[number];
+
+export type VoiceEggQuantityRow = {
+  organizationId: string;
+  amount: number;
+};
+
+export type VoiceEggMemberQuantityRow = {
+  memberId: string;
+  amount: number;
+};
+
+/** Validated egg-bulk response of `POST /api/transactions/parse-voice`. */
+export type VoiceEggParseResult = {
+  date: string | null;
+  production: VoiceEggQuantityRow[];
+  distribution: VoiceEggMemberQuantityRow[];
+  confidence: number;
+  low_confidence_fields: VoiceEggResultField[];
+  warnings: string[];
+  labels: {
+    production: Record<string, string>;
+    distribution: Record<string, string>;
+  };
+};
+
+export type VoiceParseResponse = VoiceParseResult | VoiceEggParseResult;
+
+export function isVoiceEggParseResult(
+  value: VoiceParseResponse,
+): value is VoiceEggParseResult {
+  return (
+    Array.isArray((value as VoiceEggParseResult).production) &&
+    Array.isArray((value as VoiceEggParseResult).distribution) &&
+    !('debit_account' in value)
+  );
+}
 
 export type VoiceActor = {
   userId: number | string;

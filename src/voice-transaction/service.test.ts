@@ -6,6 +6,7 @@ import { handleParseVoice } from './handler';
 import { LlmError, type LlmJsonClient, type LlmJsonRequest } from './llm';
 import { createRateLimiter } from './rate-limit';
 import {
+  parseVoiceRequestBody,
   parseVoiceTransaction,
   type VoiceParseDeps,
   type VoiceParseRequest,
@@ -18,6 +19,17 @@ type Row = Record<string, unknown>;
 const ORGS: Row[] = [
   { documentId: 'org-a', name: 'Tojóól' },
   { documentId: 'org-b', name: 'Gyümölcsös' },
+  { documentId: 'org-poultry', name: 'Tyúktartás' },
+  {
+    documentId: 'org-house-1',
+    name: '1. ól',
+    parent: { documentId: 'org-poultry' },
+  },
+  {
+    documentId: 'org-house-2',
+    name: '2. ól',
+    parent: { documentId: 'org-poultry' },
+  },
 ];
 const ACCOUNTS: Row[] = [
   { documentId: 'acc-1000', code: '1000', name: 'Házipénztár' },
@@ -29,6 +41,17 @@ const CURRENCIES: Row[] = [
 ];
 const MEMBERS: Row[] = [
   { documentId: 'mem-peti', name: 'Peti', identifier: 'peti' },
+  { documentId: 'mem-anna', name: 'Anna', identifier: 'anna' },
+];
+const MEMBERSHIPS: Row[] = [
+  {
+    documentId: 'ms-1',
+    name: 'Tyúktartók',
+    valid_from: '2020-01-01T00:00:00.000Z',
+    valid_to: null,
+    organization: { documentId: 'org-poultry' },
+    members: [MEMBERS[0], MEMBERS[1]],
+  },
 ];
 const WORKFLOWS: Row[] = [
   {
@@ -54,24 +77,89 @@ const FEATURES: BackofficeFeatureRow[] = [
   { key: 'egg-production', enabled: false, config: null },
 ];
 
-/** user 1: dataentry in org-a only; user 2: controller (all orgs). */
+const EGG_FEATURES: BackofficeFeatureRow[] = [
+  { key: 'voice_transaction_entry', enabled: true, config: null },
+  { key: 'egg-production', enabled: true, config: null },
+];
+
+function parentDocumentId(row: Row): string {
+  const parent = row.parent as { documentId?: unknown } | undefined;
+  return typeof parent?.documentId === 'string' ? parent.documentId : '';
+}
+
+function orgDocumentId(row: Row): string {
+  const org = row.organization as { documentId?: unknown } | undefined;
+  return typeof org?.documentId === 'string' ? org.documentId : '';
+}
+
+/** user 1: dataentry in org-a + poultry; user 2: controller (all orgs). */
 function fakeStrapi(): VoiceParseDeps['strapi'] {
   const tables: Record<string, Row[]> = {
     'api::organization.organization': ORGS,
     'api::account.account': ACCOUNTS,
     'api::currency-type.currency-type': CURRENCIES,
     'api::member.member': MEMBERS,
+    'api::membership.membership': MEMBERSHIPS,
     'api::transaction-workflow.transaction-workflow': WORKFLOWS,
   };
   return {
     db: {
       query: (uid: string) => ({
         findOne: async (params: Record<string, unknown>) => {
-          if (uid !== 'plugin::users-permissions.user') return null;
-          const where = params.where as { id?: unknown };
-          return where.id === 1 ? { id: 1, organizations: [ORGS[0]] } : null;
+          const where = (params.where ?? {}) as Record<string, unknown>;
+          if (uid === 'plugin::users-permissions.user') {
+            return where.id === 1
+              ? {
+                  id: 1,
+                  organizations: [
+                    ORGS.find((o) => o.documentId === 'org-a'),
+                    ORGS.find((o) => o.documentId === 'org-poultry'),
+                  ],
+                }
+              : null;
+          }
+          if (uid === 'api::organization.organization') {
+            const rows = tables[uid] ?? [];
+            if (typeof where.name === 'string') {
+              return rows.find((row) => row.name === where.name) ?? null;
+            }
+            if (typeof where.documentId === 'string') {
+              return (
+                rows.find((row) => row.documentId === where.documentId) ?? null
+              );
+            }
+          }
+          return null;
         },
-        findMany: async () => tables[uid] ?? [],
+        findMany: async (params: Record<string, unknown> = {}) => {
+          const rows = tables[uid] ?? [];
+          const where = (params.where ?? {}) as Record<string, unknown>;
+          if (
+            uid === 'api::organization.organization' &&
+            where.parent &&
+            typeof where.parent === 'object'
+          ) {
+            const parentFilter = where.parent as {
+              documentId?: string;
+            };
+            return rows.filter(
+              (row) => parentDocumentId(row) === parentFilter.documentId,
+            );
+          }
+          if (
+            uid === 'api::membership.membership' &&
+            where.organization &&
+            typeof where.organization === 'object'
+          ) {
+            const orgFilter = where.organization as {
+              documentId?: string;
+            };
+            return rows.filter(
+              (row) => orgDocumentId(row) === orgFilter.documentId,
+            );
+          }
+          return rows;
+        },
       }),
     },
   };
@@ -133,6 +221,25 @@ function request(
   return {
     transcript: 'Tegnap ötezer-kétszáz forint táp készpénzből, Peti vette.',
     organizationId: 'org-a',
+    workflowId: null,
+    ...overrides,
+  };
+}
+
+function validEggOutput(overrides: Row = {}): Row {
+  return {
+    date: '2026-11-17',
+    production: [
+      { organizationId: 'org-house-1', amount: 40 },
+      { organizationId: 'org-house-2', amount: 12 },
+    ],
+    distribution: [
+      { memberId: 'mem-peti', amount: 30 },
+      { memberId: 'mem-anna', amount: 22 },
+    ],
+    confidence: 0.85,
+    low_confidence_fields: ['distribution'],
+    warnings: [],
     ...overrides,
   };
 }
@@ -291,6 +398,138 @@ describe('parseVoiceTransaction', () => {
     await rejectsWith(parseVoiceTransaction(d, DATAENTRY, request()), 429);
     // Another user has their own window.
     await parseVoiceTransaction(d, CONTROLLER, request());
+  });
+});
+
+describe('parseVoiceTransaction egg-production', () => {
+  it('returns hen-house and member quantities for a valid LLM output', async () => {
+    const llm = new FakeLlm(validEggOutput());
+    const result = await parseVoiceTransaction(
+      deps(llm, { features: EGG_FEATURES }),
+      DATAENTRY,
+      request({
+        transcript:
+          'Ma az 1. ólban 40, a 2.-ban 12 tojás, Petinek 30, Annának 22.',
+        organizationId: 'org-poultry',
+        workflowId: 'egg-production',
+      }),
+    );
+
+    assert.ok('production' in result);
+    assert.equal(result.date, '2026-11-17');
+    assert.deepEqual(result.production, [
+      { organizationId: 'org-house-1', amount: 40 },
+      { organizationId: 'org-house-2', amount: 12 },
+    ]);
+    assert.deepEqual(result.distribution, [
+      { memberId: 'mem-peti', amount: 30 },
+      { memberId: 'mem-anna', amount: 22 },
+    ]);
+    assert.equal(result.confidence, 0.85);
+    assert.deepEqual(result.low_confidence_fields, ['distribution']);
+    assert.equal(result.labels.production['org-house-1'], '1. ól');
+    assert.equal(result.labels.distribution['mem-peti'], 'Peti');
+    assert.match(llm.calls[0]!.system, /Hen houses/);
+    assert.match(llm.calls[0]!.system, /org-house-1/);
+  });
+
+  it('drops unknown hen houses and members with Hungarian warnings', async () => {
+    const llm = new FakeLlm(
+      validEggOutput({
+        production: [
+          { organizationId: 'org-house-1', amount: 10 },
+          { organizationId: 'org-made-up', amount: 5 },
+          { organizationId: 'org-house-2', amount: -3 },
+        ],
+        distribution: [
+          { memberId: 'mem-nobody', amount: 4 },
+          { memberId: 'mem-anna', amount: 8 },
+        ],
+      }),
+    );
+    const result = await parseVoiceTransaction(
+      deps(llm, { features: EGG_FEATURES }),
+      DATAENTRY,
+      request({
+        organizationId: 'org-poultry',
+        workflowId: 'egg-production',
+      }),
+    );
+    assert.ok('production' in result);
+    assert.deepEqual(result.production, [
+      { organizationId: 'org-house-1', amount: 10 },
+    ]);
+    assert.deepEqual(result.distribution, [
+      { memberId: 'mem-anna', amount: 8 },
+    ]);
+    assert.ok(result.warnings.length >= 2);
+  });
+
+  it('rejects when egg-production feature is off', async () => {
+    const llm = new FakeLlm(validEggOutput());
+    await rejectsWith(
+      parseVoiceTransaction(
+        deps(llm),
+        DATAENTRY,
+        request({
+          organizationId: 'org-poultry',
+          workflowId: 'egg-production',
+        }),
+      ),
+      403,
+    );
+    assert.equal(llm.calls.length, 0);
+  });
+
+  it('rejects an unknown workflowId in the request body', async () => {
+    await assert.rejects(
+      async () =>
+        parseVoiceRequestBody({
+          transcript: 'Ma 10 tojás',
+          workflowId: 'fruit-picking',
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof VoiceParseError);
+        assert.equal(error.status, 400);
+        return true;
+      },
+    );
+  });
+
+  it('rejects poultry access when the user has no Tyúktartás membership', async () => {
+    const llm = new FakeLlm(validEggOutput());
+    const base = deps(llm, { features: EGG_FEATURES });
+    const strapi = {
+      db: {
+        query: (uid: string) => {
+          const inner = base.strapi.db.query(uid);
+          return {
+            findOne: async (params: Record<string, unknown>) => {
+              if (uid === 'plugin::users-permissions.user') {
+                return {
+                  id: 1,
+                  organizations: [ORGS.find((o) => o.documentId === 'org-a')],
+                };
+              }
+              return inner.findOne(params);
+            },
+            findMany: inner.findMany,
+          };
+        },
+      },
+    };
+    await rejectsWith(
+      parseVoiceTransaction(
+        { ...base, strapi },
+        DATAENTRY,
+        request({
+          organizationId: 'org-poultry',
+          workflowId: 'egg-production',
+        }),
+      ),
+      403,
+    );
+    assert.equal(llm.calls.length, 0);
   });
 });
 

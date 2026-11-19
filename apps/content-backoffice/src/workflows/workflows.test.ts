@@ -138,4 +138,10 @@ describe('visibleWorkflowForms', () => {
   it('uses egg-production as the shared feature flag id', () => {
     expect(eggDailyEntryConfig.workflowId).toBe('egg-production');
   });
+
+  it('uses a single-page layout with voice for egg daily entry', () => {
+    expect(eggDailyEntryConfig.layout).toBe('single');
+    expect(eggDailyEntryConfig.voice).toEqual({ enabled: true });
+    expect(eggDailyEntryConfig.distribution).toBeDefined();
+  });
 });

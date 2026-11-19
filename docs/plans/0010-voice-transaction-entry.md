@@ -48,9 +48,14 @@ Válasz: `{ date, amount, currency_type, debit_account, credit_account, organiza
 - Backend (`src/voice-transaction/service.test.ts`, fake Strapi + mock LLM): érvényes kimenet, ismeretlen ID-k, idegen szervezet, controller, KÖR kincstár őr, auth / flag / LLM hiány, LLM hiba, rate limit, naplóban nincs átirat.
 - SPA (Vitest): `voiceTransaction.test.ts` (válasz → űrlapérték leképezés), `useSpeechRecognition.test.ts`.
 
-## 6. Nem-cél / később
+## 6. Egg bulk slice (kész)
+
+A `POST /api/transactions/parse-voice` opcionális `workflowId: egg-production` ága más JSON sémát használ (`production[]` / `distribution[]`). A Napi tojás űrlap (`layout: 'single'`, `voice: { enabled: true }`) egylépéses: termelés + továbbosztás együtt, mikrofon kitölti az ól- és tag-mezőket; mentés kézi (üres továbbosztás = csak termelés).
+
+## 7. Nem-cél / később
 
 - Szerveroldali hangfeldolgozás (a böngésző végzi a felismerést).
 - Megosztott (Redis) rate limit több processz esetén.
 - Tag-mező a tranzakción; Edit / Review oldali diktálás.
 - Playwright smoke a mikrofon gombra (Web Speech API mock kell hozzá).
+- Más bulk workflow hangja.
