@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Checkbox,
-  FormControlLabel,
   Stack,
   Table,
   TableBody,
@@ -11,18 +10,19 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography,
+  Tooltip,
+  type SxProps,
+  type Theme,
 } from '@mui/material';
 import { useMemo } from 'react';
 import { useGetList, useTranslate } from 'react-admin';
 
 import {
   accountChoiceLabel,
-  filterAccountChoices,
+  sortAccountChoices,
   type AccountChoice,
 } from '../../data/accountCodes';
 import { KOR_TREASURY_ACCOUNT_CODE } from '../reports/assetReconciliation/constants';
-import { useAccountCodePatterns } from '../../workflows/useAccountCodePatterns';
 import { useAccountCatalog } from './useAccountCatalog';
 import {
   roundLegAmountForCurrency,
@@ -31,37 +31,106 @@ import {
   type EditableLegRow,
 } from './convertPreviewEdit';
 
+/** Compact inputs: table headers carry the label, cells only show values. */
+const denseFieldSx: SxProps<Theme> = {
+  verticalAlign: 'baseline',
+  '& .MuiInputBase-root': {
+    fontSize: '0.8125rem',
+    minHeight: 30,
+    alignItems: 'baseline',
+  },
+  '& .MuiInputBase-input': {
+    py: '5px',
+    px: 0.75,
+  },
+  '& .MuiAutocomplete-inputRoot': {
+    flexWrap: 'nowrap',
+    pr: '28px !important',
+  },
+  '& .MuiAutocomplete-input': {
+    minWidth: '4ch !important',
+  },
+};
+
+const numberFieldSx: SxProps<Theme> = {
+  ...denseFieldSx,
+  '& input[type=number]': {
+    MozAppearance: 'textfield',
+    textAlign: 'right',
+  },
+  '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button':
+    {
+      WebkitAppearance: 'none',
+      margin: 0,
+    },
+};
+
+const denseCellSx: SxProps<Theme> = {
+  py: 0.5,
+  px: 0.75,
+  verticalAlign: 'bottom',
+};
+
+function resolveAccountChoice(
+  catalog: AccountChoice[],
+  documentId: string,
+): AccountChoice | null {
+  if (!documentId) return null;
+  return (
+    catalog.find((row) => String(row.id) === documentId) ?? {
+      id: documentId,
+      code: null,
+      name: null,
+    }
+  );
+}
+
 function AccountAutocomplete({
-  label,
+  ariaLabel,
   value,
   options,
-  disabled,
+  catalog,
   onChange,
 }: {
-  label: string;
+  ariaLabel: string;
   value: string;
   options: AccountChoice[];
-  disabled?: boolean;
+  catalog: AccountChoice[];
   onChange: (documentId: string, code: string | null) => void;
 }) {
-  const selected =
-    options.find((row) => String(row.id) === value) ??
-    (value
-      ? ({ id: value, code: value, name: null } satisfies AccountChoice)
-      : null);
+  const selected = resolveAccountChoice(catalog, value);
+  const mergedOptions = useMemo(() => {
+    const current = resolveAccountChoice(catalog, value);
+    if (!current) return options;
+    if (options.some((row) => String(row.id) === String(current.id))) {
+      return options;
+    }
+    return sortAccountChoices([current, ...options]);
+  }, [catalog, options, value]);
 
   return (
     <Autocomplete
-      disabled={disabled}
+      disableClearable={Boolean(selected)}
       fullWidth
-      options={options}
-      getOptionLabel={(option) => accountChoiceLabel(option)}
+      options={mergedOptions}
+      getOptionLabel={(option) => {
+        const labelText = accountChoiceLabel(option);
+        return labelText || String(option.name ?? option.id);
+      }}
       isOptionEqualToValue={(left, right) => left.id === right.id}
       renderInput={(params) => (
-        <TextField {...params} label={label} size="small" />
+        <TextField
+          {...params}
+          inputProps={{
+            ...params.inputProps,
+            'aria-label': ariaLabel,
+          }}
+          size="small"
+          sx={denseFieldSx}
+        />
       )}
       size="small"
-      value={selected}
+      value={selected ?? undefined}
       onChange={(_event, option) => {
         onChange(String(option?.id ?? ''), option?.code ?? null);
       }}
@@ -84,6 +153,32 @@ function filterTreasury1100(
   );
 }
 
+function accountDisplayLabel(
+  catalog: AccountChoice[],
+  documentId: string,
+  fallbackCode: string,
+): string {
+  const choice = resolveAccountChoice(catalog, documentId);
+  if (!choice) return fallbackCode || '—';
+  const labeled = accountChoiceLabel({
+    ...choice,
+    code: choice.code ?? fallbackCode,
+  });
+  if (labeled) return labeled;
+  if (choice.name) return String(choice.name);
+  if (fallbackCode) return fallbackCode;
+  return String(choice.id);
+}
+
+function relationName(
+  rows: { id?: unknown; name?: unknown }[],
+  documentId: string | null,
+): string {
+  if (!documentId) return '—';
+  const match = rows.find((row) => String(row.id) === documentId);
+  return match ? String(match.name ?? match.id) : '—';
+}
+
 export function ConvertPreviewEditableTable({
   rows,
   sourceAmount,
@@ -98,15 +193,12 @@ export function ConvertPreviewEditableTable({
   onDelete: (key: string) => void;
 }) {
   const translate = useTranslate();
-  const patterns = useAccountCodePatterns();
   const { accounts } = useAccountCatalog();
-  const debitOptions = useMemo(
-    () => filterAccountChoices(accounts, 'debit', patterns),
-    [accounts, patterns],
-  );
-  const creditOptions = useMemo(
-    () => filterAccountChoices(accounts, 'credit', patterns),
-    [accounts, patterns],
+  // Expansion legs may use any ledger account (member / balance sheet), not
+  // only the create-form debit/credit code patterns.
+  const accountOptions = useMemo(
+    () => sortAccountChoices(accounts),
+    [accounts],
   );
   const { data: currencyRows = [] } = useGetList('currency-types', {
     pagination: { page: 1, perPage: 200 },
@@ -125,9 +217,38 @@ export function ConvertPreviewEditableTable({
     onChange(rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
   };
 
+  const editableSteps = rows.filter(
+    (row) => !row.locked && row.kind === 'step',
+  );
+
+  const creditLabel = translate('app.transactions_convert_preview_credit');
+  const debitLabel = translate('app.transactions_convert_preview_debit');
+  const currencyLabel = translate('app.transactions_convert_preview_currency');
+  const orgLabel = translate('resources.transactions.fields.organization');
+  const typeLabel = translate('resources.transactions.fields.transaction_type');
+  const copyReceiptLabel = translate(
+    'app.transactions_convert_edit_copy_receipt',
+  );
+
   return (
     <Box sx={{ overflowX: 'auto', width: '100%' }}>
-      <Table size="small" sx={{ minWidth: 960 }}>
+      <Table
+        size="small"
+        sx={{
+          minWidth: 1560,
+          '& .MuiTableCell-root': denseCellSx,
+          '& .MuiTableCell-head': {
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            verticalAlign: 'bottom',
+          },
+          '& .MuiAutocomplete-root, & .MuiFormControl-root, & .MuiCheckbox-root':
+            {
+              verticalAlign: 'baseline',
+            },
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell>#</TableCell>
@@ -137,45 +258,58 @@ export function ConvertPreviewEditableTable({
             <TableCell>
               {translate('app.transactions_convert_preview_description')}
             </TableCell>
-            <TableCell>
-              {translate('app.transactions_convert_preview_credit')}
-            </TableCell>
-            <TableCell>
-              {translate('app.transactions_convert_preview_debit')}
-            </TableCell>
+            <TableCell>{creditLabel}</TableCell>
+            <TableCell>{debitLabel}</TableCell>
             <TableCell align="right">
               {translate('app.transactions_convert_preview_amount')}
             </TableCell>
             <TableCell align="right">
               {translate('app.transactions_convert_edit_percent')}
             </TableCell>
+            <TableCell>{currencyLabel}</TableCell>
             <TableCell>
-              {translate('app.transactions_convert_preview_currency')}
+              {translate('resources.transactions.fields.date')}
+            </TableCell>
+            <TableCell>{orgLabel}</TableCell>
+            <TableCell>{typeLabel}</TableCell>
+            <TableCell align="center">
+              <Tooltip title={copyReceiptLabel}>
+                <span>
+                  {translate(
+                    'app.transactions_convert_edit_copy_receipt_short',
+                  )}
+                </span>
+              </Tooltip>
             </TableCell>
             <TableCell />
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row, index) => {
+          {rows.map((row) => {
             const currency = currencyRows.find(
               (item) => item.id === row.currencyTypeDocumentId,
             ) as { code?: string | null } | undefined;
             const currencyCode = currency?.code ?? row.currencyCode ?? null;
-            const debitChoices = filterTreasury1100(
-              debitOptions,
+            const choices = filterTreasury1100(
+              accountOptions,
               row,
               currencyCode,
             );
-            const creditChoices = filterTreasury1100(
-              creditOptions,
-              row,
-              currencyCode,
-            );
+            const stepNumber =
+              row.kind === 'step'
+                ? editableSteps.findIndex((step) => step.key === row.key) + 1
+                : 0;
+            const selectedCurrency =
+              currencyRows.find(
+                (item) => item.id === row.currencyTypeDocumentId,
+              ) ?? null;
 
             return (
               <TableRow key={row.key}>
-                <TableCell>{row.kind === 'step' ? index : '—'}</TableCell>
                 <TableCell>
+                  {row.kind === 'step' && stepNumber > 0 ? stepNumber : '—'}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   {row.kind === 'original'
                     ? translate(
                         'app.transactions_convert_preview_kind_original',
@@ -186,14 +320,14 @@ export function ConvertPreviewEditableTable({
                         )
                       : translate('app.transactions_convert_preview_kind_step')}
                 </TableCell>
-                <TableCell sx={{ minWidth: 200 }}>
+                <TableCell sx={{ minWidth: 168 }}>
                   {row.locked ? (
                     row.description
                   ) : (
                     <TextField
                       fullWidth
-                      multiline
                       size="small"
+                      sx={denseFieldSx}
                       value={row.description}
                       onChange={(event) =>
                         patchRow(row.key, { description: event.target.value })
@@ -201,15 +335,18 @@ export function ConvertPreviewEditableTable({
                     />
                   )}
                 </TableCell>
-                <TableCell sx={{ minWidth: 180 }}>
+                <TableCell sx={{ minWidth: 168, maxWidth: 220 }}>
                   {row.locked ? (
-                    `${row.creditCode}`
+                    accountDisplayLabel(
+                      accounts,
+                      row.creditAccountDocumentId,
+                      row.creditCode,
+                    )
                   ) : (
                     <AccountAutocomplete
-                      label={translate(
-                        'app.transactions_convert_preview_credit',
-                      )}
-                      options={creditChoices}
+                      ariaLabel={creditLabel}
+                      catalog={accounts}
+                      options={choices}
                       value={row.creditAccountDocumentId}
                       onChange={(documentId, code) =>
                         patchRow(row.key, {
@@ -220,15 +357,18 @@ export function ConvertPreviewEditableTable({
                     />
                   )}
                 </TableCell>
-                <TableCell sx={{ minWidth: 180 }}>
+                <TableCell sx={{ minWidth: 168, maxWidth: 220 }}>
                   {row.locked ? (
-                    `${row.debitCode}`
+                    accountDisplayLabel(
+                      accounts,
+                      row.debitAccountDocumentId,
+                      row.debitCode,
+                    )
                   ) : (
                     <AccountAutocomplete
-                      label={translate(
-                        'app.transactions_convert_preview_debit',
-                      )}
-                      options={debitChoices}
+                      ariaLabel={debitLabel}
+                      catalog={accounts}
+                      options={choices}
                       value={row.debitAccountDocumentId}
                       onChange={(documentId, code) =>
                         patchRow(row.key, {
@@ -239,15 +379,24 @@ export function ConvertPreviewEditableTable({
                     />
                   )}
                 </TableCell>
-                <TableCell align="right" sx={{ minWidth: 120 }}>
+                <TableCell align="right" sx={{ minWidth: 108, width: 112 }}>
                   {row.locked ? (
                     row.amount.toLocaleString('hu-HU', {
                       maximumFractionDigits: 2,
                     })
                   ) : (
                     <TextField
+                      fullWidth
                       size="small"
-                      slotProps={{ input: { inputMode: 'decimal' } }}
+                      slotProps={{
+                        htmlInput: {
+                          inputMode: 'decimal',
+                          'aria-label': translate(
+                            'app.transactions_convert_preview_amount',
+                          ),
+                        },
+                      }}
+                      sx={numberFieldSx}
                       type="number"
                       value={row.amount}
                       onChange={(event) => {
@@ -264,7 +413,7 @@ export function ConvertPreviewEditableTable({
                     />
                   )}
                 </TableCell>
-                <TableCell align="right" sx={{ minWidth: 100 }}>
+                <TableCell align="right" sx={{ minWidth: 72, width: 76 }}>
                   {row.locked || row.percent == null ? (
                     row.percent == null ? (
                       '—'
@@ -273,8 +422,17 @@ export function ConvertPreviewEditableTable({
                     )
                   ) : (
                     <TextField
+                      fullWidth
                       size="small"
-                      slotProps={{ input: { inputMode: 'decimal' } }}
+                      slotProps={{
+                        htmlInput: {
+                          inputMode: 'decimal',
+                          'aria-label': translate(
+                            'app.transactions_convert_edit_percent',
+                          ),
+                        },
+                      }}
+                      sx={numberFieldSx}
                       type="number"
                       value={row.percent}
                       onChange={(event) => {
@@ -288,34 +446,38 @@ export function ConvertPreviewEditableTable({
                     />
                   )}
                 </TableCell>
-                <TableCell sx={{ minWidth: 140 }}>
+                <TableCell sx={{ minWidth: 72, width: 80 }}>
                   {row.locked ? (
                     (currencyCode ?? '—')
                   ) : (
                     <Autocomplete
+                      disableClearable={Boolean(selectedCurrency)}
                       fullWidth
                       options={currencyRows}
                       getOptionLabel={(option) =>
-                        [option.code, option.name].filter(Boolean).join(' ')
+                        String(option.code ?? option.name ?? option.id)
                       }
                       isOptionEqualToValue={(left, right) =>
                         left.id === right.id
                       }
+                      renderOption={(props, option) => (
+                        <li {...props} key={String(option.id)}>
+                          {[option.code, option.name].filter(Boolean).join(' ')}
+                        </li>
+                      )}
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label={translate(
-                            'app.transactions_convert_preview_currency',
-                          )}
+                          inputProps={{
+                            ...params.inputProps,
+                            'aria-label': currencyLabel,
+                          }}
                           size="small"
+                          sx={denseFieldSx}
                         />
                       )}
                       size="small"
-                      value={
-                        currencyRows.find(
-                          (item) => item.id === row.currencyTypeDocumentId,
-                        ) ?? null
-                      }
+                      value={selectedCurrency ?? undefined}
                       onChange={(_event, option) => {
                         patchRow(row.key, {
                           currencyTypeDocumentId: String(option?.id ?? ''),
@@ -334,9 +496,133 @@ export function ConvertPreviewEditableTable({
                     />
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ minWidth: 128, width: 132 }}>
+                  {row.locked ? (
+                    (row.date?.slice(0, 10) ?? '—')
+                  ) : (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      slotProps={{
+                        htmlInput: {
+                          'aria-label': translate(
+                            'resources.transactions.fields.date',
+                          ),
+                        },
+                      }}
+                      sx={denseFieldSx}
+                      type="date"
+                      value={row.date?.slice(0, 10) ?? ''}
+                      onChange={(event) =>
+                        patchRow(row.key, { date: event.target.value })
+                      }
+                    />
+                  )}
+                </TableCell>
+                <TableCell sx={{ minWidth: 140, maxWidth: 180 }}>
+                  {row.locked ? (
+                    relationName(organizations, row.organizationDocumentId)
+                  ) : (
+                    <Autocomplete
+                      fullWidth
+                      options={organizations}
+                      getOptionLabel={(option) =>
+                        String(option.name ?? option.id)
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          inputProps={{
+                            ...params.inputProps,
+                            'aria-label': orgLabel,
+                          }}
+                          size="small"
+                          sx={denseFieldSx}
+                        />
+                      )}
+                      size="small"
+                      value={
+                        organizations.find(
+                          (org) => org.id === row.organizationDocumentId,
+                        ) ?? null
+                      }
+                      onChange={(_event, option) =>
+                        patchRow(row.key, {
+                          organizationDocumentId: option
+                            ? String(option.id)
+                            : null,
+                        })
+                      }
+                    />
+                  )}
+                </TableCell>
+                <TableCell sx={{ minWidth: 120, maxWidth: 160 }}>
+                  {row.locked ? (
+                    relationName(
+                      transactionTypes,
+                      row.transactionTypeDocumentId,
+                    )
+                  ) : (
+                    <Autocomplete
+                      fullWidth
+                      options={transactionTypes}
+                      getOptionLabel={(option) =>
+                        String(option.name ?? option.id)
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          inputProps={{
+                            ...params.inputProps,
+                            'aria-label': typeLabel,
+                          }}
+                          size="small"
+                          sx={denseFieldSx}
+                        />
+                      )}
+                      size="small"
+                      value={
+                        transactionTypes.find(
+                          (type) => type.id === row.transactionTypeDocumentId,
+                        ) ?? null
+                      }
+                      onChange={(_event, option) =>
+                        patchRow(row.key, {
+                          transactionTypeDocumentId: option
+                            ? String(option.id)
+                            : null,
+                        })
+                      }
+                    />
+                  )}
+                </TableCell>
+                <TableCell align="center" sx={{ width: 48 }}>
+                  {row.locked ? (
+                    row.copyReceipt ? (
+                      translate('ra.boolean.true')
+                    ) : (
+                      '—'
+                    )
+                  ) : (
+                    <Tooltip title={copyReceiptLabel}>
+                      <Checkbox
+                        checked={row.copyReceipt}
+                        inputProps={{
+                          'aria-label': copyReceiptLabel,
+                        }}
+                        size="small"
+                        onChange={(event) =>
+                          patchRow(row.key, {
+                            copyReceipt: event.target.checked,
+                          })
+                        }
+                      />
+                    </Tooltip>
+                  )}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   {row.locked ? null : (
-                    <Stack direction="row" spacing={0.5}>
+                    <Stack direction="row" spacing={0.25}>
                       <Button size="small" onClick={() => onDuplicate(row)}>
                         {translate('app.transactions_convert_edit_duplicate')}
                       </Button>
@@ -355,101 +641,6 @@ export function ConvertPreviewEditableTable({
           })}
         </TableBody>
       </Table>
-      <Stack spacing={1} sx={{ mt: 1 }}>
-        <Typography color="text.secondary" variant="caption">
-          {translate('app.transactions_convert_edit_extra_fields_hint')}
-        </Typography>
-        {rows
-          .filter((row) => !row.locked && row.kind === 'step')
-          .map((row) => (
-            <Stack
-              key={`${row.key}-extra`}
-              spacing={1}
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 1,
-              }}
-            >
-              <Typography variant="subtitle2">
-                {translate('app.transactions_convert_edit_row_meta', {
-                  key: row.key,
-                })}
-              </Typography>
-              <TextField
-                fullWidth
-                label={translate('app.transactions_field_date')}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                type="date"
-                value={row.date?.slice(0, 10) ?? ''}
-                onChange={(event) =>
-                  patchRow(row.key, { date: event.target.value })
-                }
-              />
-              <Autocomplete
-                fullWidth
-                options={organizations}
-                getOptionLabel={(option) => String(option.name ?? option.id)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={translate('app.transactions_field_organization')}
-                    size="small"
-                  />
-                )}
-                size="small"
-                value={
-                  organizations.find(
-                    (org) => org.id === row.organizationDocumentId,
-                  ) ?? null
-                }
-                onChange={(_event, option) =>
-                  patchRow(row.key, {
-                    organizationDocumentId: option ? String(option.id) : null,
-                  })
-                }
-              />
-              <Autocomplete
-                fullWidth
-                options={transactionTypes}
-                getOptionLabel={(option) => String(option.name ?? option.id)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={translate('app.transactions_field_type')}
-                    size="small"
-                  />
-                )}
-                size="small"
-                value={
-                  transactionTypes.find(
-                    (type) => type.id === row.transactionTypeDocumentId,
-                  ) ?? null
-                }
-                onChange={(_event, option) =>
-                  patchRow(row.key, {
-                    transactionTypeDocumentId: option
-                      ? String(option.id)
-                      : null,
-                  })
-                }
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={row.copyReceipt}
-                    onChange={(event) =>
-                      patchRow(row.key, { copyReceipt: event.target.checked })
-                    }
-                  />
-                }
-                label={translate('app.transactions_convert_edit_copy_receipt')}
-              />
-            </Stack>
-          ))}
-      </Stack>
     </Box>
   );
 }

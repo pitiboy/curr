@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { ConvertPreview } from '../../data/convertPreview';
 import {
+  blankLegRow,
+  buildConvertOverridePayload,
   overridesDifferFromBaseline,
   previewToEditableRows,
   rowsToOverridePayload,
   syncAmountFromPercent,
   syncPercentFromAmount,
+  validateEditableRows,
 } from './convertPreviewEdit';
 
 const preview: ConvertPreview = {
@@ -86,5 +89,89 @@ describe('convertPreviewEdit', () => {
     );
     expect(overridesDifferFromBaseline(edited, baseline)).toBe(true);
     expect(overridesDifferFromBaseline(baseline, baseline)).toBe(false);
+  });
+
+  it('rejects blank step rows and omits them from the override payload', () => {
+    const rows = [
+      ...previewToEditableRows(preview, '2026-11-01'),
+      blankLegRow(preview, '2026-11-01', 'custom:blank'),
+    ];
+    const validation = validateEditableRows(preview, rows, (key) => key);
+    expect(validation.blocking).toContain(
+      'app.transactions_convert_edit_error_amount_positive',
+    );
+    expect(validation.blocking).toContain(
+      'app.transactions_convert_edit_error_description',
+    );
+    expect(rowsToOverridePayload(rows)).toHaveLength(1);
+  });
+
+  it('builds override payload only for changed legs and/or workflow flags', () => {
+    const baseline = previewToEditableRows(preview, '2026-11-01');
+    expect(
+      buildConvertOverridePayload({
+        editMode: true,
+        blocking: [],
+        rows: baseline,
+        baselineRows: baseline,
+        keepOriginal: true,
+        stepsPublished: false,
+        baselineKeepOriginal: true,
+        baselineStepsPublished: false,
+      }),
+    ).toBeNull();
+
+    expect(
+      buildConvertOverridePayload({
+        editMode: true,
+        blocking: [],
+        rows: baseline,
+        baselineRows: baseline,
+        keepOriginal: false,
+        stepsPublished: true,
+        baselineKeepOriginal: true,
+        baselineStepsPublished: false,
+      }),
+    ).toEqual({
+      keepOriginal: false,
+      stepsPublished: true,
+    });
+
+    const edited = baseline.map((row) =>
+      row.kind === 'step' ? { ...row, amount: 90, percent: 90 } : row,
+    );
+    expect(
+      buildConvertOverridePayload({
+        editMode: true,
+        blocking: [],
+        rows: edited,
+        baselineRows: baseline,
+        keepOriginal: true,
+        stepsPublished: false,
+        baselineKeepOriginal: true,
+        baselineStepsPublished: false,
+      }),
+    ).toEqual({
+      legs: rowsToOverridePayload(edited),
+      keepOriginal: true,
+      stepsPublished: false,
+    });
+
+    expect(
+      buildConvertOverridePayload({
+        editMode: true,
+        blocking: [],
+        rows: edited,
+        baselineRows: baseline,
+        keepOriginal: true,
+        stepsPublished: true,
+        baselineKeepOriginal: true,
+        baselineStepsPublished: true,
+      }),
+    ).toEqual({
+      legs: rowsToOverridePayload(edited),
+      keepOriginal: true,
+      stepsPublished: true,
+    });
   });
 });

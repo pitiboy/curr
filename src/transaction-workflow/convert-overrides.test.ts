@@ -8,6 +8,8 @@ import {
 } from './convert.ts';
 import {
   CUSTOMISED_CONVERSION_NOTE,
+  customLegEnteredKey,
+  hasConvertOverrides,
   resolveCustomisedStepRows,
   type ConvertOverridesPayload,
 } from './convert-overrides.ts';
@@ -171,7 +173,23 @@ describe('resolveCustomisedStepRows', () => {
       accounts,
       currencies,
     );
-    assert.equal(rows[0]!.entered_key, 'tx-1:step:custom:custom:x');
+    assert.equal(rows[0]!.entered_key, 'tx-1:c:x');
     assert.equal(rows[0]!.amount, 100);
+  });
+
+  it('keeps custom entered_key within the 64-char schema limit', () => {
+    const documentId = 'abcdefghijklmnopqrstuvwx'; // 24
+    const clientKey = `custom:${'a'.repeat(8)}-${'b'.repeat(4)}-${'c'.repeat(4)}-${'d'.repeat(4)}-${'e'.repeat(12)}`;
+    const key = customLegEnteredKey(documentId, clientKey);
+    assert.ok(key.length <= 64, key);
+    assert.match(key, /^abcdefghijklmnopqrstuvwx:c:[a-z0-9]+$/);
+  });
+
+  it('detects flag-only and leg overrides', () => {
+    assert.equal(hasConvertOverrides(undefined), false);
+    assert.equal(hasConvertOverrides({}), false);
+    assert.equal(hasConvertOverrides({ keepOriginal: false }), true);
+    assert.equal(hasConvertOverrides({ stepsPublished: true }), true);
+    assert.equal(hasConvertOverrides({ legs: [] }), false);
   });
 });

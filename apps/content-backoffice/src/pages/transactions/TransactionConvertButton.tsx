@@ -38,8 +38,6 @@ export function TransactionConvertButton({
   const openAssetForm = useAssetFormAfterBooking();
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [overridePayload, setOverridePayload] =
-    useState<ConvertOverridesPayload | null>(null);
 
   const previewInput = useMemo<ConvertPreviewRequest>(
     () => ({
@@ -50,17 +48,20 @@ export function TransactionConvertButton({
   );
 
   // A transaction converts once; stay locked until the refresh hides the button.
-  const convertGuard = useSubmitGuard({
+  const convertGuard = useSubmitGuard<
+    ConvertOverridesPayload | null | undefined
+  >({
     lockOnSuccess: true,
-    run: () =>
+    run: (overrides) =>
       convertTransactionToWorkflow(
         documentId,
         workflow.documentId,
-        overridePayload ?? undefined,
+        overrides ?? undefined,
       ),
     onSuccess: (result) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
+      setEditMode(false);
       refresh();
       void openAssetForm(workflow, documentId, result);
     },
@@ -82,8 +83,8 @@ export function TransactionConvertButton({
   });
   const busy = convertGuard.busy;
 
-  const onConfirm = () => {
-    convertGuard.submit();
+  const onConfirm = (overrides?: ConvertOverridesPayload | null) => {
+    convertGuard.submit(overrides);
   };
 
   return (
@@ -139,11 +140,9 @@ export function TransactionConvertButton({
             if (busy) return;
             setOpen(false);
             setEditMode(false);
-            setOverridePayload(null);
           }}
           onConfirm={onConfirm}
           onEditModeChange={setEditMode}
-          onSavedOverride={setOverridePayload}
         />
       ) : null}
     </>

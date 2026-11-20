@@ -139,17 +139,14 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'tagsági ratio × %{ratio} (%{membership})',
     transactions_convert_edit_start: 'Kifejtés szerkesztése',
     transactions_convert_edit_reset: 'Mégse',
-    transactions_convert_edit_save: 'Mentés',
     transactions_convert_edit_add_row: 'Új lépés',
-    transactions_convert_edit_duplicate: 'Lépés másolása',
+    transactions_convert_edit_duplicate: 'Lépés duplikálása',
     transactions_convert_edit_delete: 'Lépés törlése',
     transactions_convert_edit_percent: 'Százalék',
     transactions_convert_edit_copy_receipt: 'Bizonylat másolása',
-    transactions_convert_edit_extra_fields_hint:
-      'Az alábbi mezők minden szerkeszthető lépésre vonatkoznak.',
-    transactions_convert_edit_row_meta: 'Lépés: %{key}',
-    transactions_convert_edit_saved_hint:
-      'Az egyedi lépések elmentve — a Kifejtés gomb ezekkel ment.',
+    transactions_convert_edit_copy_receipt_short: 'Biz.',
+    transactions_convert_edit_error_steps_required:
+      'Legalább egy kitöltött lépés kell a kifejtéshez.',
     transactions_convert_edit_error_accounts_required:
       'Minden lépésen kötelező a tartozik és követel számla.',
     transactions_convert_edit_error_accounts_differ:

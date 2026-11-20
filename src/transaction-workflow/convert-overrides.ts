@@ -40,8 +40,41 @@ export type ConvertLegOverrideInput = {
 };
 
 export type ConvertOverridesPayload = {
-  legs: ConvertLegOverrideInput[];
+  /** When set, replaces workflow-generated step rows. */
+  legs?: ConvertLegOverrideInput[];
+  /** When set, overrides workflow.keep_original for this convert only. */
+  keepOriginal?: boolean;
+  /** When set, overrides workflow.steps_published for this convert only. */
+  stepsPublished?: boolean;
 };
+
+export function hasConvertOverrides(
+  overrides: ConvertOverridesPayload | null | undefined,
+): boolean {
+  if (!overrides) return false;
+  return (
+    Boolean(overrides.legs?.length) ||
+    typeof overrides.keepOriginal === 'boolean' ||
+    typeof overrides.stepsPublished === 'boolean'
+  );
+}
+
+/**
+ * `entered_key` maxLength is 64. Client keys are often `custom:<uuid>` (~43 chars);
+ * prefixing `documentId:step:custom:` overflows. Keep a short stable token.
+ */
+export function customLegEnteredKey(
+  documentId: string,
+  clientKey: string,
+): string {
+  const token =
+    clientKey
+      .replace(/^custom:/i, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 16) || 'x';
+  const key = `${documentId}:c:${token}`;
+  return key.length <= 64 ? key : key.slice(0, 64);
+}
 
 export type OverrideAccountSnapshot = ReadonlyMap<
   string,
@@ -142,7 +175,8 @@ export function resolveCustomisedStepRows(
   accounts: OverrideAccountSnapshot,
   currencies: OverrideCurrencySnapshot,
 ): ExpandedStepRow[] {
-  if (!overrides.legs.length) {
+  const legs = overrides.legs ?? [];
+  if (!legs.length) {
     throw new TransactionWorkflowError('Override legs cannot be empty', 422);
   }
 
@@ -168,7 +202,7 @@ export function resolveCustomisedStepRows(
   const sourceAmount = Number(transaction.amount);
   const usedKeys = new Set<string>();
 
-  return overrides.legs.map((leg, position) => {
+  return legs.map((leg, position) => {
     const key = requireNonEmpty(leg.key, 'Override key');
     if (usedKeys.has(key)) {
       throw new TransactionWorkflowError(`Duplicate override key ${key}`, 422);
@@ -245,7 +279,7 @@ export function resolveCustomisedStepRows(
 
     const enteredKey = baselineRow
       ? baselineRow.entered_key
-      : `${transaction.documentId}:step:custom:${key}`;
+      : customLegEnteredKey(transaction.documentId, key);
 
     const orgId = leg.organizationDocumentId?.trim() || null;
     const txnType = leg.transactionTypeDocumentId?.trim() || null;

@@ -5,19 +5,23 @@
  * Generated step rows follow steps_published when keep_original is false, or when
  * the source is publishable. With keep_original, step rows link to the source;
  * Strapi drops that relation on publish if the source is still draft-only, so
- * steps stay draft until the source (and storno) can publish too.
+ * steps stay draft until the source (and storno) can publish too. When steps
+ * already carry organization but the source draft does not, convert copies that
+ * organization onto the source so steps_published can publish the whole chain.
  * Partial keep_original failure rolls back created rows and clears the source mark.
  * keep_original false: delete original, step chain; receipt only on copy_receipt steps.
  * apply_currency_rate steps: rates and the member ratio resolve before any write
  * (422 CURRENCY_RATE_MISSING / MEMBERSHIP_RATIO_AMBIGUOUS leave no rows).
  */
 import {
+  missingStoredPublishFields,
   shouldPublishConvertedSource,
   withPublishGuardLinked,
 } from '../publish-guard';
 import { claimSourceForConvert } from './convert-claim';
 import {
   ERROR_TRANSACTION_ALREADY_CONVERTED,
+  hasConvertOverrides,
   resolveCustomisedStepRows,
   type ConvertLegOverrideInput,
   type ConvertOverridesPayload,
@@ -218,41 +222,54 @@ function parseOverridesPayload(
   raw: unknown,
 ): ConvertOverridesPayload | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
-  const body = raw as { legs?: unknown };
-  if (!Array.isArray(body.legs) || body.legs.length === 0) return undefined;
+  const body = raw as {
+    legs?: unknown;
+    keepOriginal?: unknown;
+    stepsPublished?: unknown;
+  };
   const legs: ConvertLegOverrideInput[] = [];
-  for (const item of body.legs) {
-    if (!item || typeof item !== 'object') continue;
-    const row = item as Record<string, unknown>;
-    legs.push({
-      key: String(row.key ?? ''),
-      sourceStepIndex:
-        row.sourceStepIndex === null || row.sourceStepIndex === undefined
-          ? null
-          : Number(row.sourceStepIndex),
-      description: String(row.description ?? ''),
-      amount: Number(row.amount),
-      percent:
-        row.percent === null || row.percent === undefined
-          ? null
-          : Number(row.percent),
-      debitAccountDocumentId: String(row.debitAccountDocumentId ?? ''),
-      creditAccountDocumentId: String(row.creditAccountDocumentId ?? ''),
-      currencyTypeDocumentId: String(row.currencyTypeDocumentId ?? ''),
-      organizationDocumentId:
-        typeof row.organizationDocumentId === 'string'
-          ? row.organizationDocumentId
-          : null,
-      transactionTypeDocumentId:
-        typeof row.transactionTypeDocumentId === 'string'
-          ? row.transactionTypeDocumentId
-          : null,
-      copyReceipt: row.copyReceipt === true,
-      date: typeof row.date === 'string' ? row.date : undefined,
-    });
+  if (Array.isArray(body.legs)) {
+    for (const item of body.legs) {
+      if (!item || typeof item !== 'object') continue;
+      const row = item as Record<string, unknown>;
+      legs.push({
+        key: String(row.key ?? ''),
+        sourceStepIndex:
+          row.sourceStepIndex === null || row.sourceStepIndex === undefined
+            ? null
+            : Number(row.sourceStepIndex),
+        description: String(row.description ?? ''),
+        amount: Number(row.amount),
+        percent:
+          row.percent === null || row.percent === undefined
+            ? null
+            : Number(row.percent),
+        debitAccountDocumentId: String(row.debitAccountDocumentId ?? ''),
+        creditAccountDocumentId: String(row.creditAccountDocumentId ?? ''),
+        currencyTypeDocumentId: String(row.currencyTypeDocumentId ?? ''),
+        organizationDocumentId:
+          typeof row.organizationDocumentId === 'string'
+            ? row.organizationDocumentId
+            : null,
+        transactionTypeDocumentId:
+          typeof row.transactionTypeDocumentId === 'string'
+            ? row.transactionTypeDocumentId
+            : null,
+        copyReceipt: row.copyReceipt === true,
+        date: typeof row.date === 'string' ? row.date : undefined,
+      });
+    }
   }
-  if (!legs.length) return undefined;
-  return { legs };
+  const keepOriginal =
+    typeof body.keepOriginal === 'boolean' ? body.keepOriginal : undefined;
+  const stepsPublished =
+    typeof body.stepsPublished === 'boolean' ? body.stepsPublished : undefined;
+  const payload: ConvertOverridesPayload = {
+    ...(legs.length > 0 ? { legs } : {}),
+    ...(keepOriginal !== undefined ? { keepOriginal } : {}),
+    ...(stepsPublished !== undefined ? { stepsPublished } : {}),
+  };
+  return hasConvertOverrides(payload) ? payload : undefined;
 }
 
 async function loadOverrideSnapshots(
@@ -265,7 +282,7 @@ async function loadOverrideSnapshots(
 }> {
   const accountIds = new Set<string>();
   const currencyIds = new Set<string>();
-  for (const leg of overrides.legs) {
+  for (const leg of overrides.legs ?? []) {
     accountIds.add(leg.debitAccountDocumentId);
     accountIds.add(leg.creditAccountDocumentId);
     currencyIds.add(leg.currencyTypeDocumentId);
@@ -384,6 +401,8 @@ function transactionWritePayload(
   transaction: SourceTransaction,
   relatedDocumentId: string | null,
 ) {
+  const organizationDocumentId =
+    row.organization?.documentId ?? transaction.organization?.documentId;
   return {
     date: row.legDate ?? transaction.date,
     amount: row.amount,
@@ -391,9 +410,7 @@ function transactionWritePayload(
     debit_account: row.debit_account.documentId,
     credit_account: row.credit_account.documentId,
     currency_type: row.currency_type.documentId,
-    ...(row.organization?.documentId
-      ? { organization: row.organization.documentId }
-      : {}),
+    ...(organizationDocumentId ? { organization: organizationDocumentId } : {}),
     transaction_type: row.transaction_type?.documentId ?? undefined,
     related_transaction: relatedDocumentId ?? undefined,
     entered_key: row.entered_key,
@@ -536,6 +553,40 @@ function stornoPublishFields(
     debit_account: stornoShape.debit_account,
     credit_account: stornoShape.credit_account,
   };
+}
+
+/**
+ * keep_original steps link to the source; Strapi drops that relation when the
+ * source is still draft-only. If steps already carry organization (custom
+ * legs / template step org) but the source draft does not, copy it onto the
+ * source so steps_published can actually publish the chain.
+ */
+async function fillSourceOrganizationFromSteps(
+  strapi: ConvertStrapi,
+  documentId: string,
+  sourceDraft: Record<string, unknown> | null,
+  expanded: ExpandedStepRow[],
+  transaction: SourceTransaction,
+): Promise<{
+  draft: Record<string, unknown> | null;
+  organizationDocumentId?: string;
+}> {
+  if (!missingStoredPublishFields(sourceDraft).includes('organization')) {
+    return { draft: sourceDraft };
+  }
+  for (const row of expanded) {
+    const payload = transactionWritePayload(row, transaction, documentId);
+    const orgId = payload.organization;
+    if (typeof orgId !== 'string' || !orgId.trim()) continue;
+    await documentsApi(strapi, TRANSACTION_UID).update({
+      documentId,
+      data: { organization: orgId },
+      status: 'draft',
+    });
+    const draft = await loadDraftForPublishCheck(strapi, documentId);
+    return { draft, organizationDocumentId: orgId };
+  }
+  return { draft: sourceDraft };
 }
 
 async function loadDraftForPublishCheck(
@@ -714,20 +765,24 @@ async function convertOneTransaction(
   const workflow = pickMatchingWorkflow(workflows, transaction);
   if (!workflow) return null;
 
-  const keepOriginal = workflow.keep_original !== false;
+  const overrides = request.overrides;
+  const keepOriginal =
+    overrides?.keepOriginal ?? workflow.keep_original !== false;
   const published =
-    request.steps_published ?? workflow.steps_published !== false;
+    overrides?.stepsPublished ??
+    request.steps_published ??
+    workflow.steps_published !== false;
   await claimSourceForConvert(strapi, transaction.documentId);
 
   const siblingMap = await loadMemberSiblingMap(strapi, transaction);
   // Resolve rate + member ratio before any write (no rollback needed on 422).
   const rates = await resolveWorkflowRates(resolveRate, workflow, transaction);
   const memberRatio = await loadMemberRatio(strapi, workflow, transaction);
-  const overrides = request.overrides;
-  const customised = Boolean(overrides?.legs.length);
+  const customisedLegs = Boolean(overrides?.legs?.length);
+  const customised = hasConvertOverrides(overrides);
 
   let expanded: ExpandedStepRow[];
-  if (customised && overrides) {
+  if (customisedLegs && overrides) {
     const snapshots = await loadOverrideSnapshots(
       strapi,
       overrides,
@@ -761,13 +816,30 @@ async function convertOneTransaction(
   const createdDocumentIds: string[] = [];
 
   if (keepOriginal) {
-    const stornoShape = buildStornoRowShape(transaction);
     // Mirror the source gate: incomplete draft must not force-publish storno
     // (publish-guard 400 would otherwise leave original+storno orphans).
-    const sourceDraftForPublish = await loadDraftForPublishCheck(
+    let sourceDraftForPublish = await loadDraftForPublishCheck(
       strapi,
       transaction.documentId,
     );
+    let sourceForStorno = transaction;
+    if (published && expanded.length > 0) {
+      const filled = await fillSourceOrganizationFromSteps(
+        strapi,
+        transaction.documentId,
+        sourceDraftForPublish,
+        expanded,
+        transaction,
+      );
+      sourceDraftForPublish = filled.draft;
+      if (filled.organizationDocumentId) {
+        sourceForStorno = {
+          ...transaction,
+          organization: { documentId: filled.organizationDocumentId },
+        };
+      }
+    }
+    const stornoShape = buildStornoRowShape(sourceForStorno);
     const publishStorno = shouldPublishConvertedSource(
       stornoPublishFields(stornoShape),
       published,
@@ -806,7 +878,7 @@ async function convertOneTransaction(
         const copyReceipts = row.copy_receipt ? receiptIds : [];
         const documentId = await createTransactionRow(
           strapi,
-          transactionWritePayload(row, transaction, transaction.documentId),
+          transactionWritePayload(row, sourceForStorno, transaction.documentId),
           publishSteps,
           copyReceipts,
         );

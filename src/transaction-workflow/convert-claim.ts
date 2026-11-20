@@ -17,9 +17,10 @@ async function runInDbTransaction<T>(
   strapi: ConvertStrapi,
   task: () => Promise<T>,
 ): Promise<T> {
-  const txn = strapi.db.transaction;
-  if (typeof txn === 'function') {
-    return txn(task);
+  // Call through `strapi.db` so `this` stays bound (Database.transaction uses
+  // `this.connection`). Detaching the method causes: reading 'connection' of undefined.
+  if (typeof strapi.db.transaction === 'function') {
+    return strapi.db.transaction(task);
   }
   return task();
 }

@@ -2,7 +2,10 @@ import type {
   ConvertPreview,
   PreviewMovement,
 } from '../../data/convertPreview';
-import type { ConvertLegOverrideInput } from '../../data/transactionWorkflow';
+import type {
+  ConvertLegOverrideInput,
+  ConvertOverridesPayload,
+} from '../../data/transactionWorkflow';
 
 function stepAmount(sourceAmount: number, percent: number): number {
   return (sourceAmount * percent) / 100;
@@ -150,6 +153,20 @@ export type ConvertPreviewEditValidation = {
   warnings: string[];
 };
 
+/** Complete enough to send as a convert override leg (not a blank “Új lépés” row). */
+export function isCompleteEditableLeg(row: EditableLegRow): boolean {
+  return (
+    row.kind === 'step' &&
+    !row.locked &&
+    Boolean(row.debitAccountDocumentId) &&
+    Boolean(row.creditAccountDocumentId) &&
+    row.debitAccountDocumentId !== row.creditAccountDocumentId &&
+    Number.isFinite(row.amount) &&
+    row.amount > 0 &&
+    Boolean(row.description.trim())
+  );
+}
+
 export function validateEditableRows(
   preview: ConvertPreview,
   rows: readonly EditableLegRow[],
@@ -158,6 +175,12 @@ export function validateEditableRows(
   const blocking: string[] = [];
   const warnings: string[] = [];
   const steps = rows.filter((row) => row.kind === 'step' && !row.locked);
+
+  if (steps.length === 0) {
+    blocking.push(
+      translate('app.transactions_convert_edit_error_steps_required'),
+    );
+  }
 
   for (const row of steps) {
     if (!row.debitAccountDocumentId || !row.creditAccountDocumentId) {
@@ -260,22 +283,20 @@ export function blankLegRow(
 export function rowsToOverridePayload(
   rows: readonly EditableLegRow[],
 ): ConvertLegOverrideInput[] {
-  return rows
-    .filter((row) => row.kind === 'step' && !row.locked)
-    .map((row) => ({
-      key: row.key,
-      sourceStepIndex: row.sourceStepIndex,
-      description: row.description,
-      amount: row.amount,
-      percent: row.percent,
-      debitAccountDocumentId: row.debitAccountDocumentId,
-      creditAccountDocumentId: row.creditAccountDocumentId,
-      currencyTypeDocumentId: row.currencyTypeDocumentId,
-      organizationDocumentId: row.organizationDocumentId,
-      transactionTypeDocumentId: row.transactionTypeDocumentId,
-      copyReceipt: row.copyReceipt,
-      date: row.date,
-    }));
+  return rows.filter(isCompleteEditableLeg).map((row) => ({
+    key: row.key,
+    sourceStepIndex: row.sourceStepIndex,
+    description: row.description,
+    amount: row.amount,
+    percent: row.percent,
+    debitAccountDocumentId: row.debitAccountDocumentId,
+    creditAccountDocumentId: row.creditAccountDocumentId,
+    currencyTypeDocumentId: row.currencyTypeDocumentId,
+    organizationDocumentId: row.organizationDocumentId,
+    transactionTypeDocumentId: row.transactionTypeDocumentId,
+    copyReceipt: row.copyReceipt,
+    date: row.date,
+  }));
 }
 
 export function overridesDifferFromBaseline(
@@ -299,4 +320,38 @@ export function overridesDifferFromBaseline(
       row.copyReceipt !== other.copyReceipt
     );
   });
+}
+
+/** Build convert overrides from edit state; null when nothing differs from the template. */
+export function buildConvertOverridePayload(input: {
+  editMode: boolean;
+  blocking: readonly string[];
+  rows: readonly EditableLegRow[];
+  baselineRows: readonly EditableLegRow[];
+  keepOriginal: boolean;
+  stepsPublished: boolean;
+  baselineKeepOriginal: boolean;
+  baselineStepsPublished: boolean;
+}): ConvertOverridesPayload | null {
+  if (!input.editMode || input.blocking.length > 0) return null;
+
+  const legsDiffer = overridesDifferFromBaseline(
+    input.rows,
+    input.baselineRows,
+  );
+  const keepOriginalDiffer = input.keepOriginal !== input.baselineKeepOriginal;
+  const stepsPublishedDiffer =
+    input.stepsPublished !== input.baselineStepsPublished;
+
+  if (!legsDiffer && !keepOriginalDiffer && !stepsPublishedDiffer) {
+    return null;
+  }
+
+  // Always send both flags when anything differs so the server applies the
+  // form toggles even when only legs changed (baseline already matched).
+  return {
+    ...(legsDiffer ? { legs: rowsToOverridePayload(input.rows) } : {}),
+    keepOriginal: input.keepOriginal,
+    stepsPublished: input.stepsPublished,
+  };
 }

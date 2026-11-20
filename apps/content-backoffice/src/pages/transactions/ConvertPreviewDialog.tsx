@@ -25,7 +25,17 @@ export function ConvertPreviewDialog({
   const translate = useTranslate();
 
   return (
-    <Dialog fullWidth maxWidth="md" open={open} onClose={onClose}>
+    <Dialog
+      fullWidth
+      maxWidth="xl"
+      open={open}
+      onClose={onClose}
+      slotProps={{
+        paper: {
+          sx: { maxWidth: 1440 },
+        },
+      }}
+    >
       <DialogTitle>{workflow.name ?? workflow.documentId}</DialogTitle>
       <DialogContent dividers>
         <ConvertPreviewPanel active={open} previewInput={previewInput} />

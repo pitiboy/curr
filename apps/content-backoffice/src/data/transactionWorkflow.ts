@@ -122,7 +122,9 @@ export type ConvertLegOverrideInput = {
 };
 
 export type ConvertOverridesPayload = {
-  legs: ConvertLegOverrideInput[];
+  legs?: ConvertLegOverrideInput[];
+  keepOriginal?: boolean;
+  stepsPublished?: boolean;
 };
 
 export type ConvertTransactionResult = {
