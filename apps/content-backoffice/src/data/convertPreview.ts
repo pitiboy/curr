@@ -60,14 +60,15 @@ export type PreviewAppliedRate = {
   inverted?: boolean;
 };
 
-/** `{ rate, validFrom }` for the preview table, or null without a rate. */
+/** `{ rate, validFrom, inverted }` for the preview table, or null without a rate. */
 export function appliedRateLabelParts(
   rate: PreviewAppliedRate | null | undefined,
-): { rate: string; validFrom: string | null } | null {
+): { rate: string; validFrom: string | null; inverted: boolean } | null {
   if (!rate || !Number.isFinite(rate.rate)) return null;
   return {
     rate: rate.rate.toLocaleString('hu-HU', { maximumFractionDigits: 6 }),
     validFrom: rate.validFrom ? rate.validFrom.slice(0, 10) : null,
+    inverted: rate.inverted === true,
   };
 }
 

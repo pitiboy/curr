@@ -134,6 +134,8 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_steps_total:
       'Lépések összege: %{steps} (eredeti: %{original})',
     transactions_convert_preview_rate: 'árfolyam × %{rate} (%{validFrom}-tól)',
+    transactions_convert_preview_rate_inverted:
+      'árfolyam × %{rate} (%{validFrom}-tól, fordított KOR→HUF sorból)',
     transactions_convert_preview_rate_same: 'árfolyam × %{rate}',
     transactions_convert_preview_member_ratio:
       'tagsági ratio × %{ratio} (%{membership})',

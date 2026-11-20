@@ -42,7 +42,20 @@ describe('appliedRateLabelParts', () => {
         validFrom: '2023-01-01T00:00:00.000Z',
         currencyRateDocumentId: 'r',
       }),
-    ).toEqual({ rate: '100', validFrom: '2023-01-01' });
+    ).toEqual({ rate: '100', validFrom: '2023-01-01', inverted: false });
+  });
+
+  it('marks inverted KOR fallback rows', () => {
+    expect(
+      appliedRateLabelParts({
+        fromCurrencyDocumentId: 'huf',
+        toCurrencyDocumentId: 'kor',
+        rate: 0.002,
+        validFrom: '2020-01-01T00:00:00.000Z',
+        currencyRateDocumentId: 'r',
+        inverted: true,
+      }),
+    ).toEqual({ rate: '0,002', validFrom: '2020-01-01', inverted: true });
   });
 
   it('returns null without a rate and keeps validFrom null for same currency', () => {
@@ -56,7 +69,7 @@ describe('appliedRateLabelParts', () => {
         validFrom: null,
         currencyRateDocumentId: null,
       }),
-    ).toEqual({ rate: '1', validFrom: null });
+    ).toEqual({ rate: '1', validFrom: null, inverted: false });
   });
 });
 

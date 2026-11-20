@@ -1,3 +1,5 @@
+import { pickRateByCurrencyCodeAtTransactionDate } from '@curr/shared/transaction-currency-rate';
+
 import { resolveEggRule, type EggDistributionRule } from './membershipRules';
 import type { BulkQuantityRow } from './types';
 
@@ -85,33 +87,26 @@ export function membershipValidOnDate(
   return true;
 }
 
-/** Latest rate with valid_from on or before the form date (inclusive, UTC day). */
+/** Latest rate with valid_from on or before the form date — same rule as Convert. */
 export function pickLatestCurrencyRate(
   rates: readonly CurrencyRateRow[],
   fromCode: string,
   toCode: string,
   isoDate: string,
 ): CurrencyRateRow | null {
-  if (fromCode === toCode) {
-    return {
-      rate: 1,
-      validFrom: `${isoDate}T00:00:00.000Z`,
-      fromCurrencyCode: fromCode,
-      toCurrencyCode: toCode,
-    };
-  }
-  const dayEnd = `${isoDate}T23:59:59.999Z`;
-  const matching = rates.filter(
-    (row) =>
-      row.fromCurrencyCode === fromCode &&
-      row.toCurrencyCode === toCode &&
-      row.validFrom <= dayEnd,
+  const picked = pickRateByCurrencyCodeAtTransactionDate(
+    rates,
+    fromCode,
+    toCode,
+    isoDate,
   );
-  if (matching.length === 0) {
-    return null;
-  }
-  matching.sort((a, b) => (a.validFrom < b.validFrom ? 1 : -1));
-  return matching[0] ?? null;
+  if (!picked) return null;
+  return {
+    rate: picked.rate,
+    validFrom: picked.validFrom,
+    fromCurrencyCode: picked.fromCurrencyCode,
+    toCurrencyCode: picked.toCurrencyCode,
+  };
 }
 
 /** Revenue in sale currency: eggs × ratio × (EGG → sale currency rate). */

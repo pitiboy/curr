@@ -44,6 +44,9 @@ export default defineConfig(() => {
     },
     resolve: {
       dedupe: ['react', 'react-dom', 'react-admin', 'ra-core'],
+      alias: {
+        '@curr/shared': path.resolve(packageRoot, '../../src/shared'),
+      },
     },
   };
 });
