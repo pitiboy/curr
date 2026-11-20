@@ -145,7 +145,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       loading: 'Workflow-k betöltése…',
       empty: 'Nincs megjeleníthető tranzakciós workflow.',
       forbidden: 'Nincs jogosultságod ehhez az oldalhoz.',
-      sample_badge: 'Minta adatokkal',
+      sample_badge: 'Minta adat',
       edit: 'Szerkesztés',
       sample_error: {
         missing_accounts:

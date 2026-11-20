@@ -29,7 +29,7 @@ const QUANTITY_CURRENCY_HINTS = [
   'menny',
 ];
 
-export const WORKFLOW_SAMPLE_DESCRIPTION = 'Minta adatokkal' as const;
+export const WORKFLOW_SAMPLE_DESCRIPTION = 'Minta adat' as const;
 
 export type WorkflowSampleOrganization = {
   documentId: string;
