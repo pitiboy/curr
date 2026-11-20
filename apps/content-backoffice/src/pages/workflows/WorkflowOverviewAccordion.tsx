@@ -47,6 +47,8 @@ export type WorkflowOverviewAccordionProps = {
   onToggle: (documentId: string) => void;
   accounts: readonly AccountChoice[];
   sampleOrganization: WorkflowSampleOrganization | null;
+  /** HUF (or other) documentId when the template has no currency_type. */
+  fallbackCurrencyDocumentId?: string | null;
 };
 
 export function WorkflowOverviewAccordion({
@@ -55,6 +57,7 @@ export function WorkflowOverviewAccordion({
   onToggle,
   accounts,
   sampleOrganization,
+  fallbackCurrencyDocumentId = null,
 }: WorkflowOverviewAccordionProps) {
   const translate = useTranslate();
 
@@ -62,8 +65,9 @@ export function WorkflowOverviewAccordion({
     () =>
       buildWorkflowSamplePreviewInput(workflow, accounts, {
         organization: sampleOrganization,
+        fallbackCurrencyDocumentId,
       }),
-    [accounts, sampleOrganization, workflow],
+    [accounts, fallbackCurrencyDocumentId, sampleOrganization, workflow],
   );
 
   const adminEditUrl = transactionWorkflowAdminEditUrl(

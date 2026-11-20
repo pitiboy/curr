@@ -67,6 +67,12 @@ vi.mock('react-admin', async (importOriginal) => {
         if (resource === 'organizations') {
           return { data: [], total: 0 };
         }
+        if (resource === 'currency-types') {
+          return {
+            data: [{ id: 'cur-huf', code: 'HUF', name: 'Forint' }],
+            total: 1,
+          };
+        }
         return { data: accounts, total: accounts.length };
       }),
     }),

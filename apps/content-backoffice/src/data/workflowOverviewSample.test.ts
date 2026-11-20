@@ -109,4 +109,26 @@ describe('buildWorkflowSamplePreviewInput', () => {
       reason: 'missing_accounts',
     });
   });
+
+  it('falls back to HUF documentId when the template has no currency', () => {
+    const noCurrency: WorkflowTemplateHeader = {
+      ...hufWorkflow,
+      documentId: 'wf-no-cur',
+      currency_type: null,
+    };
+    expect(buildWorkflowSamplePreviewInput(noCurrency, accounts)).toEqual({
+      ok: false,
+      reason: 'missing_currency',
+    });
+
+    const withFallback = buildWorkflowSamplePreviewInput(noCurrency, accounts, {
+      fallbackCurrencyDocumentId: 'cur-huf',
+    });
+    expect(withFallback.ok).toBe(true);
+    if (!withFallback.ok) return;
+    expect(
+      withFallback.previewInput.transaction?.currency_type.documentId,
+    ).toBe('cur-huf');
+    expect(withFallback.previewInput.transaction?.amount).toBe(100_000);
+  });
 });

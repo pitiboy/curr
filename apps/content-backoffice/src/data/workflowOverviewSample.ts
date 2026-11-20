@@ -11,6 +11,9 @@ import {
 
 const DEFAULT_SAMPLE_DATE = '2026-01-15';
 
+/** Sample preview currency when the workflow template has no currency_type. */
+export const WORKFLOW_SAMPLE_FALLBACK_CURRENCY_CODE = 'HUF' as const;
+
 const QUANTITY_CURRENCY_HINTS = [
   'tojas',
   'tojás',
@@ -75,6 +78,8 @@ export function buildWorkflowSamplePreviewInput(
   accounts: readonly AccountChoice[],
   options?: {
     organization?: WorkflowSampleOrganization | null;
+    /** Used when `workflow.currency_type` is missing (typically HUF). */
+    fallbackCurrencyDocumentId?: string | null;
     sampleDate?: string;
   },
 ): BuildWorkflowSamplePreviewResult {
@@ -90,7 +95,10 @@ export function buildWorkflowSamplePreviewInput(
     return { ok: false, reason: 'missing_accounts' };
   }
 
-  const currencyDocId = workflow.currency_type?.documentId?.trim();
+  const currencyDocId =
+    workflow.currency_type?.documentId?.trim() ||
+    options?.fallbackCurrencyDocumentId?.trim() ||
+    '';
   if (!currencyDocId) {
     return { ok: false, reason: 'missing_currency' };
   }

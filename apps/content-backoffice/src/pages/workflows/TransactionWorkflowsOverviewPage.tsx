@@ -15,7 +15,10 @@ import {
   ReportPageShell,
 } from '../reports/shared/reportLayout';
 import { useTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
-import type { WorkflowSampleOrganization } from '../../data/workflowOverviewSample';
+import {
+  WORKFLOW_SAMPLE_FALLBACK_CURRENCY_CODE,
+  type WorkflowSampleOrganization,
+} from '../../data/workflowOverviewSample';
 
 import { WorkflowOverviewAccordion } from './WorkflowOverviewAccordion';
 
@@ -39,6 +42,10 @@ export function TransactionWorkflowsOverviewPage() {
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [sampleOrganization, setSampleOrganization] =
     useState<WorkflowSampleOrganization | null>(null);
+  const [fallbackCurrencyDocumentId, setFallbackCurrencyDocumentId] = useState<
+    string | null
+  >(null);
+  const [fallbackCurrencyReady, setFallbackCurrencyReady] = useState(false);
   const [expandedId, setExpandedId] = useState<string | false>(false);
 
   const mayAccess =
@@ -50,6 +57,11 @@ export function TransactionWorkflowsOverviewPage() {
 
   const needsOrganization = useMemo(
     () => workflows.some((row) => row.requires_source_organization),
+    [workflows],
+  );
+
+  const needsFallbackCurrency = useMemo(
+    () => workflows.some((row) => !row.currency_type?.documentId?.trim()),
     [workflows],
   );
 
@@ -124,12 +136,55 @@ export function TransactionWorkflowsOverviewPage() {
     };
   }, [dataProvider, mayAccess, needsOrganization]);
 
+  useEffect(() => {
+    if (!mayAccess || !needsFallbackCurrency) {
+      setFallbackCurrencyDocumentId(null);
+      setFallbackCurrencyReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    setFallbackCurrencyReady(false);
+
+    void dataProvider
+      .getList('currency-types', {
+        pagination: { page: 1, perPage: 1 },
+        sort: { field: 'code', order: 'ASC' },
+        filter: { code: { $eq: WORKFLOW_SAMPLE_FALLBACK_CURRENCY_CODE } },
+      })
+      .then((result) => {
+        if (cancelled) return;
+        const row = result.data?.[0] as
+          { id?: string; documentId?: string } | undefined;
+        const documentId =
+          typeof row?.id === 'string'
+            ? row.id
+            : typeof row?.documentId === 'string'
+              ? row.documentId
+              : '';
+        setFallbackCurrencyDocumentId(documentId || null);
+      })
+      .catch(() => {
+        if (!cancelled) setFallbackCurrencyDocumentId(null);
+      })
+      .finally(() => {
+        if (!cancelled) setFallbackCurrencyReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dataProvider, mayAccess, needsFallbackCurrency]);
+
   const onToggleWorkflow = (documentId: string) => {
     setExpandedId((current) => (current === documentId ? false : documentId));
   };
 
   const catalogLoading =
-    workflowsLoading || accountsLoading || accounts === null;
+    workflowsLoading ||
+    accountsLoading ||
+    accounts === null ||
+    (needsFallbackCurrency && !fallbackCurrencyReady);
 
   return (
     <ReportPageShell>
@@ -160,6 +215,7 @@ export function TransactionWorkflowsOverviewPage() {
               key={workflow.documentId}
               accounts={accounts ?? []}
               expanded={expandedId === workflow.documentId}
+              fallbackCurrencyDocumentId={fallbackCurrencyDocumentId}
               onToggle={onToggleWorkflow}
               sampleOrganization={sampleOrganization}
               workflow={workflow}

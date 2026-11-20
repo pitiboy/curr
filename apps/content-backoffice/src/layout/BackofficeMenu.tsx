@@ -93,13 +93,6 @@ export function BackofficeMenu() {
           to={form.path}
         />
       ))}
-      {canReadWorkflowOverview ? (
-        <Menu.Item
-          leftIcon={<HubOutlinedIcon />}
-          primaryText={translate('app.workflow_overview.menu')}
-          to="/transaction-workflows-overview"
-        />
-      ) : null}
       {canWrite ? (
         <Menu.Item
           leftIcon={<PostAddIcon />}
@@ -107,6 +100,14 @@ export function BackofficeMenu() {
           to="/transactions/create"
         />
       ) : null}
+      {canReadWorkflowOverview ? (
+        <Menu.Item
+          leftIcon={<HubOutlinedIcon />}
+          primaryText={translate('app.workflow_overview.menu')}
+          to="/transaction-workflows-overview"
+        />
+      ) : null}
+
       {canReadEggInventory ? (
         <>
           <Menu.Item
