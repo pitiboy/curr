@@ -77,6 +77,8 @@ export const MEMBER_ACCOUNT_CODES = new Set(['1101', '1001']);
 export type AccountRef = {
   documentId: string;
   code?: string | number | null;
+  /** Optional; preview lookup prefers this when present. */
+  name?: string | null;
 };
 
 /** Which source trx side to copy onto a step debit/credit. */

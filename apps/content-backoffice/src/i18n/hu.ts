@@ -157,6 +157,24 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       'A leírás kötelező minden szerkeszthető lépésen.',
     transactions_convert_edit_warning_step_sum:
       'A lépések összege (%{steps}) eltér az eredeti összegtől (%{original}).',
+    workflow_overview: {
+      menu: 'Tranzakciós workflow-k',
+      title: 'Tranzakciós workflow-k',
+      subtitle:
+        'A publikált sablonok előnézete minta adatokkal. Egyszerre egy sablon nyitható ki.',
+      loading: 'Workflow-k betöltése…',
+      empty: 'Nincs megjeleníthető tranzakciós workflow.',
+      forbidden: 'Nincs jogosultságod ehhez az oldalhoz.',
+      sample_badge: 'Minta adat',
+      edit: 'Szerkesztés',
+      sample_error: {
+        missing_accounts:
+          'Nem találhatók a sablonhoz illő számlák a minta adathoz.',
+        missing_currency: 'A sablonhoz nincs pénznem az előnézethez.',
+        missing_organization:
+          'Ehhez a sablonhoz szervezet kell a minta adathoz, de nincs elérhető szervezet.',
+      },
+    },
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',

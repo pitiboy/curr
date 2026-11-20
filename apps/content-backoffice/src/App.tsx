@@ -5,6 +5,7 @@ import { Route } from 'react-router-dom';
 import { authProvider } from './auth/authProvider';
 import { DeployRefreshChecker } from './deploy/DeployRefreshChecker';
 import { CONTENT_ROLES } from './auth/roles';
+import { TRANSACTION_WORKFLOW_PREFILL_ROLES } from './data/accountRowSelection';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
 import { i18nProvider } from './i18n';
@@ -39,6 +40,7 @@ import { RECONCILIATION_FEATURE_ID } from './pages/reports/reconciliation/types'
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionShow } from './pages/transactions/TransactionShow';
+import { TransactionWorkflowsOverviewPage } from './pages/workflows/TransactionWorkflowsOverviewPage';
 import { darkTheme, lightTheme } from './theme';
 import { eggDailyEntryConfig } from './workflows/bulk-quantity/configs/eggDailyEntry.config';
 import { BackofficeConfigProvider } from './workflows/BackofficeConfigProvider';
@@ -121,6 +123,14 @@ export function App() {
               path="/transactions/create"
             />
             <Route element={<ProfilePage />} path="/profile" />
+            <Route
+              element={
+                <RoleGuard allow={[...TRANSACTION_WORKFLOW_PREFILL_ROLES]}>
+                  <TransactionWorkflowsOverviewPage />
+                </RoleGuard>
+              }
+              path="/transaction-workflows-overview"
+            />
             <Route
               element={
                 <WorkflowFormGate

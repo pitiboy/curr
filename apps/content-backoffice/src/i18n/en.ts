@@ -112,6 +112,25 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Description is required on every editable step.',
     transactions_convert_edit_warning_step_sum:
       'Step total (%{steps}) differs from the original (%{original}).',
+    
+    : {
+      menu: 'Transaction workflows',
+      title: 'Transaction workflows',
+      subtitle:
+        'Preview of published templates with sample data. Only one template can be open at a time.',
+      loading: 'Loading workflows…',
+      empty: 'No transaction workflows to show.',
+      forbidden: 'You do not have access to this page.',
+      sample_badge: 'Sample data',
+      edit: 'Edit',
+      sample_error: {
+        missing_accounts:
+          'No accounts match this template for building sample data.',
+        missing_currency: 'This template has no currency for the preview.',
+        missing_organization:
+          'This template needs an organization for sample data, but none is available.',
+      },
+    },
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',
