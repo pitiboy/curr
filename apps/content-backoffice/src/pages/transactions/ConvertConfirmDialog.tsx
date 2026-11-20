@@ -9,8 +9,12 @@ import {
 import { useTranslate } from 'react-admin';
 
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
+import type { ConvertOverridesPayload } from '../../data/transactionWorkflow';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
-import { ConvertPreviewPanel } from './ConvertPreviewPanel';
+import {
+  ConvertPreviewPanel,
+  type ConvertPreviewEditState,
+} from './ConvertPreviewPanel';
 
 export function ConvertConfirmDialog({
   open,
@@ -20,6 +24,10 @@ export function ConvertConfirmDialog({
   workflow,
   previewInput = null,
   confirmLabelKey = 'app.transactions_convert_confirm',
+  editMode = false,
+  onEditModeChange,
+  onSavedOverride,
+  onEditStateChange,
 }: {
   open: boolean;
   onClose: () => void;
@@ -28,6 +36,10 @@ export function ConvertConfirmDialog({
   workflow: WorkflowTemplateHeader;
   previewInput?: ConvertPreviewRequest | null;
   confirmLabelKey?: string;
+  editMode?: boolean;
+  onEditModeChange?: (value: boolean) => void;
+  onSavedOverride?: (payload: ConvertOverridesPayload | null) => void;
+  onEditStateChange?: (state: ConvertPreviewEditState) => void;
 }) {
   const translate = useTranslate();
 
@@ -45,7 +57,14 @@ export function ConvertConfirmDialog({
       </DialogTitle>
       <DialogContent dividers>
         {previewInput ? (
-          <ConvertPreviewPanel active={open} previewInput={previewInput} />
+          <ConvertPreviewPanel
+            active={open}
+            editMode={editMode}
+            previewInput={previewInput}
+            onEditModeChange={onEditModeChange}
+            onEditStateChange={onEditStateChange}
+            onSavedOverride={onSavedOverride}
+          />
         ) : (
           <Typography sx={{ py: 1 }} variant="body2">
             {translate('app.transactions_convert_body')}

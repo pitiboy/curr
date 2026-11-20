@@ -9,9 +9,11 @@ import {
   CONVERTED_EXPANDED,
   CONVERTED_ORIGINAL,
   CONVERTED_STORNO,
+  ERROR_TRANSACTION_ALREADY_CONVERTED,
   STEP_RELATED,
   TRANSACTION_UID,
   WORKFLOW_UID,
+  isExpandableConvertedValue,
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert.ts';
@@ -201,8 +203,17 @@ function buildConvertStrapi(
     db: {
       query: () => ({
         // Complete stored draft → syncSourceAfterConvert may publish.
-        findOne: async () =>
-          transaction.organization
+        findOne: async ({
+          select,
+        }: {
+          select?: string[];
+        } = {}) => {
+          if (select?.includes('converted_to_workflow')) {
+            return options.stateful && source
+              ? { converted_to_workflow: source.converted_to_workflow }
+              : { converted_to_workflow: transaction.converted_to_workflow };
+          }
+          return transaction.organization
             ? {
                 date: transaction.date,
                 amount: transaction.amount,
@@ -212,8 +223,28 @@ function buildConvertStrapi(
                 debit_account: transaction.debit_account,
                 credit_account: transaction.credit_account,
               }
-            : null,
+            : null;
+        },
+        updateMany: async ({ data }: { data: Record<string, unknown> }) => {
+          if (options.stateful) {
+            if (!source) return { count: 0 };
+            if (
+              'converted_to_workflow' in data &&
+              isExpandableConvertedValue(source.converted_to_workflow)
+            ) {
+              source = {
+                ...source,
+                converted_to_workflow:
+                  data.converted_to_workflow as SourceTransaction['converted_to_workflow'],
+              };
+              return { count: 1 };
+            }
+            return { count: 0 };
+          }
+          return { count: 1 };
+        },
       }),
+      transaction: async <T>(task: () => Promise<T>) => task(),
     },
     requestContext: {
       get: () => ({ state: {} }),
@@ -244,10 +275,11 @@ describe('convertTransactions keep_original write order', () => {
       expandableTransaction,
     );
 
-    await convertTransactions(strapi, {
+    const { results } = await convertTransactions(strapi, {
       workflowDocumentId: workflowTwoSteps.documentId,
       transactionDocumentId: expandableTransaction.documentId,
     });
+    assert.equal(results.length, 1);
 
     assert.deepEqual(ops.map(opSignature), [
       `update:${expandableTransaction.documentId}:${CONVERTED_ORIGINAL}`,
@@ -264,10 +296,11 @@ describe('convertTransactions keep_original write order', () => {
     };
     const { strapi, ops } = buildConvertStrapi(workflow, expandableTransaction);
 
-    await convertTransactions(strapi, {
+    const { results } = await convertTransactions(strapi, {
       workflowDocumentId: workflow.documentId,
       transactionDocumentId: expandableTransaction.documentId,
     });
+    assert.equal(results.length, 1);
 
     assert.equal(
       ops.some(
@@ -373,13 +406,21 @@ describe('convertTransactions concurrent requests (double submit)', () => {
         transactionDocumentId: expandableTransaction.documentId,
       };
 
-      const [first, second] = await Promise.all([
+      const [first, second] = await Promise.allSettled([
         convertTransactions(strapi, request),
         convertTransactions(strapi, request),
       ]);
 
-      assert.equal(first.length, 1);
-      assert.equal(second.length, 0);
+      assert.equal(first.status, 'fulfilled');
+      assert.equal(second.status, 'rejected');
+      if (first.status === 'fulfilled') {
+        assert.equal(first.value.results.length, 1);
+      }
+      if (second.status === 'rejected') {
+        const reason = second.reason as { message?: string; code?: string };
+        assert.match(reason.message ?? '', /ki van fejtve/);
+        assert.equal(reason.code, ERROR_TRANSACTION_ALREADY_CONVERTED);
+      }
       const stepCreates = ops.filter(
         (op) => op.kind === 'create' && op.converted === CONVERTED_EXPANDED,
       );

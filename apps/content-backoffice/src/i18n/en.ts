@@ -93,6 +93,28 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_rate_same: 'rate × %{rate}',
     transactions_convert_preview_member_ratio:
       'member ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Edit expansion',
+    transactions_convert_edit_reset: 'Cancel',
+    transactions_convert_edit_save: 'Save',
+    transactions_convert_edit_add_row: 'Add step',
+    transactions_convert_edit_duplicate: 'Duplicate step',
+    transactions_convert_edit_delete: 'Delete step',
+    transactions_convert_edit_percent: 'Percent',
+    transactions_convert_edit_copy_receipt: 'Copy receipt',
+    transactions_convert_edit_extra_fields_hint:
+      'Extra fields below apply to each editable step.',
+    transactions_convert_edit_row_meta: 'Step: %{key}',
+    transactions_convert_edit_saved_hint:
+      'Custom legs saved — Convert will use them.',
+    transactions_convert_edit_error_accounts_required:
+      'Debit and credit accounts are required on every step.',
+    transactions_convert_edit_error_accounts_differ:
+      'Debit and credit accounts must differ.',
+    transactions_convert_edit_error_amount_positive: 'Amount must be positive.',
+    transactions_convert_edit_error_description:
+      'Description is required on every editable step.',
+    transactions_convert_edit_warning_step_sum:
+      'Step total (%{steps}) differs from the original (%{original}).',
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',

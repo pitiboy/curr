@@ -38,6 +38,11 @@ export const ERROR_CURRENCY_RATE_MISSING = 'CURRENCY_RATE_MISSING' as const;
 export const ERROR_CURRENCY_RATE_INVALID = 'CURRENCY_RATE_INVALID' as const;
 export const ERROR_MEMBERSHIP_RATIO_AMBIGUOUS =
   'MEMBERSHIP_RATIO_AMBIGUOUS' as const;
+export const ERROR_TRANSACTION_ALREADY_CONVERTED =
+  'TRANSACTION_ALREADY_CONVERTED' as const;
+
+/** KOR ledger treasury account (org-scope exclusion matches backoffice reports). */
+export const KOR_TREASURY_ACCOUNT_CODE = '1100';
 
 export class TransactionWorkflowError extends Error {
   status: number;
@@ -894,6 +899,8 @@ function requireStepRate(
 export type ExpandedStepRow = {
   index: number;
   description: string;
+  /** Per-leg date when a customised conversion overrides the header date. */
+  legDate?: string;
   amount: number;
   debit_account: AccountRef;
   credit_account: AccountRef;

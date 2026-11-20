@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useNotify, useRefresh, useTranslate } from 'react-admin';
 
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
+import type { ConvertOverridesPayload } from '../../data/transactionWorkflow';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
@@ -36,6 +37,9 @@ export function TransactionConvertButton({
   const refresh = useRefresh();
   const openAssetForm = useAssetFormAfterBooking();
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [overridePayload, setOverridePayload] =
+    useState<ConvertOverridesPayload | null>(null);
 
   const previewInput = useMemo<ConvertPreviewRequest>(
     () => ({
@@ -48,7 +52,12 @@ export function TransactionConvertButton({
   // A transaction converts once; stay locked until the refresh hides the button.
   const convertGuard = useSubmitGuard({
     lockOnSuccess: true,
-    run: () => convertTransactionToWorkflow(documentId, workflow.documentId),
+    run: () =>
+      convertTransactionToWorkflow(
+        documentId,
+        workflow.documentId,
+        overridePayload ?? undefined,
+      ),
     onSuccess: (result) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
@@ -59,6 +68,12 @@ export function TransactionConvertButton({
       const message = strapiErrorMessage(error);
       if (message.includes('transaction-workflow not found')) {
         invalidateTransactionWorkflowCatalog();
+      }
+      if (
+        message.includes('ki van fejtve') ||
+        message.includes('TRANSACTION_ALREADY_CONVERTED')
+      ) {
+        refresh();
       }
       notify(message || translate('app.transactions_convert_error'), {
         type: 'error',
@@ -115,12 +130,20 @@ export function TransactionConvertButton({
       </Stack>
       {open ? (
         <ConvertConfirmDialog
+          editMode={editMode}
           loading={busy}
           open={open}
           previewInput={previewInput}
           workflow={workflow}
-          onClose={() => !busy && setOpen(false)}
+          onClose={() => {
+            if (busy) return;
+            setOpen(false);
+            setEditMode(false);
+            setOverridePayload(null);
+          }}
           onConfirm={onConfirm}
+          onEditModeChange={setEditMode}
+          onSavedOverride={setOverridePayload}
         />
       ) : null}
     </>

@@ -15,6 +15,13 @@ import {
   shouldPublishConvertedSource,
   withPublishGuardLinked,
 } from '../publish-guard';
+import { claimSourceForConvert } from './convert-claim';
+import {
+  ERROR_TRANSACTION_ALREADY_CONVERTED,
+  resolveCustomisedStepRows,
+  type ConvertLegOverrideInput,
+  type ConvertOverridesPayload,
+} from './convert-overrides';
 import {
   CONVERTED_EXPANDED,
   CONVERTED_ORIGINAL,
@@ -54,6 +61,20 @@ export type ConvertRequest = {
   workflowDocumentId?: string;
   transactionDocumentId?: string;
   steps_published?: boolean;
+  /** Replace generated step rows (editor/controller only; validated server-side). */
+  overrides?: ConvertOverridesPayload;
+};
+
+export type ConvertFailureItem = {
+  transactionDocumentId: string;
+  status: number;
+  message: string;
+  code?: string;
+};
+
+export type ConvertTransactionsResult = {
+  results: ConvertResultItem[];
+  failures: ConvertFailureItem[];
 };
 
 export type AppliedRateResult = {
@@ -77,6 +98,7 @@ export type ConvertResultItem = {
   createdDocumentIds: string[];
   /** Only apply_currency_rate steps. */
   appliedRates: AppliedRateResult[];
+  customised?: boolean;
 };
 
 function appliedRatesOf(rows: ExpandedStepRow[]): AppliedRateResult[] {
@@ -95,7 +117,11 @@ export type ConvertStrapi = {
   db: {
     query: (uid: string) => {
       findOne: (params: Record<string, unknown>) => Promise<unknown | null>;
+      updateMany?: (
+        params: Record<string, unknown>,
+      ) => Promise<{ count?: number }>;
     };
+    transaction?: <T>(task: () => Promise<T>) => Promise<T>;
   };
   requestContext: {
     get: () => { state?: { publishGuardLinked?: boolean } } | undefined;
@@ -179,6 +205,129 @@ async function loadPublishedWorkflows(
   return (rows ?? []).map(asWorkflow);
 }
 
+function alreadyConvertedError(documentId: string): TransactionWorkflowError {
+  return new TransactionWorkflowError(
+    'A tranzakció már ki van fejtve.',
+    409,
+    ERROR_TRANSACTION_ALREADY_CONVERTED,
+    { documentId },
+  );
+}
+
+function parseOverridesPayload(
+  raw: unknown,
+): ConvertOverridesPayload | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const body = raw as { legs?: unknown };
+  if (!Array.isArray(body.legs) || body.legs.length === 0) return undefined;
+  const legs: ConvertLegOverrideInput[] = [];
+  for (const item of body.legs) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as Record<string, unknown>;
+    legs.push({
+      key: String(row.key ?? ''),
+      sourceStepIndex:
+        row.sourceStepIndex === null || row.sourceStepIndex === undefined
+          ? null
+          : Number(row.sourceStepIndex),
+      description: String(row.description ?? ''),
+      amount: Number(row.amount),
+      percent:
+        row.percent === null || row.percent === undefined
+          ? null
+          : Number(row.percent),
+      debitAccountDocumentId: String(row.debitAccountDocumentId ?? ''),
+      creditAccountDocumentId: String(row.creditAccountDocumentId ?? ''),
+      currencyTypeDocumentId: String(row.currencyTypeDocumentId ?? ''),
+      organizationDocumentId:
+        typeof row.organizationDocumentId === 'string'
+          ? row.organizationDocumentId
+          : null,
+      transactionTypeDocumentId:
+        typeof row.transactionTypeDocumentId === 'string'
+          ? row.transactionTypeDocumentId
+          : null,
+      copyReceipt: row.copyReceipt === true,
+      date: typeof row.date === 'string' ? row.date : undefined,
+    });
+  }
+  if (!legs.length) return undefined;
+  return { legs };
+}
+
+async function loadOverrideSnapshots(
+  strapi: ConvertStrapi,
+  overrides: ConvertOverridesPayload,
+  transaction: SourceTransaction,
+): Promise<{
+  accounts: Map<string, { documentId: string; code?: string | number | null }>;
+  currencies: Map<string, { documentId: string; code?: string | null }>;
+}> {
+  const accountIds = new Set<string>();
+  const currencyIds = new Set<string>();
+  for (const leg of overrides.legs) {
+    accountIds.add(leg.debitAccountDocumentId);
+    accountIds.add(leg.creditAccountDocumentId);
+    currencyIds.add(leg.currencyTypeDocumentId);
+  }
+  for (const side of [
+    transaction.debit_account,
+    transaction.credit_account,
+  ] as const) {
+    if (side?.documentId) accountIds.add(side.documentId);
+  }
+  if (transaction.currency_type?.documentId) {
+    currencyIds.add(transaction.currency_type.documentId);
+  }
+
+  const accounts = new Map<
+    string,
+    { documentId: string; code?: string | number | null }
+  >();
+  const currencies = new Map<
+    string,
+    { documentId: string; code?: string | null }
+  >();
+
+  const accountApi = documentsApi(strapi, 'api::account.account');
+  for (const documentId of accountIds) {
+    const row = (await accountApi.findOne({
+      documentId,
+      fields: ['documentId', 'code'],
+    })) as { documentId?: string; code?: string | number | null } | null;
+    if (!row?.documentId) {
+      throw new TransactionWorkflowError(
+        `Account ${documentId} not found`,
+        422,
+      );
+    }
+    accounts.set(documentId, {
+      documentId: row.documentId,
+      code: row.code,
+    });
+  }
+
+  const currencyApi = documentsApi(strapi, 'api::currency-type.currency-type');
+  for (const documentId of currencyIds) {
+    const row = (await currencyApi.findOne({
+      documentId,
+      fields: ['documentId', 'code'],
+    })) as { documentId?: string; code?: string | null } | null;
+    if (!row?.documentId) {
+      throw new TransactionWorkflowError(
+        `Currency ${documentId} not found`,
+        422,
+      );
+    }
+    currencies.set(documentId, {
+      documentId: row.documentId,
+      code: row.code ?? null,
+    });
+  }
+
+  return { accounts, currencies };
+}
+
 async function loadTransactions(
   strapi: ConvertStrapi,
   transactionDocumentId?: string,
@@ -236,7 +385,7 @@ function transactionWritePayload(
   relatedDocumentId: string | null,
 ) {
   return {
-    date: transaction.date,
+    date: row.legDate ?? transaction.date,
     amount: row.amount,
     description: row.description,
     debit_account: row.debit_account.documentId,
@@ -471,7 +620,7 @@ export async function withTransactionConvertLock<T>(
 export async function convertTransactions(
   strapi: ConvertStrapi,
   request: ConvertRequest,
-): Promise<ConvertResultItem[]> {
+): Promise<ConvertTransactionsResult> {
   if (!request.workflowDocumentId && !request.transactionDocumentId) {
     throw new TransactionWorkflowError(
       'Provide workflowDocumentId and/or transactionDocumentId',
@@ -504,32 +653,55 @@ export async function convertTransactions(
   );
 
   const results: ConvertResultItem[] = [];
+  const failures: ConvertFailureItem[] = [];
+  const explicitTransactionId = request.transactionDocumentId?.trim();
   // One resolver per request: same-day rate lookups are cached across rows.
   const resolveRate = createRateResolver(strapi);
 
   for (const candidate of transactions) {
-    const result = await withTransactionConvertLock(
-      candidate.documentId,
-      async () => {
-        // Re-read under the lock: a concurrent convert may have finished.
-        const [transaction] = await loadTransactions(
-          strapi,
-          candidate.documentId,
-        );
-        if (!transaction) return null;
-        return convertOneTransaction(
-          strapi,
-          request,
-          workflows,
-          transaction,
-          resolveRate,
-        );
-      },
-    );
-    if (result) results.push(result);
+    try {
+      const result = await withTransactionConvertLock(
+        candidate.documentId,
+        async () => {
+          const [transaction] = await loadTransactions(
+            strapi,
+            candidate.documentId,
+          );
+          if (!transaction) {
+            throw alreadyConvertedError(candidate.documentId);
+          }
+          if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
+            throw alreadyConvertedError(transaction.documentId);
+          }
+          return convertOneTransaction(
+            strapi,
+            request,
+            workflows,
+            transaction,
+            resolveRate,
+          );
+        },
+      );
+      if (result) results.push(result);
+    } catch (error) {
+      if (error instanceof TransactionWorkflowError) {
+        const failure: ConvertFailureItem = {
+          transactionDocumentId: candidate.documentId,
+          status: error.status,
+          message: error.message,
+          code: error.code,
+        };
+        failures.push(failure);
+        if (explicitTransactionId) {
+          throw error;
+        }
+        continue;
+      }
+      throw error;
+    }
   }
 
-  return results;
+  return { results, failures };
 }
 
 async function convertOneTransaction(
@@ -539,27 +711,47 @@ async function convertOneTransaction(
   transaction: SourceTransaction,
   resolveRate: ReturnType<typeof createRateResolver>,
 ): Promise<ConvertResultItem | null> {
-  if (!isExpandableConvertedValue(transaction.converted_to_workflow)) {
-    return null;
-  }
-
   const workflow = pickMatchingWorkflow(workflows, transaction);
   if (!workflow) return null;
 
   const keepOriginal = workflow.keep_original !== false;
   const published =
     request.steps_published ?? workflow.steps_published !== false;
+  await claimSourceForConvert(strapi, transaction.documentId);
+
   const siblingMap = await loadMemberSiblingMap(strapi, transaction);
   // Resolve rate + member ratio before any write (no rollback needed on 422).
   const rates = await resolveWorkflowRates(resolveRate, workflow, transaction);
   const memberRatio = await loadMemberRatio(strapi, workflow, transaction);
-  const expanded = expandWorkflowSteps(
-    workflow,
-    transaction,
-    siblingMap,
-    rates,
-    memberRatio,
-  );
+  const overrides = request.overrides;
+  const customised = Boolean(overrides?.legs.length);
+
+  let expanded: ExpandedStepRow[];
+  if (customised && overrides) {
+    const snapshots = await loadOverrideSnapshots(
+      strapi,
+      overrides,
+      transaction,
+    );
+    expanded = resolveCustomisedStepRows(
+      workflow,
+      transaction,
+      siblingMap,
+      rates,
+      memberRatio,
+      overrides,
+      snapshots.accounts,
+      snapshots.currencies,
+    );
+  } else {
+    expanded = expandWorkflowSteps(
+      workflow,
+      transaction,
+      siblingMap,
+      rates,
+      memberRatio,
+    );
+  }
   assertKeepOriginalReceiptPolicy(keepOriginal, transaction, expanded);
 
   const receiptIds =
@@ -653,5 +845,8 @@ async function convertOneTransaction(
     stornoDocumentId,
     createdDocumentIds,
     appliedRates: appliedRatesOf(expanded),
+    customised: customised || undefined,
   };
 }
+
+export { parseOverridesPayload, alreadyConvertedError };

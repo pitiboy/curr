@@ -686,6 +686,8 @@ Technikai szerződés: [0002 plan §5.1](./plans/0002-transaction-workflow-conte
 
 Szerkesztő (`editor`) a kifejtés megerősítése előtt megnyithatja a **Kifejtés előnézete** modált. A `POST /api/transaction-workflows/convert-preview` dry-run endpoint ugyanazt a pure logikát hívja (`expandWorkflowSteps`, storno szabályok), mint a Convert — nincs írás az adatbázisba. Mentett tranzakcióhoz `transactionDocumentId`, create űrlaphoz inline `transaction` payload (documentId-kkel). A válasz SVG diagramhoz és táblázathoz: eredeti, storno (ha `keep_original`), lépések sorrendben; figyelmeztetések (pl. bizonylat másolás, százalék-összeg).
 
+**Inline lépésszerkesztés (egyedi kifejtés):** alapból az előnézet read-only. A megerősítő ablakban (`convert_inline_edit` feature) az `editor` / `controller` a **Kifejtés szerkesztése** gombbal szerkesztő módba lép: csak a generált lépéssorok módosíthatók; az eredeti és a storno fix. **Mégse** újratölti a sablon szerinti lépéseket (szerkesztő módban marad). **Mentés** a kliens oldalon rögzíti az overrides listát; a **Kifejtés** gomb a `POST …/convert` hívást `overrides.legs[]` payloaddal küldi. A szerver validálja (`convert-overrides.ts`), a step leírásokhoz `[egyedi kifejtés]` kerül. A sablon rekord nem változik. Dupla kifejtés: DB-s claim + HTTP 409 (`TRANSACTION_ALREADY_CONVERTED`, „A tranzakció már ki van fejtve.”); batch convert esetén `failures[]` a válaszban. Részletek: [0011 plan](./plans/0011-convert-inline-leg-edit.md).
+
 ```mermaid
 flowchart TD
   api["Convert API"]

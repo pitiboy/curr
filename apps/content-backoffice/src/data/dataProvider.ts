@@ -25,7 +25,10 @@ import {
   purgeTransactionExpansion,
 } from './transactionDelete';
 import { publishTransactionDraft } from './transactionPublish';
-import { convertTransaction as postConvertTransaction } from './transactionWorkflow';
+import {
+  convertTransaction as postConvertTransaction,
+  type ConvertOverridesPayload,
+} from './transactionWorkflow';
 import {
   createTransactionDraft,
   updateTransactionDraft,
@@ -191,10 +194,12 @@ export function createNewTransactionDraft(data: Record<string, unknown>) {
 export function convertTransactionToWorkflow(
   transactionDocumentId: string,
   workflowDocumentId: string,
+  overrides?: ConvertOverridesPayload,
 ) {
   return postConvertTransaction(httpClient, STRAPI_URL, {
     transactionDocumentId,
     workflowDocumentId,
+    overrides,
   });
 }
 

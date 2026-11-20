@@ -137,6 +137,29 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_rate_same: 'árfolyam × %{rate}',
     transactions_convert_preview_member_ratio:
       'tagsági ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Kifejtés szerkesztése',
+    transactions_convert_edit_reset: 'Mégse',
+    transactions_convert_edit_save: 'Mentés',
+    transactions_convert_edit_add_row: 'Új lépés',
+    transactions_convert_edit_duplicate: 'Lépés másolása',
+    transactions_convert_edit_delete: 'Lépés törlése',
+    transactions_convert_edit_percent: 'Százalék',
+    transactions_convert_edit_copy_receipt: 'Bizonylat másolása',
+    transactions_convert_edit_extra_fields_hint:
+      'Az alábbi mezők minden szerkeszthető lépésre vonatkoznak.',
+    transactions_convert_edit_row_meta: 'Lépés: %{key}',
+    transactions_convert_edit_saved_hint:
+      'Az egyedi lépések elmentve — a Kifejtés gomb ezekkel ment.',
+    transactions_convert_edit_error_accounts_required:
+      'Minden lépésen kötelező a tartozik és követel számla.',
+    transactions_convert_edit_error_accounts_differ:
+      'A tartozik és követel számla nem lehet ugyanaz.',
+    transactions_convert_edit_error_amount_positive:
+      'Az összegnek pozitívnak kell lennie.',
+    transactions_convert_edit_error_description:
+      'A leírás kötelező minden szerkeszthető lépésen.',
+    transactions_convert_edit_warning_step_sum:
+      'A lépések összege (%{steps}) eltér az eredeti összegtől (%{original}).',
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
