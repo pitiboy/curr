@@ -21,6 +21,7 @@ import {
   createNewTransactionDraft,
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
+import type { ConvertOverridesPayload } from '../../data/transactionWorkflow';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
@@ -92,6 +93,7 @@ export function TransactionCreateToolbar({
     requireOrganizationForSave,
   );
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const matchInput = useMemo(
     () =>
@@ -156,6 +158,7 @@ export function TransactionCreateToolbar({
     {
       formValues: Record<string, unknown>;
       workflowDocumentId: string;
+      overrides?: ConvertOverridesPayload | null;
     },
     {
       documentId: string;
@@ -163,7 +166,7 @@ export function TransactionCreateToolbar({
     }
   >({
     lockOnSuccess: true,
-    run: async ({ formValues, workflowDocumentId }) => {
+    run: async ({ formValues, workflowDocumentId, overrides }) => {
       const created = await createNewTransactionDraft({
         ...formValues,
         receipt_cards: receiptCards,
@@ -178,12 +181,14 @@ export function TransactionCreateToolbar({
       const result = await convertTransactionToWorkflow(
         documentId,
         workflowDocumentId,
+        overrides ?? undefined,
       );
       return { documentId, result };
     },
     onSuccess: ({ documentId, result }) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
+      setEditMode(false);
       onSaveSucceeded();
       // `collect_asset` workflows continue on the prefilled "Új eszköz" form.
       void openAssetForm(workflow, documentId, result).then(
@@ -205,7 +210,7 @@ export function TransactionCreateToolbar({
   });
   const busy = saveAndConvertGuard.busy;
 
-  const onSaveAndConvert = () => {
+  const onSaveAndConvert = (overrides?: ConvertOverridesPayload | null) => {
     if (!workflow || busy) return;
     const formValues = (values ?? {}) as Record<string, unknown>;
     const errors = transactionFormErrors(formValues, receiptCards, translate, {
@@ -224,7 +229,14 @@ export function TransactionCreateToolbar({
     saveAndConvertGuard.submit({
       formValues,
       workflowDocumentId: workflow.documentId,
+      overrides,
     });
+  };
+
+  const closeConvertDialog = () => {
+    if (busy) return;
+    setOpen(false);
+    setEditMode(false);
   };
 
   const actionsDisabled = busy || !formReady;
@@ -263,12 +275,14 @@ export function TransactionCreateToolbar({
           {open ? (
             <ConvertConfirmDialog
               confirmLabelKey="app.transactions_convert_save"
+              editMode={editMode}
               loading={busy}
               open={open}
               previewInput={previewInput}
               workflow={workflow}
-              onClose={() => !busy && setOpen(false)}
+              onClose={closeConvertDialog}
               onConfirm={onSaveAndConvert}
+              onEditModeChange={setEditMode}
             />
           ) : null}
         </Stack>

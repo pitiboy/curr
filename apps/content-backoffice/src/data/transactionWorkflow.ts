@@ -106,15 +106,45 @@ export function transactionWorkflowConvertUrl(strapiUrl: string): string {
   return `${strapiUrl}/api/transaction-workflows/convert`;
 }
 
+export type ConvertLegOverrideInput = {
+  key: string;
+  sourceStepIndex: number | null;
+  description: string;
+  amount: number;
+  percent: number | null;
+  debitAccountDocumentId: string;
+  creditAccountDocumentId: string;
+  currencyTypeDocumentId: string;
+  organizationDocumentId?: string | null;
+  transactionTypeDocumentId?: string | null;
+  copyReceipt: boolean;
+  date?: string;
+};
+
+export type ConvertOverridesPayload = {
+  legs?: ConvertLegOverrideInput[];
+  keepOriginal?: boolean;
+  stepsPublished?: boolean;
+};
+
 export type ConvertTransactionResult = {
   transactionDocumentId: string;
   workflowDocumentId: string;
   stornoDocumentId?: string;
   createdDocumentIds: string[];
+  customised?: boolean;
+};
+
+export type ConvertTransactionFailure = {
+  transactionDocumentId: string;
+  status: number;
+  message: string;
+  code?: string;
 };
 
 type ConvertResponse = {
   data?: ConvertTransactionResult[];
+  failures?: ConvertTransactionFailure[];
 };
 
 /** Loads all published workflow templates (header + org-from-original flag). */
@@ -152,6 +182,7 @@ export async function convertTransaction(
   input: {
     transactionDocumentId: string;
     workflowDocumentId: string;
+    overrides?: ConvertOverridesPayload;
   },
 ): Promise<ConvertTransactionResult> {
   const { json } = (await httpClient(transactionWorkflowConvertUrl(strapiUrl), {
@@ -159,10 +190,26 @@ export async function convertTransaction(
     body: JSON.stringify({
       transactionDocumentId: input.transactionDocumentId,
       workflowDocumentId: input.workflowDocumentId,
+      ...(input.overrides ? { overrides: input.overrides } : {}),
     }),
   })) as { json: ConvertResponse };
   const first = json.data?.[0];
   if (!first) {
+    const failure = json.failures?.[0];
+    if (failure?.message) {
+      const error = new Error(failure.message) as Error & {
+        status?: number;
+        body?: { error?: { message?: string; details?: { code?: string } } };
+      };
+      error.status = failure.status;
+      error.body = {
+        error: {
+          message: failure.message,
+          details: failure.code ? { code: failure.code } : undefined,
+        },
+      };
+      throw error;
+    }
     throw new Error('Convert response missing data');
   }
   return first;

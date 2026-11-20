@@ -4,10 +4,13 @@
 
 import { factories } from '@strapi/strapi';
 
+import { EDITOR_LIKE_ROLE_TYPES } from '../../../content-roles';
 import {
   convertTransactions,
+  parseOverridesPayload,
   type ConvertStrapi,
 } from '../../../transaction-workflow/convert-service';
+import { ERROR_CONVERT_OVERRIDES_FORBIDDEN } from '../../../transaction-workflow/convert-overrides';
 import {
   convertPreview,
   type ConvertPreviewRequest,
@@ -35,10 +38,34 @@ export default factories.createCoreController(
         workflowDocumentId?: string;
         transactionDocumentId?: string;
         steps_published?: boolean;
+        overrides?: unknown;
       };
 
+      const overrides = parseOverridesPayload(body.overrides);
+      if (overrides) {
+        const roleType = (ctx.state as { user?: { role?: { type?: string } } })
+          .user?.role?.type;
+        if (
+          !roleType ||
+          !(EDITOR_LIKE_ROLE_TYPES as readonly string[]).includes(roleType)
+        ) {
+          ctx.status = 403;
+          ctx.body = {
+            data: null,
+            error: errorBody(
+              new TransactionWorkflowError(
+                'Customised convert is only available to editor roles',
+                403,
+                ERROR_CONVERT_OVERRIDES_FORBIDDEN,
+              ),
+            ),
+          };
+          return;
+        }
+      }
+
       try {
-        const results = await convertTransactions(
+        const { results, failures } = await convertTransactions(
           strapi as unknown as ConvertStrapi,
           {
             workflowDocumentId:
@@ -53,10 +80,14 @@ export default factories.createCoreController(
               typeof body.steps_published === 'boolean'
                 ? body.steps_published
                 : undefined,
+            overrides,
           },
         );
 
-        ctx.body = { data: results };
+        ctx.body = {
+          data: results,
+          ...(failures.length > 0 ? { failures } : {}),
+        };
       } catch (error) {
         if (error instanceof TransactionWorkflowError) {
           ctx.status = error.status;

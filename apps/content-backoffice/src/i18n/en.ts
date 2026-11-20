@@ -93,6 +93,25 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_rate_same: 'rate × %{rate}',
     transactions_convert_preview_member_ratio:
       'member ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Edit expansion',
+    transactions_convert_edit_reset: 'Cancel',
+    transactions_convert_edit_add_row: 'Add step',
+    transactions_convert_edit_duplicate: 'Duplicate step',
+    transactions_convert_edit_delete: 'Delete step',
+    transactions_convert_edit_percent: 'Percent',
+    transactions_convert_edit_copy_receipt: 'Copy receipt',
+    transactions_convert_edit_copy_receipt_short: 'Rcpt',
+    transactions_convert_edit_error_steps_required:
+      'At least one filled step is required to convert.',
+    transactions_convert_edit_error_accounts_required:
+      'Debit and credit accounts are required on every step.',
+    transactions_convert_edit_error_accounts_differ:
+      'Debit and credit accounts must differ.',
+    transactions_convert_edit_error_amount_positive: 'Amount must be positive.',
+    transactions_convert_edit_error_description:
+      'Description is required on every editable step.',
+    transactions_convert_edit_warning_step_sum:
+      'Step total (%{steps}) differs from the original (%{original}).',
     workflow_overview: {
       menu: 'Transaction workflows',
       title: 'Transaction workflows',

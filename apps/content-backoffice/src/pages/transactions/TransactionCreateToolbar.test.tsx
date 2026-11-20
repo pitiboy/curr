@@ -230,6 +230,7 @@ describe('TransactionCreateToolbar', () => {
       expect(convertTransactionToWorkflow).toHaveBeenCalledWith(
         'tx-new',
         'wf-selected',
+        undefined,
       );
       expect(openAssetForm).toHaveBeenCalledWith(
         expect.objectContaining({ documentId: 'wf-selected' }),
