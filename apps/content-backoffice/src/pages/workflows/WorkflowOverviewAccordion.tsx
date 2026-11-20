@@ -119,7 +119,7 @@ export function WorkflowOverviewAccordion({
                 </Button>
               ) : null}
             </Stack>
-            {!sample.ok ? (
+            {sample.ok === false ? (
               <Alert severity="warning">
                 {translate(
                   `app.workflow_overview.sample_error.${sample.reason}`,

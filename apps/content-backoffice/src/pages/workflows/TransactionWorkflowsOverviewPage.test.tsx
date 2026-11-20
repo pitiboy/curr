@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -42,7 +48,8 @@ vi.mock('../../workflows/useTransactionWorkflowCatalog', () => ({
 }));
 
 vi.mock('../../data/accountCodes', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../data/accountCodes')>();
+  const actual =
+    await importOriginal<typeof import('../../data/accountCodes')>();
   return {
     ...actual,
     loadAllAccounts: vi.fn(async () => accounts),
