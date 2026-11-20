@@ -134,14 +134,16 @@ function ingestAccount(
   row: AccountRow | null | undefined,
 ): void {
   if (!row?.documentId) return;
+  const existing = map.get(row.documentId);
   const code =
     row.code != null && String(row.code).trim()
       ? String(row.code)
-      : (map.get(row.documentId)?.code ?? '');
+      : (existing?.code ?? '');
   if (!code) return;
   map.set(row.documentId, {
     code,
-    name: row.name ?? null,
+    // Keep a previously loaded name when a later ingest omits it.
+    name: row.name ?? existing?.name ?? null,
   });
 }
 
@@ -402,10 +404,12 @@ async function inlineToSourceTransaction(
     debit_account: {
       documentId: debitRow.documentId,
       code: debitRow.code,
+      name: debitRow.name ?? null,
     },
     credit_account: {
       documentId: creditRow.documentId,
       code: creditRow.code,
+      name: creditRow.name ?? null,
     },
     currency_type: {
       documentId: currencyRow.documentId,
@@ -448,6 +452,7 @@ async function loadMemberSiblingMap(
         ? {
             documentId: memberRow.account.documentId,
             code: memberRow.account.code,
+            name: memberRow.account.name ?? null,
           }
         : null,
     private_account:
@@ -455,6 +460,7 @@ async function loadMemberSiblingMap(
         ? {
             documentId: memberRow.private_account.documentId,
             code: memberRow.private_account.code,
+            name: memberRow.private_account.name ?? null,
           }
         : null,
   });
@@ -533,9 +539,10 @@ export async function convertPreview(
     transaction.credit_account,
   ] as const) {
     const documentId = side?.documentId;
-    if (documentId && !accountLookup.has(documentId)) {
-      ingestAccount(accountLookup, await loadAccountRow(strapi, documentId));
-    }
+    if (!documentId) continue;
+    // Reload when missing or name was dropped (inline payload used to omit name).
+    if (accountLookup.get(documentId)?.name) continue;
+    ingestAccount(accountLookup, await loadAccountRow(strapi, documentId));
   }
   await hydrateCurrencyLookup(
     strapi,
