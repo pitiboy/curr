@@ -49,7 +49,8 @@ export function TransactionConvertButton({
 
   // A transaction converts once; stay locked until the refresh hides the button.
   const convertGuard = useSubmitGuard<
-    ConvertOverridesPayload | null | undefined
+    ConvertOverridesPayload | null | undefined,
+    Awaited<ReturnType<typeof convertTransactionToWorkflow>>
   >({
     lockOnSuccess: true,
     run: (overrides) =>

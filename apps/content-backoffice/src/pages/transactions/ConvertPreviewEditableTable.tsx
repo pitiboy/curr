@@ -65,10 +65,10 @@ const numberFieldSx: SxProps<Theme> = {
     },
 };
 
-const denseCellSx: SxProps<Theme> = {
+const denseCellSx = {
   py: 0.5,
   px: 0.75,
-  verticalAlign: 'bottom',
+  verticalAlign: 'bottom' as const,
 };
 
 function resolveAccountChoice(
@@ -121,11 +121,14 @@ function AccountAutocomplete({
       renderInput={(params) => (
         <TextField
           {...params}
-          inputProps={{
-            ...params.inputProps,
-            'aria-label': ariaLabel,
-          }}
           size="small"
+          slotProps={{
+            ...params.slotProps,
+            htmlInput: {
+              ...params.slotProps.htmlInput,
+              'aria-label': ariaLabel,
+            },
+          }}
           sx={denseFieldSx}
         />
       )}
@@ -468,11 +471,14 @@ export function ConvertPreviewEditableTable({
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          inputProps={{
-                            ...params.inputProps,
-                            'aria-label': currencyLabel,
-                          }}
                           size="small"
+                          slotProps={{
+                            ...params.slotProps,
+                            htmlInput: {
+                              ...params.slotProps.htmlInput,
+                              'aria-label': currencyLabel,
+                            },
+                          }}
                           sx={denseFieldSx}
                         />
                       )}
@@ -532,11 +538,14 @@ export function ConvertPreviewEditableTable({
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          inputProps={{
-                            ...params.inputProps,
-                            'aria-label': orgLabel,
-                          }}
                           size="small"
+                          slotProps={{
+                            ...params.slotProps,
+                            htmlInput: {
+                              ...params.slotProps.htmlInput,
+                              'aria-label': orgLabel,
+                            },
+                          }}
                           sx={denseFieldSx}
                         />
                       )}
@@ -572,11 +581,14 @@ export function ConvertPreviewEditableTable({
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          inputProps={{
-                            ...params.inputProps,
-                            'aria-label': typeLabel,
-                          }}
                           size="small"
+                          slotProps={{
+                            ...params.slotProps,
+                            htmlInput: {
+                              ...params.slotProps.htmlInput,
+                              'aria-label': typeLabel,
+                            },
+                          }}
                           sx={denseFieldSx}
                         />
                       )}
@@ -607,10 +619,12 @@ export function ConvertPreviewEditableTable({
                     <Tooltip title={copyReceiptLabel}>
                       <Checkbox
                         checked={row.copyReceipt}
-                        inputProps={{
-                          'aria-label': copyReceiptLabel,
-                        }}
                         size="small"
+                        slotProps={{
+                          input: {
+                            'aria-label': copyReceiptLabel,
+                          },
+                        }}
                         onChange={(event) =>
                           patchRow(row.key, {
                             copyReceipt: event.target.checked,

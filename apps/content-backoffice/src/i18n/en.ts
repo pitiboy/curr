@@ -112,8 +112,7 @@ export const enMessages = mergeTranslations(englishMessages, {
       'Description is required on every editable step.',
     transactions_convert_edit_warning_step_sum:
       'Step total (%{steps}) differs from the original (%{original}).',
-    
-    : {
+    workflow_overview: {
       menu: 'Transaction workflows',
       title: 'Transaction workflows',
       subtitle:
