@@ -7,6 +7,7 @@ import {
   type ConvertPreview,
   type ConvertPreviewRequest,
 } from '../data/convertPreview';
+import { strapiErrorMessage } from '../data/transactionPublish';
 
 const httpClient = strapiHttpClient({ storage: localStorage });
 
@@ -34,7 +35,8 @@ export function useConvertPreview(
     } catch (caught: unknown) {
       if (controller.signal.aborted) return;
       const message =
-        caught instanceof Error ? caught.message : 'Convert preview failed';
+        strapiErrorMessage(caught) ||
+        (caught instanceof Error ? caught.message : 'Convert preview failed');
       setPreview(null);
       setError(message);
     } finally {

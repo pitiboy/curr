@@ -9,7 +9,8 @@ import {
   type WorkflowTemplateHeader,
 } from './transactionList';
 
-const DEFAULT_SAMPLE_DATE = '2026-01-15';
+/** After seeded FX rates (e.g. HEN→HUF validFrom 2026-09-11). */
+const DEFAULT_SAMPLE_DATE = '2026-10-01';
 
 /** Sample preview currency when the workflow template has no currency_type. */
 export const WORKFLOW_SAMPLE_FALLBACK_CURRENCY_CODE = 'HUF' as const;
