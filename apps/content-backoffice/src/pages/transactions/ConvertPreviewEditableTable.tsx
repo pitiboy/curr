@@ -246,8 +246,8 @@ export function ConvertPreviewEditableTable({
                     })
                   ) : (
                     <TextField
-                      inputProps={{ inputMode: 'decimal' }}
                       size="small"
+                      slotProps={{ input: { inputMode: 'decimal' } }}
                       type="number"
                       value={row.amount}
                       onChange={(event) => {
@@ -273,8 +273,8 @@ export function ConvertPreviewEditableTable({
                     )
                   ) : (
                     <TextField
-                      inputProps={{ inputMode: 'decimal' }}
                       size="small"
+                      slotProps={{ input: { inputMode: 'decimal' } }}
                       type="number"
                       value={row.percent}
                       onChange={(event) => {
@@ -379,9 +379,9 @@ export function ConvertPreviewEditableTable({
               </Typography>
               <TextField
                 fullWidth
-                InputLabelProps={{ shrink: true }}
                 label={translate('app.transactions_field_date')}
                 size="small"
+                slotProps={{ inputLabel: { shrink: true } }}
                 type="date"
                 value={row.date?.slice(0, 10) ?? ''}
                 onChange={(event) =>

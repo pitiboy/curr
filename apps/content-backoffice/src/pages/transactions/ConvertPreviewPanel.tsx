@@ -34,6 +34,17 @@ export type ConvertPreviewEditState = {
   editedRows: EditableLegRow[];
 };
 
+function isSavedTransactionPreview(
+  input: ConvertPreviewRequest,
+): input is { workflowDocumentId: string; transactionDocumentId: string } {
+  return 'transactionDocumentId' in input;
+}
+
+function previewTransactionDate(input: ConvertPreviewRequest): string {
+  if ('transaction' in input) return input.transaction.date;
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function ConvertPreviewPanel({
   previewInput,
   active,
@@ -57,9 +68,7 @@ export function ConvertPreviewPanel({
     backofficeConfig?.enabled.includes(CONVERT_INLINE_EDIT_FEATURE_ID) ?? false;
   const canEdit = isEditorLikeRole(permissions) && inlineEditEnabled;
 
-  const transactionDocumentId = previewInput.transactionDocumentId;
-  const transactionDate =
-    previewInput.transaction?.date ?? new Date().toISOString().slice(0, 10);
+  const transactionDate = previewTransactionDate(previewInput);
 
   const [baselineRows, setBaselineRows] = useState<EditableLegRow[]>([]);
   const [rows, setRows] = useState<EditableLegRow[]>([]);
@@ -169,7 +178,7 @@ export function ConvertPreviewPanel({
             ? translate('app.transactions_convert_preview_steps_published')
             : translate('app.transactions_convert_preview_steps_draft')}
         </Typography>
-        {canEdit && previewInput.transactionDocumentId ? (
+        {canEdit && isSavedTransactionPreview(previewInput) ? (
           <Stack direction="row" spacing={1}>
             {!editMode ? (
               <Button
