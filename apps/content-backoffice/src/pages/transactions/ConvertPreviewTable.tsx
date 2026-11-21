@@ -44,10 +44,15 @@ function RateCaption({ movement }: { movement: PreviewMovement }) {
       variant="caption"
     >
       {parts.validFrom
-        ? translate('app.transactions_convert_preview_rate', {
-            rate: parts.rate,
-            validFrom: parts.validFrom,
-          })
+        ? translate(
+            parts.inverted
+              ? 'app.transactions_convert_preview_rate_inverted'
+              : 'app.transactions_convert_preview_rate',
+            {
+              rate: parts.rate,
+              validFrom: parts.validFrom,
+            },
+          )
         : translate('app.transactions_convert_preview_rate_same', {
             rate: parts.rate,
           })}

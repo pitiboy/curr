@@ -99,6 +99,57 @@ describe('currency rate pick', () => {
       1,
     );
   });
+
+  it('issue #109: 2025-01-01 uses June 2024 KOR rate, not June 2025', () => {
+    const korRates = [
+      {
+        rate: 500,
+        validFrom: '2024-06-01T00:00:00.000Z',
+        fromCurrencyCode: 'KOR',
+        toCurrencyCode: 'HUF',
+      },
+      {
+        rate: 600,
+        validFrom: '2025-06-01T00:00:00.000Z',
+        fromCurrencyCode: 'KOR',
+        toCurrencyCode: 'HUF',
+      },
+    ];
+    expect(
+      pickLatestCurrencyRate(korRates, 'KOR', 'HUF', '2025-01-01')?.rate,
+    ).toBe(500);
+    expect(
+      pickLatestCurrencyRate(korRates, 'KOR', 'HUF', '2025-06-01')?.rate,
+    ).toBe(600);
+    expect(
+      pickLatestCurrencyRate(korRates, 'KOR', 'HUF', '2024-05-01'),
+    ).toBeNull();
+  });
+
+  it('same calendar rule for timestamps with Budapest offset', () => {
+    const rows = [
+      {
+        rate: 90,
+        validFrom: '2024-12-31T23:00:00.000Z',
+        fromCurrencyCode: 'EGG',
+        toCurrencyCode: 'HUF',
+      },
+      {
+        rate: 100,
+        validFrom: '2025-01-01T00:00:00.000Z',
+        fromCurrencyCode: 'EGG',
+        toCurrencyCode: 'HUF',
+      },
+    ];
+    expect(
+      pickLatestCurrencyRate(rows, 'EGG', 'HUF', '2024-12-31T23:30:00+01:00')
+        ?.rate,
+    ).toBe(90);
+    expect(
+      pickLatestCurrencyRate(rows, 'EGG', 'HUF', '2025-01-01T00:30:00+01:00')
+        ?.rate,
+    ).toBe(100);
+  });
 });
 
 describe('distribution legs', () => {

@@ -318,7 +318,10 @@ describe('expandWorkflowSteps with apply_currency_rate', () => {
       to: 'HUF',
       date: '2026-11-07',
     });
-    assert.match(error.message, /EGG → HUF not found on or before 2026-11-07/);
+    assert.match(
+      error.message,
+      /Nincs érvényes árfolyam \(EGG → HUF\) a tranzakció dátumára: 2026-11-07\./,
+    );
   });
 
   it('throws 422 CURRENCY_RATE_MISSING when no rates map is passed', () => {

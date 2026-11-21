@@ -347,6 +347,61 @@ describe('convertTransactions with apply_currency_rate', () => {
     assert.equal(rateQueries.length, 1);
   });
 
+  it('batch with different transaction dates uses one lookup per day', async () => {
+    const rateOld: RateRow = {
+      documentId: 'rate-egg-huf-old',
+      rate: 80,
+      valid_from: '2024-01-01T00:00:00.000Z',
+      from_currency_type: { documentId: egg.documentId },
+      to_currency_type: { documentId: huf.documentId },
+    };
+    const rateNew: RateRow = {
+      documentId: 'rate-egg-huf-new',
+      rate: 120,
+      valid_from: '2026-06-01T00:00:00.000Z',
+      from_currency_type: { documentId: egg.documentId },
+      to_currency_type: { documentId: huf.documentId },
+    };
+    const { strapi, created, rateQueries } = buildStrapi({
+      transactions: [
+        { ...eggSource('tx-a', 10), date: '2026-01-15' },
+        { ...eggSource('tx-b', 12), date: '2026-11-07' },
+      ],
+      rates: [rateOld, rateNew],
+    });
+    const results = await convertTransactions(
+      strapi as unknown as ConvertStrapi,
+      { workflowDocumentId: 'wf-24' },
+    );
+    assert.equal(results.length, 2);
+    assert.equal(rateQueries.length, 2);
+    const hufSteps = created.filter((row) =>
+      row.entered_key.includes(':step:1'),
+    );
+    assert.deepEqual(
+      hufSteps.map((row) => row.amount).sort((a, b) => a - b),
+      [800, 1440],
+    );
+  });
+
+  it('missing rate on one row in batch does not write anything for that row', async () => {
+    const { strapi, writes } = buildStrapi({
+      transactions: [
+        { ...eggSource('tx-ok'), date: '2026-11-07' },
+        { ...eggSource('tx-missing'), date: '2020-01-01' },
+      ],
+      rates: [eggHufRate],
+    });
+    await assert.rejects(
+      convertTransactions(strapi as unknown as ConvertStrapi, {
+        workflowDocumentId: 'wf-24',
+      }),
+      (error: unknown) => error instanceof TransactionWorkflowError,
+    );
+    assert.ok(writes.some((entry) => entry.startsWith('create:tx-ok')));
+    assert.ok(!writes.some((entry) => entry.startsWith('create:tx-missing')));
+  });
+
   it('one lookup for a batch of same-day rows', async () => {
     const { strapi, rateQueries } = buildStrapi({
       transactions: [eggSource('tx-a'), eggSource('tx-b', 12)],
@@ -365,11 +420,19 @@ describe('convertTransactions with apply_currency_rate', () => {
       transactions: [eggSource()],
       rates: [],
     });
-    await rejectsWithCode(
+    await assert.rejects(
       convertTransactions(strapi as unknown as ConvertStrapi, {
         transactionDocumentId: 'tx-egg',
       }),
-      ERROR_CURRENCY_RATE_MISSING,
+      (error: unknown) => {
+        assert.ok(error instanceof TransactionWorkflowError);
+        assert.equal(error.code, ERROR_CURRENCY_RATE_MISSING);
+        assert.match(
+          error.message,
+          /Nincs érvényes árfolyam \(EGG → HUF\) a tranzakció dátumára: 2026-11-07\./,
+        );
+        return true;
+      },
     );
     assert.deepEqual(writes, []);
   });
