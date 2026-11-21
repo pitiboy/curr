@@ -147,7 +147,7 @@ type WizardToolbarProps = {
   onSingleSave: () => void;
 };
 
-function WizardToolbar({
+export function WizardToolbar({
   activeStep,
   hasDistribution,
   singleLayout,
@@ -955,20 +955,22 @@ export function BulkQuantityEntryPage({
       }
     }
     const date = formDate;
-    const prepared = await prepareSave(
-      date,
-      includeDistribution,
-      eggToSaleRate ?? 1,
-    );
-    if (!prepared.ready) {
-      return;
-    }
-    await runProductionAndPool(
-      prepared.productionPlans,
-      prepared.poolLegPlans,
-      date,
-      includeDistribution ? prepared.legPlans : [],
-    );
+    runGuarded(async () => {
+      const prepared = await prepareSave(
+        date,
+        includeDistribution,
+        eggToSaleRate ?? 1,
+      );
+      if (!prepared.ready) {
+        return;
+      }
+      await runProductionAndPool(
+        prepared.productionPlans,
+        prepared.poolLegPlans,
+        date,
+        includeDistribution ? prepared.legPlans : [],
+      );
+    });
   };
 
   const applyVoicePlan = useCallback((plan: VoiceEggBulkFormPlan) => {
