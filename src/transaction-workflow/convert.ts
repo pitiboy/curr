@@ -656,7 +656,7 @@ export {
   normalizeCurrencyCode,
   transactionRateCutoff as rateCutoff,
   transactionRateIsoDay as isoDay,
-} from '../shared/transaction-currency-rate.ts';
+} from '../shared/transaction-currency-rate';
 import {
   currencyPairInvolvesKor,
   formatCurrencyRateMissingMessage,
@@ -664,7 +664,7 @@ import {
   pickRateAtTransactionDate,
   transactionRateIsoDay as isoDay,
   type TransactionRateRow,
-} from '../shared/transaction-currency-rate.ts';
+} from '../shared/transaction-currency-rate';
 
 /** Build an inverted AppliedRate from a direct `to → from` row. */
 export function invertAppliedRate(

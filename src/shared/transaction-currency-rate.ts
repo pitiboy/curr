@@ -69,7 +69,6 @@ export function pickDirectRateAtTransactionDate(
   toKey: string,
   date: string,
 ): PickedTransactionRate | null {
-  const isoDate = transactionRateIsoDay(date);
   if (fromKey === toKey) {
     return {
       fromKey,
