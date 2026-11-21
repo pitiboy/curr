@@ -17,12 +17,7 @@ const { collectBulkQuantityDuplicates, saveHarness } = vi.hoisted(() => {
     resolvePipeline: () => {},
   };
   const collectBulkQuantityDuplicates = vi.fn(
-    (
-      _http: unknown,
-      _url: string,
-      _date: string,
-      _checks: unknown[],
-    ) =>
+    (_http: unknown, _url: string, _date: string, _checks: unknown[]) =>
       new Promise<[]>((resolve) => {
         saveHarness.resolveDuplicateLookup = () => resolve([]);
       }),
@@ -54,9 +49,7 @@ vi.mock('react-admin', async (importOriginal) => {
     ...actual,
     useTranslate: () => (key: string) =>
       key === 'app.bulk_quantity.save' ? 'Mentés' : key,
-    Toolbar: ({ children }: { children?: ReactNode }) => (
-      <div>{children}</div>
-    ),
+    Toolbar: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   };
 });
 
