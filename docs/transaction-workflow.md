@@ -289,7 +289,7 @@ Seedből hiányzik: `1900`.
 
 Tojás jelenik meg egy ólban, készletre kerül, majd eladáskor a darab kimegy a készletből, a forint pedig közvetlenül értékesítési bevétel lesz (korona nélkül).
 
-**Egysoros match forrás (v1):** a keletkezés sora `1300` ← `4500` (EGG). A teljes eladási folyamat (forint bevétel + készletcsökkenés) a sablon `step` listája; a Napi tojás űrlap csak a keletkezést írja (lásd alább).
+**Egysoros match forrás (v1):** a keletkezés sora `1300` ← `4500` (EGG). A teljes eladási folyamat (forint bevétel + készletcsökkenés) a sablon `step` listája. A Napi tojás űrlap a termelést, a készlet átvezetést és a továbbosztást a backend endpointon keresztül, saját sablonokkal könyveli (lásd alább).
 
 A szervezet az `I/4.12.1.2 Állattenyésztés` gyereke. A seedben ilyen ól még nincs; a juhnyáj mutatja a fa mintáját. A minta szervezete: Tojóól.
 
@@ -327,57 +327,98 @@ Seedből hiányzik: `EGG`, `4500`, `1900`, és a Tojóól szervezeti csomópont.
 
 ### Napi tojás rögzítés (edizone backoffice)
 
-Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-production` workflow) egyszerre több tyúkólt tölthet ki. A tyúkólok az `Tyúktartás` gyermek szervezetei (alom szerint). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
+Az edizone példányon a content-backoffice **Napi tojás rögzítés** űrlapja (`egg-production` workflow, `/workflows/egg-production`) egyszerre több tyúkólt tölthet ki. A tyúkólok a `Tyúktartás` gyermek szervezetei (alom szerint; a név: [`egg-poultry.constants.json`](../database/seeders/egg-poultry.constants.json)). Mezők: egy közös dátum (alapértelmezés: ma) és ólanként egy egész darabszám (0 vagy üres sor nem kerül mentésre).
 
-Mentésenként egy tranzakció jön létre nem nulla soronként; alapból piszkozatként, ugyanazzal a szerepkör- és véglegesítési logikával, mint az **Új tranzakció** űrlap. Az `egg-production` Settings sor `config.initialPublicationStatus` mezője lehet `draft` (alap) vagy `published`: utóbbi esetben sikeres mentés után a kliens meghívja a közzétételt `.../actions/publish?eggAuto=1` queryvel (`dataentry` vagy `editor`); a szerver ellenőrzi, hogy a beállításban továbbra is `published` van, és ebben a kontextusban a rögzítő és a publikáló lehet ugyanaz (a manuális Véglegesítés továbbra is a `publisher_must_differ` szabály alá esik `eggAuto` nélkül). Könyvelés soronként:
+**Mentés: egyetlen backend kérés.** Az űrlap már nem állít elő és nem ír soronként tranzakciót a kliensen. A termelést, a készlet átvezetést és (2. lépés) a továbbosztást egyetlen `POST /api/egg-production/entries` kérés küldi; a lábakat a szerver a transaction-workflow motor kifejtésével (`expandWorkflowSteps`) építi fel, és **egy adatbázis-tranzakcióban** (`strapi.db.transaction`) írja. Ha bármelyik láb hibát dob, semmi sem marad az adatbázisban. Részletek: [Napi tojás endpoint](#napi-tojás-endpoint-post-apiegg-productionentries), terv: [0010](./plans/0010-tojas-urlap-backend-endpoint.md).
 
-| Tartozik ←       | Követel                                            | Összeg | Pénznem | Szervezet       | Típus       |
-| ---------------- | -------------------------------------------------- | ------ | ------- | --------------- | ----------- |
-| `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab  | EGG     | az adott tyúkól | `Átvezetés` |
+Ólanként három sor keletkezik (ugyanazok, mint korábban a kliens oldali mentésnél):
 
-Bizonylat nincs. Ha ugyanarra a napra, ólra, EGG pénznemre és `1300`/`4500` párosra már van sor, a mentés előtt párbeszéd kínál **új sor** vagy **meglévő összeg frissítése** választást. A workflow kapcsoló a **Settings** collection `egg-production` sorában van (edizone seed: enabled, `initialPublicationStatus: draft`; kor: disabled); ugyanez kapcsolja a **Tojás készlet** kimutatást is. Régi `egg-daily-entry` kulcs → migráció: [`database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js`](../database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
+| Láb                         | Tartozik ←       | Követel                                            | Összeg | Pénznem | Szervezet       | Típus       |
+| --------------------------- | ---------------- | -------------------------------------------------- | ------ | ------- | --------------- | ----------- |
+| Termelés                    | `1300` Készletek | `4500` Saját termelésű készletek állományváltozása | darab  | EGG     | az adott tyúkól | `Átvezetés` |
+| Készlet átvezetés (ól)      | `4500`           | `1300` Készletek                                   | darab  | EGG     | az adott tyúkól | `Átvezetés` |
+| Készlet átvezetés (központ) | `1300` Készletek | `4500`                                             | darab  | EGG     | `Tyúktartás`    | `Átvezetés` |
+
+Az ól `1300` egyenlege így nettó nulla, a közös készlet a `Tyúktartás` szervezeten van. Leírások (sablonból): `Napi tojás — <ól>: <db> db`, `Tojás készlet átvezetés (ól) — <ól> → Tyúktartás (<db> db)`, `Tojás készlet átvezetés (Tyúktartás) — <ól> (<db> db)`.
+
+**Kapcsolt sorok (`related_transaction`):** a mentés első termelés sora az esemény anchor-ja (nincs kapcsolata); a további termelés sorok és minden továbbosztási láb erre mutat, az átvezetési lábak a saját óljuk termelés sorára. Ugyanaz a csillag minta, mint a Convert-nél ([`src/transaction-event-anchor.ts`](../src/transaction-event-anchor.ts)).
+
+Bizonylat nincs. A sorok alapból piszkozatként jönnek létre. Az `egg-production` Settings sor `config.initialPublicationStatus` mezője lehet `draft` (alap) vagy `published`: utóbbi esetben a kliens `publish: true`-t küld, a szerver ellenőrzi, hogy a beállításban továbbra is `published` van, és minden megírt lábat ugyanabban az adatbázis-tranzakcióban közzétesz a korábbi `?eggAuto=1` szabályaival (linked publish: `dataentry` is véglegesíthet, a rögzítő és a publikáló lehet ugyanaz). A manuális Véglegesítés és a `POST /api/transactions/:id/actions/publish?eggAuto=1` változatlan, továbbra is a `publisher_must_differ` szabály alá esik `eggAuto` nélkül.
+
+A workflow kapcsoló a **Settings** collection `egg-production` sorában van (edizone seed: enabled, `initialPublicationStatus: draft`; kor: disabled); ugyanez kapcsolja a **Tojás készlet** kimutatást is, és most már **szerver oldalon** is: kikapcsolt sor esetén az endpoint 403-at ad. Régi `egg-daily-entry` kulcs → migráció: [`database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js`](../database/migrations/2026.11.06T00.00.00.000.rename-egg-daily-entry-to-egg-production.js). Részletek: [apps/content-backoffice/src/workflows/bulk-quantity/README.md](../apps/content-backoffice/src/workflows/bulk-quantity/README.md).
 
 ### Napi tojás továbbosztás (edizone backoffice, egylépéses űrlap)
 
 A **Napi tojás rögzítés** űrlap egy oldalon mutatja a termelést (ólankénti mezők, fent) és a **továbbosztást** a `Tyúktartás` szervezet tagjai között. A tagokat a **`membership`** kapcsolja a szervezethez: `membership.members` → egy vagy több tag (many-to-many), `membership.organization` → szervezet, `membership.membership_type` → tagságtípus. Egy membership rekord közös szabályokkal több tagot is lefedhet. A tojás szabály a tagságon (`membership.rules`, opcionális felülírás) vagy a tagságtípus alapértelmezésén (`membership_type.rules`) van: `{ "egg": { "mode": "internal" | "sale", "ratio": number } }`.
 
-Az űrlap mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. Egy **Mentés** gomb van: ha a továbbosztás mezők üresek / nullák, csak a termelés (+ pool átvezetés) mentődik; ha van legalább egy nem nulla tag-mennyiség, termelés és továbbosztás együtt. Hangalapú kitöltés: a `voice_transaction_entry` feature mellett mikrofon → `POST /api/transactions/parse-voice` `workflowId: egg-production` (ól + tag mennyiségek); mentés továbbra is kézi. A nem nulla sorok tranzakciói alapból piszkozatként jönnek létre (auto-publish: lásd fent az `initialPublicationStatus` és `publisher_must_differ` szabályt), ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap.
+Az űrlap mutatja a napi termelt darabszámot, az élő **még kiosztatlan** számlálót, és tagonként egy egész mezőt. Ha a kiosztott összeg meghaladja a mai termelést, figyelmeztetés jelenik meg (pl. előző napi raktár miatt); a mentés ettől még engedélyezett. Egy **Mentés** gomb van: ha a továbbosztás mezők üresek / nullák, csak a termelés (+ pool átvezetés) mentődik; ha van legalább egy nem nulla tag-mennyiség, termelés és továbbosztás együtt. Hangalapú kitöltés: a `voice_transaction_entry` feature mellett mikrofon → `POST /api/transactions/parse-voice` `workflowId: egg-production` (ól + tag mennyiségek); mentés továbbra is kézi. A nem nulla sorok tranzakciói alapból piszkozatként jönnek létre (auto-publish: lásd fent az `initialPublicationStatus` és `publisher_must_differ` szabályt), ugyanazzal a szerepkör-logikával, mint az **Új tranzakció** űrlap. A mentés ilyenkor is **egy kérésben, atomikusan** történik (termelés és továbbosztás együtt).
 
-| Szabály               | Tartozik ←                  | Követel                 | Összeg                | Pénznem                             | Szervezet    | Típus       |
-| --------------------- | --------------------------- | ----------------------- | --------------------- | ----------------------------------- | ------------ | ----------- |
-| `internal`            | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                 | `Tyúktartás` | `Átvezetés` |
-| `sale` — tojás        | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                 | ugyanaz      | `Átvezetés` |
-| `sale` — kp befizetés | `1000` Készpénz             | tag `1001` saját számla | db × ratio × árfolyam | `VITE_EGG_SALE_CURRENCY` (alap HUF) | ugyanaz      | `Készpénz`  |
-| `sale` — bevétel      | `4000` Értékesítés bevétele | `1000` Készpénz         | ugyanaz               | HUF                                 | ugyanaz      | `Átvezetés` |
+| Szabály               | Tartozik ←                  | Követel                 | Összeg                | Pénznem                                             | Szervezet    | Típus       |
+| --------------------- | --------------------------- | ----------------------- | --------------------- | --------------------------------------------------- | ------------ | ----------- |
+| `internal`            | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                                 | `Tyúktartás` | `Átvezetés` |
+| `sale` — tojás        | tag `1001` saját számla     | `1300` Készletek        | db                    | EGG                                                 | ugyanaz      | `Átvezetés` |
+| `sale` — kp befizetés | `1000` Készpénz             | tag `1001` saját számla | db × ratio × árfolyam | eladási pénznem (Settings `saleCurrency`, alap HUF) | ugyanaz      | `Készpénz`  |
+| `sale` — bevétel      | `4000` Értékesítés bevétele | `1000` Készpénz         | ugyanaz               | ugyanaz                                             | ugyanaz      | `Átvezetés` |
 
-Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora a űrlap dátumáig (beleértve). Ha értékesítési tag van, de nincs ilyen árfolyam, az értékesítési sorok és a mentés tiltva van; a használt árfolyam megjelenik az űrlapon. A kiosztatlan tojás a `1300`-on marad (nincs tranzakció).
+Az eladási pénznem: az `egg-production` sor `config.saleCurrency` (vagy `eggSaleCurrency`), különben az `app.egg_sale_currency` Settings sor, alapértelmezés `HUF`. Az árfolyam a **`currency-rate`** legfrissebb `EGG` → eladási pénznem sora az űrlap dátumáig (beleértve); ha értékesítési tag van, de nincs ilyen árfolyam, az űrlap tiltja a mentést, a szerver pedig 422 `CURRENCY_RATE_MISSING`-et ad. Az összeg kerekítése 4 tizedes. 1001 számla nélküli tagnál, illetve 0 eladási összegnél a tag kimarad (figyelmeztetés a válaszban). A kiosztatlan tojás a `1300`-on marad (nincs tranzakció). A KOR pénztár (`1100`) egyik lábon sem szerepelhet (a szerver 422-vel elutasítja). A riportok valós idejűek és változatlanok: ugyanazok a sorok keletkeznek, mint korábban.
 
-**Ugyanez Convert-tel:** egy egysoros `1001 tag ← 1300` EGG tranzakció a **Tojás eladás forintért** sablonnal is kifejthető. A két HUF lépés (kp befizetés, bevétel) [árfolyamos lépés](#árfolyamos-lépés). Az összeg itt is db × ratio × árfolyam, ugyanazzal az árfolyam-szabállyal (a tranzakció dátumáig érvényes legfrissebb EGG → HUF sor; ha nincs, a konverzió nem fut le). A ratio a tag tagsági szabálya (`rules.egg.ratio`), lásd [Árfolyamos lépés](#árfolyamos-lépés). Eltérések az űrlaptól: a Convert a tag **minden** érvényes tagságát nézi (nem csak a Tyúktartásét), csak az adatbázisban rögzített szabályt használja, `internal` tagnál is végrehajt, és közvetítői jutalékot nem könyvel.
+**Ugyanez Convert-tel:** egy egysoros `1001 tag ← 1300` EGG tranzakció a **Tojás eladás forintért** sablonnal (edizone 24) is kifejthető. Az űrlap eladási sablonja ([42](../database/seeders/http/edizone/data/transaction-workflows/42-tojas-urlap-tovabbosztas-eladas.json)) lépésről lépésre ugyanaz a számla/pénznem/szervezet/típus/árfolyam beállítás (teszt ellenőrzi). Eltérések az űrlaptól: a Convert a tag **minden** érvényes tagságát nézi (nem csak a Tyúktartásét), csak az adatbázisban rögzített szabályt használja, `internal` tagnál is végrehajt, és közvetítői jutalékot nem könyvel.
 
-Duplikátum kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár (termelés és továbbosztás ugyanígy). Ha bármelyik lépéshez talál meglévő sort, egy párbeszéd kínál **új sor** vagy **meglévő frissítése** választást; a választás **minden** érintett sorra vonatkozik (termelés + továbbosztás).
+**Duplikátumok (szerver oldalon):** kulcs: dátum + szervezet + pénznem + tartozik/követel számlapár, lábanként (termelés, átvezetés, továbbosztás ugyanígy; piszkozat és közzétett sor is számít). Ha több láb ugyanazt a kulcsot adja (pl. két ól központi átvezetése, több tag eladás bevétele), egy meglévő sort legfeljebb egy láb kap meg (azonos összeg előnyben). `conflictChoice` nélkül a szerver 409-et ad a ütközések listájával, és semmit nem ír; az űrlap ekkor párbeszédben kér választást: **meglévő frissítése** (`replace`), **új sor** (`add`) vagy **meglévő megtartása** (`skip`). Továbbosztásnál a választás **minden** érintett sorra vonatkozik; ólanként felülírható (`conflictChoices`). `skip` esetén a meglévő termelés sor lesz az anchor.
 
 ```mermaid
 sequenceDiagram
   participant BO as Backoffice (egylepes)
-  participant Ol as Tyukol (termelés)
-  participant Keszlet as 1300 Keszletek
-  participant Tag as 1001 sajat szamla
-  participant Penztar as 1000 Keszpenz
-  participant Ert as 4000 Bevetel
+  participant API as POST /api/egg-production/entries
+  participant WF as Workflow motor (expandWorkflowSteps)
+  participant DB as strapi.db.transaction
 
-  BO->>Ol: 1. lepes — termelés sorok (1300 ← 4500)
-  BO->>BO: 2. lepes — tagonkénti db
-  alt bentlakó / társult (internal)
-    Keszlet->>Tag: EGG atvezetés (1001 ← 1300)
-  else értékesítési típus (sale)
-    Keszlet->>Tag: tojás (1001 ← 1300), EGG
-    Tag->>Penztar: kp befizetés (1000 ← 1001), HUF
-    Penztar->>Ert: bevétel (1000 → 4000), HUF, árfolyam + ratio
-  end
-  Note over Keszlet: kiosztatlan db a 1300-on marad
+  BO->>API: date, productions[], distributions[], conflictChoice?, publish
+  API->>API: auth, egg-production flag, szerep, org scope
+  API->>WF: virtualis forras sor olonkent / tagonkent
+  WF-->>API: labak (termeles + atvezetes, internal / sale)
+  API->>API: duplikatum kulcs → 409 vagy skip / replace / add
+  API->>DB: minden lab egy tranzakcioban (+ opcionalis publish)
+  DB-->>API: commit (vagy rollback: semmi sem marad)
+  API-->>BO: labankenti eredmeny
 ```
 
-**Későbbi riport:** tervezett készletkimutatás (termelt vs. kiosztott vs. `1300` maradvány); a tranzakciós adatok erre lekérdezhetők (dátum, `1300`/`4500`/`1000`/`4000`, szervezet, EGG/HUF).
+### Napi tojás endpoint (`POST /api/egg-production/entries`)
+
+Kód: [`src/egg-production/`](../src/egg-production/) (service, tiszta terv, tagsági szabály), route: [`src/api/egg-production/`](../src/api/egg-production/). Jogosultság: `api::egg-production.egg-production.createEntries` (minden content szerep, [`src/content-roles.ts`](../src/content-roles.ts)); a service ellenőrzi:
+
+- bejelentkezett felhasználó (401), `egg-production` Settings sor `enabled` (403 `EGG_FEATURE_DISABLED`);
+- szerep: `dataentry`, `editor`, `controller` (vagy a Settings sor `config.roles` listája; különben 403 `EGG_ROLE_FORBIDDEN`);
+- szervezeti hatókör: `dataentry` / `editor` csak a saját szervezeteire könyvelhet — **minden** láb szervezete (ólak és `Tyúktartás`) a felhasználó szervezetei között kell legyen; `controller` bármire (403 `EGG_ORG_SCOPE_DENIED`, írás előtt).
+
+Kérés:
+
+```json
+{
+  "date": "2026-11-18",
+  "productions": [{ "organizationId": "<ól documentId>", "quantity": 120 }],
+  "distributions": [{ "memberId": "<tag documentId>", "quantity": 10 }],
+  "conflictChoice": "skip | replace | add",
+  "conflictChoices": { "<ól documentId>": "skip" },
+  "publish": false
+}
+```
+
+`?dryRun=1` (vagy `"dryRun": true`): ugyanaz a terv és ütközés lista írás nélkül (előnézet). Válasz: `data.legs[]` lábanként (`key`, `kind`, `label`, `status`: `created` / `updated` / `skipped` / `planned` / `conflict`, `documentId`, `relatedDocumentId`, összeg, leírás, kódok), `data.conflicts[]`, `data.warnings[]`, `data.anchorDocumentId`, `data.autoPublish`. Hiba: Strapi formátum, `error.details.code` gépi kóddal (`EGG_VALIDATION` 400, `EGG_CONFLICT_CHOICE_REQUIRED` 409, `EGG_TEMPLATE_MISSING` 422, `CURRENCY_RATE_MISSING` 422, `EGG_WRITE_FAILED` + `details.legKey`), magyar üzenettel.
+
+**Sablonok.** Három dedikált transaction-workflow sablon, név szerint keresve ([`src/egg-production/constants.ts`](../src/egg-production/constants.ts)), az edizone seedben **draft** státusszal és `0000`/`0000` fejléc kóddal — így a Convert és a backoffice sablon katalógus (csak published) nem látja őket, a Convert viselkedése nem változik. Seed: `npm run seed:http:edizone:transaction-workflows -- local` (idempotens: név + fejléc kód alapján kihagyja a meglévőt; a `"status": "draft"` mezőt a [`11-transaction-workflows.http`](../database/seeders/http/common/11-transaction-workflows.http) kezeli).
+
+| Sablon                                           | Fájl                                                                                                        | Lépések                                                                          |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Tojás napi termelés és készlet átvezetés (űrlap) | [40](../database/seeders/http/edizone/data/transaction-workflows/40-tojas-urlap-termeles-es-atvezetes.json) | termelés, átvezetés (ól), átvezetés (Tyúktartás) — ól: `{original.organization}` |
+| Tojás továbbosztás belső (űrlap)                 | [41](../database/seeders/http/edizone/data/transaction-workflows/41-tojas-urlap-tovabbosztas-belso.json)    | `1001` ← `1300` EGG                                                              |
+| Tojás továbbosztás eladás (űrlap)                | [42](../database/seeders/http/edizone/data/transaction-workflows/42-tojas-urlap-tovabbosztas-eladas.json)   | mint az edizone 24: tojás, kp befizetés, bevétel (árfolyamos lépések)            |
+
+A kifejtés virtuális forrás sorral fut (ól vagy tag neve a `{original.description}`, darab a `{original.amount}`); nincs storno, nincs `converted_to_workflow`, nincs `entered_key`. A lépés sorrendje kötött (lépésszám-eltérés → 422 `EGG_TEMPLATE_INVALID`). A `{step.amount}` helyőrzőt (eladás összeg) a service tölti. Az árfolyamos lépések pénzneme a beállított eladási pénznemre cserélődik.
+
+**Tojás napló (Excel) import — egyszeri, elavult.** A [`egg-sheet-to-transactions.mjs`](../database/seeders/egg-sheet-to-transactions.mjs) a régi Google Sheet napló egyszeri betöltésére szolgált; új rögzítés az űrlapon / endpointon keresztül megy. A kódban `PRODUCTION_FROM = SALES_FROM = 2026-10-01` (a seeder README korábban tévesen `2026-09-01`-et írt; javítva: [database/seeders/README.md](../database/seeders/README.md)).
+
+**Későbbi riport:** a **Tojás készlet** kimutatás (termelt vs. kiosztott vs. `1300` maradvány) a tranzakciós adatokból valós időben számol; ez a változás nem érinti.
 
 ## Ügylet 4 — gyümölcs szürete és piaci eladása
 

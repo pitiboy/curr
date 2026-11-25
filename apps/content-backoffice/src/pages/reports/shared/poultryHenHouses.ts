@@ -1,5 +1,5 @@
 import type { ContentHttpClient } from '../../../data/receiptDraft';
-import { POULTRY_STOCK_ORGANIZATION_NAME } from '../../../workflows/bulk-quantity/poolTransfer';
+import { POULTRY_STOCK_ORGANIZATION_NAME } from '../../../workflows/bulk-quantity/eggDailyEntry.constants';
 
 import { fetchStrapiList } from './reportTransactionStatus';
 

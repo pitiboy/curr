@@ -592,16 +592,20 @@ export const enMessages = mergeTranslations(englishMessages, {
       no_rows: 'Enter at least one non-zero quantity.',
       invalid_quantity: 'Whole number, 0 or greater.',
       results_heading: 'Save results',
-      auto_publish_done: 'Saved and published.',
-      auto_publish_done_after_update: 'Updated and published.',
-      auto_publish_failed: 'Publishing failed.',
-      retry_failed: 'Retry failed rows',
+      save_success: 'Saved.',
+      save_failed_nothing_saved: 'Saving failed; nothing was recorded.',
+      result_created: '%{count} new rows',
+      result_updated: '%{count} rows updated',
+      result_skipped: '%{count} existing rows kept',
+      result_published: 'published',
+      retry_failed: 'Retry save',
       conflict_title: 'Entry already exists for this day',
       conflict_body:
         'A transaction already exists for the same day, hen house, and account pair. Choose what to do for each row.',
       conflict_existing: 'Existing amount: %{amount}',
       conflict_update: 'Update existing row',
       conflict_insert: 'Insert as new row',
+      conflict_skip: 'Keep existing row (skip)',
       conflict_continue: 'Continue',
       conflict_global_body:
         'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
@@ -622,20 +626,6 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_no_members:
         'No members in organization “%{org}” for this date.',
       distribution_members_failed: 'Could not load the member list.',
-      pool_transfer: {
-        coop: 'Egg stock transfer (coop) — %{organization} → Tyúktartás (%{amount})',
-        parent: 'Egg stock transfer (Tyúktartás) — %{organization} (%{amount})',
-      },
-      description: {
-        egg: 'Daily eggs — %{organization}: %{amount}',
-        egg_distribution_internal:
-          'Egg distribution (internal) — %{member}: %{amount}',
-        egg_distribution_sale_egg: 'Egg sale (eggs) — %{member}: %{amount}',
-        egg_distribution_cash:
-          'Egg sale (cash payment) — %{member}: %{amount} → %{revenue}',
-        egg_distribution_revenue:
-          'Egg sale (revenue) — %{member}: %{amount} → %{revenue}',
-      },
     },
     login_google: 'Sign in with Google',
     oauth_errors: {

@@ -1,0 +1,18 @@
+{
+  "name": "Tojás továbbosztás belső (űrlap)",
+  "status": "draft",
+  "debit_account_code": "0000",
+  "credit_account_code": "0000",
+  "currency": "EGG",
+  "steps": [
+    {
+      "description": "Tojás továbbosztás (belső) — {original.description}: {original.amount} db",
+      "percent": 100,
+      "debit_code": "1001",
+      "credit_code": "1300",
+      "currency": "EGG",
+      "organization": "Tyúktartás",
+      "transaction_type": "Átvezetés"
+    }
+  ]
+}

@@ -1,4 +1,12 @@
+import poultryConstants from '../../../../../database/seeders/egg-poultry.constants.json';
 import { MEMBER_PRIVATE_ACCOUNT_CODE } from './memberAccounts';
+
+/** Hen houses' parent org: pooled stock + distribution (backend: `src/egg-production/constants.ts`). */
+export const POULTRY_STOCK_ORGANIZATION_NAME =
+  poultryConstants.poultryStockOrganizationName;
+
+/** Single write endpoint: production + pool + distribution legs (backend builds them). */
+export const EGG_PRODUCTION_ENTRIES_PATH = '/api/egg-production/entries';
 
 /** Settings feature flag + workflow id (gates form menu and egg inventory report). */
 export const EGG_PRODUCTION_WORKFLOW_ID = 'egg-production';
