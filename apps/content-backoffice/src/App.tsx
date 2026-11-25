@@ -5,12 +5,27 @@ import { Route } from 'react-router-dom';
 import { authProvider } from './auth/authProvider';
 import { DeployRefreshChecker } from './deploy/DeployRefreshChecker';
 import { CONTENT_ROLES } from './auth/roles';
+import { TRANSACTION_WORKFLOW_PREFILL_ROLES } from './data/accountRowSelection';
 import { RoleGuard } from './auth/RoleGuard';
 import { dataProvider } from './data/dataProvider';
 import { i18nProvider } from './i18n';
 import { AppTitle } from './layout/AppTitle';
 import { BackofficeLayout } from './layout/BackofficeLayout';
 import { LoginPage } from './login/LoginPage';
+import { AssetCreate } from './pages/assets/AssetCreate';
+import { AssetEdit } from './pages/assets/AssetEdit';
+import { AssetCategoryGate, AssetGate } from './pages/assets/AssetGate';
+import { AssetList } from './pages/assets/AssetList';
+import { AssetShow } from './pages/assets/AssetShow';
+import {
+  AssetCategoryCreate,
+  AssetCategoryEdit,
+  AssetCategoryList,
+} from './pages/assets/AssetCategoryPages';
+import {
+  ASSET_CATEGORIES_RESOURCE,
+  ASSETS_RESOURCE,
+} from './pages/assets/assetConstants';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { EggInventoryReportPage } from './pages/reports/EggInventoryReportPage';
 import { HenInventoryReportPage } from './pages/reports/HenInventoryReportPage';
@@ -25,6 +40,7 @@ import { RECONCILIATION_FEATURE_ID } from './pages/reports/reconciliation/types'
 import { TransactionCreate } from './pages/transactions/TransactionCreate';
 import { TransactionList } from './pages/transactions/TransactionList';
 import { TransactionShow } from './pages/transactions/TransactionShow';
+import { TransactionWorkflowsOverviewPage } from './pages/workflows/TransactionWorkflowsOverviewPage';
 import { darkTheme, lightTheme } from './theme';
 import { eggDailyEntryConfig } from './workflows/bulk-quantity/configs/eggDailyEntry.config';
 import { BackofficeConfigProvider } from './workflows/BackofficeConfigProvider';
@@ -52,6 +68,51 @@ export function App() {
             options={{ label: 'app.transactions_list' }}
             show={TransactionShow}
           />
+          <Resource
+            create={
+              <AssetGate>
+                <AssetCreate />
+              </AssetGate>
+            }
+            edit={
+              <AssetGate>
+                <AssetEdit />
+              </AssetGate>
+            }
+            list={
+              <AssetGate>
+                <AssetList />
+              </AssetGate>
+            }
+            name={ASSETS_RESOURCE}
+            options={{ label: 'app.assets.menu' }}
+            recordRepresentation="name"
+            show={
+              <AssetGate>
+                <AssetShow />
+              </AssetGate>
+            }
+          />
+          <Resource
+            create={
+              <AssetCategoryGate>
+                <AssetCategoryCreate />
+              </AssetCategoryGate>
+            }
+            edit={
+              <AssetCategoryGate>
+                <AssetCategoryEdit />
+              </AssetCategoryGate>
+            }
+            list={
+              <AssetCategoryGate>
+                <AssetCategoryList />
+              </AssetCategoryGate>
+            }
+            name={ASSET_CATEGORIES_RESOURCE}
+            options={{ label: 'app.asset_categories.menu' }}
+            recordRepresentation="name"
+          />
           <CustomRoutes>
             <Route
               element={
@@ -62,6 +123,14 @@ export function App() {
               path="/transactions/create"
             />
             <Route element={<ProfilePage />} path="/profile" />
+            <Route
+              element={
+                <RoleGuard allow={[...TRANSACTION_WORKFLOW_PREFILL_ROLES]}>
+                  <TransactionWorkflowsOverviewPage />
+                </RoleGuard>
+              }
+              path="/transaction-workflows-overview"
+            />
             <Route
               element={
                 <WorkflowFormGate

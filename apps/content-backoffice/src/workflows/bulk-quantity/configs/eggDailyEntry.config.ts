@@ -42,4 +42,6 @@ export const eggDailyEntryConfig: BulkQuantityWorkflowConfig = {
   entriesPath: EGG_PRODUCTION_ENTRIES_PATH,
   roles: ['dataentry', 'editor', 'controller'],
   distribution: eggDistributionConfig,
+  layout: 'single',
+  voice: { enabled: true },
 };

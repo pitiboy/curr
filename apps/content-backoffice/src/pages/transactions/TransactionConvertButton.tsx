@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react';
 import { useNotify, useRefresh, useTranslate } from 'react-admin';
 
 import { convertTransactionToWorkflow } from '../../data/dataProvider';
+import type { ConvertOverridesPayload } from '../../data/transactionWorkflow';
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { useSubmitGuard } from '../../submit/useSubmitGuard';
 import { invalidateTransactionWorkflowCatalog } from '../../workflows/useTransactionWorkflowCatalog';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import { ConvertConfirmDialog } from './ConvertConfirmDialog';
 import { TransactionConvertPreviewButton } from './TransactionConvertPreviewButton';
 
@@ -33,7 +35,9 @@ export function TransactionConvertButton({
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
+  const openAssetForm = useAssetFormAfterBooking();
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const previewInput = useMemo<ConvertPreviewRequest>(
     () => ({
@@ -44,18 +48,34 @@ export function TransactionConvertButton({
   );
 
   // A transaction converts once; stay locked until the refresh hides the button.
-  const convertGuard = useSubmitGuard({
+  const convertGuard = useSubmitGuard<
+    ConvertOverridesPayload | null | undefined,
+    Awaited<ReturnType<typeof convertTransactionToWorkflow>>
+  >({
     lockOnSuccess: true,
-    run: () => convertTransactionToWorkflow(documentId, workflow.documentId),
-    onSuccess: () => {
+    run: (overrides) =>
+      convertTransactionToWorkflow(
+        documentId,
+        workflow.documentId,
+        overrides ?? undefined,
+      ),
+    onSuccess: (result) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
+      setEditMode(false);
       refresh();
+      void openAssetForm(workflow, documentId, result);
     },
     onError: (error: unknown) => {
       const message = strapiErrorMessage(error);
       if (message.includes('transaction-workflow not found')) {
         invalidateTransactionWorkflowCatalog();
+      }
+      if (
+        message.includes('ki van fejtve') ||
+        message.includes('TRANSACTION_ALREADY_CONVERTED')
+      ) {
+        refresh();
       }
       notify(message || translate('app.transactions_convert_error'), {
         type: 'error',
@@ -64,8 +84,8 @@ export function TransactionConvertButton({
   });
   const busy = convertGuard.busy;
 
-  const onConfirm = () => {
-    convertGuard.submit();
+  const onConfirm = (overrides?: ConvertOverridesPayload | null) => {
+    convertGuard.submit(overrides);
   };
 
   return (
@@ -112,12 +132,18 @@ export function TransactionConvertButton({
       </Stack>
       {open ? (
         <ConvertConfirmDialog
+          editMode={editMode}
           loading={busy}
           open={open}
           previewInput={previewInput}
           workflow={workflow}
-          onClose={() => !busy && setOpen(false)}
+          onClose={() => {
+            if (busy) return;
+            setOpen(false);
+            setEditMode(false);
+          }}
           onConfirm={onConfirm}
+          onEditModeChange={setEditMode}
         />
       ) : null}
     </>

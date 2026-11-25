@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Mezőgazdasági gépek",
+    "description": "Traktorok, munkagépek, vetőgépek, pótkocsik.",
+    "sort_order": 10
+  },
+  {
+    "name": "Kéziszerszámok",
+    "description": "Ásók, kapák, gereblyék, kézi fűrészek, kisgépek.",
+    "sort_order": 20
+  },
+  {
+    "name": "Kerti és erdészeti gépek",
+    "description": "Fűnyírók, fűkaszák, láncfűrészek, rotációs kapák.",
+    "sort_order": 30
+  },
+  {
+    "name": "Öntözés",
+    "description": "Szivattyúk, csepegtető rendszerek, tömlők, tartályok.",
+    "sort_order": 40
+  },
+  {
+    "name": "Állattartási eszközök",
+    "description": "Ólak, etetők, itatók, kerítések, villanypásztor.",
+    "sort_order": 50
+  },
+  {
+    "name": "Járművek",
+    "description": "Személy- és teherautók, utánfutók, quadok.",
+    "sort_order": 60
+  },
+  {
+    "name": "Építőanyag-tartós eszközök",
+    "description": "Fóliasátrak, raktárkonténerek, tartós szerkezetek.",
+    "sort_order": 70
+  },
+  {
+    "name": "Konyha és feldolgozás",
+    "description": "Feldolgozó gépek, aszalók, hűtők, konyhai eszközök.",
+    "sort_order": 80
+  },
+  {
+    "name": "Informatika és elektronika",
+    "description": "Számítógépek, telefonok, kamerák, mérlegek.",
+    "sort_order": 90
+  },
+  {
+    "name": "Energetika",
+    "description": "Napelemek, akkumulátorok, aggregátorok, kazánok.",
+    "sort_order": 100
+  },
+  {
+    "name": "Bútor és tárolás",
+    "description": "Polcok, szekrények, asztalok, raktári állványok.",
+    "sort_order": 110
+  },
+  {
+    "name": "Egyéb",
+    "description": "Más kategóriába nem sorolható eszközök.",
+    "sort_order": 999
+  }
+]

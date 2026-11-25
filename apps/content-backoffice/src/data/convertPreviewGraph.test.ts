@@ -4,6 +4,7 @@ import type { ConvertPreview } from './convertPreview';
 import {
   formatSequenceAmount,
   layoutSequenceDiagram,
+  sequenceParticipantName,
 } from './convertPreviewGraph';
 
 const previewFixture: ConvertPreview = {
@@ -81,19 +82,27 @@ describe('layoutSequenceDiagram', () => {
     });
   });
 
-  it('uses member pastel fill for 1101/1001', () => {
+  it('uses member pastel fill and role label for 1101/1001', () => {
     const preview: ConvertPreview = {
       ...previewFixture,
       movements: [],
       original: {
         ...previewFixture.original,
-        debit: { documentId: 'm', code: '1101', name: 'Tag' },
+        debit: { documentId: 'm', code: '1101', name: 'kovacs - tagi számla' },
+        credit: {
+          documentId: 'p',
+          code: '1001',
+          name: 'kovacs - saját számla',
+        },
       },
     };
     const layout = layoutSequenceDiagram(preview);
-    const member = layout.participants.find((row) => row.code === '1101');
-    expect(member?.isMember).toBe(true);
-    expect(member?.headerFill).toContain('FFE0B2');
+    const tagi = layout.participants.find((row) => row.code === '1101');
+    const sajat = layout.participants.find((row) => row.code === '1001');
+    expect(tagi?.isMember).toBe(true);
+    expect(tagi?.headerFill).toContain('FFE0B2');
+    expect(tagi?.name).toBe('tagi számla');
+    expect(sajat?.name).toBe('saját számla');
   });
 
   it('detects self-loop messages', () => {
@@ -122,5 +131,21 @@ describe('layoutSequenceDiagram', () => {
 describe('formatSequenceAmount', () => {
   it('includes currency code', () => {
     expect(formatSequenceAmount(324, 'EGG')).toContain('EGG');
+  });
+});
+
+describe('sequenceParticipantName', () => {
+  it('prefers role labels for member ledgers', () => {
+    expect(sequenceParticipantName('1101', 'x - tagi számla')).toBe(
+      'tagi számla',
+    );
+    expect(sequenceParticipantName('1001', null)).toBe('saját számla');
+  });
+
+  it('falls back to the API account name', () => {
+    expect(sequenceParticipantName('1530', 'Lakóépületek')).toBe(
+      'Lakóépületek',
+    );
+    expect(sequenceParticipantName('1530', '  ')).toBeNull();
   });
 });

@@ -11,6 +11,7 @@ import { AdminContext } from 'react-admin';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { eggDailyEntryConfig } from './configs/eggDailyEntry.config';
+import type { BulkQuantityWorkflowConfig } from './types';
 import type { EggEntriesResponse } from './eggEntriesApi';
 
 const { httpMock, notify, translate } = vi.hoisted(() => ({
@@ -174,17 +175,42 @@ afterEach(() => {
   notify.mockReset();
 });
 
-async function renderPage() {
+const wizardConfig = { ...eggDailyEntryConfig, layout: 'wizard' as const };
+
+async function renderPage(config: BulkQuantityWorkflowConfig = wizardConfig) {
   const { BulkQuantityEntryPage } = await import('./BulkQuantityEntryPage');
   render(
     <AdminContext>
-      <BulkQuantityEntryPage config={eggDailyEntryConfig} />
+      <BulkQuantityEntryPage config={config} />
     </AdminContext>,
   );
   await screen.findByLabelText('A ól');
 }
 
 describe('BulkQuantityEntryPage (egg daily entry)', () => {
+  it('single layout: one Save button, empty distribution sends production only', async () => {
+    const user = userEvent.setup();
+    await renderPage(eggDailyEntryConfig);
+    expect(
+      screen.queryByRole('button', {
+        name: 'app.bulk_quantity.save_production_only',
+      }),
+    ).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('Anna')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('A ól'), {
+      target: { value: '120' },
+    });
+    await user.click(
+      screen.getByRole('button', { name: 'app.bulk_quantity.save' }),
+    );
+
+    await waitFor(() => expect(entryPosts()).toHaveLength(1));
+    expect(entryPosts()[0]!.body).toMatchObject({
+      productions: [{ organizationId: 'org-a', quantity: 120 }],
+      distributions: [],
+    });
+  });
+
   it('saves production only with a single POST and renders the per-row result', async () => {
     const user = userEvent.setup();
     await renderPage();

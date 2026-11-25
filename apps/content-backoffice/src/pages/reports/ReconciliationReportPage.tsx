@@ -18,6 +18,9 @@ import { Title, useTranslate } from 'react-admin';
 
 import { useOpenDrilldown } from '../../filters/globalTransactionFiltersAtom';
 import { useBackofficeConfig } from '../../workflows/useBackofficeConfig';
+import { ASSETS_FEATURE_ID } from '../assets/assetConstants';
+import { AssetReconciliationSection } from './assetReconciliation/AssetReconciliationSection';
+import { useAssetReconciliation } from './assetReconciliation/useAssetReconciliation';
 import {
   ReportPageHeader,
   ReportPageShell,
@@ -57,8 +60,10 @@ function formatCell(value: unknown): string {
 export function ReconciliationReportPage() {
   const translate = useTranslate();
   const openDrilldown = useOpenDrilldown();
-  const { features } = useBackofficeConfig();
+  const { features, enabled } = useBackofficeConfig();
   const { report, loading, error, refresh } = useReconciliationReport();
+  const assetsEnabled = enabled.includes(ASSETS_FEATURE_ID);
+  const assetReconciliation = useAssetReconciliation(assetsEnabled);
   const publishedWithoutReceiptsFilter =
     publishedWithoutReceiptsFilterFromConfig(
       features[RECONCILIATION_FEATURE_ID]?.config,
@@ -94,7 +99,10 @@ export function ReconciliationReportPage() {
         }}
       >
         <Button
-          onClick={() => void refresh()}
+          onClick={() => {
+            void refresh();
+            if (assetsEnabled) assetReconciliation.reload();
+          }}
           startIcon={<RefreshIcon />}
           variant="outlined"
         >
@@ -111,6 +119,17 @@ export function ReconciliationReportPage() {
           days: report?.auditLogRetentionDays ?? 365,
         })}
       </Alert>
+
+      {assetsEnabled ? (
+        <Box sx={{ mb: 2 }}>
+          <AssetReconciliationSection
+            asOf={assetReconciliation.asOf}
+            errorMessage={assetReconciliation.errorMessage}
+            report={assetReconciliation.report}
+            status={assetReconciliation.status}
+          />
+        </Box>
+      ) : null}
 
       {loading ? <Skeleton height={320} variant="rounded" /> : null}
 

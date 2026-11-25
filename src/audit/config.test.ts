@@ -69,4 +69,19 @@ describe('shouldAudit', () => {
     const off = readAuditConfig({ AUDIT_LOG_ENABLED: 'false' });
     assert.equal(shouldAudit(off, 'POST', '/api/auth/local'), false);
   });
+
+  it('audits asset and asset-category writes like other content types', () => {
+    for (const [method, path] of [
+      ['POST', '/api/assets'],
+      ['PUT', '/api/assets/abc123'],
+      ['DELETE', '/api/assets/abc123'],
+      ['POST', '/api/asset-categories'],
+      ['PUT', '/api/asset-categories/cat1'],
+      ['DELETE', '/api/asset-categories/cat1'],
+      ['PUT', '/content-manager/collection-types/api::asset.asset/abc123'],
+    ]) {
+      assert.equal(shouldAudit(cfg, method, path), true, `${method} ${path}`);
+    }
+    assert.equal(shouldAudit(cfg, 'GET', '/api/assets'), false);
+  });
 });

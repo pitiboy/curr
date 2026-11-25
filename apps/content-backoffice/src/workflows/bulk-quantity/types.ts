@@ -5,6 +5,15 @@ export type BulkQuantityDistributionConfig = {
   memberOrganizationName: string;
 };
 
+/** Wizard (default) vs production+distribution on one page. */
+export type BulkQuantityLayout = 'wizard' | 'single';
+
+export type BulkQuantityVoiceConfig = {
+  enabled: true;
+  /** Settings feature key; defaults to `voice_transaction_entry`. */
+  featureKey?: string;
+};
+
 export type BulkQuantityWorkflowConfig = {
   workflowId: string;
   path: string;
@@ -17,6 +26,10 @@ export type BulkQuantityWorkflowConfig = {
   entriesPath: string;
   roles: readonly ContentRole[];
   distribution?: BulkQuantityDistributionConfig;
+  /** Default `wizard`. With `distribution`, `single` shows both sections together. */
+  layout?: BulkQuantityLayout;
+  /** Opt-in hangalapú kitöltés (parse-voice + workflowId). */
+  voice?: BulkQuantityVoiceConfig;
 };
 
 export type BulkQuantityHenHouse = {

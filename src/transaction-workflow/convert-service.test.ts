@@ -9,13 +9,19 @@ import {
   CONVERTED_EXPANDED,
   CONVERTED_ORIGINAL,
   CONVERTED_STORNO,
+  ERROR_TRANSACTION_ALREADY_CONVERTED,
   STEP_RELATED,
   TRANSACTION_UID,
   WORKFLOW_UID,
+  isExpandableConvertedValue,
   type SourceTransaction,
   type WorkflowTemplate,
 } from './convert.ts';
-import { convertTransactions, type ConvertStrapi } from './convert-service.ts';
+import {
+  convertTransactions,
+  parseOverridesPayload,
+  type ConvertStrapi,
+} from './convert-service.ts';
 
 const huf = { documentId: 'cur-huf' };
 
@@ -103,6 +109,21 @@ function buildConvertStrapi(
   let source: SourceTransaction | null = { ...transaction };
   const yieldTick = () => new Promise((resolve) => setImmediate(resolve));
 
+  const draftPublishRow = () => {
+    const row = options.stateful && source ? source : transaction;
+    const organization = row.organization ?? null;
+    if (!organization) return null;
+    return {
+      date: row.date,
+      amount: row.amount,
+      description: row.description,
+      currency_type: row.currency_type,
+      organization,
+      debit_account: row.debit_account,
+      credit_account: row.credit_account,
+    };
+  };
+
   const transactionApi = {
     findOne: async () => (options.stateful ? source : transaction),
     findMany: async () => [],
@@ -141,17 +162,20 @@ function buildConvertStrapi(
         });
       }
       const converted = data.converted_to_workflow;
-      if (
-        options.stateful &&
-        source &&
-        documentId === source.documentId &&
-        'converted_to_workflow' in data
-      ) {
-        source = {
-          ...source,
-          converted_to_workflow:
-            converted as SourceTransaction['converted_to_workflow'],
-        };
+      if (source && documentId === source.documentId) {
+        const next: SourceTransaction = { ...source };
+        if ('converted_to_workflow' in data) {
+          next.converted_to_workflow =
+            converted as SourceTransaction['converted_to_workflow'];
+        }
+        if (typeof data.organization === 'string' && data.organization) {
+          next.organization = { documentId: data.organization };
+        }
+        source = next;
+        // Non-stateful mocks still need the org fill to show up on publish checks.
+        if (!options.stateful && next.organization) {
+          transaction.organization = next.organization;
+        }
       }
       ops.push({
         kind: 'update',
@@ -201,19 +225,38 @@ function buildConvertStrapi(
     db: {
       query: () => ({
         // Complete stored draft → syncSourceAfterConvert may publish.
-        findOne: async () =>
-          transaction.organization
-            ? {
-                date: transaction.date,
-                amount: transaction.amount,
-                description: transaction.description,
-                currency_type: transaction.currency_type,
-                organization: transaction.organization,
-                debit_account: transaction.debit_account,
-                credit_account: transaction.credit_account,
-              }
-            : null,
+        findOne: async ({
+          select,
+        }: {
+          select?: string[];
+        } = {}) => {
+          if (select?.includes('converted_to_workflow')) {
+            return options.stateful && source
+              ? { converted_to_workflow: source.converted_to_workflow }
+              : { converted_to_workflow: transaction.converted_to_workflow };
+          }
+          return draftPublishRow();
+        },
+        updateMany: async ({ data }: { data: Record<string, unknown> }) => {
+          if (options.stateful) {
+            if (!source) return { count: 0 };
+            if (
+              'converted_to_workflow' in data &&
+              isExpandableConvertedValue(source.converted_to_workflow)
+            ) {
+              source = {
+                ...source,
+                converted_to_workflow:
+                  data.converted_to_workflow as SourceTransaction['converted_to_workflow'],
+              };
+              return { count: 1 };
+            }
+            return { count: 0 };
+          }
+          return { count: 1 };
+        },
       }),
+      transaction: async <T>(task: () => Promise<T>) => task(),
     },
     requestContext: {
       get: () => ({ state: {} }),
@@ -244,10 +287,11 @@ describe('convertTransactions keep_original write order', () => {
       expandableTransaction,
     );
 
-    await convertTransactions(strapi, {
+    const { results } = await convertTransactions(strapi, {
       workflowDocumentId: workflowTwoSteps.documentId,
       transactionDocumentId: expandableTransaction.documentId,
     });
+    assert.equal(results.length, 1);
 
     assert.deepEqual(ops.map(opSignature), [
       `update:${expandableTransaction.documentId}:${CONVERTED_ORIGINAL}`,
@@ -264,10 +308,11 @@ describe('convertTransactions keep_original write order', () => {
     };
     const { strapi, ops } = buildConvertStrapi(workflow, expandableTransaction);
 
-    await convertTransactions(strapi, {
+    const { results } = await convertTransactions(strapi, {
       workflowDocumentId: workflow.documentId,
       transactionDocumentId: expandableTransaction.documentId,
     });
+    assert.equal(results.length, 1);
 
     assert.equal(
       ops.some(
@@ -280,6 +325,49 @@ describe('convertTransactions keep_original write order', () => {
       `create:${CONVERTED_EXPANDED}:${expandableTransaction.documentId}:step:1`,
       `delete:${expandableTransaction.documentId}`,
     ]);
+  });
+
+  it('honours overrides.keepOriginal over the workflow template flag', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      keep_original: true,
+    };
+    const { strapi, ops } = buildConvertStrapi(workflow, expandableTransaction);
+
+    const { results } = await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: expandableTransaction.documentId,
+      overrides: { keepOriginal: false },
+    });
+    assert.equal(results.length, 1);
+    assert.equal(results[0]?.customised, true);
+    assert.equal(
+      ops.some(
+        (op) => op.kind === 'update' && op.converted === CONVERTED_ORIGINAL,
+      ),
+      false,
+    );
+    assert.deepEqual(ops.map(opSignature), [
+      `create:${CONVERTED_EXPANDED}:${expandableTransaction.documentId}:step:0`,
+      `create:${CONVERTED_EXPANDED}:${expandableTransaction.documentId}:step:1`,
+      `delete:${expandableTransaction.documentId}`,
+    ]);
+  });
+
+  it('honours overrides.stepsPublished over the workflow template flag', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      steps_published: false,
+    };
+    const { strapi, ops } = buildConvertStrapi(workflow, completeTransaction);
+
+    await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: completeTransaction.documentId,
+      overrides: { stepsPublished: true },
+    });
+
+    assert.ok(ops.some((op) => op.kind === 'publish'));
   });
 
   it('keeps incomplete-source storno and steps as draft (related link needs a published source)', async () => {
@@ -297,6 +385,40 @@ describe('convertTransactions keep_original write order', () => {
     assert.deepEqual(
       ops.filter((op) => op.kind === 'publish'),
       [],
+    );
+  });
+
+  it('copies step organization onto an incomplete source so steps_published can publish', async () => {
+    const workflow: WorkflowTemplate = {
+      ...workflowTwoSteps,
+      steps_published: true,
+      step: [
+        {
+          ...workflowTwoSteps.step[0]!,
+          organization: { documentId: 'org-from-step' },
+        },
+        {
+          ...workflowTwoSteps.step[1]!,
+          organization: { documentId: 'org-from-step' },
+        },
+      ],
+    };
+    const source: SourceTransaction = { ...expandableTransaction };
+    const { strapi, ops } = buildConvertStrapi(workflow, source);
+
+    await convertTransactions(strapi, {
+      workflowDocumentId: workflow.documentId,
+      transactionDocumentId: source.documentId,
+    });
+
+    assert.equal(source.organization?.documentId, 'org-from-step');
+    assert.ok(
+      ops.some(
+        (op) => op.kind === 'publish' && op.documentId === source.documentId,
+      ),
+    );
+    assert.ok(
+      ops.some((op) => op.kind === 'publish' && op.documentId === 'created-1'),
     );
   });
 
@@ -373,13 +495,21 @@ describe('convertTransactions concurrent requests (double submit)', () => {
         transactionDocumentId: expandableTransaction.documentId,
       };
 
-      const [first, second] = await Promise.all([
+      const [first, second] = await Promise.allSettled([
         convertTransactions(strapi, request),
         convertTransactions(strapi, request),
       ]);
 
-      assert.equal(first.length, 1);
-      assert.equal(second.length, 0);
+      assert.equal(first.status, 'fulfilled');
+      assert.equal(second.status, 'rejected');
+      if (first.status === 'fulfilled') {
+        assert.equal(first.value.results.length, 1);
+      }
+      if (second.status === 'rejected') {
+        const reason = second.reason as { message?: string; code?: string };
+        assert.match(reason.message ?? '', /ki van fejtve/);
+        assert.equal(reason.code, ERROR_TRANSACTION_ALREADY_CONVERTED);
+      }
       const stepCreates = ops.filter(
         (op) => op.kind === 'create' && op.converted === CONVERTED_EXPANDED,
       );
@@ -465,5 +595,42 @@ describe('convertTransactions copy_receipt', () => {
       createIdx < connectIdx && connectIdx < publishIdx,
       'published copy_receipt steps must link receipts before publish',
     );
+  });
+});
+
+describe('parseOverridesPayload', () => {
+  it('accepts flag-only overrides without legs', () => {
+    assert.deepEqual(parseOverridesPayload({ keepOriginal: false }), {
+      keepOriginal: false,
+    });
+    assert.deepEqual(parseOverridesPayload({ stepsPublished: true }), {
+      stepsPublished: true,
+    });
+  });
+
+  it('returns undefined for empty objects', () => {
+    assert.equal(parseOverridesPayload({}), undefined);
+    assert.equal(parseOverridesPayload({ legs: [] }), undefined);
+  });
+
+  it('parses legs together with flags', () => {
+    const parsed = parseOverridesPayload({
+      keepOriginal: true,
+      legs: [
+        {
+          key: 'step:0',
+          sourceStepIndex: 0,
+          description: 'x',
+          amount: 10,
+          percent: 100,
+          debitAccountDocumentId: 'd',
+          creditAccountDocumentId: 'c',
+          currencyTypeDocumentId: 'cur',
+          copyReceipt: false,
+        },
+      ],
+    });
+    assert.equal(parsed?.keepOriginal, true);
+    assert.equal(parsed?.legs?.length, 1);
   });
 });

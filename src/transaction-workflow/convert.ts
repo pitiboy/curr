@@ -9,7 +9,7 @@
  * tagi oldal forrás trx / testvér számlából.
  * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
  * legfrissebb valid_from ≤ forrás nap vége) × tagsági ratio (csak valódi váltásnál,
- * `rules[forrás pénznem kód]`), 2 tizedes; rate-et és ratio-t a hívó oldja fel.
+ * `rules[forrás pénznem kód]`), 4 tizedes; rate-et és ratio-t a hívó oldja fel.
  * KOR-t érintő párnál direkt sor hiányában inverz: `1 / rate(to → from)`.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat),
  * opcionális gépi `code` (pl. CURRENCY_RATE_MISSING) és `details`.
@@ -38,6 +38,11 @@ export const ERROR_CURRENCY_RATE_MISSING = 'CURRENCY_RATE_MISSING' as const;
 export const ERROR_CURRENCY_RATE_INVALID = 'CURRENCY_RATE_INVALID' as const;
 export const ERROR_MEMBERSHIP_RATIO_AMBIGUOUS =
   'MEMBERSHIP_RATIO_AMBIGUOUS' as const;
+export const ERROR_TRANSACTION_ALREADY_CONVERTED =
+  'TRANSACTION_ALREADY_CONVERTED' as const;
+
+/** KOR ledger treasury account (org-scope exclusion matches backoffice reports). */
+export const KOR_TREASURY_ACCOUNT_CODE = '1100';
 
 export class TransactionWorkflowError extends Error {
   status: number;
@@ -72,6 +77,8 @@ export const MEMBER_ACCOUNT_CODES = new Set(['1101', '1001']);
 export type AccountRef = {
   documentId: string;
   code?: string | number | null;
+  /** Optional; preview lookup prefers this when present. */
+  name?: string | null;
 };
 
 /** Which source trx side to copy onto a step debit/credit. */
@@ -726,9 +733,9 @@ export function rateCutoff(date: string): string {
   return `${isoDay(date)}T23:59:59.999Z`;
 }
 
-/** Two-decimal rounding for rate-applied amounts (matches saleRevenueAmount). */
+/** Four-decimal rounding for rate-applied amounts (matches saleRevenueAmount / transaction.amount scale). */
 export function roundAmount(value: number): number {
-  return Math.round(value * 100) / 100;
+  return Math.round(value * 10_000) / 10_000;
 }
 
 /**
@@ -894,6 +901,8 @@ function requireStepRate(
 export type ExpandedStepRow = {
   index: number;
   description: string;
+  /** Per-leg date when a customised conversion overrides the header date. */
+  legDate?: string;
   amount: number;
   debit_account: AccountRef;
   credit_account: AccountRef;

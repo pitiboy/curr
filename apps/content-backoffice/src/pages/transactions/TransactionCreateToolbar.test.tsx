@@ -1,11 +1,27 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const createNewTransactionDraft = vi.fn();
+const convertTransactionToWorkflow = vi.fn();
 vi.mock('../../data/dataProvider', () => ({
-  createNewTransactionDraft: vi.fn(),
-  convertTransactionToWorkflow: vi.fn(),
+  createNewTransactionDraft: (...args: unknown[]) =>
+    createNewTransactionDraft(...args),
+  convertTransactionToWorkflow: (...args: unknown[]) =>
+    convertTransactionToWorkflow(...args),
 }));
+
+const openAssetForm = vi.fn();
+vi.mock('../assets/useAssetFormAfterBooking', () => ({
+  useAssetFormAfterBooking: () => openAssetForm,
+}));
+const redirect = vi.fn();
 
 const usePermissions = vi.fn();
 const useTransactionWorkflowCatalog = vi.fn();
@@ -26,7 +42,7 @@ vi.mock('react-admin', async (importOriginal) => {
     usePermissions: () => usePermissions(),
     useTranslate: () => (key: string) => key,
     useNotify: () => vi.fn(),
-    useRedirect: () => vi.fn(),
+    useRedirect: () => redirect,
     SaveButton: ({ disabled }: { disabled?: boolean }) => (
       <button disabled={disabled} type="button">
         Mentés
@@ -91,6 +107,7 @@ const workflow = {
   debit_account_code: 5200,
   credit_account_code: 1101,
   requires_source_organization: false,
+  collect_asset: false,
 };
 
 function ToolbarShell({
@@ -170,5 +187,68 @@ describe('TransactionCreateToolbar', () => {
     expect(
       screen.getByRole('button', { name: 'app.transactions_convert_save' }),
     ).toBeDisabled();
+  });
+
+  describe('collect_asset workflow → "Új eszköz" form', () => {
+    async function bookSelectedWorkflow() {
+      createNewTransactionDraft.mockResolvedValue({
+        data: { documentId: 'tx-new' },
+      });
+      convertTransactionToWorkflow.mockResolvedValue({
+        transactionDocumentId: 'tx-new',
+        workflowDocumentId: 'wf-selected',
+        createdDocumentIds: ['tx-leg-1500', 'tx-leg-pay'],
+      });
+      render(
+        <ToolbarShell
+          storedSelection={{
+            kind: 'workflow',
+            workflowDocumentId: 'wf-selected',
+          }}
+        />,
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: 'app.transactions_convert_save' }),
+      );
+      const confirmButtons = await screen.findAllByRole('button', {
+        name: 'app.transactions_convert_save',
+      });
+      fireEvent.click(confirmButtons[confirmButtons.length - 1]!);
+      await waitFor(() => expect(openAssetForm).toHaveBeenCalled());
+    }
+
+    beforeEach(() => {
+      redirect.mockReset();
+      openAssetForm.mockReset();
+      createNewTransactionDraft.mockReset();
+      convertTransactionToWorkflow.mockReset();
+    });
+
+    it('hands the booked original + convert result to the asset redirect', async () => {
+      openAssetForm.mockResolvedValue(true);
+      await bookSelectedWorkflow();
+      expect(convertTransactionToWorkflow).toHaveBeenCalledWith(
+        'tx-new',
+        'wf-selected',
+        undefined,
+      );
+      expect(openAssetForm).toHaveBeenCalledWith(
+        expect.objectContaining({ documentId: 'wf-selected' }),
+        'tx-new',
+        expect.objectContaining({
+          createdDocumentIds: ['tx-leg-1500', 'tx-leg-pay'],
+        }),
+      );
+      // The asset form replaces the default list redirect.
+      expect(redirect).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the transaction list when no asset form opens', async () => {
+      openAssetForm.mockResolvedValue(false);
+      await bookSelectedWorkflow();
+      await waitFor(() =>
+        expect(redirect).toHaveBeenCalledWith('list', 'transactions'),
+      );
+    });
   });
 });

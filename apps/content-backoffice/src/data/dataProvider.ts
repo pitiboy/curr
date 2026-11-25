@@ -2,6 +2,13 @@ import { strapiDataProvider, strapiHttpClient } from 'ra-strapi';
 import type { DataProvider, GetListParams } from 'react-admin';
 
 import { STRAPI_URL } from '../config';
+import {
+  deleteAsset,
+  fetchAsset,
+  fetchAssetList,
+  fetchAssetsByIds,
+  saveAsset,
+} from './assetData';
 import { attachReceiptToTransaction } from './receiptDraft';
 import {
   assembleTransactionList,
@@ -18,7 +25,10 @@ import {
   purgeTransactionExpansion,
 } from './transactionDelete';
 import { publishTransactionDraft } from './transactionPublish';
-import { convertTransaction as postConvertTransaction } from './transactionWorkflow';
+import {
+  convertTransaction as postConvertTransaction,
+  type ConvertOverridesPayload,
+} from './transactionWorkflow';
 import {
   createTransactionDraft,
   updateTransactionDraft,
@@ -79,13 +89,43 @@ async function getTransactionList(params: GetListParams) {
   return assembleTransactionList(drafts, published, params);
 }
 
+const ASSETS = 'assets';
+
 export const dataProvider = withDocumentId({
   ...strapiProvider,
-  getList: (resource, params) =>
-    resource === 'transactions'
+  getList: (resource, params) => {
+    if (resource === ASSETS)
+      return fetchAssetList(httpClient, STRAPI_URL, params);
+    return resource === 'transactions'
       ? getTransactionList(params)
-      : strapiProvider.getList(resource, params),
+      : strapiProvider.getList(resource, params);
+  },
+  getMany: async (resource, params) =>
+    resource === ASSETS
+      ? { data: await fetchAssetsByIds(httpClient, STRAPI_URL, params.ids) }
+      : strapiProvider.getMany(resource, params),
+  update: async (resource, params) =>
+    resource === ASSETS
+      ? {
+          data: await saveAsset(
+            httpClient,
+            STRAPI_URL,
+            params.data as Record<string, unknown>,
+            String(params.id),
+          ),
+        }
+      : strapiProvider.update(resource, params),
+  delete: async (resource, params) => {
+    if (resource !== ASSETS) return strapiProvider.delete(resource, params);
+    await deleteAsset(httpClient, STRAPI_URL, String(params.id));
+    return { data: params.previousData ?? { id: params.id } };
+  },
   getOne: async (resource, params) => {
+    if (resource === ASSETS) {
+      return {
+        data: await fetchAsset(httpClient, STRAPI_URL, String(params.id)),
+      };
+    }
     if (resource !== 'transactions') {
       return strapiProvider.getOne(resource, params);
     }
@@ -101,14 +141,22 @@ export const dataProvider = withDocumentId({
     }
     return { data: row };
   },
-  create: (resource, params) =>
-    resource === 'transactions'
-      ? createTransactionDraft(
-          httpClient,
-          STRAPI_URL,
-          params.data as Record<string, unknown>,
-        )
-      : strapiProvider.create(resource, params),
+  create: async (resource, params) =>
+    resource === ASSETS
+      ? {
+          data: await saveAsset(
+            httpClient,
+            STRAPI_URL,
+            params.data as Record<string, unknown>,
+          ),
+        }
+      : resource === 'transactions'
+        ? createTransactionDraft(
+            httpClient,
+            STRAPI_URL,
+            params.data as Record<string, unknown>,
+          )
+        : strapiProvider.create(resource, params),
 } as DataProvider);
 
 export function publishTransaction(
@@ -146,10 +194,12 @@ export function createNewTransactionDraft(data: Record<string, unknown>) {
 export function convertTransactionToWorkflow(
   transactionDocumentId: string,
   workflowDocumentId: string,
+  overrides?: ConvertOverridesPayload,
 ) {
   return postConvertTransaction(httpClient, STRAPI_URL, {
     transactionDocumentId,
     workflowDocumentId,
+    overrides,
   });
 }
 

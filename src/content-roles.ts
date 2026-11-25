@@ -14,6 +14,7 @@ export const CONTENT_ROLE_ACTIONS = [
   'api::transaction.transaction.findOne',
   'api::transaction.transaction.create',
   'api::transaction.transaction.update',
+  'api::transaction.transaction.parseVoice',
   'api::receipt.receipt.find',
   'api::receipt.receipt.findOne',
   'api::receipt.receipt.create',
@@ -43,6 +44,13 @@ export const CONTENT_ROLE_ACTIONS = [
   'api::transaction-workflow.transaction-workflow.findOne',
   // Napi tojás űrlap; feature flag / szerep / org scope a service-ben.
   'api::egg-production.egg-production.createEntries',
+  // Eszköznyilvántartás: org-scoped read/write (see org-scope middleware).
+  'api::asset.asset.find',
+  'api::asset.asset.findOne',
+  'api::asset.asset.create',
+  'api::asset.asset.update',
+  'api::asset-category.asset-category.find',
+  'api::asset-category.asset-category.findOne',
 ] as const;
 
 export const EDITOR_ONLY_CONTENT_ACTIONS = [
@@ -60,6 +68,10 @@ export const CONTROLLER_ONLY_CONTENT_ACTIONS = [
   'api::transaction.transaction.purgeExpansion',
   'api::receipt.receipt.delete',
   'api::backoffice.backoffice.reconciliation',
+  'api::asset.asset.delete',
+  'api::asset-category.asset-category.create',
+  'api::asset-category.asset-category.update',
+  'api::asset-category.asset-category.delete',
 ] as const;
 
 /** Content API actions granted to a role type by the bootstrap. */

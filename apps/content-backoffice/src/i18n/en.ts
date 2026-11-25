@@ -4,6 +4,45 @@ import { mergeTranslations } from 'react-admin';
 /** English message catalog (react-admin + app labels). */
 export const enMessages = mergeTranslations(englishMessages, {
   app: {
+    assets: {
+      menu: 'Assets',
+      list_title: 'Asset inventory',
+      create_title: 'New asset',
+      edit_title: 'Edit asset',
+      show_title: 'Asset details',
+      no_photo: 'No photo',
+      responsible_member_help:
+        'For member-owned items the responsible member is also the owner.',
+      transaction_picker_help_debit:
+        'Optional. Lists the latest 1500 debits (KOR rows excluded); narrow by description or amount.',
+      transaction_picker_help_credit:
+        'Optional. Lists the latest 1500 credits (e.g. a “Fixed asset disposal” deal), excluding acquisition deals’ internal legs and KOR rows; narrow by description or amount.',
+      transaction_picker_empty: 'No matches',
+      transaction_picker_usage:
+        'Already linked to %{count} asset(s): %{linked} / %{amount} %{currency}',
+      transaction_picker_over_linked:
+        'Warning: with this asset the linked assets would total %{total} %{currency}, more than the transaction amount (%{amount} %{currency}).',
+      collect_after_booking:
+        'The deal is booked. Record the asset in the inventory.',
+      ownership_types: {
+        coop_owned: 'Cooperative owned',
+        member_owned_lendable: 'Member owned, lendable',
+        barter: 'Brought in by barter',
+      },
+      statuses: {
+        in_use: 'In use',
+        in_storage: 'In storage',
+        under_repair: 'Under repair',
+        lent_out: 'Lent out',
+        disposed: 'Disposed',
+      },
+    },
+    asset_categories: {
+      menu: 'Asset categories',
+      list_title: 'Asset categories',
+      create_title: 'New asset category',
+      edit_title: 'Edit asset category',
+    },
     title: 'Backoffice',
     menu_placeholder: 'No menu items',
     transactions_list: 'Transactions',
@@ -54,6 +93,43 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_rate_same: 'rate × %{rate}',
     transactions_convert_preview_member_ratio:
       'member ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Edit expansion',
+    transactions_convert_edit_reset: 'Cancel',
+    transactions_convert_edit_add_row: 'Add step',
+    transactions_convert_edit_duplicate: 'Duplicate step',
+    transactions_convert_edit_delete: 'Delete step',
+    transactions_convert_edit_percent: 'Percent',
+    transactions_convert_edit_copy_receipt: 'Copy receipt',
+    transactions_convert_edit_copy_receipt_short: 'Rcpt',
+    transactions_convert_edit_error_steps_required:
+      'At least one filled step is required to convert.',
+    transactions_convert_edit_error_accounts_required:
+      'Debit and credit accounts are required on every step.',
+    transactions_convert_edit_error_accounts_differ:
+      'Debit and credit accounts must differ.',
+    transactions_convert_edit_error_amount_positive: 'Amount must be positive.',
+    transactions_convert_edit_error_description:
+      'Description is required on every editable step.',
+    transactions_convert_edit_warning_step_sum:
+      'Step total (%{steps}) differs from the original (%{original}).',
+    workflow_overview: {
+      menu: 'Transaction workflows',
+      title: 'Transaction workflows',
+      subtitle:
+        'Preview of published templates with sample data. Only one template can be open at a time.',
+      loading: 'Loading workflows…',
+      empty: 'No transaction workflows to show.',
+      forbidden: 'You do not have access to this page.',
+      sample_badge: 'Sample data',
+      edit: 'Edit',
+      sample_error: {
+        missing_accounts:
+          'No accounts match this template for building sample data.',
+        missing_currency: 'This template has no currency for the preview.',
+        missing_organization:
+          'This template needs an organization for sample data, but none is available.',
+      },
+    },
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',
@@ -119,6 +195,32 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_finalize_same_person:
       'Changes were saved and the transaction stayed a draft. The person who entered it cannot finalize it.',
     form_issues_count: '%{errors} error(s), %{warnings} warning(s)',
+    voice_start: 'Dictate',
+    voice_stop: 'Stop dictation',
+    voice_hint:
+      'Say the transaction in Hungarian (e.g. "tegnap ötezer forint táp készpénzből"). Check everything before saving.',
+    voice_bulk_hint:
+      'Dictate the daily eggs in Hungarian (hen-house production and distribution). Check everything before saving.',
+    voice_listening: 'Listening…',
+    voice_processing: 'Parsing…',
+    voice_unsupported:
+      'This browser does not support voice dictation. Try Chrome or Edge, or fill in the form by hand.',
+    voice_error_mic_denied:
+      'No microphone permission. Allow it in the browser settings.',
+    voice_error_no_speech: 'No speech detected. Try again.',
+    voice_error_no_mic: 'No microphone found.',
+    voice_error_network: 'Network error during speech recognition.',
+    voice_error_generic: 'Speech recognition stopped. Try again.',
+    voice_error_request: 'Could not parse the dictation. Try again.',
+    voice_retry: 'Retry',
+    voice_review_notice:
+      'The form was filled from your dictation. Nothing is saved: check the fields, then save as usual.',
+    voice_filled_fields: 'Filled:',
+    voice_low_confidence: 'uncertain',
+    voice_nothing_filled: 'No field could be filled from the dictation.',
+    voice_workflow_selected: 'Selected workflow template: %{name}',
+    voice_member_mentioned:
+      'Member mentioned: %{name}. Transactions have no member field; check the accounts.',
     transactions_create_issues_title: 'Save',
     transactions_create_issues_hint:
       'The transaction is saved as a draft. Fill in the starred fields; a receipt can wait for now.',
@@ -170,6 +272,7 @@ export const enMessages = mergeTranslations(englishMessages, {
     account_profile_all: 'All accounts',
     account_profile_cost: 'Expense',
     account_profile_revenue: 'Revenue',
+    account_profile_investment: 'Investment',
     account_profile_group_profiles: 'Profiles',
     account_profile_group_workflows: 'Transaction templates',
     account_profile_workflows_loading: 'Loading templates…',
@@ -375,6 +478,35 @@ export const enMessages = mergeTranslations(englishMessages, {
       },
     },
     reconciliation: {
+      fixed_assets: {
+        title: 'Fixed assets (1500) reconciliation',
+        subtitle:
+          'Per currency: the 1500 balance (up to %{date}, KOR treasury rows excluded) versus the purchase prices of coop-owned, non-disposed assets linked to a transaction. The sidebar filters (status, organization, currency, deal expansion, range end) apply.',
+        ok: 'Matches',
+        mismatch: 'Mismatch',
+        empty: 'No 1500 rows and no recorded assets for these filters.',
+        unlinked_assets:
+          'Coop-owned, non-disposed assets without an acquisition transaction (%{count})',
+        unlinked_debits: '1500 debits without an asset (%{count})',
+        transaction_mismatches:
+          'Transactions whose linked assets’ purchase prices do not add up to the amount (%{count})',
+        treasury_excluded:
+          '%{count} KOR treasury (1100) rows were left out of the calculation.',
+        columns: {
+          currency: 'Currency',
+          ledger: '1500 balance',
+          assets: 'Assets total',
+          difference: 'Difference',
+          name: 'Asset',
+          organization: 'Organization',
+          price: 'Purchase price',
+          date: 'Date',
+          description: 'Description',
+          amount: 'Amount',
+          asset_count: 'Assets',
+          linked_total: 'Assets total',
+        },
+      },
       menu: 'Reconciliation report',
       title: 'Reconciliation report',
       subtitle: 'Read-only domain and user-hygiene checks. Does not fix data.',
@@ -479,6 +611,7 @@ export const enMessages = mergeTranslations(englishMessages, {
         'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
       step_production: 'Production',
       step_distribution: 'Distribution',
+      distribution_summary: 'Distribution summary',
       next_distribution: 'Next: distribution',
       back_production: 'Back: production',
       save_production_only: 'Save production only',
@@ -563,6 +696,36 @@ export const enMessages = mergeTranslations(englishMessages, {
     receipt_saved: 'Receipt saved.',
   },
   resources: {
+    assets: {
+      name: 'Asset |||| Assets',
+      fields: {
+        name: 'Name',
+        category: 'Category',
+        ownership_type: 'Ownership',
+        status: 'Status',
+        responsible_member: 'Responsible member',
+        location: 'Location',
+        purchase_price: 'Purchase price',
+        currency_type: 'Currency',
+        purchase_date: 'Purchase date',
+        warranty_until: 'Warranty until',
+        serial_number: 'Serial number',
+        notes: 'Notes',
+        photo: 'Photo',
+        organization: 'Organization',
+        acquisition_transaction: 'Acquisition transaction',
+        disposal_transaction: 'Disposal transaction',
+        q: 'Search',
+      },
+    },
+    'asset-categories': {
+      name: 'Asset category |||| Asset categories',
+      fields: {
+        name: 'Name',
+        description: 'Description',
+        sort_order: 'Sort order',
+      },
+    },
     transactions: {
       name: 'Transaction |||| Transactions',
       fields: {

@@ -11,6 +11,8 @@ import {
 const accounts: AccountChoice[] = [
   { id: 'cash', code: '1000', name: 'Készpénz' },
   { id: 'private', code: '1001', name: 'Saját' },
+  { id: 'bank', code: '1100', name: 'Bank' },
+  { id: 'receivable', code: '1200', name: 'Követelés' },
   { id: 'stock', code: '1300', name: 'Készletek' },
   { id: 'revenue', code: '4000', name: 'Bevétel' },
   { id: 'egg-revenue', code: '4500', name: 'Tojás bevétel' },
@@ -24,13 +26,26 @@ describe('filterAccountsByProfile', () => {
     ).toEqual(['5000']);
     expect(
       filterAccountsByProfile(accounts, 'credit', 'cost').map((r) => r.code),
-    ).toEqual(['1000', '1001', '1300']);
+    ).toEqual(['1000', '1001', '1100', '1200', '1300']);
     expect(
       filterAccountsByProfile(accounts, 'debit', 'revenue').map((r) => r.code),
-    ).toEqual(['1000', '1001', '1300']);
+    ).toEqual(['1000', '1001', '1100', '1200', '1300']);
     expect(
       filterAccountsByProfile(accounts, 'credit', 'revenue').map((r) => r.code),
     ).toEqual(['4000', '4500']);
+  });
+
+  it('filters investment: credit 10*/11*, debit other 1*', () => {
+    expect(
+      filterAccountsByProfile(accounts, 'credit', 'investment').map(
+        (r) => r.code,
+      ),
+    ).toEqual(['1000', '1001', '1100']);
+    expect(
+      filterAccountsByProfile(accounts, 'debit', 'investment').map(
+        (r) => r.code,
+      ),
+    ).toEqual(['1200', '1300']);
   });
 
   it('keeps an out-of-profile selection in the dropdown list', () => {
@@ -65,8 +80,17 @@ describe('filterAccountsByProfile', () => {
 });
 
 describe('selectableAccountProfiles', () => {
-  it('always offers all, cost, and revenue', () => {
-    expect(selectableAccountProfiles()).toEqual(['cost', 'revenue']);
-    expect(selectableAccountProfilesWithAll()).toEqual(['', 'cost', 'revenue']);
+  it('always offers all, cost, revenue, and investment', () => {
+    expect(selectableAccountProfiles()).toEqual([
+      'cost',
+      'revenue',
+      'investment',
+    ]);
+    expect(selectableAccountProfilesWithAll()).toEqual([
+      '',
+      'cost',
+      'revenue',
+      'investment',
+    ]);
   });
 });

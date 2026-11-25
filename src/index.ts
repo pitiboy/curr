@@ -7,6 +7,8 @@ import {
 } from './static-pages';
 import { createPublishPolicyLoader } from './backoffice-features/policy';
 import { registerOrgScopeMiddleware } from './org-scope-middleware';
+import { ensureAssetCategories } from './assets/asset-categories';
+import { registerAssetGuard } from './assets/asset-guard';
 import { registerPublishGuard } from './publish-guard';
 import { backfillMemberAccounts } from './member-accounts';
 import { registerMembershipValidFromFormDefault } from './membership-valid-from-default';
@@ -97,6 +99,16 @@ const usersPermissionsRolePermissions = {
   'api::backoffice': {
     controllers: {
       backoffice: allow(['config', 'reconciliation']),
+    },
+  },
+  'api::asset': {
+    controllers: {
+      asset: allow(['find', 'findOne', 'create', 'update']),
+    },
+  },
+  'api::asset-category': {
+    controllers: {
+      'asset-category': allow(['find', 'findOne']),
     },
   },
   'api::transaction-workflow': {
@@ -389,6 +401,7 @@ function registerAdminAppConfigRoute(strapi: {
 export default {
   register({ strapi }) {
     registerOrgScopeMiddleware(strapi);
+    registerAssetGuard(strapi);
     registerWakeRoutes(strapi);
     registerPublishGuard(strapi, createPublishPolicyLoader(strapi));
     registerStaticPageRoutes(strapi);
@@ -421,6 +434,7 @@ export default {
     await restoreReceiptTransactionLinksFromStash(strapi);
     await ensureUsersPermissionsRoles(strapi);
     await ensureReceiptTypes(strapi);
+    await ensureAssetCategories(strapi);
     await ensureTransactionImportKeyIndex(strapi);
 
     await backfillMemberAccounts(strapi);

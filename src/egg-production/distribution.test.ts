@@ -31,9 +31,9 @@ describe('distribution totals', () => {
     assert.equal(parsePositiveQuantity(' 7 '), 7);
   });
 
-  it('rounds sale revenue to 2 decimals', () => {
+  it('rounds sale revenue to 4 decimals', () => {
     assert.equal(saleRevenueAmount(10, 0.75, 60), 450);
-    assert.equal(saleRevenueAmount(3, 0.5, 33.333), 50);
+    assert.equal(saleRevenueAmount(3, 0.5, 33.333), 49.9995);
   });
 
   it('checks membership validity on the inclusive UTC day', () => {

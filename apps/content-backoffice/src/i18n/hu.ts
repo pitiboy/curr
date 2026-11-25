@@ -47,6 +47,45 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     },
   },
   app: {
+    assets: {
+      menu: 'Eszközök',
+      list_title: 'Eszköznyilvántartás',
+      create_title: 'Új eszköz',
+      edit_title: 'Eszköz szerkesztése',
+      show_title: 'Eszköz adatai',
+      no_photo: 'Nincs fotó',
+      responsible_member_help:
+        'Tagi tulajdonú eszköznél a felelős tag egyben a tulajdonos is.',
+      transaction_picker_help_debit:
+        'Opcionális. A legutóbbi 1500-as terhelések látszanak (KOR tételek nélkül); leírásra vagy összegre szűkíthetsz.',
+      transaction_picker_help_credit:
+        'Opcionális. A legutóbbi 1500-as jóváírások látszanak (pl. „Tárgyi eszköz selejtezés” ügylet), a beszerzési ügyletek belső sorai és a KOR tételek nélkül; leírásra vagy összegre szűkíthetsz.',
+      transaction_picker_empty: 'Nincs találat',
+      transaction_picker_usage:
+        'Már %{count} eszközhöz kötve: %{linked} / %{amount} %{currency}',
+      transaction_picker_over_linked:
+        'Figyelem: a tranzakcióhoz kötött eszközök összege ezzel az eszközzel %{total} %{currency} lenne, ami több, mint a tranzakció összege (%{amount} %{currency}).',
+      collect_after_booking:
+        'Az ügylet könyvelve. Rögzítsd az eszközt az eszköznyilvántartásban.',
+      ownership_types: {
+        coop_owned: 'Szövetkezeti tulajdon',
+        member_owned_lendable: 'Tagé, kölcsönkérhető',
+        barter: 'Barterben behozott',
+      },
+      statuses: {
+        in_use: 'Használatban',
+        in_storage: 'Raktáron',
+        under_repair: 'Javításon',
+        lent_out: 'Kölcsönadva',
+        disposed: 'Selejtezve',
+      },
+    },
+    asset_categories: {
+      menu: 'Eszköz kategóriák',
+      list_title: 'Eszköz kategóriák',
+      create_title: 'Új eszköz kategória',
+      edit_title: 'Eszköz kategória szerkesztése',
+    },
     title: 'Kezelő felület',
     menu_placeholder: 'Nincs menüpont',
     transactions_list: 'Tranzakciók',
@@ -98,6 +137,44 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_rate_same: 'árfolyam × %{rate}',
     transactions_convert_preview_member_ratio:
       'tagsági ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Kifejtés szerkesztése',
+    transactions_convert_edit_reset: 'Mégse',
+    transactions_convert_edit_add_row: 'Új lépés',
+    transactions_convert_edit_duplicate: 'Lépés duplikálása',
+    transactions_convert_edit_delete: 'Lépés törlése',
+    transactions_convert_edit_percent: 'Százalék',
+    transactions_convert_edit_copy_receipt: 'Bizonylat másolása',
+    transactions_convert_edit_copy_receipt_short: 'Biz.',
+    transactions_convert_edit_error_steps_required:
+      'Legalább egy kitöltött lépés kell a kifejtéshez.',
+    transactions_convert_edit_error_accounts_required:
+      'Minden lépésen kötelező a tartozik és követel számla.',
+    transactions_convert_edit_error_accounts_differ:
+      'A tartozik és követel számla nem lehet ugyanaz.',
+    transactions_convert_edit_error_amount_positive:
+      'Az összegnek pozitívnak kell lennie.',
+    transactions_convert_edit_error_description:
+      'A leírás kötelező minden szerkeszthető lépésen.',
+    transactions_convert_edit_warning_step_sum:
+      'A lépések összege (%{steps}) eltér az eredeti összegtől (%{original}).',
+    workflow_overview: {
+      menu: 'Tranzakciós workflow-k',
+      title: 'Tranzakciós workflow-k',
+      subtitle:
+        'A publikált sablonok előnézete minta adatokkal. Egyszerre egy sablon nyitható ki.',
+      loading: 'Workflow-k betöltése…',
+      empty: 'Nincs megjeleníthető tranzakciós workflow.',
+      forbidden: 'Nincs jogosultságod ehhez az oldalhoz.',
+      sample_badge: 'Minta adat',
+      edit: 'Szerkesztés',
+      sample_error: {
+        missing_accounts:
+          'Nem találhatók a sablonhoz illő számlák a minta adathoz.',
+        missing_currency: 'A sablonhoz nincs pénznem az előnézethez.',
+        missing_organization:
+          'Ehhez a sablonhoz szervezet kell a minta adathoz, de nincs elérhető szervezet.',
+      },
+    },
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
@@ -163,6 +240,33 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_finalize_same_person:
       'A módosítások elmentve, a tranzakció piszkozat maradt. A rögzítő nem véglegesítheti a saját tranzakcióját.',
     form_issues_count: '%{errors} hiba, %{warnings} figyelmeztetés',
+    voice_start: 'Diktálás',
+    voice_stop: 'Diktálás vége',
+    voice_hint:
+      'Mondd el magyarul a tranzakciót (pl. „tegnap ötezer forint táp készpénzből”). Mentés előtt mindent ellenőrizz.',
+    voice_bulk_hint:
+      'Mondd el magyarul a napi tojást (ólankénti termelés és továbbosztás). Mentés előtt mindent ellenőrizz.',
+    voice_listening: 'Figyelek…',
+    voice_processing: 'Értelmezés…',
+    voice_unsupported:
+      'Ez a böngésző nem támogatja a hangalapú diktálást. Próbáld Chrome-ban vagy Edge-ben, vagy töltsd ki az űrlapot kézzel.',
+    voice_error_mic_denied:
+      'Nincs engedély a mikrofonhoz. Engedélyezd a böngésző beállításaiban.',
+    voice_error_no_speech: 'Nem hallottam beszédet. Próbáld újra.',
+    voice_error_no_mic: 'Nem található mikrofon.',
+    voice_error_network: 'Hálózati hiba a beszédfelismerés közben.',
+    voice_error_generic: 'A beszédfelismerés megszakadt. Próbáld újra.',
+    voice_error_request: 'A diktálás értelmezése nem sikerült. Próbáld újra.',
+    voice_retry: 'Újra',
+    voice_review_notice:
+      'Az űrlapot a diktálás alapján kitöltöttük. Semmi nincs mentve: ellenőrizd a mezőket, majd mentsd a szokásos módon.',
+    voice_filled_fields: 'Kitöltve:',
+    voice_low_confidence: 'bizonytalan',
+    voice_nothing_filled:
+      'A diktálásból egyetlen mezőt sem sikerült kitölteni.',
+    voice_workflow_selected: 'Kiválasztott ügylet-sablon: %{name}',
+    voice_member_mentioned:
+      'Említett tag: %{name}. A tranzakción nincs tag mező, ellenőrizd a számlákat.',
     transactions_create_issues_title: 'Mentés',
     transactions_create_issues_hint:
       'A tranzakció piszkozatként mentődik. A csillagos mezőket töltsd ki; a bizonylat most még elhagyható.',
@@ -213,6 +317,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     account_profile_all: 'Minden számla',
     account_profile_cost: 'Költség',
     account_profile_revenue: 'Bevétel',
+    account_profile_investment: 'Befektetés',
     account_profile_group_profiles: 'Profilok',
     account_profile_group_workflows: 'Ügylet-sablonok',
     account_profile_workflows_loading: 'Sablonok betöltése…',
@@ -422,6 +527,35 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       },
     },
     reconciliation: {
+      fixed_assets: {
+        title: 'Tárgyi eszközök (1500) egyeztetés',
+        subtitle:
+          'Pénznemenként: az 1500-as számla egyenlege (%{date}-ig, a KOR kincstári tételek nélkül) és a szövetkezeti tulajdonú, nem selejtezett, tranzakcióhoz kötött eszközök beszerzési árának összege. A bal oldali szűrők (státusz, szervezet, pénznem, ügylet bontás, időszak vége) itt is érvényesek.',
+        ok: 'Egyezik',
+        mismatch: 'Eltérés',
+        empty: 'Nincs 1500-as tétel és nyilvántartott eszköz a szűrésben.',
+        unlinked_assets:
+          'Szövetkezeti, nem selejtezett eszköz beszerzési tranzakció nélkül (%{count})',
+        unlinked_debits: '1500-as terhelés eszköz nélkül (%{count})',
+        transaction_mismatches:
+          'Tranzakció, ahol a hozzá kötött eszközök beszerzési ára nem egyezik az összeggel (%{count})',
+        treasury_excluded:
+          '%{count} KOR kincstári (1100) tétel kimaradt a számításból.',
+        columns: {
+          currency: 'Pénznem',
+          ledger: '1500 egyenleg',
+          assets: 'Eszközök összesen',
+          difference: 'Eltérés',
+          name: 'Eszköz',
+          organization: 'Szervezet',
+          price: 'Beszerzési ár',
+          date: 'Dátum',
+          description: 'Leírás',
+          amount: 'Összeg',
+          asset_count: 'Eszközök',
+          linked_total: 'Eszközök összesen',
+        },
+      },
       menu: 'Konzisztencia jelentés',
       title: 'Konzisztencia jelentés',
       subtitle:
@@ -530,6 +664,7 @@ export const huMessages = mergeTranslations(hungarianMessages, {
         'Már van rögzítés erre a napra (termelés vagy továbbosztás). Az alábbi választás minden érintett sorra vonatkozik.',
       step_production: 'Termelés',
       step_distribution: 'Továbbosztás',
+      distribution_summary: 'Továbbosztás összesítő',
       next_distribution: 'Tovább: továbbosztás',
       back_production: 'Vissza: termelés',
       save_production_only: 'Csak termelés mentése',
@@ -614,6 +749,36 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     receipt_saved: 'A bizonylat mentve.',
   },
   resources: {
+    assets: {
+      name: 'Eszköz |||| Eszközök',
+      fields: {
+        name: 'Név',
+        category: 'Kategória',
+        ownership_type: 'Tulajdon típusa',
+        status: 'Állapot',
+        responsible_member: 'Felelős tag',
+        location: 'Helyszín',
+        purchase_price: 'Beszerzési ár',
+        currency_type: 'Pénznem',
+        purchase_date: 'Beszerzés dátuma',
+        warranty_until: 'Garancia vége',
+        serial_number: 'Gyári szám',
+        notes: 'Megjegyzés',
+        photo: 'Fotó',
+        organization: 'Szervezet',
+        acquisition_transaction: 'Beszerzési tranzakció',
+        disposal_transaction: 'Selejtezési tranzakció',
+        q: 'Keresés',
+      },
+    },
+    'asset-categories': {
+      name: 'Eszköz kategória |||| Eszköz kategóriák',
+      fields: {
+        name: 'Név',
+        description: 'Leírás',
+        sort_order: 'Sorrend',
+      },
+    },
     transactions: {
       name: 'Tranzakció |||| Tranzakciók',
       fields: {

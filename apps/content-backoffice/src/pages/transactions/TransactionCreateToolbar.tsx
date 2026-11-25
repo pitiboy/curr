@@ -21,8 +21,10 @@ import {
   createNewTransactionDraft,
   convertTransactionToWorkflow,
 } from '../../data/dataProvider';
+import type { ConvertOverridesPayload } from '../../data/transactionWorkflow';
 import { strapiErrorMessage } from '../../data/transactionPublish';
 import { useSubmitGuard } from '../../submit/useSubmitGuard';
+import { useAssetFormAfterBooking } from '../assets/useAssetFormAfterBooking';
 import {
   invalidateTransactionWorkflowCatalog,
   useTransactionWorkflowCatalog,
@@ -73,6 +75,7 @@ export function TransactionCreateToolbar({
   const translate = useTranslate();
   const notify = useNotify();
   const redirect = useRedirect();
+  const openAssetForm = useAssetFormAfterBooking();
   const { isPending } = usePermissions();
   const accountRow = useOptionalTransactionCreateAccountRow();
   const { workflows, loading: catalogLoading } =
@@ -90,6 +93,7 @@ export function TransactionCreateToolbar({
     requireOrganizationForSave,
   );
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const matchInput = useMemo(
     () =>
@@ -150,30 +154,48 @@ export function TransactionCreateToolbar({
 
   // lockOnSuccess: after save + convert we redirect away; a late second tap
   // must not create (and expand) a second source transaction.
-  const saveAndConvertGuard = useSubmitGuard<{
-    formValues: Record<string, unknown>;
-    workflowDocumentId: string;
-  }>({
+  const saveAndConvertGuard = useSubmitGuard<
+    {
+      formValues: Record<string, unknown>;
+      workflowDocumentId: string;
+      overrides?: ConvertOverridesPayload | null;
+    },
+    {
+      documentId: string;
+      result: Awaited<ReturnType<typeof convertTransactionToWorkflow>>;
+    }
+  >({
     lockOnSuccess: true,
-    run: async ({ formValues, workflowDocumentId }) => {
-      const result = await createNewTransactionDraft({
+    run: async ({ formValues, workflowDocumentId, overrides }) => {
+      const created = await createNewTransactionDraft({
         ...formValues,
         receipt_cards: receiptCards,
       });
       const documentId =
-        typeof result.data.documentId === 'string'
-          ? result.data.documentId
+        typeof created.data.documentId === 'string'
+          ? created.data.documentId
           : '';
       if (!documentId) {
         throw new Error('Missing documentId after create');
       }
-      return convertTransactionToWorkflow(documentId, workflowDocumentId);
+      const result = await convertTransactionToWorkflow(
+        documentId,
+        workflowDocumentId,
+        overrides ?? undefined,
+      );
+      return { documentId, result };
     },
-    onSuccess: () => {
+    onSuccess: ({ documentId, result }) => {
       notify('app.transactions_convert_done', { type: 'success' });
       setOpen(false);
+      setEditMode(false);
       onSaveSucceeded();
-      redirect('list', 'transactions');
+      // `collect_asset` workflows continue on the prefilled "Új eszköz" form.
+      void openAssetForm(workflow, documentId, result).then(
+        (openedAssetForm) => {
+          if (!openedAssetForm) redirect('list', 'transactions');
+        },
+      );
     },
     onError: (error: unknown) => {
       const message = strapiErrorMessage(error);
@@ -188,7 +210,7 @@ export function TransactionCreateToolbar({
   });
   const busy = saveAndConvertGuard.busy;
 
-  const onSaveAndConvert = () => {
+  const onSaveAndConvert = (overrides?: ConvertOverridesPayload | null) => {
     if (!workflow || busy) return;
     const formValues = (values ?? {}) as Record<string, unknown>;
     const errors = transactionFormErrors(formValues, receiptCards, translate, {
@@ -207,7 +229,14 @@ export function TransactionCreateToolbar({
     saveAndConvertGuard.submit({
       formValues,
       workflowDocumentId: workflow.documentId,
+      overrides,
     });
+  };
+
+  const closeConvertDialog = () => {
+    if (busy) return;
+    setOpen(false);
+    setEditMode(false);
   };
 
   const actionsDisabled = busy || !formReady;
@@ -246,12 +275,14 @@ export function TransactionCreateToolbar({
           {open ? (
             <ConvertConfirmDialog
               confirmLabelKey="app.transactions_convert_save"
+              editMode={editMode}
               loading={busy}
               open={open}
               previewInput={previewInput}
               workflow={workflow}
-              onClose={() => !busy && setOpen(false)}
+              onClose={closeConvertDialog}
               onConfirm={onSaveAndConvert}
+              onEditModeChange={setEditMode}
             />
           ) : null}
         </Stack>

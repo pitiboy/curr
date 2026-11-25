@@ -34,6 +34,8 @@ Client modules: `eggEntriesApi.ts` (request/response types, error parsing, resul
 
 The `egg-production` Settings row may set `config.initialPublicationStatus`: `"draft"` (default) or `"published"`. With `"published"` the wizard sends `publish: true`; the server re-checks the Setting and publishes every written leg inside the same DB transaction with the linked `eggAuto` context (`dataentry` may finalize, same person allowed). The manual list „Véglegesítés” and `POST /api/transactions/:id/actions/publish?eggAuto=1` are unchanged.
 
+Layout: `layout: 'single'` (egg) shows production and distribution on one page; an empty distribution saves production only. Opt-in `voice: { enabled: true }` adds microphone dictation via `POST /api/transactions/parse-voice` with `workflowId` (fills hen-house + member quantities; saving stays manual).
+
 ## Member ↔ organization
 
 Members are **not** linked to organizations directly. The **`membership`** collection connects them:

@@ -14,6 +14,7 @@
 # Ha a name + fejléc kód páros már létezik, a POST nem fut le (idempotens).
 # "status": "draft" → draft sablon (lookup + POST is draft): a napi tojás
 # űrlap sablonjai (40–42, fejléc 0000/0000) így nem illeszkednek a Convert-be.
+# `collect_asset: true` (opcionális) → könyvelés után a backoffice megnyitja az „Új eszköz” űrlapot.
 
 {{
   if (typeof wfItems === "undefined") {
@@ -413,6 +414,8 @@ Accept: application/json
         credit_account_code: String(item.credit_account_code),
         keep_original: item.keep_original !== false,
         steps_published: item.steps_published !== false,
+        // Backoffice: open the "Új eszköz" form after booking (asset inventory).
+        collect_asset: item.collect_asset === true,
         configuration: null,
         step: steps,
       };

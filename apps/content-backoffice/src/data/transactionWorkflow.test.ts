@@ -61,6 +61,7 @@ describe('fetchPublishedWorkflows', () => {
               name: 'Fix org',
               debit_account_code: 1000,
               credit_account_code: 1900,
+              collect_asset: true,
               step: [
                 {
                   __component: 'workflow.step',
@@ -108,6 +109,7 @@ describe('fetchPublishedWorkflows', () => {
           name: 'Bányászás',
         },
         requires_source_organization: true,
+        collect_asset: false,
       },
       {
         documentId: 'wf-2',
@@ -117,6 +119,7 @@ describe('fetchPublishedWorkflows', () => {
         currency_type: null,
         transaction_type: null,
         requires_source_organization: false,
+        collect_asset: true,
       },
     ]);
   });

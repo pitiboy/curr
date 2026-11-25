@@ -543,6 +543,115 @@ export interface ApiAccountAccount extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAssetCategoryAssetCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'asset_categories';
+  info: {
+    description: 'Eszk\u00F6z kateg\u00F3ria (t\u00E1rgyi eszk\u00F6z nyilv\u00E1ntart\u00E1s)';
+    displayName: 'Asset Category';
+    pluralName: 'asset-categories';
+    singularName: 'asset-category';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::asset-category.asset-category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    sort_order: Schema.Attribute.Integer;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAssetAsset extends Struct.CollectionTypeSchema {
+  collectionName: 'assets';
+  info: {
+    description: 'Egyedi t\u00E1rgyi eszk\u00F6z (eszk\u00F6znyilv\u00E1ntart\u00E1s)';
+    displayName: 'Asset';
+    pluralName: 'assets';
+    singularName: 'asset';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    acquisition_transaction: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transaction.transaction'
+    >;
+    category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::asset-category.asset-category'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currency_type: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::currency-type.currency-type'
+    >;
+    disposal_transaction: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transaction.transaction'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::asset.asset'> &
+      Schema.Attribute.Private;
+    location: Schema.Attribute.String;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    notes: Schema.Attribute.Text;
+    organization: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::organization.organization'
+    > &
+      Schema.Attribute.Required;
+    ownership_type: Schema.Attribute.Enumeration<
+      ['coop_owned', 'member_owned_lendable', 'barter']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'coop_owned'>;
+    photo: Schema.Attribute.Media<'images'>;
+    publishedAt: Schema.Attribute.DateTime;
+    purchase_date: Schema.Attribute.Date;
+    purchase_price: Schema.Attribute.Decimal;
+    responsible_member: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::member.member'
+    >;
+    serial_number: Schema.Attribute.String;
+    status: Schema.Attribute.Enumeration<
+      ['in_use', 'in_storage', 'under_repair', 'lent_out', 'disposed']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'in_use'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    warranty_until: Schema.Attribute.Date;
+  };
+}
+
 export interface ApiAuditLogAuditLog extends Struct.CollectionTypeSchema {
   collectionName: 'audit_logs';
   info: {
@@ -884,9 +993,7 @@ export interface ApiMembershipMembership extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    valid_from: Schema.Attribute.DateTime &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'2026-11-13T15:09:13.372Z'>;
+    valid_from: Schema.Attribute.DateTime & Schema.Attribute.Required;
     valid_to: Schema.Attribute.DateTime;
   };
 }
@@ -1186,6 +1293,7 @@ export interface ApiTransactionWorkflowTransactionWorkflow
     draftAndPublish: true;
   };
   attributes: {
+    collect_asset: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     configuration: Schema.Attribute.JSON;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1823,6 +1931,8 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::account-category.account-category': ApiAccountCategoryAccountCategory;
       'api::account.account': ApiAccountAccount;
+      'api::asset-category.asset-category': ApiAssetCategoryAssetCategory;
+      'api::asset.asset': ApiAssetAsset;
       'api::audit-log.audit-log': ApiAuditLogAuditLog;
       'api::currency-category.currency-category': ApiCurrencyCategoryCurrencyCategory;
       'api::currency-rate.currency-rate': ApiCurrencyRateCurrencyRate;

@@ -1,0 +1,17 @@
+{
+  "name": "Tárgyi eszköz selejtezés",
+  "debit_account_code": "5800",
+  "credit_account_code": "1500",
+  "steps": [
+    {
+      "description": "{original.description} | Eszköz selejtezés",
+      "percent": 100,
+      "debit_code": "{original.debit_account_code}",
+      "credit_code": "{original.credit_account_code}",
+      "currency": "{original.currency}",
+      "organization": "{original.organization}",
+      "transaction_type": "Átvezetés",
+      "copy_receipt": true
+    }
+  ]
+}
