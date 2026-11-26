@@ -83,5 +83,10 @@
     "key": "assets",
     "enabled": true,
     "config": {}
+  },
+  {
+    "key": "convert_inline_edit",
+    "enabled": true,
+    "config": {}
   }
 ]

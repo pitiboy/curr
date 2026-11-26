@@ -95,6 +95,43 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_rate_same: 'rate × %{rate}',
     transactions_convert_preview_member_ratio:
       'member ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Edit expansion',
+    transactions_convert_edit_reset: 'Cancel',
+    transactions_convert_edit_add_row: 'Add step',
+    transactions_convert_edit_duplicate: 'Duplicate step',
+    transactions_convert_edit_delete: 'Delete step',
+    transactions_convert_edit_percent: 'Percent',
+    transactions_convert_edit_copy_receipt: 'Copy receipt',
+    transactions_convert_edit_copy_receipt_short: 'Rcpt',
+    transactions_convert_edit_error_steps_required:
+      'At least one filled step is required to convert.',
+    transactions_convert_edit_error_accounts_required:
+      'Debit and credit accounts are required on every step.',
+    transactions_convert_edit_error_accounts_differ:
+      'Debit and credit accounts must differ.',
+    transactions_convert_edit_error_amount_positive: 'Amount must be positive.',
+    transactions_convert_edit_error_description:
+      'Description is required on every editable step.',
+    transactions_convert_edit_warning_step_sum:
+      'Step total (%{steps}) differs from the original (%{original}).',
+    workflow_overview: {
+      menu: 'Transaction workflows',
+      title: 'Transaction workflows',
+      subtitle:
+        'Preview of published templates with sample data. Only one template can be open at a time.',
+      loading: 'Loading workflows…',
+      empty: 'No transaction workflows to show.',
+      forbidden: 'You do not have access to this page.',
+      sample_badge: 'Sample data',
+      edit: 'Edit',
+      sample_error: {
+        missing_accounts:
+          'No accounts match this template for building sample data.',
+        missing_currency: 'This template has no currency for the preview.',
+        missing_organization:
+          'This template needs an organization for sample data, but none is available.',
+      },
+    },
     transactions_related_children: '%{count} linked transaction(s)',
     transactions_related_parent: 'Linked to: %{date} / %{amount}',
     transactions_related_parent_short: 'Linked to another transaction',
@@ -557,16 +594,20 @@ export const enMessages = mergeTranslations(englishMessages, {
       no_rows: 'Enter at least one non-zero quantity.',
       invalid_quantity: 'Whole number, 0 or greater.',
       results_heading: 'Save results',
-      auto_publish_done: 'Saved and published.',
-      auto_publish_done_after_update: 'Updated and published.',
-      auto_publish_failed: 'Publishing failed.',
-      retry_failed: 'Retry failed rows',
+      save_success: 'Saved.',
+      save_failed_nothing_saved: 'Saving failed; nothing was recorded.',
+      result_created: '%{count} new rows',
+      result_updated: '%{count} rows updated',
+      result_skipped: '%{count} existing rows kept',
+      result_published: 'published',
+      retry_failed: 'Retry save',
       conflict_title: 'Entry already exists for this day',
       conflict_body:
         'A transaction already exists for the same day, hen house, and account pair. Choose what to do for each row.',
       conflict_existing: 'Existing amount: %{amount}',
       conflict_update: 'Update existing row',
       conflict_insert: 'Insert as new row',
+      conflict_skip: 'Keep existing row (skip)',
       conflict_continue: 'Continue',
       conflict_global_body:
         'Entries already exist for this day (production or distribution). The choice below applies to every affected row.',
@@ -587,20 +628,6 @@ export const enMessages = mergeTranslations(englishMessages, {
       distribution_no_members:
         'No members in organization “%{org}” for this date.',
       distribution_members_failed: 'Could not load the member list.',
-      pool_transfer: {
-        coop: 'Egg stock transfer (coop) — %{organization} → Tyúktartás (%{amount})',
-        parent: 'Egg stock transfer (Tyúktartás) — %{organization} (%{amount})',
-      },
-      description: {
-        egg: 'Daily eggs — %{organization}: %{amount}',
-        egg_distribution_internal:
-          'Egg distribution (internal) — %{member}: %{amount}',
-        egg_distribution_sale_egg: 'Egg sale (eggs) — %{member}: %{amount}',
-        egg_distribution_cash:
-          'Egg sale (cash payment) — %{member}: %{amount} → %{revenue}',
-        egg_distribution_revenue:
-          'Egg sale (revenue) — %{member}: %{amount} → %{revenue}',
-      },
     },
     login_google: 'Sign in with Google',
     oauth_errors: {

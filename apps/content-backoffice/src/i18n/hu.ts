@@ -139,6 +139,44 @@ export const huMessages = mergeTranslations(hungarianMessages, {
     transactions_convert_preview_rate_same: 'árfolyam × %{rate}',
     transactions_convert_preview_member_ratio:
       'tagsági ratio × %{ratio} (%{membership})',
+    transactions_convert_edit_start: 'Kifejtés szerkesztése',
+    transactions_convert_edit_reset: 'Mégse',
+    transactions_convert_edit_add_row: 'Új lépés',
+    transactions_convert_edit_duplicate: 'Lépés duplikálása',
+    transactions_convert_edit_delete: 'Lépés törlése',
+    transactions_convert_edit_percent: 'Százalék',
+    transactions_convert_edit_copy_receipt: 'Bizonylat másolása',
+    transactions_convert_edit_copy_receipt_short: 'Biz.',
+    transactions_convert_edit_error_steps_required:
+      'Legalább egy kitöltött lépés kell a kifejtéshez.',
+    transactions_convert_edit_error_accounts_required:
+      'Minden lépésen kötelező a tartozik és követel számla.',
+    transactions_convert_edit_error_accounts_differ:
+      'A tartozik és követel számla nem lehet ugyanaz.',
+    transactions_convert_edit_error_amount_positive:
+      'Az összegnek pozitívnak kell lennie.',
+    transactions_convert_edit_error_description:
+      'A leírás kötelező minden szerkeszthető lépésen.',
+    transactions_convert_edit_warning_step_sum:
+      'A lépések összege (%{steps}) eltér az eredeti összegtől (%{original}).',
+    workflow_overview: {
+      menu: 'Tranzakciós workflow-k',
+      title: 'Tranzakciós workflow-k',
+      subtitle:
+        'A publikált sablonok előnézete minta adatokkal. Egyszerre egy sablon nyitható ki.',
+      loading: 'Workflow-k betöltése…',
+      empty: 'Nincs megjeleníthető tranzakciós workflow.',
+      forbidden: 'Nincs jogosultságod ehhez az oldalhoz.',
+      sample_badge: 'Minta adat',
+      edit: 'Szerkesztés',
+      sample_error: {
+        missing_accounts:
+          'Nem találhatók a sablonhoz illő számlák a minta adathoz.',
+        missing_currency: 'A sablonhoz nincs pénznem az előnézethez.',
+        missing_organization:
+          'Ehhez a sablonhoz szervezet kell a minta adathoz, de nincs elérhető szervezet.',
+      },
+    },
     transactions_related_children: '%{count} kapcsolódó sor',
     transactions_related_parent: 'Kapcsolódik: %{date} / %{amount}',
     transactions_related_parent_short: 'Kapcsolódik egy másik tranzakcióhoz',
@@ -608,16 +646,21 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       no_rows: 'Adj meg legalább egy nem nulla darabszámot.',
       invalid_quantity: 'Egész szám, 0 vagy nagyobb.',
       results_heading: 'Mentés eredménye',
-      auto_publish_done: 'Mentve és közzétéve.',
-      auto_publish_done_after_update: 'Frissítve és közzétéve.',
-      auto_publish_failed: 'Közzététel nem sikerült.',
-      retry_failed: 'Sikertelen sorok újrapróbálása',
+      save_success: 'Mentve.',
+      save_failed_nothing_saved:
+        'A mentés nem sikerült, semmi nem került rögzítésre.',
+      result_created: '%{count} új sor',
+      result_updated: '%{count} sor frissítve',
+      result_skipped: '%{count} meglévő sor megtartva',
+      result_published: 'közzétéve',
+      retry_failed: 'Mentés újrapróbálása',
       conflict_title: 'Már van rögzítés erre a napra',
       conflict_body:
-        'Ugyanerre a napra, ólra és könyvelési párosra már létezik tranzakció. Válaszd ki, mit tegyünk soronként.',
+        'Ugyanerre a napra, szervezetre, pénznemre és könyvelési párosra már létezik tranzakció. Válaszd ki, mit tegyünk soronként.',
       conflict_existing: 'Meglévő összeg: %{amount}',
       conflict_update: 'Meglévő sor frissítése',
       conflict_insert: 'Új sor felvétele',
+      conflict_skip: 'Meglévő sor megtartása (kihagyás)',
       conflict_continue: 'Folytatás',
       conflict_global_body:
         'Már van rögzítés erre a napra (termelés vagy továbbosztás). Az alábbi választás minden érintett sorra vonatkozik.',
@@ -639,22 +682,6 @@ export const huMessages = mergeTranslations(hungarianMessages, {
       distribution_no_members:
         'Nincs tag a(z) „%{org}” szervezetben ehhez a naphoz.',
       distribution_members_failed: 'A taglista betöltése nem sikerült.',
-      pool_transfer: {
-        coop: 'Tojás készlet átvezetés (ól) — %{organization} → Tyúktartás (%{amount} db)',
-        parent:
-          'Tojás készlet átvezetés (Tyúktartás) — %{organization} (%{amount} db)',
-      },
-      description: {
-        egg: 'Napi tojás — %{organization}: %{amount} db',
-        egg_distribution_internal:
-          'Tojás továbbosztás (belső) — %{member}: %{amount} db',
-        egg_distribution_sale_egg:
-          'Tojás eladás (tojás) — %{member}: %{amount} db',
-        egg_distribution_cash:
-          'Tojás eladás (kp befizetés) — %{member}: %{amount} db → %{revenue} Ft',
-        egg_distribution_revenue:
-          'Tojás eladás (bevétel) — %{member}: %{amount} db → %{revenue} Ft',
-      },
     },
     login_google: 'Bejelentkezés Google-lel',
     oauth_errors: {

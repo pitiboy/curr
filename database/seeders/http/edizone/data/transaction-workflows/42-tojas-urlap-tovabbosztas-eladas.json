@@ -1,0 +1,38 @@
+{
+  "name": "Tojás továbbosztás eladás (űrlap)",
+  "status": "draft",
+  "debit_account_code": "0000",
+  "credit_account_code": "0000",
+  "currency": "EGG",
+  "steps": [
+    {
+      "description": "Tojás eladás (tojás) — {original.description}: {original.amount} db",
+      "percent": 100,
+      "debit_code": "1001",
+      "credit_code": "1300",
+      "currency": "EGG",
+      "organization": "Tyúktartás",
+      "transaction_type": "Átvezetés"
+    },
+    {
+      "description": "Tojás eladás (kp befizetés) — {original.description}: {original.amount} db → {step.amount} Ft",
+      "percent": 100,
+      "debit_code": "1000",
+      "credit_code": "1001",
+      "currency": "HUF",
+      "organization": "Tyúktartás",
+      "transaction_type": "Készpénz",
+      "apply_currency_rate": true
+    },
+    {
+      "description": "Tojás eladás (bevétel) — {original.description}: {original.amount} db → {step.amount} Ft",
+      "percent": 100,
+      "debit_code": "4000",
+      "credit_code": "1000",
+      "currency": "HUF",
+      "organization": "Tyúktartás",
+      "transaction_type": "Átvezetés",
+      "apply_currency_rate": true
+    }
+  ]
+}

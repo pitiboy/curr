@@ -6,12 +6,14 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import ListIcon from '@mui/icons-material/List';
+import HubOutlinedIcon from '@mui/icons-material/HubOutlined';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { Menu, usePermissions, useTranslate } from 'react-admin';
 import { useLocation } from 'react-router-dom';
 
 import { isContentRole, isEditorLikeRole, roleAllowed } from '../auth/roles';
+import { TRANSACTION_WORKFLOW_PREFILL_ROLES } from '../data/accountRowSelection';
 import {
   TRANSACTIONS_LIST_PATH,
   transactionListMode,
@@ -70,6 +72,11 @@ export function BackofficeMenu() {
     enabled.includes(RECONCILIATION_FEATURE_ID) &&
     typeof permissions === 'string' &&
     roleAllowed(reconciliationRoles, permissions);
+  const canReadWorkflowOverview =
+    typeof permissions === 'string' &&
+    (TRANSACTION_WORKFLOW_PREFILL_ROLES as readonly string[]).includes(
+      permissions,
+    );
 
   return (
     <Menu>
@@ -93,6 +100,14 @@ export function BackofficeMenu() {
           to="/transactions/create"
         />
       ) : null}
+      {canReadWorkflowOverview ? (
+        <Menu.Item
+          leftIcon={<HubOutlinedIcon />}
+          primaryText={translate('app.workflow_overview.menu')}
+          to="/transaction-workflows-overview"
+        />
+      ) : null}
+
       {canReadEggInventory ? (
         <>
           <Menu.Item

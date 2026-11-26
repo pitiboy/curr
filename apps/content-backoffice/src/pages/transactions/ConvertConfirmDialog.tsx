@@ -6,11 +6,16 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { useState } from 'react';
 import { useTranslate } from 'react-admin';
 
 import type { ConvertPreviewRequest } from '../../data/convertPreview';
+import type { ConvertOverridesPayload } from '../../data/transactionWorkflow';
 import type { WorkflowTemplateHeader } from '../../data/transactionList';
-import { ConvertPreviewPanel } from './ConvertPreviewPanel';
+import {
+  ConvertPreviewPanel,
+  type ConvertPreviewEditState,
+} from './ConvertPreviewPanel';
 
 export function ConvertConfirmDialog({
   open,
@@ -20,23 +25,38 @@ export function ConvertConfirmDialog({
   workflow,
   previewInput = null,
   confirmLabelKey = 'app.transactions_convert_confirm',
+  editMode = false,
+  onEditModeChange,
+  onEditStateChange,
 }: {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (overrides?: ConvertOverridesPayload | null) => void;
   loading: boolean;
   workflow: WorkflowTemplateHeader;
   previewInput?: ConvertPreviewRequest | null;
   confirmLabelKey?: string;
+  editMode?: boolean;
+  onEditModeChange?: (value: boolean) => void;
+  onEditStateChange?: (state: ConvertPreviewEditState) => void;
 }) {
   const translate = useTranslate();
+  const [editState, setEditState] = useState<ConvertPreviewEditState | null>(
+    null,
+  );
+  const confirmBlocked = (editState?.blocking.length ?? 0) > 0;
 
   return (
     <Dialog
       fullWidth
-      maxWidth="md"
+      maxWidth="xl"
       open={open}
       onClose={() => !loading && onClose()}
+      slotProps={{
+        paper: {
+          sx: { maxWidth: 1440 },
+        },
+      }}
     >
       <DialogTitle>
         {translate('app.transactions_convert_title', {
@@ -45,7 +65,27 @@ export function ConvertConfirmDialog({
       </DialogTitle>
       <DialogContent dividers>
         {previewInput ? (
-          <ConvertPreviewPanel active={open} previewInput={previewInput} />
+          <ConvertPreviewPanel
+            active={open}
+            editMode={editMode}
+            previewInput={previewInput}
+            onEditModeChange={onEditModeChange}
+            onEditStateChange={(state) => {
+              setEditState((prev) => {
+                if (
+                  prev &&
+                  prev.editMode === state.editMode &&
+                  prev.overridePayload === state.overridePayload &&
+                  prev.editedRows === state.editedRows &&
+                  prev.blocking === state.blocking
+                ) {
+                  return prev;
+                }
+                return state;
+              });
+              onEditStateChange?.(state);
+            }}
+          />
         ) : (
           <Typography sx={{ py: 1 }} variant="body2">
             {translate('app.transactions_convert_body')}
@@ -56,7 +96,11 @@ export function ConvertConfirmDialog({
         <Button disabled={loading} onClick={onClose}>
           {translate('ra.action.cancel')}
         </Button>
-        <Button disabled={loading} variant="contained" onClick={onConfirm}>
+        <Button
+          disabled={loading || confirmBlocked}
+          variant="contained"
+          onClick={() => onConfirm(editState?.overridePayload ?? null)}
+        >
           {translate(confirmLabelKey)}
         </Button>
       </DialogActions>

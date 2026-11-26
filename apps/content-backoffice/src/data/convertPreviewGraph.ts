@@ -2,6 +2,26 @@ import type { ConvertPreview, PreviewAccount } from './convertPreview';
 
 export const MEMBER_LEDGER_CODES = new Set(['1101', '1001']);
 
+/**
+ * Short domain labels for well-known ledger codes (docs/transaction-workflow.md).
+ * Prefer these over long member-specific account names in the sequence diagram.
+ */
+export const ACCOUNT_ROLE_LABELS: Readonly<Record<string, string>> = {
+  '1001': 'saját számla',
+  '1101': 'tagi számla',
+};
+
+/** Display name under a participant code: role label, else API name. */
+export function sequenceParticipantName(
+  code: string,
+  name: string | null | undefined,
+): string | null {
+  const role = ACCOUNT_ROLE_LABELS[code.trim()];
+  if (role) return role;
+  const trimmed = name?.trim();
+  return trimmed || null;
+}
+
 /** Layout constants (sequencediagram.org-style lifelines). */
 export const SEQ_PADDING_X = 20;
 export const SEQ_PADDING_Y = 16;
@@ -174,7 +194,8 @@ export function layoutSequenceDiagram(
   const participants: SequenceParticipant[] = participantOrder.map(
     (documentId, column) => {
       const account = participantById.get(documentId)!;
-      const nameLen = account.name?.length ?? 0;
+      const displayName = sequenceParticipantName(account.code, account.name);
+      const nameLen = displayName?.length ?? 0;
       const width = Math.max(
         SEQ_PARTICIPANT_MIN_WIDTH,
         48 + account.code.length * 8 + Math.min(nameLen, 18) * 5,
@@ -187,7 +208,7 @@ export function layoutSequenceDiagram(
       return {
         id: documentId,
         code: account.code,
-        name: account.name,
+        name: displayName,
         isMember: account.isMember,
         column,
         x: 0,

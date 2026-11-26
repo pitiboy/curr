@@ -209,7 +209,9 @@ function buildStrapi(fixture: Fixture) {
                 memberships: fixture.memberships ?? [],
               }
             : null,
+        updateMany: async () => ({ count: 1 }),
       }),
+      transaction: async <T>(task: () => Promise<T>) => task(),
     },
     requestContext: { get: () => ({ state: {} }) },
     log: { warn: () => {} },
@@ -320,10 +322,11 @@ describe('convertTransactions with apply_currency_rate', () => {
       transactions: [eggSource()],
       rates: [eggHufRate],
     });
-    const [result] = await convertTransactions(
+    const { results } = await convertTransactions(
       strapi as unknown as ConvertStrapi,
       { transactionDocumentId: 'tx-egg' },
     );
+    const result = results[0]!;
     assert.deepEqual(
       created.map((row) => [row.entered_key, row.amount]),
       [
@@ -404,7 +407,7 @@ describe('convertTransactions with apply_currency_rate', () => {
       transactions: [eggSource('tx-a'), eggSource('tx-b', 12)],
       rates: [eggHufRate],
     });
-    const results = await convertTransactions(
+    const { results } = await convertTransactions(
       strapi as unknown as ConvertStrapi,
       { workflowDocumentId: 'wf-24' },
     );
@@ -448,10 +451,11 @@ describe('convertTransactions with apply_currency_rate', () => {
         },
       ],
     });
-    const [result] = await convertTransactions(
+    const { results } = await convertTransactions(
       strapi as unknown as ConvertStrapi,
       { transactionDocumentId: 'tx-egg' },
     );
+    const result = results[0]!;
     assert.deepEqual(
       created.map((row) => [row.entered_key, row.amount, row.description]),
       [
@@ -524,10 +528,11 @@ describe('convertTransactions with apply_currency_rate', () => {
         { documentId: 'm-ok', membership_type: { name: 'Vásárló' } },
       ],
     });
-    const [result] = await convertTransactions(
+    const { results } = await convertTransactions(
       strapi as unknown as ConvertStrapi,
       { transactionDocumentId: 'tx-egg' },
     );
+    const result = results[0]!;
     assert.equal(created[2].amount, 3000);
     assert.equal(result.appliedRates[0].ratio, 1);
     assert.equal(result.appliedRates[0].membershipDocumentId, null);

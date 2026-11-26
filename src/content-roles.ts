@@ -42,6 +42,8 @@ export const CONTENT_ROLE_ACTIONS = [
   'api::backoffice.backoffice.config',
   'api::transaction-workflow.transaction-workflow.find',
   'api::transaction-workflow.transaction-workflow.findOne',
+  // Napi tojás űrlap; feature flag / szerep / org scope a service-ben.
+  'api::egg-production.egg-production.createEntries',
   // Eszköznyilvántartás: org-scoped read/write (see org-scope middleware).
   'api::asset.asset.find',
   'api::asset.asset.findOne',
