@@ -188,6 +188,30 @@ async function renderPage(config: BulkQuantityWorkflowConfig = wizardConfig) {
 }
 
 describe('BulkQuantityEntryPage (egg daily entry)', () => {
+  it('single layout: double click on Mentés sends one POST and disables the button while saving', async () => {
+    let release: () => void = () => {};
+    entriesHandler = () =>
+      new Promise((resolve) => {
+        release = () => resolve({ json: { data: okResponse() } });
+      });
+    await renderPage(eggDailyEntryConfig);
+    await screen.findByLabelText('Anna');
+    fireEvent.change(screen.getByLabelText('A ól'), {
+      target: { value: '120' },
+    });
+    const save = screen.getByRole('button', { name: 'app.bulk_quantity.save' });
+
+    fireEvent.click(save);
+    fireEvent.click(save);
+
+    await waitFor(() => expect(save).toBeDisabled());
+    expect(entryPosts()).toHaveLength(1);
+
+    release();
+    await screen.findByTestId('bulk-quantity-results');
+    expect(entryPosts()).toHaveLength(1);
+  });
+
   it('single layout: one Save button, empty distribution sends production only', async () => {
     const user = userEvent.setup();
     await renderPage(eggDailyEntryConfig);
