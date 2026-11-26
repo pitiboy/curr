@@ -50,7 +50,7 @@ describe('transactionRateIsoDay / transactionRateCutoff', () => {
     );
     assert.equal(
       transactionRateCutoff('2025-01-01'),
-      '2025-01-01T23:59:59.999Z',
+      '2025-01-01T22:59:59.999Z',
     );
   });
 });
@@ -125,7 +125,7 @@ describe('timezone edge around 2025-01-01', () => {
   };
   const rateDec31 = {
     rate: 90,
-    validFrom: '2024-12-31T23:00:00.000Z',
+    validFrom: '2024-12-30T23:00:00.000Z',
     fromKey: 'a',
     toKey: 'b',
     rowKey: 'dec31',
@@ -199,5 +199,50 @@ describe('pickRateByCurrencyCodeAtTransactionDate (backoffice)', () => {
     );
     assert.equal(byCode?.rate, byId?.rate);
     assert.equal(byCode?.rate, 500);
+  });
+});
+
+describe('Budapest local-midnight valid_from (CET/CEST)', () => {
+  const eggOld = {
+    rate: 100,
+    validFrom: '2022-12-31T23:00:00.000Z', // 2023-01-01 00:00 Budapest
+    fromKey: 'egg',
+    toKey: 'huf',
+    rowKey: 'old',
+  };
+  const eggNov1 = {
+    rate: 1000,
+    validFrom: '2026-10-31T23:00:00.000Z', // 2026-11-01 00:00 Budapest
+    fromKey: 'egg',
+    toKey: 'huf',
+    rowKey: 'nov1',
+  };
+
+  it('2026-10-31 transaction does not use the rate valid from 2026-11-01', () => {
+    const picked = pickDirectRateAtTransactionDate(
+      [eggOld, eggNov1],
+      'egg',
+      'huf',
+      '2026-10-31',
+    );
+    assert.equal(picked?.rate, 100);
+    assert.equal(picked?.rowKey, 'old');
+  });
+
+  it('2026-11-01 transaction uses the new rate', () => {
+    const picked = pickDirectRateAtTransactionDate(
+      [eggOld, eggNov1],
+      'egg',
+      'huf',
+      '2026-11-01',
+    );
+    assert.equal(picked?.rate, 1000);
+  });
+
+  it('summer time: cutoff is 22:00Z the day before the next day', () => {
+    assert.equal(
+      transactionRateCutoff('2026-07-01'),
+      '2026-07-01T21:59:59.999Z',
+    );
   });
 });

@@ -721,7 +721,7 @@ export function roundAmount(value: number): number {
 }
 
 /**
- * Latest direct `from → to` row with valid_from ≤ end of `date` (UTC).
+ * Latest direct `from → to` row with valid_from ≤ end of `date` (Europe/Budapest).
  * No inverse. Same currency → rate 1 without a row.
  */
 function toTransactionRateRows(
@@ -765,7 +765,7 @@ export function pickDirectLatestRate(
 }
 
 /**
- * Latest `from → to` rate with valid_from ≤ end of `date` (UTC).
+ * Latest `from → to` rate with valid_from ≤ end of `date` (Europe/Budapest).
  * Same currency → rate 1. Direct row wins. When codes show a KOR pair and no
  * direct row exists, falls back to `1 / rate(to → from)` (`inverted: true`).
  * Non-KOR pairs never invert.

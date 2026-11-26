@@ -243,7 +243,7 @@ describe('findLatestCurrencyRate / createRateResolver', () => {
     assert.deepEqual(rateQueries[0].filters, {
       from_currency_type: { documentId: { $eq: 'cur-egg' } },
       to_currency_type: { documentId: { $eq: 'cur-huf' } },
-      valid_from: { $lte: '2026-11-07T23:59:59.999Z' },
+      valid_from: { $lte: '2026-11-07T22:59:59.999Z' },
     });
     assert.deepEqual(rateQueries[0].sort, ['valid_from:desc']);
   });
