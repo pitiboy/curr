@@ -36,17 +36,17 @@ describe('distribution totals', () => {
     assert.equal(saleRevenueAmount(3, 0.5, 33.333), 49.9995);
   });
 
-  it('checks membership validity on the inclusive UTC day', () => {
+  it('checks membership validity on the inclusive Europe/Budapest day', () => {
     assert.equal(
-      membershipValidOnDate('2026-11-18T23:00:00.000Z', null, '2026-11-18'),
+      membershipValidOnDate('2026-11-18T22:59:59.000Z', null, '2026-11-18'),
       true,
     );
     assert.equal(
-      membershipValidOnDate('2026-11-19T00:00:00.000Z', null, '2026-11-18'),
+      membershipValidOnDate('2026-11-18T23:00:00.000Z', null, '2026-11-18'),
       false,
     );
     assert.equal(
-      membershipValidOnDate(null, '2026-11-17T23:59:59.000Z', '2026-11-18'),
+      membershipValidOnDate(null, '2026-11-17T22:59:59.000Z', '2026-11-18'),
       false,
     );
   });
@@ -131,6 +131,46 @@ describe('pickLatestCurrencyRate', () => {
     assert.equal(
       pickLatestCurrencyRate([], 'HUF', 'HUF', '2026-11-18')?.rate,
       1,
+    );
+  });
+
+  it('2026-10-31 transaction does not use the rate valid from 2026-11-01 (Budapest midnight)', () => {
+    const eggOld = {
+      rate: 100,
+      validFrom: '2022-12-31T23:00:00.000Z',
+      fromCurrencyCode: 'EGG',
+      toCurrencyCode: 'HUF',
+    };
+    const eggNov1 = {
+      rate: 1000,
+      validFrom: '2026-10-31T23:00:00.000Z', // 2026-11-01 00:00 Budapest
+      fromCurrencyCode: 'EGG',
+      toCurrencyCode: 'HUF',
+    };
+    assert.equal(
+      pickLatestCurrencyRate([eggOld, eggNov1], 'EGG', 'HUF', '2026-10-31')
+        ?.rate,
+      100,
+    );
+  });
+
+  it('2026-11-01 transaction uses the new rate', () => {
+    const eggOld = {
+      rate: 100,
+      validFrom: '2022-12-31T23:00:00.000Z',
+      fromCurrencyCode: 'EGG',
+      toCurrencyCode: 'HUF',
+    };
+    const eggNov1 = {
+      rate: 1000,
+      validFrom: '2026-10-31T23:00:00.000Z', // 2026-11-01 00:00 Budapest
+      fromCurrencyCode: 'EGG',
+      toCurrencyCode: 'HUF',
+    };
+    assert.equal(
+      pickLatestCurrencyRate([eggOld, eggNov1], 'EGG', 'HUF', '2026-11-01')
+        ?.rate,
+      1000,
     );
   });
 });

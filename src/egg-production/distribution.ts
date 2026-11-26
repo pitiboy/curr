@@ -6,6 +6,7 @@
  * lábakat már csak a backend állítja elő (`plan.ts`).
  */
 import { resolveEggRule } from './membership-rules';
+import { transactionRateCutoff } from '../shared/transaction-currency-rate';
 
 export type CurrencyRateRow = {
   rate: number;
@@ -56,14 +57,14 @@ export function isOverDistributed(
   return distributed > produced;
 }
 
-/** Inclusive UTC day check on `valid_from` / `valid_to`. */
+/** Inclusive Europe/Budapest day check on `valid_from` / `valid_to`. */
 export function membershipValidOnDate(
   validFrom: string | null | undefined,
   validTo: string | null | undefined,
   isoDate: string,
 ): boolean {
   const dayStart = `${isoDate}T00:00:00.000Z`;
-  const dayEnd = `${isoDate}T23:59:59.999Z`;
+  const dayEnd = transactionRateCutoff(isoDate);
   if (validFrom) {
     const from = new Date(validFrom);
     if (!Number.isNaN(from.getTime()) && from.toISOString() > dayEnd) {
@@ -79,7 +80,7 @@ export function membershipValidOnDate(
   return true;
 }
 
-/** Latest rate with valid_from on or before the form date (inclusive, UTC day). */
+/** Latest rate with valid_from on or before the form date (inclusive, Europe/Budapest day). */
 export function pickLatestCurrencyRate(
   rates: readonly CurrencyRateRow[],
   fromCode: string,
@@ -94,7 +95,7 @@ export function pickLatestCurrencyRate(
       toCurrencyCode: toCode,
     };
   }
-  const dayEnd = `${isoDate}T23:59:59.999Z`;
+  const dayEnd = transactionRateCutoff(isoDate);
   const matching = rates.filter(
     (row) =>
       row.fromCurrencyCode === fromCode &&

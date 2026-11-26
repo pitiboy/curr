@@ -8,7 +8,7 @@
  * vagy step relation (üres marad üres orgnál);
  * tagi oldal forrás trx / testvér számlából.
  * apply_currency_rate step: amount × currency-rate (forrás pénznem → step pénznem,
- * legfrissebb valid_from ≤ forrás nap vége) × tagsági ratio (csak valódi váltásnál,
+ * legfrissebb valid_from ≤ forrás tranzakció napja vége, nem a kifejtés napja) × tagsági ratio (csak valódi váltásnál,
  * `rules[forrás pénznem kód]`), 4 tizedes; rate-et és ratio-t a hívó oldja fel.
  * KOR-t érintő párnál direkt sor hiányában inverz: `1 / rate(to → from)`.
  * Hibák: TransactionWorkflowError HTTP státusszal (409 ütköző sablon, 422 hiányzó adat),
@@ -657,22 +657,21 @@ export type PickLatestRateOptions = {
   toCode?: string | null;
 };
 
-export function normalizeCurrencyCode(
-  code: string | null | undefined,
-): string | null {
-  const trimmed = code?.trim();
-  return trimmed ? trimmed.toUpperCase() : null;
-}
-
-/** Inverse fallback only when the pair touches KOR (0002 plan §5.1 / §9.1). */
-export function currencyPairInvolvesKor(
-  fromCode: string | null | undefined,
-  toCode: string | null | undefined,
-): boolean {
-  const from = normalizeCurrencyCode(fromCode);
-  const to = normalizeCurrencyCode(toCode);
-  return from === 'KOR' || to === 'KOR';
-}
+export {
+  currencyPairInvolvesKor,
+  formatCurrencyRateMissingMessage,
+  normalizeCurrencyCode,
+  transactionRateCutoff as rateCutoff,
+  transactionRateIsoDay as isoDay,
+} from '../shared/transaction-currency-rate';
+import {
+  currencyPairInvolvesKor,
+  formatCurrencyRateMissingMessage,
+  pickDirectRateAtTransactionDate,
+  pickRateAtTransactionDate,
+  transactionRateIsoDay as isoDay,
+  type TransactionRateRow,
+} from '../shared/transaction-currency-rate';
 
 /** Build an inverted AppliedRate from a direct `to → from` row. */
 export function invertAppliedRate(
@@ -723,67 +722,57 @@ export type CurrencyRateRow = {
   toCurrencyDocumentId: string;
 };
 
-/** `YYYY-MM-DD` of the transaction date (accepts full ISO timestamps). */
-export function isoDay(date: string): string {
-  return String(date ?? '').slice(0, 10);
-}
-
-/** Inclusive UTC end of the given day — same rule as backoffice pickLatestCurrencyRate. */
-export function rateCutoff(date: string): string {
-  return `${isoDay(date)}T23:59:59.999Z`;
-}
-
 /** Four-decimal rounding for rate-applied amounts (matches saleRevenueAmount / transaction.amount scale). */
 export function roundAmount(value: number): number {
   return Math.round(value * 10_000) / 10_000;
 }
 
 /**
- * Latest direct `from → to` row with valid_from ≤ end of `date` (UTC).
+ * Latest direct `from → to` row with valid_from ≤ end of `date` (Europe/Budapest).
  * No inverse. Same currency → rate 1 without a row.
  */
+function toTransactionRateRows(
+  rows: readonly CurrencyRateRow[],
+): TransactionRateRow[] {
+  return rows.map((row) => ({
+    rate: row.rate,
+    validFrom: row.valid_from,
+    fromKey: row.fromCurrencyDocumentId,
+    toKey: row.toCurrencyDocumentId,
+    rowKey: row.documentId ?? null,
+  }));
+}
+
+function pickedToAppliedRate(
+  picked: NonNullable<ReturnType<typeof pickDirectRateAtTransactionDate>>,
+): AppliedRate {
+  return {
+    fromCurrencyDocumentId: picked.fromKey,
+    toCurrencyDocumentId: picked.toKey,
+    rate: picked.rate,
+    validFrom: picked.validFrom,
+    currencyRateDocumentId: picked.rowKey,
+    inverted: picked.inverted,
+  };
+}
+
 export function pickDirectLatestRate(
   rows: readonly CurrencyRateRow[],
   fromCurrencyDocumentId: string,
   toCurrencyDocumentId: string,
   date: string,
 ): AppliedRate | null {
-  if (fromCurrencyDocumentId === toCurrencyDocumentId) {
-    return {
-      fromCurrencyDocumentId,
-      toCurrencyDocumentId,
-      rate: 1,
-      validFrom: null,
-      currencyRateDocumentId: null,
-      inverted: false,
-    };
-  }
-  const cutoff = Date.parse(rateCutoff(date));
-  let best: CurrencyRateRow | null = null;
-  let bestTime = -Infinity;
-  for (const row of rows) {
-    if (row.fromCurrencyDocumentId !== fromCurrencyDocumentId) continue;
-    if (row.toCurrencyDocumentId !== toCurrencyDocumentId) continue;
-    const time = Date.parse(row.valid_from);
-    if (!Number.isFinite(time) || time > cutoff) continue;
-    if (time > bestTime) {
-      best = row;
-      bestTime = time;
-    }
-  }
-  if (!best) return null;
-  return {
+  const picked = pickDirectRateAtTransactionDate(
+    toTransactionRateRows(rows),
     fromCurrencyDocumentId,
     toCurrencyDocumentId,
-    rate: Number(best.rate),
-    validFrom: best.valid_from,
-    currencyRateDocumentId: best.documentId ?? null,
-    inverted: false,
-  };
+    date,
+  );
+  return picked ? pickedToAppliedRate(picked) : null;
 }
 
 /**
- * Latest `from → to` rate with valid_from ≤ end of `date` (UTC).
+ * Latest `from → to` rate with valid_from ≤ end of `date` (Europe/Budapest).
  * Same currency → rate 1. Direct row wins. When codes show a KOR pair and no
  * direct row exists, falls back to `1 / rate(to → from)` (`inverted: true`).
  * Non-KOR pairs never invert.
@@ -795,26 +784,14 @@ export function pickLatestRate(
   date: string,
   options?: PickLatestRateOptions,
 ): AppliedRate | null {
-  const direct = pickDirectLatestRate(
-    rows,
+  const picked = pickRateAtTransactionDate(
+    toTransactionRateRows(rows),
     fromCurrencyDocumentId,
     toCurrencyDocumentId,
     date,
+    options,
   );
-  if (direct) return direct;
-  if (!currencyPairInvolvesKor(options?.fromCode, options?.toCode)) return null;
-  const inverse = pickDirectLatestRate(
-    rows,
-    toCurrencyDocumentId,
-    fromCurrencyDocumentId,
-    date,
-  );
-  if (!inverse) return null;
-  return invertAppliedRate(
-    inverse,
-    fromCurrencyDocumentId,
-    toCurrencyDocumentId,
-  );
+  return picked ? pickedToAppliedRate(picked) : null;
 }
 
 /** True when any step of the template asks for a currency-rate conversion. */
@@ -881,7 +858,7 @@ function requireStepRate(
   const applied = rates?.get(stepCurrency.documentId);
   if (!applied) {
     throw new TransactionWorkflowError(
-      `Currency rate ${details.from} → ${details.to} not found on or before ${details.date}`,
+      formatCurrencyRateMissingMessage(details.from, details.to, details.date),
       422,
       ERROR_CURRENCY_RATE_MISSING,
       details,

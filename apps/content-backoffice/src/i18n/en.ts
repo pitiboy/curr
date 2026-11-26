@@ -90,6 +90,8 @@ export const enMessages = mergeTranslations(englishMessages, {
     transactions_convert_preview_steps_total:
       'Step total: %{steps} (original: %{original})',
     transactions_convert_preview_rate: 'rate × %{rate} (from %{validFrom})',
+    transactions_convert_preview_rate_inverted:
+      'rate × %{rate} (from %{validFrom}, inverted from KOR→HUF row)',
     transactions_convert_preview_rate_same: 'rate × %{rate}',
     transactions_convert_preview_member_ratio:
       'member ratio × %{ratio} (%{membership})',
