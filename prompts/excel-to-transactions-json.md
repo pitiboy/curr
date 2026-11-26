@@ -66,7 +66,7 @@ Más Excelnél ne feltételezd ezt a layoutot — használd az alias-táblát é
 - [ ] Számlacímkék: a meglévő `credit_label` / `debit_label` szövegek és feloldott `credit_account` / `debit_account` (könyv név, `tag:<azonosító>`, `saját:<azonosító>`).
 - [ ] Szervezetek: pontos név a `organizations.json`-ból vagy `projectOrganizations` mapből.
 - [ ] Tranzakciótípusok: meglévő `transaction_type` vagy lookup (`operationTransactionTypes` > `placeTransactionTypes`).
-- [ ] **Új címkét ne találj ki**, ha a táblázatban hasonló már szerepel — `fold()` szerinti egyezést használj (NFC, kötőjel normalizálás, szóközök).
+- [ ] **Új könyvi számlanevet vagy szervezetnevet soha ne találj ki** — minden feloldott érték a meglévő `accounts.json` / `organizations.json` / lookup táblák közül jön. Ha az Excelben nincs számla, **kötelező javaslat** (lásd alább), nem üres mező.
 
 ---
 
@@ -110,7 +110,43 @@ Sorokban először **`credit_label` / `debit_label`** marad az Excel szövege; a
 2. `ACCOUNT_ALIASES` a `transaction-import-keys.mjs`-ben (pl. `Pénztár - Saját számla` → `Készpénz`).
 3. Minta: `Név - Tagi számla` / `Név - Saját számla` → `tag:<azonosító>` / `saját:<azonosító>` (`memberIdentifierBase` szabályok).
 
-A JSON tetején lévő **`partyAccounts`**, **`operationCreditAccounts`**, **`expenseDebitAccounts`** csak akkor kell, ha a soron nincs még `credit_account` / `debit_account` — a seeder is ezt használja tartalékként.
+A JSON tetején lévő **`partyAccounts`**, **`operationCreditAccounts`**, **`expenseDebitAccounts`** a seeder tartalék logikáját szolgálják; az agent **mégis töltse ki** a soron a `credit_label` / `debit_label` és a feloldott `credit_account` / `debit_account` mezőket, ha az Excel üres — lásd a következő szakaszt.
+
+---
+
+## Számla javaslása, ha az Excelben nincs megadva
+
+Ha a credit és/vagy debit oszlop **üres** vagy nem feloldható, a kimeneti JSON **nem maradhat** üres címkével vagy csak „nem feloldott” listával: add meg a legvalószínűbb számlát a meglévő könyvből, és **dokumentáld** a záró összefoglalóban.
+
+### Kötelező kitöltés
+
+- Minden feldolgozott soron legyen **`credit_label` és `debit_label`** (a meglévő fájl mintájának megfelelő szöveg — pl. könyv név vagy `Név - Tagi számla`).
+- Minden soron legyen **`credit_account` és `debit_account`**: pontos név az `accounts.json`-ból, vagy `tag:<azonosító>` / `saját:<azonosító>`.
+- **Soha ne hozz létre új számlanevet**, ami nincs az `accounts.json`-ban (kivéve a már bevett `tag:` / `saját:` azonosító formátumot).
+
+### Javaslati prioritás (hiányzó oldalra)
+
+A hiányzó **credit** és **debit** oldalt **külön-külön** töltsd ki, ebben a sorrendben — állj meg az első érvényes, meglévő számlánál:
+
+1. **Partner / payee / payer** — `partyAccounts[payer]`, `partyAccounts[payee]`; tagi minta: `payer`/`payee` név → `tag:<azonosító>` vagy `Név - Tagi számla` címke, ha a meglévő sorokban így szerepel.
+2. **Leírás kulcsszavak** — hasonló `description` minták a cél `transactions.json`-ban (pl. „részjegy”, „utalás”, „anyag”) → ugyanaz a credit/debit pár.
+3. **Szervezet / projekt** — `organization` és tipikus költség/bevétel számlák ugyanerre a szervezetre a meglévő adatban.
+4. **Tranzakció iránya** — bejövő (jóváírás) vs kimenő (terhelés): a meglévő adatban az irányhoz leggyakoribb cash/bank oldal (credit = honnan jön a pénz, debit = hova megy; kövesd a KÖR mintákat).
+5. **Excel előjel** (mielőtt abszolút `amount`): az előjel segíthet az irány felismerésében, ha más jel nincs.
+6. **Legközelebbi meglévő sor** — ugyanaz partner + hasonló leírás / ugyanaz `operation`+`purpose` → másold a párosított számlákat.
+7. **Lookup táblák** a JSON tetején:
+   - credit: `operationCreditAccounts[operation]`, majd `partyAccounts[payer]`
+   - debit: ha `operation === "Költség"` → `expenseDebitAccounts[purpose]`, különben `partyAccounts[payee]`
+8. **Alapértelmezés irány szerint** — a cél fájl statisztikájából: leggyakoribb credit (pl. `Készpénz`, `Bankszámlák`) és leggyakoribb költség/bevétel debit, ha mást nem találsz; **alacsony** biztonsággal jelöld.
+
+### Átláthatóság (séma változatlan)
+
+- **Ne** adj hozzá új mezőt a sorokhoz (pl. `suggested: true`), hacsak a cél `transactions.json` már nem tartalmaz ilyet.
+- Minden **nem Excelből jött** számla szerepeljen a záró összefoglaló **„Javasolt számlák”** táblázatában:
+
+| Sor (`row`) | Mező (`credit_label` / `debit_label` / …) | Javasolt számla | Indok (rövid) | Biztonság (magas / közepes / alacsony) |
+
+A feltöltés draft marad (`?status=draft`), ezért a javaslatok emberi ellenőrzésre várnak, de a JSON **importálható** legyen.
 
 ---
 
@@ -131,13 +167,14 @@ Követni: `importKeys()` (`transaction-import-keys.mjs`).
 
 ## Validáció (kötelező ellenőrzőlista)
 
-- [ ] Minden sor: `date`, `amount`, `description`, `credit_label`, `debit_label` (vagy már feloldott accounts).
+- [ ] Minden sor: `date`, `amount`, `description`, kitöltött `credit_label`, `debit_label`, `credit_account`, `debit_account` (üres számla **nem** megengedett — hiány esetén javaslat a fenti szabályokkal).
 - [ ] `amount` > 0, szám, max. 2 tizedes a JSON-ban ahogy a meglévő fájlban.
-- [ ] `credit_account` / `debit_account` feloldható a `accounts.json` + aliasok alapján, vagy explicit `tag:`/`saját:`.
+- [ ] Minden `credit_account` / `debit_account` **létező** könyv név vagy `tag:`/`saját:` az `accounts.json` + aliasok alapján — **csendben új név tiltva**.
 - [ ] `organization` név szerepel az `organizations.json`-ban, vagy a `projectOrganizations` mapből feloldható, vagy üres → `mainOrganization`.
 - [ ] `transaction_type` (ha van) szerepel a `transaction-types.json`-ban, vagy lookupból származik.
 - [ ] `entered_key` egyedi a fájlon belül.
-- [ ] **Nem feloldható értékek:** listázd külön (sor `row`, eredeti címke, javasolt emberi döntés) — **ne találj ki** csendben új számlanevet vagy szervezetet.
+- [ ] **Javasolt számlák** (Excelből nem jött): mind szerepeljen a záró összefoglaló táblázatában (sor, mező, számla, indok, biztonság).
+- [ ] **Nem feloldható (nem számla):** szervezet, ismeretlen Excel-címke stb. — listázd külön emberi döntéssel; számlára **mindig** adj meglévő könyvi javaslatot, ne hagyd üresen és ne „csak listázd feloldatlanként”.
 
 Opcionálisan javasold a felhasználónak:
 
@@ -162,8 +199,9 @@ Minden futás végén add meg:
 1. Észlelt oszlop-megfeleltetés (táblázat).
 2. Feltételezések (hiányzó fejléc, dátum/összeg típus).
 3. Konvertált / kihagyott sorok száma + okok.
-4. **Nem feloldott** értékek listája (emberi döntés szükséges).
-5. Következő lépés: kulcsellenőrzés (`--check`) és feltöltés (lásd alul).
+4. **Javasolt számlák** táblázat (minden kitöltött, Excelből nem eredő credit/debit: sor, mező, számla, indok, magas/közepes/alacsony biztonság).
+5. **Nem feloldott** egyéb értékek (főleg szervezet, típus, ismeretlen címke) — emberi döntés; számlák ide **ne** kerüljenek, ha már javaslatként ki lettek töltve.
+6. Következő lépés: kulcsellenőrzés (`--check`) és feltöltés (lásd alul).
 
 Cél: **nulla vagy minimális** kézi szerkesztés.
 
@@ -204,7 +242,8 @@ A seeder draft tranzakciókat hoz létre / frissít (`?status=draft`), `entered_
 - [ ] Excel beolvasva, üres/összesítő sorok kihagyva
 - [ ] Oszlop-map dokumentálva, aliasok alkalmazva
 - [ ] Dátum ISO, összeg abszolút, címkék a meglévő mintához igazítva
+- [ ] Hiányzó Excel-számla → kitöltött credit/debit + javaslat a záró táblázatban
 - [ ] `entered_key` minden új/frissített soron, duplikátumok `#n` jelöléssel
-- [ ] Validáció + nem feloldott lista
+- [ ] Validáció + javasolt számlák + nem feloldott (nem számla) lista
 - [ ] Magyar összefoglaló a felhasználónak
 - [ ] (Opcionális DB) csak explicit kérésre, csak GET, token biztonság
