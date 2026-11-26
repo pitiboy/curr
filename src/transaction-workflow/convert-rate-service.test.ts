@@ -369,7 +369,7 @@ describe('convertTransactions with apply_currency_rate', () => {
       ],
       rates: [rateOld, rateNew],
     });
-    const results = await convertTransactions(
+    const { results } = await convertTransactions(
       strapi as unknown as ConvertStrapi,
       { workflowDocumentId: 'wf-24' },
     );
@@ -392,12 +392,12 @@ describe('convertTransactions with apply_currency_rate', () => {
       ],
       rates: [eggHufRate],
     });
-    await assert.rejects(
-      convertTransactions(strapi as unknown as ConvertStrapi, {
-        workflowDocumentId: 'wf-24',
-      }),
-      (error: unknown) => error instanceof TransactionWorkflowError,
+    const { results, failures } = await convertTransactions(
+      strapi as unknown as ConvertStrapi,
+      { workflowDocumentId: 'wf-24' },
     );
+    assert.equal(results.length, 1);
+    assert.equal(failures.length, 1);
     assert.ok(writes.some((entry) => entry.startsWith('create:tx-ok')));
     assert.ok(!writes.some((entry) => entry.startsWith('create:tx-missing')));
   });
